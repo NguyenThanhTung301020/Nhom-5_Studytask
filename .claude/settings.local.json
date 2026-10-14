@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell($node = \\(Get-Command node -ErrorAction SilentlyContinue\\); if \\($node\\) { foreach \\($f in @\\('pages/Reports.js','components/GradeBook.js','pages/Profile.js','components/AccountManager.js'\\)\\) { Copy-Item $f \"$env:TEMP\\\\chk.mjs\" -Force; & node --check \"$env:TEMP\\\\chk.mjs\"; if \\($?\\) { \"OK: $f\" } else { \"FAIL: $f\" } } } else { \"node not found\" })"
-    ]
-  }
-}
