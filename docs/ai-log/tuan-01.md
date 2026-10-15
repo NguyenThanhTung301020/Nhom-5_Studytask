@@ -12,6 +12,7 @@
 AI có tạo các tệp **tài liệu** sau (ngày 14/10/2026). Nhóm đã đọc lại các tệp này trước khi commit:
 - `docs/bao-cao-tuan/tuan-01.md` – bản báo cáo tuần 1 dạng Markdown
 - `docs/ai-log/tuan-01.md` – tệp này
+- `docs/phan-tich/01…04` – 4 tệp phân tích (nhận xét GVHD/GVPB, đối chiếu TC1–TC6, Giữ/Bỏ/Sửa/Thêm, tách môi trường), chuyển nội dung từ bảng trong file Word lên GitHub (15/10/2026)
 - `.gitignore` – loại thư mục cấu hình cá nhân `.claude/` khỏi repo
 
 ## Chi tiết từng lần sử dụng
@@ -36,3 +37,9 @@ AI có tạo các tệp **tài liệu** sau (ngày 14/10/2026). Nhóm đã đọ
 - Mã do AI sinh được commit riêng, thông điệp commit có nhãn `[AI]`.
 - Mỗi commit như vậy phải có một thành viên khác review.
 - Mỗi lần dùng AI được ghi vào `docs/ai-log/tuan-XX.md`, kèm mã commit tương ứng.
+
+## Bổ sung ngày 15/10/2026 (sau nhận xét của GVHD)
+
+| Ngày | Prompt chính (nguyên văn) | AI tạo ra | Sinh viên kiểm tra / tự làm |
+|---|---|---|---|
+| 15/10 | "Hãy dựa vào nhận xét trên của GVHD hãy làm lại theo đúng ý trên" (kèm nhận xét: bỏ link ngoài GitHub, thêm khai báo AI vào body, đưa nội dung bảng Word lên GitHub) | Bỏ link ngoài GitHub; thêm mục 7 "Khai báo sử dụng AI" vào báo cáo; tạo 4 tệp docs/phan-tich/01–04 từ nội dung bảng trong file Word; thêm link [D1]–[D4] | Nguyễn Thanh Tùng đọc lại, tự commit và push |
