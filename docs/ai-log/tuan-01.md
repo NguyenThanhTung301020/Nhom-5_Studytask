@@ -1,8 +1,8 @@
 # Nhật ký sử dụng AI – Tuần 1 (05/10 – 10/10/2026)
 
 - **Công cụ:** Claude Code (Anthropic), tiện ích trong VS Code
-- **Model:** Claude Opus 5.5 (`claude-opus-5-5`)
-- **Người sử dụng:** Trương Thanh Vui, Trần Đức Tùng (07/10 – rà soát mã); Nguyễn Thanh Tùng (07/10 – soạn báo cáo; 12/10; 14/10)
+- **Model:** Claude Opus 5.5 (`claude-opus-5-5`) từ 07/10 đến 14/10; Claude Sonnet 5.5 (`claude-sonnet-5-5`) từ 15/10
+- **Người sử dụng:** Trương Thanh Vui, Trần Đức Tùng (07/10 – rà soát mã); Nguyễn Thanh Tùng (07/10 – soạn báo cáo; 12/10; 14/10; 15/10)
 - **Công cụ AI khác:** không dùng
 
 ## Mã nguồn do AI sinh
@@ -23,6 +23,7 @@ AI có tạo các tệp **tài liệu** sau (ngày 14/10/2026). Nhóm đã đọ
 | 09/10 | (không dùng AI) | – | Nguyễn Thanh Tùng tự sửa file Word: đổi mã môn thành GRPR401979, sửa tiêu đề phụ, bỏ dòng Kho mã nguồn và Họp nhóm, bỏ một ý trong Mục tiêu, bỏ mục Lộ trình và phần ký |
 | 12/10 | "hãy sửa lại những phần tô vàng trong file word …"; "dựa vào nội dung đã sửa hãy hướng dẫn tôi điền vào form trên hình" | Điền các ô còn trống trong nhật ký AI; sửa tham chiếu chéo; soạn nội dung để dán vào form nộp | Trả lời câu hỏi của AI: ai dùng AI, có dùng công cụ AI khác hay không |
 | 14/10 | "hãy sửa và hướng dẫn tôi sửa lại file … theo như yêu cầu trên của giảng viên và thay kế hoạch của 2 thành những yêu cầu như hình mà tôi gửi" | Thêm link GitHub vào báo cáo; viết lại Kế hoạch tuần 2 theo ghi chú của nhóm; tạo các tệp docs | **Kế hoạch tuần 2 do nhóm tự lập** (ghi chú viết tay), AI chỉ trình bày lại; nhóm tự tạo repo GitHub và tự commit, push |
+| 15/10 | "từ những nội dung trên hãy hướng dẫn tôi điền vào bảng báo cáo trong hình (phân công công việc rõ cho từng thành viên và link GitHub"; "hãy tách link link GitHub ra riêng để không bị loạn"; "hãy hướng dẫn để tôi điền lại form nộp" | Sửa mô tả 2 commit trong báo cáo; tách link GitHub thành mục 7 với mã [R]/[F]/[L]/[P]; hướng dẫn điền form | Nguyễn Thanh Tùng tự chạy lệnh git (commit `53662e8`, push) và tự chỉnh định dạng file báo cáo |
 
 ## Sai sót của AI mà nhóm phát hiện
 
