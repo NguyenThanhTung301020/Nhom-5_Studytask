@@ -1,0 +1,19 @@
+{
+  "name": "studytask",
+  "private": true,
+  "description": "StudyTask – website quản lý deadline học tập cho sinh viên",
+  "type": "module",
+  "scripts": {
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-studytask",
+    "seed": "node scripts/seed-emulator.mjs",
+    "serve": "http-server . -p 5500 -c-1 -a 127.0.0.1",
+    "test:logic": "node --test tests/logic.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-studytask \"node --test tests/firestore.rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.1.0",
+    "firebase-tools": "^14.0.0",
+    "http-server": "^14.1.1"
+  }
+}

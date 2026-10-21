@@ -1,2 +1,14 @@
 # Cấu hình cá nhân của công cụ (Claude Code) – không đưa lên repo
 .claude/
+
+# Node / Firebase CLI
+node_modules/
+*.log
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Biến môi trường cục bộ
+.env
+.env.*
