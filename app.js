@@ -1,10 +1,12 @@
 // app.js – StudyTask v3.0 – Root component
 import { SAMPLE_SUBJECTS, SAMPLE_DEADLINES, SAMPLE_HOMEWORKS, SAMPLE_QUIZZES, SAMPLE_MATERIALS,
          SAMPLE_SCHEDULE, SAMPLE_EXAMS, SAMPLE_NEWS, SAMPLE_FORMS,
-         DEFAULT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE,
-         DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY } from './utils/constants.js'
+         DEFAULT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, BLANK_STUDENT_PROFILE,
+         DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY, STAFF_ROLES } from './utils/constants.js'
 import { load, save, applySettings, getDaysUntil } from './utils/helpers.js'
-import { initFirebase, isFirebaseReady, onAuth,
+import { getDocument } from './utils/store.js'
+import { DEFAULT_FINANCE_CONFIG, tuitionSummary, tuitionReminder } from './utils/tuition.js'
+import { initFirebase, isFirebaseReady, onAuth, fbLogout,
          loadSharedData, saveSharedKey,
          loadUserData, saveUserKey,
          getUserProfile, setUserProfile, getAllUsers,
@@ -30,6 +32,12 @@ import Schedule   from './pages/Schedule.js'
 import News       from './pages/News.js'
 import Forms      from './pages/Forms.js'
 import Directory  from './pages/Directory.js'
+import MonthCalendar from './pages/MonthCalendar.js'
+import Tuition       from './pages/Tuition.js'
+import GradingPolicy from './pages/GradingPolicy.js'
+import Curriculum    from './pages/Curriculum.js'
+import Graduation    from './pages/Graduation.js'
+import Theses        from './pages/Theses.js'
 
 const { useState, useEffect, useRef, useCallback, useMemo, createElement: h } = window.React
 
@@ -80,10 +88,22 @@ function App() {
 
     const ss = shared   || {}
     const ps = personal || {}
+
+    // Dữ liệu cá nhân trong localStorage chỉ dùng lại khi nó thuộc ĐÚNG tài khoản đang đăng nhập.
+    // (Lỗi cũ: tài khoản B đăng nhập sau tài khoản A trên cùng máy sẽ nhận hồ sơ của A
+    //  từ st_profile và bản đó còn bị ghi ngược lên Firestore của B.)
+    const ownerKey  = uid || fbUser?.email || 'guest'
+    const sameOwner = load('st_owner', null) === ownerKey
+    const loadMine  = (key, fallback) => sameOwner ? load(key, fallback) : fallback
+
+    // Hồ sơ mặc định theo vai trò; tài khoản thật (có uid) không nhận dữ liệu mẫu của sinh viên demo
+    const roleDefault = fbUser?.role === 'teacher' ? DEFAULT_TEACHER_PROFILE
+                      : ['admin', 'training', 'finance'].includes(fbUser?.role) ? DEFAULT_ADMIN_PROFILE
+                      : uid ? BLANK_STUDENT_PROFILE : DEFAULT_PROFILE
     const defaultProfile = {
-      ...DEFAULT_PROFILE,
-      name:  fbUser?.name  || load('st_profile', DEFAULT_PROFILE).name,
-      email: fbUser?.email || load('st_profile', DEFAULT_PROFILE).email,
+      ...roleDefault,
+      name:  fbUser?.name  || roleDefault.name,
+      email: fbUser?.email || roleDefault.email,
     }
 
     // ── Dữ liệu chung (tất cả user đọc chung) ──
@@ -101,11 +121,11 @@ function App() {
 
     // ── Dữ liệu cá nhân (mỗi user một bản) ──
     const dPersonal = {
-      homeworkSubs: ps.homeworkSubs ?? load('st_homeworkSubs', {}),
-      submissions:  ps.submissions  ?? load('st_submissions', []),
-      profile:      ps.profile      ?? load('st_profile',     defaultProfile),
-      library:      ps.library      ?? load('st_library',     DEFAULT_LIBRARY),
-      contacts:     ps.contacts     ?? load('st_contacts',    []),
+      homeworkSubs: ps.homeworkSubs ?? loadMine('st_homeworkSubs', {}),
+      submissions:  ps.submissions  ?? loadMine('st_submissions', []),
+      profile:      ps.profile      ?? loadMine('st_profile',     defaultProfile),
+      library:      ps.library      ?? loadMine('st_library',     DEFAULT_LIBRARY),
+      contacts:     ps.contacts     ?? loadMine('st_contacts',    []),
     }
 
     setSubjects    (dShared.subjects)
@@ -126,6 +146,7 @@ function App() {
     // Đồng bộ localStorage
     Object.entries(dShared).forEach(([k, v]) => save(`st_${k}`, v))
     Object.entries(dPersonal).forEach(([k, v]) => save(`st_${k}`, v))
+    save('st_owner', ownerKey)
 
     dataReady.current = true
 
@@ -181,7 +202,9 @@ function App() {
       } else {
         const cached = load('st_user', null)
         if (cached) { setUser(cached); await loadAppData(null, cached) }
-        else         { setUser(null);  dataReady.current = true }
+        // Chưa đăng nhập: giữ dataReady = false để các useEffect không ghi dữ liệu mẫu lên Firestore
+        // ngay lúc vừa đăng nhập (trước khi loadAppData tải xong dữ liệu thật của tài khoản).
+        else         { setUser(null);  dataReady.current = false }
         // Demo mode: dùng DEMO_ACCOUNTS làm danh sách users
         setAllUsers(DEMO_ACCOUNTS.map(a => ({ ...a, uid: a.id })))
       }
@@ -202,6 +225,8 @@ function App() {
 
   const handleLogout = () => {
     dataReady.current = false
+    // Đăng xuất cả phiên Firebase (trước đây chỉ xóa state → tải lại trang là tự đăng nhập lại tài khoản cũ)
+    if (isFirebaseReady()) fbLogout().catch(e => console.warn('[Firebase] signOut:', e.message))
     setUser(null)
     save('st_user', null)
     setSubjects(SAMPLE_SUBJECTS);   setDeadlines(SAMPLE_DEADLINES)
@@ -217,18 +242,19 @@ function App() {
 
   // ── Lọc dữ liệu theo môn học được phân quyền ─────────────────
   const uid = user?.uid || null
+  const seesAll = !!user && (user.role === 'admin' || STAFF_ROLES.includes(user.role))
 
   const mySubjects = useMemo(() => {
-    if (!user || user.role === 'admin' || user.subjectIds === null || user.subjectIds === undefined)
+    if (!user || seesAll || user.subjectIds === null || user.subjectIds === undefined)
       return subjects
     return subjects.filter(s => (user.subjectIds || []).includes(s.id))
-  }, [subjects, user])
+  }, [subjects, user, seesAll])
 
   const myDeadlines = useMemo(() => {
-    if (!user || user.role === 'admin' || !user.subjectIds) return deadlines
+    if (!user || seesAll || !user.subjectIds) return deadlines
     const ids = new Set(user.subjectIds)
     return deadlines.filter(d => ids.has(d.subjectId))
-  }, [deadlines, user])
+  }, [deadlines, user, seesAll])
 
   // Ghép định nghĩa bài tập (chung) với trạng thái nộp bài của user hiện tại
   const homeworksView = useMemo(() =>
@@ -239,41 +265,57 @@ function App() {
     })), [homeworks, homeworkSubs])
 
   const myHomeworks = useMemo(() => {
-    if (!user || user.role === 'admin' || !user.subjectIds) return homeworksView
+    if (!user || seesAll || !user.subjectIds) return homeworksView
     const ids = new Set(user.subjectIds)
     return homeworksView.filter(h => ids.has(h.subjectId))
-  }, [homeworksView, user])
+  }, [homeworksView, user, seesAll])
 
   const myQuizzes = useMemo(() => {
-    if (!user || user.role === 'admin' || !user.subjectIds) return quizzes
+    if (!user || seesAll || !user.subjectIds) return quizzes
     const ids = new Set(user.subjectIds)
     return quizzes.filter(q => ids.has(q.subjectId))
-  }, [quizzes, user])
+  }, [quizzes, user, seesAll])
 
   const myMaterials = useMemo(() => {
-    if (!user || user.role === 'admin' || !user.subjectIds) return materials
+    if (!user || seesAll || !user.subjectIds) return materials
     const ids = new Set(user.subjectIds)
     return materials.filter(m => ids.has(m.subjectId))
-  }, [materials, user])
+  }, [materials, user, seesAll])
 
   const mySchedule = useMemo(() => {
-    if (!user || user.role === 'admin' || !user.subjectIds) return schedule
+    if (!user || seesAll || !user.subjectIds) return schedule
     const ids = new Set(user.subjectIds)
     return schedule.filter(c => ids.has(c.subjectId))
-  }, [schedule, user])
+  }, [schedule, user, seesAll])
 
   const myExams = useMemo(() => {
-    if (!user || user.role === 'admin' || !user.subjectIds) return exams
+    if (!user || seesAll || !user.subjectIds) return exams
     const ids = new Set(user.subjectIds)
     return exams.filter(e => ids.has(e.subjectId))
-  }, [exams, user])
+  }, [exams, user, seesAll])
 
-  // ── Thông báo: deadline sắp tới/quá hạn, lịch thi, thông báo giáo viên ──
+  // ── Học phí của sinh viên (để nhắc công nợ đến hạn trên chuông thông báo) ──
+  const [tuitionInfo, setTuitionInfo] = useState(null)   // { cfg, acc }
+  useEffect(() => {
+    if (!user || user.role !== 'student') { setTuitionInfo(null); return }
+    let alive = true
+    ;(async () => {
+      try {
+        const cfg = { ...DEFAULT_FINANCE_CONFIG, ...((await getDocument('financeConfig', 'current')) || {}) }
+        const acc = (await getDocument('tuition', user.uid || user.id)) || {}
+        if (alive) setTuitionInfo({ cfg, acc })
+      } catch (e) { console.warn('[Học phí]', e.message) }
+    })()
+    return () => { alive = false }
+  }, [user?.uid, user?.role])
+
+  // ── Thông báo: deadline sắp tới/quá hạn, lịch thi, thông báo giáo viên, học phí ──
   const notifications = useMemo(() => {
     if (!user) return []
     const subName = (id) => (subjects.find(s => s.id === id) || {}).name || 'Môn học'
     const list = []
-    myDeadlines.forEach(d => {
+    const academic = user.role !== 'finance'   // Phòng Tài chính không cần nhắc deadline / lịch thi
+    if (academic) myDeadlines.forEach(d => {
       if (d.status === 'completed') return
       const days = getDaysUntil(d.dueDate)
       if (days > 7) return
@@ -286,7 +328,7 @@ function App() {
         sort: days,
       })
     })
-    myExams.forEach(e => {
+    if (academic) myExams.forEach(e => {
       const days = getDaysUntil(e.date)
       if (days < 0 || days > 14) return
       list.push({
@@ -296,12 +338,20 @@ function App() {
         sort: days + 0.5,
       })
     })
-    mySubjects.forEach(s => {
+    if (academic) mySubjects.forEach(s => {
       if (s.note && s.note.trim())
         list.push({ id: 'note-' + s.id + '-' + s.note.trim().length, page: 'subjects', icon: 'megaphone-fill', color: '#1cc88a', title: 'Thông báo: ' + s.name, desc: s.note, sort: -1 })
     })
+    if (tuitionInfo && user.role === 'student') {
+      const sum = tuitionSummary(user, subjects, tuitionInfo.cfg, tuitionInfo.acc)
+      const rem = tuitionReminder(sum, tuitionInfo.cfg)
+      if (rem) list.push({ id: `fee-${tuitionInfo.cfg.dueDate}-${rem.level}-${sum.debt}`, page: 'tuition', icon: 'cash-coin',
+        color: rem.level === 'overdue' ? '#e74a3b' : '#e67e22', title: 'Học phí ' + (tuitionInfo.cfg.semester || ''), desc: rem.text, sort: -2 })
+      ;(tuitionInfo.acc.notices || []).slice(-3).forEach((n, i) => list.push({ id: `fee-notice-${n.at}-${i}-${(n.message || '').length}`, page: 'tuition',
+        icon: 'envelope-paper-fill', color: '#e67e22', title: 'Phòng Tài chính thông báo', desc: n.message, sort: -1.5 }))
+    }
     return list.sort((a, b) => a.sort - b.sort)
-  }, [user, myDeadlines, myExams, mySubjects, subjects])
+  }, [user, myDeadlines, myExams, mySubjects, subjects, tuitionInfo])
 
   const unreadNotif = notifications.filter(n => !notifSeen.includes(n.id)).length
   const markNotifSeen = useCallback(() => {
@@ -331,13 +381,29 @@ function App() {
 
   // ── Profile save: trực tiếp Firebase, không qua useEffect ─────
 
+  // Ghi lên Firestore TRƯỚC, thành công mới cập nhật state. Firestore Web SDK không báo lỗi khi mất mạng
+  // mà giữ Promise chờ mãi → đặt thời hạn để giao diện không bị treo ở "Đang lưu…".
+  const SAVE_TIMEOUT_MS = 10000
+  const withTimeout = (p) => Promise.race([p, new Promise((_, rej) =>
+    setTimeout(() => rej(new Error('Máy chủ chưa phản hồi. Kiểm tra kết nối mạng rồi lưu lại.')), SAVE_TIMEOUT_MS))])
+
   const handleProfileSave = useCallback(async (newProfile) => {
-    setProfile(newProfile)
-    save('st_profile', newProfile)
+    const clean = { ...newProfile, name: (newProfile.name || '').trim() }
     if (uid) {
-      await saveUserKey(uid, 'profile', newProfile)
-      if (newProfile.name) setUserProfile(uid, { name: newProfile.name }).catch(() => {})
+      await withTimeout(saveUserKey(uid, 'profile', clean))
+      // Đồng bộ tên + số điện thoại sang user/{uid} (Admin, Danh bạ đọc từ đây).
+      // Rules chỉ cho chủ tài khoản sửa 2 trường này (V2).
+      try {
+        await withTimeout(setUserProfile(uid, { name: clean.name, phone: clean.phone || '' }))
+      } catch (e) {
+        setProfile(clean); save('st_profile', clean)
+        throw new Error('Đã lưu hồ sơ nhưng chưa cập nhật được tên/số điện thoại trong danh bạ: ' + e.message)
+      }
+      setUser(u => u ? { ...u, name: clean.name || u.name } : u)
+      save('st_allUsers_cache_ts', 0)   // buộc tải lại danh sách người dùng ở lần sau
     }
+    setProfile(clean)
+    save('st_profile', clean)
   }, [uid])
 
   // ── Ghi nhật ký hoạt động (chỉ sinh viên) cho trang Quản lý lớp học ──
@@ -390,7 +456,7 @@ function App() {
 
   // ── Sync localStorage + Firestore (chỉ sau khi data load xong) ─
   // Dữ liệu CHUNG → sharedData/global (chỉ admin/teacher ghi, student chỉ đọc)
-  const canWriteShared = user?.role === 'admin' || user?.role === 'teacher'
+  const canWriteShared = user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'training'
 
   useEffect(() => {
     if (!dataReady.current) return
@@ -507,7 +573,13 @@ function App() {
         page === 'tools'      && h(Tools,      {}),
         page === 'news'       && h(News,       { news, setNews, role: user.role }),
         page === 'forms'      && h(Forms,      { forms, setForms, role: user.role }),
-        page === 'directory'  && (user.role === 'admin' || user.role === 'teacher') && h(Directory, { allUsers, subjects, role: user.role, user }),
+        page === 'calendar'   && h(MonthCalendar, { schedule: mySchedule, exams: myExams, subjects: mySubjects, onNavigate: navigate }),
+        page === 'tuition'    && ['student', 'finance', 'admin'].includes(user.role) && h(Tuition, { user, allUsers, subjects }),
+        page === 'grading'    && h(GradingPolicy, { user, subjects: mySubjects, quizzes: myQuizzes, homeworks }),
+        page === 'curriculum' && ['training', 'admin'].includes(user.role) && h(Curriculum, { subjects, setSubjects, schedule, exams, deadlines }),
+        page === 'graduation' && ['student', 'training', 'admin'].includes(user.role) && h(Graduation, { user, profile, subjects }),
+        page === 'theses'     && h(Theses, { user }),
+        page === 'directory'  && ['admin', 'teacher', 'training', 'finance'].includes(user.role) && h(Directory, { allUsers, subjects, role: user.role, user }),
         page === 'reports'    && (user.role === 'admin' || user.role === 'teacher') && h(Reports, { subjects: mySubjects, quizzes: myQuizzes, materials: myMaterials, homeworks, allUsers, user, fetchActivities }),
         page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities }),
       )

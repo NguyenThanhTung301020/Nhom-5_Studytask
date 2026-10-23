@@ -57,7 +57,8 @@ export default function Login({ onLogin }) {
           await setUserProfile(uid, profile)
         }
 
-        onLogin({ uid, email: cred.user.email, name: profile.name, role: profile.role })
+        // Truyền cả subjectIds: thiếu trường này thì app coi như 'xem tất cả môn' cho tới khi tải lại trang
+        onLogin({ uid, email: cred.user.email, name: profile.name, role: profile.role, subjectIds: profile.subjectIds !== undefined ? profile.subjectIds : null })
         return
       } catch (err) {
         // auth/wrong-password, auth/user-not-found …

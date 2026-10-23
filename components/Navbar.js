@@ -28,7 +28,9 @@ export default function Navbar({ user, profile, currentPage, onNavigate, onLogou
     return () => document.removeEventListener('mousedown', onDoc)
   }, [notifOpen])
   const toggleNotif = () => {
-    setNotifOpen(o => { const nv = !o; if (nv && onOpenNotifications) onOpenNotifications(); return nv })
+    // Gọi onOpenNotifications ngoài hàm cập nhật state (gọi bên trong sẽ cập nhật App giữa lúc render Navbar)
+    if (!notifOpen && onOpenNotifications) onOpenNotifications()
+    setNotifOpen(!notifOpen)
   }
 
   const initials  = (profile.name || user.name).split(' ').map((w) => w[0]).slice(-2).join('').toUpperCase()

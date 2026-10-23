@@ -3,32 +3,143 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
-      return request.auth != null &&
-        get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';
+    function signedIn() {
+      return request.auth != null;
     }
 
+    function myRole() {
+      return get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
+        myRole() == 'admin';
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Vai trò của người gọi nằm trong danh sách roles
+    function hasRole(roles) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/user/$(request.auth.uid)) &&
+        myRole() in roles;
+    }
+
+    // Giáo viên được phân công dạy môn subjectId (id môn là số, doc id là chuỗi)
+    function teachesSubject(subjectId) {
+      return hasRole(['teacher']) &&
+        get(/databases/$(database)/documents/user/$(request.auth.uid)).data.get('subjectIds', []).hasAny([int(subjectId)]);
+    }
+
+    // Hồ sơ tài khoản: { email, name, role, subjectIds, phone, expiresAt, createdAt }
     match /user/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read: if signedIn();
+
+      // V2 (tuần 2): người dùng chỉ tự tạo được hồ sơ sinh viên tối thiểu khi đăng nhập lần đầu,
+      // không tự đặt role/subjectIds/expiresAt; admin tạo được hồ sơ bất kỳ.
+      allow create: if isAdmin() || (
+        isOwner(uid) &&
+        request.resource.data.keys().hasOnly(['name', 'email', 'role']) &&
+        request.resource.data.role == 'student' &&
+        request.resource.data.email == request.auth.token.email
+      );
+
+      // V2 (tuần 2): chủ tài khoản chỉ được sửa name, phone; role, subjectIds, expiresAt... chỉ admin sửa.
+      allow update: if isAdmin() || (
+        isOwner(uid) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone']) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // V1 (vá tạm tuần 2): bản mật khẩu tách khỏi user/{uid}. Chỉ admin đọc;
+    // chủ tài khoản được ghi (đồng bộ khi tự đổi mật khẩu) nhưng không đọc được.
+    // Sẽ bỏ hẳn collection này ở tuần 3 (Cloud Functions + Admin SDK).
+    match /userSecrets/{uid} {
+      allow read, delete: if isAdmin();
+      allow create, update: if isAdmin() || (
+        isOwner(uid) &&
+        request.resource.data.keys().hasOnly(['password', 'updatedAt']) &&
+        request.resource.data.password is string
+      );
     }
 
     match /userData/{uid} {
       // Chủ sở hữu đọc/ghi; admin được phép (để xóa khi thanh lý tài khoản)
-      allow read, write: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read, write: if isOwner(uid) || isAdmin();
     }
 
     match /sharedData/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null &&
-        get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role in ['admin', 'teacher'];
+      allow read: if signedIn();
+      // Phòng Đào tạo được sửa danh sách môn học (thêm/bớt theo chương trình đào tạo) và lịch
+      allow write: if hasRole(['admin', 'teacher', 'training']);
+    }
+
+    // ── Quy chế tính điểm ──────────────────────────────────────────
+    // Tỉ lệ (trọng số) từng môn: chỉ Phòng Đào tạo / Admin cập nhật
+    match /gradingPolicies/{subjectId} {
+      allow read: if signedIn();
+      allow write: if hasRole(['admin', 'training']);
+    }
+    // Cột bài tập nào được tính điểm (còn lại tính vào chuyên cần): giáo viên dạy môn đó quyết định
+    match /gradingColumns/{subjectId} {
+      allow read: if signedIn();
+      allow write: if hasRole(['admin']) || teachesSubject(subjectId);
+    }
+
+    // ── Học phí ────────────────────────────────────────────────────
+    // Đơn giá tín chỉ, hạn nộp: Phòng Tài chính cấu hình, mọi người đọc
+    match /financeConfig/{docId} {
+      allow read: if signedIn();
+      allow write: if hasRole(['admin', 'finance']);
+    }
+    // Công nợ từng sinh viên: chỉ chính sinh viên và Phòng Tài chính / Admin xem
+    match /tuition/{uid} {
+      allow read: if isOwner(uid) || hasRole(['admin', 'finance']);
+      allow write: if hasRole(['admin', 'finance']);
+    }
+
+    // ── Chương trình đào tạo ───────────────────────────────────────
+    match /curriculum/{programId} {
+      allow read: if signedIn();
+      allow write: if hasRole(['admin', 'training']);
+    }
+
+    // ── Phiếu đăng ký xét tốt nghiệp ───────────────────────────────
+    match /graduationApps/{uid} {
+      allow read: if isOwner(uid) || hasRole(['admin', 'training']);
+      // Sinh viên tự nộp phiếu của mình, trạng thái ban đầu luôn là "submitted", không tự ghi kết quả duyệt
+      allow create: if hasRole(['student']) && isOwner(uid) &&
+        request.resource.data.status == 'submitted' &&
+        !request.resource.data.keys().hasAny(['review', 'reviewedBy', 'reviewedAt']);
+      // Sinh viên chỉ sửa khi phiếu đang chờ duyệt hoặc cần bổ sung, và nộp lại ở trạng thái "submitted"
+      allow update: if hasRole(['admin', 'training']) || (
+        isOwner(uid) &&
+        resource.data.status in ['submitted', 'needsFix'] &&
+        request.resource.data.status == 'submitted' &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['review', 'reviewedBy', 'reviewedAt'])
+      );
+      allow delete: if hasRole(['admin', 'training']) || (isOwner(uid) && resource.data.status == 'submitted');
+    }
+
+    // ── Công bố khóa luận ──────────────────────────────────────────
+    match /theses/{thesisId} {
+      allow read: if signedIn();
+      allow write: if hasRole(['admin', 'training']);
     }
 
     // Nhật ký hoạt động: ai cũng đọc được (admin/giáo viên tổng hợp);
     // mỗi người ghi nhật ký của chính mình, admin được ghi/xóa để quản lý.
+    // (V4 – giới hạn đọc và chặn tự ghi điểm: kế hoạch tuần 4–6)
     match /activities/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow read: if signedIn();
+      allow write: if isOwner(uid) || isAdmin();
     }
   }
 }
