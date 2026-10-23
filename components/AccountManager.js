@@ -1,7 +1,8 @@
 // components/AccountManager.js – Quản lý tài khoản người dùng (Admin)
 import { ROLES, DEMO_ACCOUNTS } from '../utils/constants.js'
 import { isFirebaseReady, getAllUsers, createAccountSecondary,
-         adminUpdateUser, deleteUserData, sendResetEmail, adminSetPassword } from '../utils/firebase.js'
+         adminUpdateUser, deleteUserData, sendResetEmail, adminSetPassword,
+         getAllSecrets, migrateLegacyPasswords } from '../utils/firebase.js'
 import ConfirmModal from './ConfirmModal.js'
 
 const { useState, useEffect, createElement: h } = window.React
@@ -122,7 +123,7 @@ function AccountModal({ item, subjects, onSave, onClose, saving }) {
             h('input', { type: 'date', className: 'form-control', value: form.expiresAt, onChange: e => setForm({ ...form, expiresAt: e.target.value }) }),
             h('div', { className: 'form-text' }, 'Để trống nếu tài khoản không giới hạn thời gian. Tài khoản quá hạn có thể xóa hàng loạt.')
           ),
-          form.role !== 'admin' && h('div', null,
+          !['admin', 'training', 'finance'].includes(form.role) && h('div', null,
             h('label', { className: 'form-label fw-semibold' },
               h('i', { className: 'bi bi-journal-check me-1' }),
               form.role === 'teacher' ? 'Môn đảm nhiệm' : 'Môn học đăng ký'
@@ -162,16 +163,39 @@ export default function AccountManager({ subjects = [] }) {
   const [reveal,   setReveal]   = useState({})     // { uid: true } – hiện mật khẩu
   const [pwUser,   setPwUser]   = useState(null)   // user đang đổi mật khẩu
   const [pwWorking,setPwWorking]= useState(false)
+  const [legacyCount, setLegacyCount] = useState(0)   // số hồ sơ còn trường password cũ trong user/{uid}
+  const [migrating,   setMigrating]   = useState(false)
   const fb = isFirebaseReady()
+
+  // Mật khẩu lấy từ userSecrets (chỉ admin đọc được); hồ sơ chưa chuyển thì tạm dùng trường password cũ
+  const loadUsers = async () => {
+    const [list, secrets] = await Promise.all([getAllUsers(), getAllSecrets()])
+    setLegacyCount(list.filter(u => typeof u.password === 'string' && u.password).length)
+    return list.map(u => ({ ...u, password: secrets[u.uid] ?? u.password }))
+  }
 
   useEffect(() => {
     (async () => {
       setLoading(true)
-      if (fb) setUsers(await getAllUsers())
+      if (fb) setUsers(await loadUsers())
       else    setUsers(DEMO_ACCOUNTS.map(u => ({ ...u, uid: u.id })))
       setLoading(false)
     })()
   }, [])
+
+  // V1 (vá tạm tuần 2): chuyển password cũ sang userSecrets rồi xóa khỏi user/{uid}
+  const handleMigrate = async () => {
+    setMigrating(true)
+    try {
+      const raw = await getAllUsers()
+      const n = await migrateLegacyPasswords(raw)
+      setUsers(await loadUsers())
+      alert(`Đã chuyển ${n} mật khẩu sang kho riêng (userSecrets). Các tài khoản khác không còn đọc được mật khẩu.`)
+    } catch (e) {
+      alert('Chuyển mật khẩu lỗi: ' + e.message)
+    }
+    setMigrating(false)
+  }
 
   const expiredUsers = users.filter(isExpired)
 
@@ -203,6 +227,7 @@ export default function AccountManager({ subjects = [] }) {
   }
 
   const handleConfirm = async () => {
+    if (confirm.type === 'migrate') { setConfirm(null); return handleMigrate() }
     if (confirm.type === 'one') await doDelete(confirm.uid)
     else for (const u of expiredUsers) await doDelete(u.uid)
     setConfirm(null)
@@ -249,6 +274,12 @@ export default function AccountManager({ subjects = [] }) {
         expiredUsers.length > 0 && h('span', { className: 'text-danger ms-2' }, h('i', { className: 'bi bi-clock-history me-1' }), `${expiredUsers.length} quá hạn`)
       ),
       h('div', { className: 'd-flex gap-2' },
+        fb && legacyCount > 0 && h('button', { className: 'btn btn-sm btn-warning', disabled: migrating,
+          title: 'Mật khẩu đang nằm trong hồ sơ công khai user/{uid} – mọi tài khoản đã đăng nhập đều đọc được (V1)',
+          onClick: () => setConfirm({ type: 'migrate', message: `Chuyển ${legacyCount} mật khẩu từ hồ sơ công khai sang kho riêng chỉ admin đọc được? Nên export Firestore để sao lưu trước khi chạy.` }) },
+          migrating ? h('span', { className: 'spinner-border spinner-border-sm me-1' }) : h('i', { className: 'bi bi-shield-exclamation me-1' }),
+          `Chuyển ${legacyCount} mật khẩu sang kho riêng`
+        ),
         expiredUsers.length > 0 && h('button', { className: 'btn btn-sm btn-outline-danger',
           onClick: () => setConfirm({ type: 'expired', message: `Xóa ${expiredUsers.length} tài khoản đã quá hạn? Toàn bộ dữ liệu Firestore của các tài khoản này sẽ bị xóa.` }) },
           h('i', { className: 'bi bi-trash me-1' }), `Xóa ${expiredUsers.length} tài khoản quá hạn`
@@ -319,13 +350,14 @@ export default function AccountManager({ subjects = [] }) {
 
     h('div', { className: 'alert alert-info small mt-3 mb-0 py-2' },
       h('i', { className: 'bi bi-info-circle me-1' }),
-      'Mật khẩu hiển thị/đổi được vì hệ thống lưu kèm bản mật khẩu trong Firestore (chỉ phù hợp đồ án với email ảo — ',
-      h('strong', null, 'không an toàn cho hệ thống thật'), '). Xóa tài khoản sẽ xóa dữ liệu Firestore; bản ghi trong ',
+      'Mật khẩu hiển thị/đổi được vì hệ thống còn lưu một bản trong collection userSecrets (chỉ admin đọc được). Đây là bản vá tạm — ',
+      h('strong', null, 'sẽ bỏ hẳn khi chuyển sang Cloud Functions'), '. Xóa tài khoản sẽ xóa dữ liệu Firestore; bản ghi trong ',
       h('strong', null, 'Authentication'), ' cần xóa thủ công ở Firebase Console.'
     ),
 
     modal && h(AccountModal, { item: modal === 'edit' ? editItem : null, subjects, saving, onSave: handleSave, onClose: () => setModal(null) }),
     pwUser && h(PasswordModal, { user: pwUser, working: pwWorking, onApply: handleSetPassword, onResetEmail: handleReset, onClose: () => setPwUser(null) }),
-    confirm && h(ConfirmModal, { message: confirm.message, onConfirm: handleConfirm, onClose: () => setConfirm(null) })
+    confirm && h(ConfirmModal, { message: confirm.message, onConfirm: handleConfirm, onClose: () => setConfirm(null),
+      ...(confirm.type === 'migrate' ? { confirmLabel: 'Chuyển', confirmClass: 'btn-warning' } : {}) })
   )
 }

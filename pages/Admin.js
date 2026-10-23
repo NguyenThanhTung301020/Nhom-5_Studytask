@@ -320,12 +320,10 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
           h('div', { className: 'd-flex align-items-center gap-3' },
             h('i', { className: 'bi bi-fire fs-2', style: { color: '#f6a623' } }),
             h('div', null,
-              h('div', { className: 'fw-bold mb-1' }, 'Cập nhật Firestore Rules để phân quyền Admin'),
+              h('div', { className: 'fw-bold mb-1' }, 'Firestore Rules được quản lý trong mã nguồn'),
               h('p', { className: 'text-muted small mb-0' },
-                'Thêm rule sau vào Firebase Console → Firestore → Rules để admin có thể gán môn học cho người dùng khác:'
-              ),
-              h('code', { className: 'small d-block mt-2 p-2 rounded', style: { background: 'rgba(0,0,0,.06)' } },
-                `allow write: if request.auth.uid == uid || get(/databases/$(database)/documents/user/$(request.auth.uid)).data.role == 'admin';`
+                'Rules nằm ở tệp firestore.rules trong repo và có kiểm thử tự động (npm run test:rules). ',
+                'Người dùng chỉ tự sửa được tên và số điện thoại; vai trò, môn học, hạn tài khoản chỉ admin sửa.'
               )
             )
           )
