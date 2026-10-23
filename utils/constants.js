@@ -4,6 +4,8 @@ export const DEMO_ACCOUNTS = [
   { id: 'u1', email: 'admin@studytask.vn',   password: 'admin123',   name: 'Quản trị viên',     role: 'admin',   subjectIds: null      }, // null = xem tất cả
   { id: 'u2', email: 'teacher@studytask.vn', password: 'teacher123', name: 'TS. Nguyễn Văn An', role: 'teacher', subjectIds: [1, 2]    }, // dạy Toán + Vật lý
   { id: 'u3', email: 'student@studytask.vn', password: 'student123', name: 'Trần Minh Khoa',    role: 'student', subjectIds: [1, 3, 4] }, // học Toán + Lập trình + Tiếng Anh
+  { id: 'u4', email: 'daotao@studytask.vn',   password: 'daotao123',   name: 'Phòng Đào tạo',   role: 'training' },
+  { id: 'u5', email: 'taichinh@studytask.vn', password: 'taichinh123', name: 'Phòng Tài chính', role: 'finance' },
 ]
 // ✅ Email domain: studytask.vn (khớp với Firebase Auth)
 export const DEMO_USER = DEMO_ACCOUNTS[2]
@@ -12,12 +14,18 @@ export const ROLES = {
   admin:   { label: 'Quản trị viên', icon: 'shield-fill-check',  color: '#e74a3b', badge: 'danger'  },
   teacher: { label: 'Giáo viên',     icon: 'person-workspace',   color: '#4e73df', badge: 'primary' },
   student: { label: 'Sinh viên',     icon: 'person-circle',      color: '#1cc88a', badge: 'success' },
+  training:{ label: 'Phòng Đào tạo', icon: 'building-gear',      color: '#6f42c1', badge: 'primary' },
+  finance: { label: 'Phòng Tài chính', icon: 'cash-coin',        color: '#e67e22', badge: 'warning' },
 }
+// Vai trò cán bộ phòng ban: không gán môn học, xem toàn bộ dữ liệu chung
+export const STAFF_ROLES = ['training', 'finance']
 
 export const PERMS = {
   admin:   { canEdit: true,  canDelete: true,  canManageUsers: true,  canGrade: true,  canManageLibrary: true  },
   teacher: { canEdit: true,  canDelete: true,  canManageUsers: false, canGrade: true,  canManageLibrary: false },
   student: { canEdit: false, canDelete: false, canManageUsers: false, canGrade: false, canManageLibrary: false },
+  training:{ canEdit: true,  canDelete: true,  canManageUsers: false, canGrade: false, canManageLibrary: false },
+  finance: { canEdit: false, canDelete: false, canManageUsers: false, canGrade: false, canManageLibrary: false },
 }
 
 export const relDate = (offset) => {
@@ -27,7 +35,7 @@ export const relDate = (offset) => {
 
 export const SAMPLE_SUBJECTS = [
   { id: 1, name: 'Toán cao cấp',     code: 'MTH101', color: '#4e73df', teachers: ['TS. Nguyễn Văn An'],                        credits: 3 },
-  { id: 2, name: 'Vật lý đại cương', code: 'PHY101', color: '#1cc88a', teachers: ['PGS. Trần Thị Bích', 'TS. Nguyễn Văn An'], credits: 4 },
+  { id: 2, name: 'Vật lý đại cương', code: 'PHY101', color: '#1cc88a', teachers: ['PGS. Trần Thị Bích', 'TS. Nguyễn Văn An'], credits: 4, practiceCredits: 1 },
   { id: 3, name: 'Lập trình cơ bản', code: 'CS101',  color: '#36b9cc', teachers: ['ThS. Lê Minh Châu'],                        credits: 3 },
   { id: 4, name: 'Tiếng Anh',         code: 'ENG101', color: '#f6c23e', teachers: ['ThS. Phạm Thị Dung'],                       credits: 2 },
   { id: 5, name: 'Cơ sở dữ liệu',    code: 'DB201',  color: '#e74a3b', teachers: ['TS. Hoàng Văn Hải'],                        credits: 3 },
@@ -73,6 +81,11 @@ export const DEFAULT_PROFILE = {
   gpa:       '3.20',
   email:     DEMO_USER.email,
   phone:     '0901234567',
+}
+
+// Hồ sơ trống cho sinh viên thật (tài khoản Firebase) – DEFAULT_PROFILE ở trên chỉ dùng cho chế độ demo
+export const BLANK_STUDENT_PROFILE = {
+  name: '', studentId: '', faculty: '', major: '', className: '', semester: '', gpa: '', email: '', phone: '',
 }
 
 export const DEFAULT_TEACHER_PROFILE = {
@@ -236,26 +249,33 @@ export const SAMPLE_EXAMS = [
 ]
 
 export const NAV_ITEMS = [
-  { key: 'dashboard',  icon: 'speedometer2',        label: 'Dashboard', roles: ['admin','teacher','student'] },
-  { key: 'subjects',   icon: 'book',                label: 'Môn học',   roles: ['admin','teacher','student'] },
-  { key: 'schedule',   icon: 'calendar-week',       label: 'Lịch học & Thi', roles: ['admin','teacher','student'] },
+  { key: 'dashboard',  icon: 'speedometer2',        label: 'Dashboard', roles: ['admin','teacher','student','training','finance'] },
+  { key: 'subjects',   icon: 'book',                label: 'Môn học',   roles: ['admin','teacher','student','training'] },
+  { key: 'schedule',   icon: 'calendar-week',       label: 'Lịch học & Thi', roles: ['admin','teacher','student','training'] },
+  { key: 'calendar',   icon: 'calendar3',           label: 'Lịch theo tháng', roles: ['admin','teacher','student','training'] },
   { key: 'deadlines',  icon: 'clock',               label: 'Deadline',  roles: ['admin','teacher','student'] },
   { key: 'statistics', icon: 'bar-chart',           label: 'Thống kê',  roles: ['admin','teacher','student'] },
   { key: 'library',    icon: 'journal-bookmark',    label: 'Thư viện',  roles: ['admin','teacher','student'] },
   { key: 'quiz',        icon: 'patch-question',      label: 'Trắc nghiệm', roles: ['admin','teacher','student'] },
   { key: 'tools',      icon: 'tools',               label: 'Tiện ích',    roles: ['admin','teacher','student'] },
-  { key: 'news',       icon: 'newspaper',           label: 'Tin tức',     roles: ['admin','teacher','student'] },
-  { key: 'forms',      icon: 'file-earmark-ruled',  label: 'Biểu mẫu',    roles: ['admin','teacher','student'] },
-  { key: 'directory',  icon: 'person-vcard',        label: 'Hồ sơ SV-GV', roles: ['admin','teacher'] },
+  { key: 'news',       icon: 'newspaper',           label: 'Tin tức',     roles: ['admin','teacher','student','training','finance'] },
+  { key: 'forms',      icon: 'file-earmark-ruled',  label: 'Biểu mẫu',    roles: ['admin','teacher','student','training','finance'] },
+  { key: 'theses',     icon: 'journal-richtext',    label: 'Công bố khóa luận', roles: ['admin','teacher','student','training','finance'] },
+  { key: 'graduation', icon: 'mortarboard',         label: 'Xét tốt nghiệp', roles: ['admin','student','training'] },
+  { key: 'tuition',    icon: 'cash-coin',           label: 'Học phí',     roles: ['admin','student','finance'] },
+  { key: 'grading',    icon: 'percent',             label: 'Quy chế điểm', roles: ['admin','teacher','student','training'] },
+  { key: 'curriculum', icon: 'diagram-3',           label: 'Chương trình ĐT', roles: ['admin','training'] },
+  { key: 'directory',  icon: 'person-vcard',        label: 'Hồ sơ SV-GV', roles: ['admin','teacher','training','finance'] },
   { key: 'reports',    icon: 'clipboard-data',      label: 'Quản lý lớp học', roles: ['admin','teacher'] },
-  { key: 'contact',    icon: 'envelope',            label: 'Liên hệ',     roles: ['admin','teacher','student'] },
+  { key: 'contact',    icon: 'envelope',            label: 'Liên hệ',     roles: ['admin','teacher','student','training','finance'] },
   { key: 'admin',      icon: 'gear-wide-connected', label: 'Quản trị',    roles: ['admin'] },
 ]
 
 // Nhóm điều hướng cho sidebar dọc – mỗi nhóm có thể mở/thu độc lập
 export const NAV_GROUPS = [
-  { id: 'hoctap',    title: 'Học tập',           icon: 'mortarboard-fill', keys: ['dashboard', 'subjects', 'schedule', 'deadlines', 'quiz'] },
+  { id: 'hoctap',    title: 'Học tập',           icon: 'mortarboard-fill', keys: ['dashboard', 'subjects', 'schedule', 'calendar', 'deadlines', 'quiz'] },
   { id: 'tainguyen', title: 'Theo dõi & Tài nguyên', icon: 'collection-fill', keys: ['statistics', 'library', 'tools'] },
+  { id: 'daotao',    title: 'Đào tạo & Tài chính', icon: 'building',       keys: ['grading', 'curriculum', 'tuition', 'graduation', 'theses'] },
   { id: 'nhatruong', title: 'Nhà trường',        icon: 'bank',             keys: ['news', 'forms'] },
   { id: 'hethong',   title: 'Quản lý & Hệ thống', icon: 'grid-1x2-fill',   keys: ['directory', 'reports', 'contact', 'admin'] },
 ]
@@ -328,4 +348,39 @@ export const SAMPLE_ACTIVITY = [
     { type: 'material', subjectId: 4, refId: 8, refTitle: 'Cambridge Grammar in Use',    at: relDate(-3) },
     { type: 'homework', subjectId: 4, refId: 7, refTitle: 'Bài tập ngữ pháp',            at: relDate(-2) },
   ]},
+]
+
+// ── Chương trình đào tạo mẫu (để Phòng Đào tạo khởi tạo nhanh) ──
+export const SAMPLE_CURRICULUM = {
+  name: 'Kỹ thuật phần mềm – khóa 2024', major: 'Kỹ thuật phần mềm', cohort: '2024', totalCredits: 20,
+  modules: [
+    { id: 'dc', name: 'Kiến thức giáo dục đại cương', kind: 'required', courses: [
+      { code: 'MTH101', name: 'Toán cao cấp', credits: 3 },
+      { code: 'PHY101', name: 'Vật lý đại cương', credits: 4 },
+      { code: 'ENG101', name: 'Tiếng Anh', credits: 2 },
+    ]},
+    { id: 'cs', name: 'Kiến thức cơ sở ngành', kind: 'required', courses: [
+      { code: 'CS101', name: 'Lập trình cơ bản', credits: 3 },
+      { code: 'DB201', name: 'Cơ sở dữ liệu', credits: 3 },
+      { code: 'DS201', name: 'Cấu trúc dữ liệu và giải thuật', credits: 3 },
+    ]},
+    { id: 'tc', name: 'Tự chọn chuyên ngành', kind: 'elective', minCredits: 2, courses: [
+      { code: 'WEB301', name: 'Lập trình Web', credits: 3 },
+      { code: 'MOB301', name: 'Lập trình di động', credits: 3 },
+    ]},
+  ],
+}
+
+// ── Xét tốt nghiệp ──
+export const GRAD_STATUS = {
+  submitted: { label: 'Đã nộp – chờ duyệt', color: '#4e73df', icon: 'send-check' },
+  needsFix:  { label: 'Cần bổ sung',         color: '#f6c23e', icon: 'exclamation-circle' },
+  approved:  { label: 'Đủ điều kiện',        color: '#1cc88a', icon: 'check-circle-fill' },
+  rejected:  { label: 'Không đủ điều kiện',  color: '#e74a3b', icon: 'x-circle-fill' },
+}
+export const GRAD_CERTS = [
+  { key: 'english', label: 'Chuẩn đầu ra ngoại ngữ' },
+  { key: 'it',      label: 'Chuẩn đầu ra tin học' },
+  { key: 'gdqp',    label: 'Chứng chỉ Giáo dục quốc phòng – an ninh' },
+  { key: 'gdtc',    label: 'Chứng chỉ Giáo dục thể chất' },
 ]

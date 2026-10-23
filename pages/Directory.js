@@ -12,10 +12,10 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
 
   const subName = (id) => (subjects.find(s => s.id === id) || {}).name
   const subColor = (id) => (subjects.find(s => s.id === id) || {}).color || '#858796'
-  const isAdmin = role === 'admin'
+  const isAdmin = role === 'admin' || role === 'training' || role === 'finance'   // phòng ban xem toàn bộ
   const mySubjectIds = new Set(user?.subjectIds || [])
 
-  // Giáo viên chỉ xem SV trong môn mình phụ trách; admin xem tất cả
+  // Giáo viên chỉ xem SV trong môn mình phụ trách; admin và phòng ban xem tất cả
   const inScope = (u) => {
     if (isAdmin) return true
     if (!Array.isArray(u.subjectIds)) return false

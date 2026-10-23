@@ -1,5 +1,5 @@
 // pages/Profile.js – Hồ sơ người dùng (role-aware)
-import { DEFAULT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, ROLES } from '../utils/constants.js'
+import { DEFAULT_PROFILE, BLANK_STUDENT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, ROLES } from '../utils/constants.js'
 import { isFirebaseReady, changeOwnPassword, sendEmailVerify, isEmailVerified } from '../utils/firebase.js'
 
 const { useState, useEffect, createElement: h } = window.React
@@ -124,9 +124,27 @@ const ADMIN_FIELDS = [
 ]
 
 const ROLE_CONFIG = {
-  student: { fields: STUDENT_FIELDS, title: 'Hồ sơ sinh viên',   icon: 'person-circle', default: DEFAULT_PROFILE },
+  student: { fields: STUDENT_FIELDS, title: 'Hồ sơ sinh viên',   icon: 'person-circle', default: BLANK_STUDENT_PROFILE },
   teacher: { fields: TEACHER_FIELDS, title: 'Hồ sơ giáo viên',   icon: 'person-workspace', default: DEFAULT_TEACHER_PROFILE },
   admin:   { fields: ADMIN_FIELDS,   title: 'Hồ sơ quản trị',    icon: 'shield-fill-check', default: DEFAULT_ADMIN_PROFILE },
+  training:{ fields: ADMIN_FIELDS,   title: 'Hồ sơ Phòng Đào tạo',   icon: 'building-gear', default: { ...DEFAULT_ADMIN_PROFILE, department: 'Phòng Đào tạo' } },
+  finance: { fields: ADMIN_FIELDS,   title: 'Hồ sơ Phòng Tài chính', icon: 'cash-coin',     default: { ...DEFAULT_ADMIN_PROFILE, department: 'Phòng Tài chính' } },
+}
+
+// ─── Kiểm tra dữ liệu trước khi lưu → { field: 'thông báo lỗi' } ──
+export function validateProfile(form) {
+  const err = {}
+  const name = (form.name || '').trim()
+  if (!name) err.name = 'Họ và tên không được để trống.'
+  else if (name.length > 100) err.name = 'Họ và tên tối đa 100 ký tự.'
+  if (form.phone && !/^(\+84|0)\d{9,10}$/.test(String(form.phone).replace(/[\s.-]/g, '')))
+    err.phone = 'Số điện thoại không hợp lệ (VD: 0901234567).'
+  if (form.gpa !== undefined && String(form.gpa).trim() !== '') {
+    const g = Number(String(form.gpa).replace(',', '.'))
+    if (isNaN(g) || g < 0 || g > 4) err.gpa = 'GPA phải là số từ 0 đến 4.'
+  }
+  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) err.email = 'Email không hợp lệ.'
+  return err
 }
 
 // ─── GPA badge ──────────────────────────────────────────────────
@@ -207,31 +225,41 @@ function StatsPanel({ role, subjects, deadlines, homeworks }) {
 // ─── Main Profile component ──────────────────────────────────────
 export default function Profile({ profile, setProfile, onSave, subjects, deadlines, homeworks, user }) {
   const role     = user?.role || 'student'
-  const cfg      = ROLE_CONFIG[role] || ROLE_CONFIG.student
+  const cfg0     = ROLE_CONFIG[role] || ROLE_CONFIG.student
+  // Chế độ demo (không có uid) giữ hồ sơ mẫu; tài khoản thật dùng hồ sơ trống theo vai trò
+  const cfg      = (role === 'student' && !user?.uid) ? { ...cfg0, default: DEFAULT_PROFILE } : cfg0
   const roleInfo = ROLES[role] || ROLES.student
 
   const [editing, setEditing] = useState(false)
   const [form,    setForm]    = useState({ ...cfg.default, ...profile })
-  const [saveMsg, setSaveMsg] = useState(null)
+  const [saveMsg, setSaveMsg] = useState(null)   // null | 'saving' | 'ok' | 'error'
+  const [saveErr, setSaveErr] = useState('')
+  const [errors,  setErrors]  = useState({})
 
   // Sync form khi profile thay đổi từ Firebase
-  useEffect(() => { setForm(prev => ({ ...cfg.default, ...profile })) }, [profile])
+  // Chỉ đồng bộ lại form khi KHÔNG ở chế độ sửa (tránh xóa mất nội dung người dùng đang nhập)
+  useEffect(() => { if (!editing) setForm({ ...cfg.default, ...profile }) }, [profile, editing])
 
   const handleSave = async () => {
-    setSaveMsg('saving')
+    const err = validateProfile(form)
+    setErrors(err)
+    if (Object.keys(err).length) return
+    setSaveMsg('saving'); setSaveErr('')
     try {
       if (onSave) await onSave(form)
       else        setProfile(form)
       setEditing(false)
       setSaveMsg('ok')
-      setTimeout(() => setSaveMsg(null), 3000)
+      setTimeout(() => setSaveMsg(m => m === 'ok' ? null : m), 4000)
     } catch (e) {
       setSaveMsg('error')
-      setTimeout(() => setSaveMsg(null), 4000)
+      setSaveErr(e?.code === 'permission-denied' ? 'Không có quyền cập nhật (Firestore Rules).' : (e?.message || ''))
     }
   }
 
-  const handleCancel = () => { setForm({ ...cfg.default, ...profile }); setEditing(false); setSaveMsg(null) }
+  const handleCancel = () => { setForm({ ...cfg.default, ...profile }); setEditing(false); setSaveMsg(null); setSaveErr(''); setErrors({}) }
+
+  const fieldError = (key) => errors[key] && h('div', { className: 'small text-danger mt-1' }, errors[key])
 
   return h('div', { className: 'container-fluid py-4' },
 
@@ -241,8 +269,12 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
         h('i', { className: `bi bi-${cfg.icon} me-2`, style: { color: roleInfo.color } }),
         cfg.title
       ),
-      !editing && h('button', { className: 'btn btn-primary btn-sm', onClick: () => setEditing(true) },
-        h('i', { className: 'bi bi-pencil me-1' }), 'Chỉnh sửa')
+      h('div', { className: 'd-flex align-items-center gap-2' },
+        saveMsg === 'ok' && h('span', { className: 'text-success small', role: 'status' },
+          h('i', { className: 'bi bi-check-circle-fill me-1' }), user?.uid ? 'Đã lưu lên Firebase' : 'Đã lưu trên máy này'),
+        !editing && h('button', { className: 'btn btn-primary btn-sm', onClick: () => { setSaveMsg(null); setEditing(true) } },
+          h('i', { className: 'bi bi-pencil me-1' }), 'Chỉnh sửa')
+      )
     ),
 
     h('div', { className: 'row g-4' },
@@ -254,9 +286,11 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
 
           // Tên – editable
           editing
-            ? h('input', { className: 'form-control text-center fw-bold mb-2',
-                value: form.name, placeholder: 'Họ và tên',
-                onChange: e => setForm({ ...form, name: e.target.value }) })
+            ? h('div', { className: 'mb-2' },
+                h('input', { className: `form-control text-center fw-bold${errors.name ? ' is-invalid' : ''}`,
+                  value: form.name || '', placeholder: 'Họ và tên', maxLength: 100,
+                  onChange: e => setForm({ ...form, name: e.target.value }) }),
+                fieldError('name'))
             : h('h5', { className: 'fw-bold mb-1' }, profile.name || user?.name),
 
           // Subtitle theo role
@@ -264,7 +298,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
             h('i', { className: 'bi bi-mortarboard me-1' }), profile.major || 'Sinh viên'),
           role === 'teacher' && h('p', { className: 'text-muted small mb-1' },
             h('i', { className: 'bi bi-person-workspace me-1' }), profile.position || 'Giáo viên'),
-          role === 'admin' && h('p', { className: 'text-muted small mb-1' },
+          ['admin', 'training', 'finance'].includes(role) && h('p', { className: 'text-muted small mb-1' },
             h('i', { className: 'bi bi-shield-fill-check me-1' }), profile.department || 'Quản trị viên'),
 
           role === 'student' && profile.semester &&
@@ -328,8 +362,10 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
                           h('span', { className: 'badge flex-shrink-0', style: { backgroundColor: 'rgba(255,160,0,.15)', color: '#f6a623', fontSize: '0.7rem' } },
                             h('i', { className: 'bi bi-lock-fill me-1' }), 'Firebase')
                         )
-                      : h('input', { type: f.type, className: 'form-control', value: form[f.key] || '',
-                          placeholder: f.placeholder, onChange: e => setForm({ ...form, [f.key]: e.target.value }) })
+                      : h(window.React.Fragment, null,
+                          h('input', { type: f.type, className: `form-control${errors[f.key] ? ' is-invalid' : ''}`, value: form[f.key] || '',
+                            placeholder: f.placeholder, onChange: e => setForm({ ...form, [f.key]: e.target.value }) }),
+                          fieldError(f.key))
                     : h('div', { className: 'profile-field-value' },
                         f.key === 'gpa'
                           ? h(window.React.Fragment, null,
@@ -343,10 +379,10 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
           ),
 
           editing && h('div', { className: 'd-flex gap-2 mt-4 justify-content-end border-top pt-3 align-items-center flex-wrap' },
-            saveMsg === 'ok'    && h('span', { className: 'text-success small me-auto' },
-              h('i', { className: 'bi bi-check-circle-fill me-1' }), 'Đã lưu lên Firebase'),
-            saveMsg === 'error' && h('span', { className: 'text-danger small me-auto' },
-              h('i', { className: 'bi bi-x-circle-fill me-1' }), 'Lưu thất bại – thử lại'),
+            Object.keys(errors).length > 0 && h('span', { className: 'text-danger small me-auto' },
+              h('i', { className: 'bi bi-exclamation-circle me-1' }), 'Vui lòng sửa các trường được đánh dấu.'),
+            saveMsg === 'error' && h('span', { className: 'text-danger small me-auto', role: 'alert' },
+              h('i', { className: 'bi bi-x-circle-fill me-1' }), 'Lưu thất bại – thử lại', saveErr && `: ${saveErr}`),
             h('button', { className: 'btn btn-secondary', onClick: handleCancel }, 'Hủy'),
             h('button', { className: 'btn btn-primary', disabled: saveMsg === 'saving', onClick: handleSave },
               saveMsg === 'saving'
