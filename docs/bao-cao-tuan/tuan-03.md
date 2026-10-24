@@ -5,7 +5,7 @@
 - Nhóm: Nguyễn Thanh Tùng (24TX810027) · Trần Đức Tùng (24TX810026) · Trương Thanh Vui (24TX810021)
 - Thời gian: 19/10 – 24/10/2026
 - Repo GitHub (public): https://github.com/NguyenThanhTung301020/Nhom-5_Studytask
-- Toàn bộ link minh chứng: xem mục 8. Các mã [C4], [PR1], [D5]... trong bài trỏ tới mục này.
+- Toàn bộ link minh chứng: xem mục 8. Các mã [C4], [PR1], [D9]... trong bài trỏ tới mục này.
 
 1. Trọng tâm tuần và tình trạng commit
 
