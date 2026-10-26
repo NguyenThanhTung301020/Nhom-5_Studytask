@@ -11,7 +11,8 @@ function ClassModal({ subjects, item, defaultTeacher, onSave, onClose }) {
   const [form, setForm] = useState(item
     ? { description: '', link: '', ...item }
     : { subjectId: subjects[0]?.id || '', day: 2, start: '07:00', end: '09:00', room: '', teacher: '', format: 'offline', description: '', link: '' })
-  const valid = form.subjectId && form.start && form.end
+  const dateErr = form.startDate && form.endDate && form.endDate < form.startDate
+  const valid = form.subjectId && form.start && form.end && !dateErr
   const isOnline = form.format === 'online' || form.format === 'hybrid'
 
   const pickSubject = (sid) => setForm({ ...form, subjectId: Number(sid), teacher: form.teacher || defaultTeacher(Number(sid)) })
@@ -48,6 +49,18 @@ function ClassModal({ subjects, item, defaultTeacher, onSave, onClose }) {
               h('label', { className: 'form-label fw-semibold' }, 'Giờ kết thúc ', h('span', { className: 'text-danger' }, '*')),
               h('input', { type: 'time', className: 'form-control', value: form.end, onChange: e => setForm({ ...form, end: e.target.value }) })
             )
+          ),
+          h('div', { className: 'row g-3 mb-3' },
+            h('div', { className: 'col-6' },
+              h('label', { className: 'form-label fw-semibold' }, 'Học từ ngày'),
+              h('input', { type: 'date', className: 'form-control', value: form.startDate || '', onChange: e => setForm({ ...form, startDate: e.target.value }) })
+            ),
+            h('div', { className: 'col-6' },
+              h('label', { className: 'form-label fw-semibold' }, 'Đến ngày'),
+              h('input', { type: 'date', className: `form-control${dateErr ? ' is-invalid' : ''}`, value: form.endDate || '', onChange: e => setForm({ ...form, endDate: e.target.value }) })
+            ),
+            h('div', { className: 'col-12 form-text mt-1' }, dateErr ? h('span', { className: 'text-danger' }, 'Ngày kết thúc phải sau ngày bắt đầu.')
+              : 'Để trống nếu tiết học lặp lại mọi tuần. Lịch theo tháng chỉ hiện tiết học trong khoảng ngày này.')
           ),
           h('div', { className: 'row g-3 mb-3' },
             h('div', { className: 'col-6' },
@@ -165,7 +178,7 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
   const [editExam, setEditExam] = useState(null)
   const [confirm,  setConfirm]  = useState(null)    // { kind:'cls'|'exam', id }
 
-  const isTeacher = role === 'admin' || role === 'teacher'
+  const isTeacher = role === 'admin' || role === 'teacher' || role === 'training'   // Phòng Đào tạo xếp lịch
   const subjectOf = (id) => subjects.find(s => s.id === id) || {}
   const defaultTeacher = (sid) => (subjectTeacherMap[sid]?.[0]?.name) || subjectOf(sid).teacher || ''
 
@@ -203,7 +216,9 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
           h('span', null, h('i', { className: 'bi bi-clock me-1' }), `${c.start} – ${c.end}`),
           c.room && h('span', null, h('i', { className: 'bi bi-geo-alt me-1' }), c.room),
           c.teacher && h('span', null, h('i', { className: 'bi bi-person me-1' }), c.teacher),
-          h('span', { style: { color: cf.color } }, h('i', { className: `bi bi-${cf.icon} me-1` }), cf.label)
+          h('span', { style: { color: cf.color } }, h('i', { className: `bi bi-${cf.icon} me-1` }), cf.label),
+          (c.startDate || c.endDate) && h('span', null, h('i', { className: 'bi bi-calendar-range me-1' }),
+            `${c.startDate ? fmtDate(c.startDate) : '…'} – ${c.endDate ? fmtDate(c.endDate) : '…'}`)
         ),
         c.description && h('div', { className: 'small text-muted mt-1' }, h('i', { className: 'bi bi-card-text me-1' }), c.description),
         c.link && h('a', { href: c.link, target: '_blank', rel: 'noopener noreferrer', className: 'btn btn-sm btn-success mt-2' },

@@ -1033,3 +1033,63 @@ body {
   .settings-drawer { width: 280px; }
   .fab-settings { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 1.1rem; }
 }
+
+/* ═══ Vai trò phòng ban ═══ */
+.role-badge-training { background: rgba(111,66,193,.12); color: #6f42c1; }
+.role-badge-finance  { background: rgba(230,126,34,.12); color: #e67e22; }
+
+/* ═══ Lịch theo tháng ═══ */
+.mcal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.mcal-head { border-bottom: 1px solid var(--border); }
+.mcal-head-cell { padding: 8px 6px; font-size: .75rem; font-weight: 700; text-align: center; color: var(--bs-secondary-color, #858796); }
+.mcal-cell {
+  min-height: 104px; padding: 4px 5px; text-align: left; vertical-align: top;
+  background: transparent; border: 0; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 2px; color: inherit; cursor: pointer; min-width: 0;
+}
+.mcal-cell:nth-child(7n) { border-right: 0; }
+.mcal-cell:hover { background: rgba(78,115,223,.05); }
+.mcal-cell:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.mcal-out { opacity: .4; }
+.mcal-date { font-size: .8rem; font-weight: 600; }
+.mcal-today .mcal-date {
+  background: var(--primary); color: #fff; border-radius: 50%; width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.mcal-sel { background: rgba(78,115,223,.10) !important; box-shadow: inset 0 0 0 2px var(--primary); }
+.mcal-items { width: 100%; min-width: 0; }
+.mcal-pill {
+  font-size: .68rem; line-height: 1.25; padding: 2px 4px; margin-bottom: 2px; border-radius: 4px;
+  border-left: 3px solid; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mcal-pill-exam { font-weight: 600; }
+.mcal-pill-time { font-variant-numeric: tabular-nums; opacity: .8; }
+.mcal-more { font-size: .66rem; color: var(--bs-secondary-color, #858796); padding-left: 4px; }
+.mcal-count {
+  margin-top: auto; align-self: center; font-size: .65rem; font-weight: 700;
+  background: var(--primary); color: #fff; border-radius: 10px; padding: 0 6px;
+}
+.mcal-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: baseline; flex-shrink: 0; }
+@media (max-width: 767.98px) {
+  .mcal-cell { min-height: 54px; align-items: center; }
+  .mcal-date { font-size: .75rem; }
+}
+
+/* ═══ Quy chế điểm ═══ */
+.gp-bar { display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: var(--border); }
+.gp-bar-seg { color: #fff; font-size: .72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; min-width: 28px; }
+
+/* ═══ Khóa luận ═══ */
+.thesis-card { cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.thesis-card:hover, .thesis-card:focus-visible { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.1) !important; outline: none; }
+.thesis-title, .thesis-abstract { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.thesis-title { -webkit-line-clamp: 3; }
+.thesis-abstract { -webkit-line-clamp: 3; }
+
+/* ═══ In phiếu xét tốt nghiệp ═══ */
+@media print {
+  .app-sidebar, .navbar, .fab-settings, .btn, .alert, .col-lg-4 { display: none !important; }
+  .app-main { margin: 0 !important; padding: 0 !important; }
+  .grad-form { box-shadow: none !important; }
+  .col-lg-8 { width: 100% !important; }
+}
