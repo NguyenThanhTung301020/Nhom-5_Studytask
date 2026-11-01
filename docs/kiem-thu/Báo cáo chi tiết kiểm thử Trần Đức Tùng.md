@@ -29,8 +29,9 @@ Tệp này mô tả đầy đủ cấu hình, từng lượt chạy và từng n
 |---|---|---|---|---|
 | `npm run test:logic` | 42 | 42 | 0 | 0 |
 | `npm run test:rules` | 46 | 46 | 0 | 0 |
+| `npm run test:rules:deep` (kiểm thử mở rộng)| 69 | 69 | 0 | 0 |
 | Mục 4 của [D9] (thử tay trên trình duyệt) | 8 | | | 0 |
-| **Tổng** | **96** | **96** | **0** | **0** |
+| **Tổng** | **165** | **165** | **0** | **0** |
 
 Hai lần chạy kiểm thử tự động cho cùng kết quả:
 
@@ -38,6 +39,7 @@ Hai lần chạy kiểm thử tự động cho cùng kết quả:
 |---|---|---|---|
 | `npm run test:logic` | 42/42 đạt | 42/42 đạt (11:30:01) | 0,14 giây |
 | `npm run test:rules` | 46/46 đạt | 46/46 đạt (11:30:42 – 11:30:55) | 5,6 giây kiểm thử; 13 giây tính cả bật/tắt Emulator |
+| `npm run test:rule:deep` | 69/69 đạt (18:55) | 69/69 đạt (18:55) | 24,4 giây kiểm thử; khoảng 30 giây tính cả bật và tắt Emulator |
 
 ## 3. `npm run test:logic` – 42/42 đạt
 
@@ -75,8 +77,39 @@ Cách thiếp lập và chạy chương trình của máy:
 - Lúc chạy, máy đang mở sẵn Emulator (`npm run emulators`, cổng 8080) để thử tay. File kiểm thử gọi `clearFirestore()`, nên chạy trên cổng 8080 sẽ xóa dữ liệu seed đang dùng. Vì vậy đã chạy cùng lệnh trên một Emulator riêng ở cổng 8180, dùng bản sao tạm của `firebase.json` và `tests/firestore.rules.test.mjs` chỉ đổi số cổng 8080 → 8180, chạy xong xóa bản sao. Rules và nội dung kiểm thử giữ nguyên.
 - Trên Windows, sau khi `emulators:exec` kết thúc, tiến trình Java của Firestore Emulator còn sót lại và giữ cổng. Lần chạy thứ hai báo "port taken" cho tới khi tắt tiến trình đó. Nếu gặp lỗi này, tìm tiến trình đang giữ cổng (`Get-NetTCPConnection -LocalPort 8080`) rồi tắt, hoặc mở lại máy.
 - Trên máy không mở Emulator khác thì chạy thẳng `npm run test:rules`.
+  
+## 5. npm run test:rules:deep (kiểm thử mở rộng)
 
-## 5. Thử các bước ở mục 4 của [D9]
+Tệp `tests/firestore.rules.deep.test.mjs` (do Trương Thanh Vui thêm ở PR #15) kiểm thử Security sâu hơn `test:rules`: ma trận quyền theo từng vai trò, các ca biên và các rủi ro còn tồn tại. Lúc chạy, máy không mở Emulator nào khác nên chạy thẳng `npm run test:rulers:deep` trên cổng 8080, không cần bản so cônng.
+
+| Nhóm kiểm thử | số ca | Đạt | Không đạt|
+|---|---|---|---|
+| Mặc định từ chối | 3 | 3 |0 |
+| Vai trò lấy từ hồ sơ, không tin token / thông tin tai khoản mất hồ sơ | 5 | 5 | 0 |
+| `user/{uid}` - ca biên | 11 | 11 | 0 |
+| `useSecrets` - ma trận | 4 | 4| 0 |
+| `userData` / `sharedData` -ma trận | 6 | 6 | 0 |
+| Quy đổi điểm - ma trận | 9 | 9 | 0 |
+| Học phí = ma trận | 6 | 6 | 0 |
+| Chương trình đào tạo | 6 | 6 | 0 |
+| `graduationApps` - ca biên | 10 | 10 | 0 |
+| `activities` | 3 | 3 | 0 |
+| Rủi ro còn tồn tại (ghi lại hiệ trạng) | 6 | 6 | 0 |
+| **Tổng** | **69** | **69** | **0** |
+
+Lưu ý khi đọc kết quả:
+
+- Nhóm "Rủi ro còn tồn tại" (R1–R6) ghi lại hiện trạng. Ca R1–R5 "đạt" nghĩa là rủi ro **vẫn còn**, không phải đã được vá:
+  - R1: sinh viên đọc được trường `password` cũ trong hồ sơ công khai của người khác.
+  - R2: `userSecrets` chấp nhận mật khẩu rỗng hoặc rất ngắn.
+  - R3: mọi sinh viên đọc được nhật ký hoạt động của người khác.
+  - R4: trường `phone` không được kiểm kiểu và độ dài.
+  - R5: giáo viên (không chỉ admin) xóa hoặc ghi đè được toàn bộ `sharedData`.
+  - R6: admin không tự tạo được phiếu tốt nghiệp (chỉ role `student` được tạo).
+- Các dòng `PERMISSION_DENIED` và `evaluation error` trong log là do các ca cố ý thử thao tác bị chặn, không phải lỗi.
+- Sau lần chạy 1, tiến trình Java của Emulator lại còn sót và giữ cổng 8080 (cùng hiện tượng ở mục 4). Đã tắt tiến trình đó rồi chạy lần 2, chạy xong cũng tắt tiến trình sót lại.
+
+## 6. Thử các bước ở mục 4 của [D9]
 
 Người thao tác: Trần Đức Tùng, tự làm bằng tay trên trình duyệt. Ngày 01/11/2026, bắt đầu khoảng 13:50.
 
@@ -96,10 +129,11 @@ Môi trường: `npm run emulators`, `npm run seed` (dữ liệu sạch), `npm r
 
 Ghi chú bước 6: thông báo chỉ hiện sau đúng 10 giây (`SAVE_TIMEOUT_MS = 10000` trong `app.js`), nên cần chờ khoảng 15 giây; trong 10 giây đầu nút luôn ở "Đang lưu…".
 
-## 6. Nhật ký sử dụng AI 
+## 7. Nhật ký sử dụng AI 
 
 - Chuẩn bị môi trường: khoảng 13:48 bật Emulator (npm run emulators) và seed dữ liệu sạch (npm run seed). Sau đó đăng xuất phiên cũ trên trình duyệt để bạn bắt đầu bước 1 từ màn hình đăng nhập.
 - Mở Emulator UI cho bước 5: dùng REST API của Emulator để tìm uid của tài khoản student@studytask.vn, rồi mở thẳng document user/{uid} trên Emulator UI (cổng 4000).
 - Sửa lỗi khởi động web: npm run serve báo EADDRINUSE vì cổng 5500 bị một server nền cũ giữ. AI tắt server đó, sửa cổng trong .claude/launch.json từ 3000 thành 5500, rồi chạy lại web. Từ lúc này trang mở bằng http://localhost:5500.
 - Tắt Emulator cho bước 6: lúc 14:23:25, chỉ tắt các tiến trình giữ cổng 8080, 9099 và 4000. Web ở cổng 5500 vẫn chạy.
 - Bật lại Emulator sau bước 6: lúc 14:32:08 khởi động lại Emulator và seed lại dữ liệu.
+- Chạy kiểm thử mở rộng: lúc 18:54 chạy `npm run test:rules:deep` hai lần, tắt tiến trình Java sót lại giữ cổng 8080 sau mỗi lần, rồi ghi kết quả vào mục 5.
