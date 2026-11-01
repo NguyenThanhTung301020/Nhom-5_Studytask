@@ -5,7 +5,8 @@
 | Người phụ trách | Trương Thanh Vui |
 | Máy | `DESKTOP-IMSJ193` (tài khoản Windows `Minx`) |
 | Ngày chạy | 28/10/2026 |
-| Nhánh Git | `------` (commit gốc `-----`) |
+| Nhánh Git | `docs/so-do-dfd` (commit gốc [`d087a67`](https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/commit/d087a67)); `firestore.rules` tại commit này giống hệt `master` lúc mở PR (`58b6dbb`) |
+| Tệp kiểm thử | `tests/firestore.rules.test.mjs` (bộ gốc), `tests/firestore.rules.deep.test.mjs` (bộ chuyên sâu), `scripts/mutate.mjs` (kiểm thử đột biến) – đưa lên cùng PR với báo cáo này |
 | Công cụ thực hiện | Claude Code (AI) chạy lệnh trên máy này theo yêu cầu của Thanh Vui; cần ghi vào nhật ký sử dụng AI của nhóm |
 | Phạm vi | Chỉ các ca chạy trên **máy Thanh Vui**. Máy Nguyễn Thanh Tùng và Trần Đức Tùng chạy và ghi riêng |
 
@@ -82,7 +83,10 @@ Phụ thuộc được cài bằng `npm ci` (máy chưa có `node_modules` trư�
 npm ci
 npm run test:rules          # bộ gốc, 46 ca, cổng 8080
 npm run test:rules:deep     # bộ chuyên sâu, 69 ca, cổng 8080
+npx firebase emulators:exec --only firestore --project demo-studytask "node scripts/mutate.mjs"   # kiểm thử đột biến, 113 bản
 ```
+
+`scripts/mutate.mjs` ghi các bản đột biến và `mut-results.json` vào thư mục tạm của hệ điều hành (`studytask-mutants`), hoặc thư mục truyền ở tham số đầu tiên. Biến `ONLY=14,89,91,105` để chạy lại một số bản.
 
 Yêu cầu: Node.js, Java (JDK 11 trở lên) trong `PATH`, cổng 8080 và 9150 đang trống.
 
@@ -96,7 +100,7 @@ Giờ theo giờ máy (UTC+7). Các lượt in đậm là kết quả dùng làm
 | 2 | Bộ sâu lần đầu | `npm run test:rules:deep` | 8080 | 66/67 đạt, **1 lỗi** | Lỗi do **ca test sai**: tài khoản `NEW` chưa có hồ sơ nên ca "được phép" bị từ chối, kéo theo các ca "bị chặn" trong cùng test bị chặn vì lý do sai (đạt giả). Đã sửa ca |
 | 3 | Bộ sâu sau sửa | `npm run test:rules:deep` | 8080 | Không chạy được | Cổng 8080 bị chiếm bởi Java sót lại sau lần chạy đầu tiên |
 | 4 | Bộ sâu | `emulators:exec --config` | 8091 | **67/67 đạt** | Đổi sang cổng tạm; bộ sâu đọc cổng từ `FIRESTORE_EMULATOR_HOST` |
-| 5 | Đột biến thử 3 bản | `mutate.mjs` | 8091 | 3/3 bị bắt | Kiểm tra công cụ chạy đúng |
+| 5 | Đột biến thử 3 bản | `scripts/mutate.mjs` | 8091 | 3/3 bị bắt | Kiểm tra công cụ chạy đúng |
 | 6 | Đột biến đầy đủ lần 1 | chạy trên Emulator còn sót | 8091 | **Kết quả bỏ** ("104/113 sống sót") | Lỗi hạ tầng: Emulator tắt giữa chừng, lỗi kết nối bị công cụ tính nhầm thành "sống sót". Đã sửa công cụ (chỉ tính "sống sót" khi mọi ca đều đạt) |
 | 7 | Đột biến lần 2 | `emulators:exec` | 8091 | Không chạy | Lỗi dấu nháy trong lệnh Windows |
 | 8 | Đột biến lần 3 | `emulators:exec` | 8101 | Không chạy | Cổng 8101 còn Java sót từ lần thử 2 bản |
