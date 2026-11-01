@@ -30,7 +30,7 @@ Tệp này mô tả đầy đủ cấu hình, từng lượt chạy và từng n
 | `npm run test:logic` | 42 | 42 | 0 | 0 |
 | `npm run test:rules` | 46 | 46 | 0 | 0 |
 | Mục 4 của [D9] (thử tay trên trình duyệt) | 8 | | | 8 |
-| **Tổng** | **96** | **96** | **8** | **8** |
+| **Tổng** | **96** | **96** | **0** | **8** |
 
 Hai lần chạy kiểm thử tự động cho cùng kết quả:
 
