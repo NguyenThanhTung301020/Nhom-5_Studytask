@@ -12,3 +12,6 @@ ui-debug.log
 # Biến môi trường cục bộ
 .env
 .env.*
+
+# File tạm do scripts/mutate.mjs tạo khi chạy
+tests/.tmp-orig-mut.test.mjs
