@@ -10,22 +10,24 @@ Nguyên tắc:
 
 Mã V1–V7 là 7 vấn đề rà soát ở mục 3 của báo cáo tuần 1.
 
+Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các mục 1, 3, 4, 5, 6, 9, 11 theo đề xuất ở mục 3.4 báo cáo tuần 3 – dồn các mục Bỏ/Sửa liên quan tới mật khẩu sang tuần 5, dời mục 9 sau tuần 5.
+
 | # | Tính năng / thành phần | Quyết định | Lý do | Căn cứ | Tuần |
 |---|---|---|---|---|---|
 | | **BỎ** | | | | |
-| 1 | Lưu mật khẩu trong Firestore; cột "Mật khẩu" và chức năng Admin tự nhập mật khẩu mới cho người khác | Bỏ | Lỗ hổng V1; không được lưu mật khẩu dạng văn bản thuần. Thay bằng Cloud Function + Admin SDK hoặc email đặt lại mật khẩu | GVPB | 2–3 |
+| 1 | Lưu mật khẩu trong Firestore; cột "Mật khẩu" và chức năng Admin tự nhập mật khẩu mới cho người khác | Bỏ | Lỗ hổng V1; không được lưu mật khẩu dạng văn bản thuần. Thay bằng Cloud Function + Admin SDK hoặc email đặt lại mật khẩu | GVPB | 4 (vá tạm), 5 (bỏ hẳn) |
 | 2 | Tiện ích Giải trí, Dịch thuật (chỉ mở Google Translate), Máy tính bỏ túi | Bỏ | Ngoài nghiệp vụ quản lý học tập, không tạo giá trị riêng; máy tính dùng Function() (V7). Thu gọn để tập trung vào nghiệp vụ lõi | GVHD (tính khả thi) | 7 |
-| 3 | Tự nạp dữ liệu mẫu vào Firestore và chế độ demo trên bản đang chạy | Bỏ | Dữ liệu mẫu lẫn vào dữ liệu thật (V6). Dữ liệu mẫu chỉ còn dùng qua script seed trên môi trường dev/Emulator | Nhóm rà soát | 6 |
-| 4 | Instance Firebase phụ để tạo tài khoản và đổi mật khẩu bằng đăng nhập ngầm | Bỏ | Phụ thuộc vào mật khẩu lưu trữ; thay bằng Admin SDK chạy ở máy chủ | GVPB | 3 |
+| 3 | Tự nạp dữ liệu mẫu vào Firestore và chế độ demo trên bản đang chạy | Bỏ | Dữ liệu mẫu lẫn vào dữ liệu thật (V6). Dữ liệu mẫu chỉ còn dùng qua script seed trên môi trường dev/Emulator | Nhóm rà soát | 5 |
+| 4 | Instance Firebase phụ để tạo tài khoản và đổi mật khẩu bằng đăng nhập ngầm | Bỏ | Phụ thuộc vào mật khẩu lưu trữ; thay bằng Admin SDK chạy ở máy chủ | GVPB | 5 |
 | | **SỬA** | | | | |
-| 5 | Firestore Security Rules | Sửa | Chặn người dùng tự sửa role, subjectIds, expiresAt (V2); giới hạn đọc activities (V4); kiểm tra trường, kiểu dữ liệu khi ghi | GVPB; nhóm rà soát | 2, 6 |
-| 6 | Trắc nghiệm | Sửa | Tách đáp án ra collection chỉ giáo viên đọc được; chấm điểm bằng Cloud Function; điểm do máy chủ ghi (V3, V4) | GVHD (tính khả thi); nhóm rà soát | 4 |
+| 5 | Firestore Security Rules | Sửa | Chặn người dùng tự sửa role, subjectIds, expiresAt (V2); giới hạn đọc activities (V4); kiểm tra trường, kiểu dữ liệu khi ghi | GVPB; nhóm rà soát | 4–5 |
+| 6 | Trắc nghiệm | Sửa | Tách đáp án ra collection chỉ giáo viên đọc được; chấm điểm bằng Cloud Function; điểm do máy chủ ghi (V3, V4) | GVHD (tính khả thi); nhóm rà soát | 5–6 |
 | 7 | Cấu trúc dữ liệu sharedData/global | Sửa | Tách thành collection theo môn học để vượt giới hạn 1 MB và phân quyền đọc theo môn | GVPB | 6 |
 | 8 | Cách tính điểm trung bình môn | Sửa | Cho giáo viên cấu hình trọng số trắc nghiệm / bài tập / chuyên cần theo quy chế | GVPB | 7 |
-| 9 | Nền tảng front-end (React UMD qua CDN, không JSX) | Sửa | Chuyển sang Vite + JSX + ESLint để có bước build tối ưu, cải thiện LCP 2,9 s và Lighthouse 72/100 | GVPB | 5 |
+| 9 | Nền tảng front-end (React UMD qua CDN, không JSX) | Sửa | Chuyển sang Vite + JSX + ESLint để có bước build tối ưu, cải thiện LCP 2,9 s và Lighthouse 72/100 | GVPB | Sau tuần 5 |
 | 10 | Liên hệ hỗ trợ | Sửa | Chuyển tin nhắn vào collection riêng (supportTickets) để Quản trị viên xem và phản hồi (V5) | Nhóm rà soát | 7 |
 | | **THÊM** | | | | |
-| 11 | Cloud Functions (backend): quản lý tài khoản, gán vai trò bằng custom claims, chấm trắc nghiệm | Thêm | Đưa nghiệp vụ nhạy cảm ra khỏi trình duyệt; bổ sung phần thiết kế, lập trình backend | GVPB | 3–4 |
+| 11 | Cloud Functions (backend): quản lý tài khoản, gán vai trò bằng custom claims, chấm trắc nghiệm | Thêm | Đưa nghiệp vụ nhạy cảm ra khỏi trình duyệt; bổ sung phần thiết kế, lập trình backend | GVPB | 4 (bản thử), 5 (hoàn thiện) |
 | 12 | Git/GitHub, quy ước nhánh và commit; CI/CD bằng GitHub Actions | Thêm | Chứng minh quá trình làm việc, đối chiếu nhật ký AI, tự động kiểm thử và triển khai | GVHD (dùng AI); TC2 CI/CD | 2, 5 |
 | 13 | Kiểm thử tự động: rules unit test, Vitest, Playwright | Thêm | Thay thế kiểm thử thủ công; chạy trong CI | GVPB; TC2 | 2, 10 |
 | 14 | Nhập danh sách lớp từ tệp CSV/Excel | Thêm | Giáo viên đưa lớp thật vào hệ thống nhanh, không phải tạo từng tài khoản – điều kiện để áp dụng thực tế | GVHD (tính khả thi) | 7 |
