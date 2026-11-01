@@ -2,7 +2,7 @@
 
 Website quản lý deadline học tập cho sinh viên. Đề tài tiểu luận nhóm 5, GVHD: TS. Huỳnh Xuân Phụng.
 
-- Bản đang vận hành: tên miền sutdytask.io.vn (Netlify, Firebase project `sutdytask`)
+- Bản đang vận hành: tên miền sutdytask.io.vn (Cloudflare, upload thủ công; Firebase project `sutdytask`)
 - Thành viên: Nguyễn Thanh Tùng (24TX810027), Trần Đức Tùng (24TX810026), Trương Thanh Vui (24TX810021)
 
 ## Công nghệ
@@ -23,6 +23,8 @@ firestore.rules                 Security Rules của Firestore
 firebase.json                   Cấu hình Emulator (cổng 9099, 8080, 4000)
 tests/                          Kiểm thử Security Rules
 scripts/seed-emulator.mjs       Nạp tài khoản demo vào Emulator
+reset-worker/                   Bản thử Cloudflare Worker (đặt lại mật khẩu)
+_headers                        Header bảo mật và cache cho Cloudflare
 docs/                           Báo cáo tuần, nhật ký AI, phân tích, thiết kế, sửa lỗi
 ```
 
@@ -34,7 +36,7 @@ docs/                           Báo cáo tuần, nhật ký AI, phân tích, th
 |---|---|---|
 | `http://127.0.0.1:5500` hoặc `localhost` | Emulator, project `demo-studytask` | Mặc định khi chạy local; không chạm dữ liệu thật |
 | `http://127.0.0.1:5500/?offline=1` | Không dùng | Đăng nhập bằng tài khoản demo cục bộ, không cần Emulator |
-| Domain khác (Netlify, sutdytask.io.vn) | Production `sutdytask` | Bản đang vận hành |
+| Domain khác (Cloudflare, sutdytask.io.vn) | Production `sutdytask` | Bản đang vận hành |
 
 ### Yêu cầu
 
@@ -104,8 +106,8 @@ npx firebase deploy --only firestore:rules --project sutdytask
 Thứ tự bắt buộc cho bản tuần 2:
 
 1. Export Firestore để sao lưu (Firebase Console → Firestore → Import/Export, hoặc `gcloud firestore export`).
-2. Deploy **rules trước**. Mã mới ghi mật khẩu vào `userSecrets`, mà rules cũ không có quy tắc nào cho collection này, nên nếu mã mới lên Netlify trước thì tạo tài khoản và đổi mật khẩu sẽ bị từ chối.
-3. Đưa mã lên Netlify (gộp vào `master` hoặc deploy thủ công).
+2. Deploy **rules trước**. Mã mới ghi mật khẩu vào `userSecrets`, mà rules cũ không có quy tắc nào cho collection này, nên nếu mã mới lên Cloudflare trước thì tạo tài khoản và đổi mật khẩu sẽ bị từ chối.
+3. Upload mã lên Cloudflare (upload thủ công; gộp vào `master` không tự deploy).
 4. Quản trị viên đăng nhập, vào **Quản trị → Tài khoản**, bấm **"Chuyển N mật khẩu sang kho riêng"** để chuyển mật khẩu cũ ra khỏi hồ sơ công khai.
 5. Thử đăng nhập và lưu hồ sơ với cả 3 vai trò.
 

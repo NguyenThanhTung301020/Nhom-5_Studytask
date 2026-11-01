@@ -2,7 +2,7 @@
 // Môi trường (xem docs/phan-tich/04-tach-moi-truong.md):
 //   - Chạy trên localhost/127.0.0.1        → Firebase Emulator (project demo-studytask), KHÔNG chạm production
 //   - Chạy trên localhost với ?offline=1   → không dùng Firebase, đăng nhập bằng tài khoản demo cục bộ
-//   - Các domain khác (Netlify, sutdytask.io.vn) → project production sutdytask
+//   - Các domain khác (Cloudflare, sutdytask.io.vn) → project production sutdytask
 
 import { initializeApp, deleteApp }                               from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js'
 import { getAuth, connectAuthEmulator, signInWithEmailAndPassword, signOut,
