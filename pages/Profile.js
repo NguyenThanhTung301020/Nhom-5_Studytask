@@ -44,7 +44,7 @@ function PasswordChangeCard({ uid }) {
     open && h('div', { className: 'mt-3' },
       !fb
         ? h('div', { className: 'alert alert-secondary small py-2 mb-0' },
-            h('i', { className: 'bi bi-info-circle me-1' }), 'Chế độ demo: cần kết nối Firebase để đổi mật khẩu thật.')
+            h('i', { className: 'bi bi-info-circle me-1' }), 'Chế độ demo: cần kết nối máy chủ để đổi mật khẩu thật.')
         : !uid
           ? h('div', { className: 'alert alert-secondary small py-2 mb-0' }, 'Bạn cần đăng nhập để đổi mật khẩu.')
           : h(window.React.Fragment, null,
@@ -139,7 +139,7 @@ function SyncBadge({ uid }) {
   if (!uid) return h('span', { className: 'badge bg-secondary-subtle text-secondary small' },
     h('i', { className: 'bi bi-hdd me-1' }), 'Lưu cục bộ')
   return h('span', { className: 'badge small', style: { backgroundColor: 'rgba(255,160,0,.15)', color: '#f6a623' } },
-    h('i', { className: 'bi bi-fire me-1' }), 'Firebase')
+    h('i', { className: 'bi bi-hdd-network me-1' }), 'Máy chủ')
 }
 
 // ─── Card thống kê sidebar ───────────────────────────────────────
@@ -207,7 +207,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
   const [saveErr, setSaveErr] = useState('')
   const [errors,  setErrors]  = useState({})
 
-  // Sync form khi profile thay đổi từ Firebase
+  // Sync form khi profile thay đổi từ máy chủ
   // Chỉ đồng bộ lại form khi KHÔNG ở chế độ sửa (tránh xóa mất nội dung người dùng đang nhập)
   useEffect(() => { if (!editing) setForm({ ...cfg.default, ...profile }) }, [profile, editing])
 
@@ -224,7 +224,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
       setTimeout(() => setSaveMsg(m => m === 'ok' ? null : m), 4000)
     } catch (e) {
       setSaveMsg('error')
-      setSaveErr(e?.code === 'permission-denied' ? 'Không có quyền cập nhật (Firestore Rules).' : (e?.message || ''))
+      setSaveErr(e?.code === 'permission-denied' ? 'Không có quyền cập nhật (phân quyền của máy chủ).' : (e?.message || ''))
     }
   }
 
@@ -242,7 +242,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
       ),
       h('div', { className: 'd-flex align-items-center gap-2' },
         saveMsg === 'ok' && h('span', { className: 'text-success small', role: 'status' },
-          h('i', { className: 'bi bi-check-circle-fill me-1' }), user?.uid ? 'Đã lưu lên Firebase' : 'Đã lưu trên máy này'),
+          h('i', { className: 'bi bi-check-circle-fill me-1' }), user?.uid ? 'Đã lưu lên máy chủ' : 'Đã lưu trên máy này'),
         !editing && h('button', { className: 'btn btn-primary btn-sm', onClick: () => { setSaveMsg(null); setEditing(true) } },
           h('i', { className: 'bi bi-pencil me-1' }), 'Chỉnh sửa')
       )
