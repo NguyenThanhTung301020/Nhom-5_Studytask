@@ -2,14 +2,14 @@
 
 Website quản lý deadline học tập cho sinh viên. Đề tài tiểu luận nhóm 5, GVHD: TS. Huỳnh Xuân Phụng.
 
-- Bản đang vận hành: tên miền sutdytask.io.vn (Cloudflare, upload thủ công; Firebase project `sutdytask`)
+- Bản đang vận hành: https://sutdytask.io.vn (máy chủ riêng của nhóm qua Cloudflare Tunnel). **Từ 03/11/2026 không còn dùng Firebase**: xem [docs/thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md](docs/thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md)
 - Thành viên: Nguyễn Thanh Tùng (24TX810027), Trần Đức Tùng (24TX810026), Trương Thanh Vui (24TX810021)
 
 ## Công nghệ
 
 - Front-end: React 18 (bản UMD qua CDN, không có bước build), Bootstrap 5, Chart.js
-- Back-end: Firebase Authentication, Cloud Firestore (phân quyền bằng `firestore.rules`)
-- Công cụ dev: Firebase Emulator Suite, `@firebase/rules-unit-testing`, `http-server`
+- Back-end: API Python (`server/studytask_api.py`, chỉ thư viện chuẩn) + SQLite; nginx + Cloudflare Tunnel. Phân quyền trong hàm `can()` (chuyển từ `firestore.rules`, file này vẫn giữ làm đặc tả)
+- Công cụ dev/kiểm thử: Python 3 (`tests/server/`), Firebase Emulator Suite + `@firebase/rules-unit-testing` (kiểm thử `firestore.rules`), `http-server`
 
 ## Cấu trúc thư mục
 
@@ -17,11 +17,14 @@ Website quản lý deadline học tập cho sinh viên. Đề tài tiểu luận
 index.html, app.js, style.css   Trang gốc và component App
 components/                     Thành phần dùng chung (Navbar, Login, AccountManager, ...)
 pages/                          Các trang (Dashboard, Profile, Quiz, Admin, ...)
-utils/                          firebase.js (kết nối Firebase), store.js (đọc/ghi Firestore hoặc localStorage),
-                                grading.js (quy chế điểm), tuition.js (học phí), curriculum.js (CTĐT), constants.js, helpers.js
-firestore.rules                 Security Rules của Firestore
-firebase.json                   Cấu hình Emulator (cổng 9099, 8080, 4000)
-tests/                          Kiểm thử Security Rules
+utils/                          firebase.js (giữ tên cũ, nay gọi API /api của máy chủ), chat.js (chat realtime),
+                                store.js (đọc/ghi dữ liệu), grading.js (quy chế điểm), tuition.js (học phí),
+                                curriculum.js (CTĐT), constants.js, helpers.js
+server/                         API Python thay Firebase (studytask_api.py) và hướng dẫn chạy
+deploy/                         Triển khai: deploy.sh, cấu hình nginx, dịch vụ systemd, server-report.sh
+firestore.rules                 Security Rules cũ của Firestore (giữ làm đặc tả cho hàm can() của máy chủ)
+firebase.json                   Cấu hình Emulator (chỉ dùng để kiểm thử firestore.rules)
+tests/                          Kiểm thử Security Rules (Node) và tests/server/ (kiểm thử máy chủ, Python)
 scripts/seed-emulator.mjs       Nạp tài khoản demo vào Emulator
 reset-worker/                   Bản thử Cloudflare Worker (đặt lại mật khẩu)
 _headers                        Header bảo mật và cache cho Cloudflare
@@ -30,7 +33,9 @@ docs/                           Báo cáo tuần, nhật ký AI, phân tích, th
 
 ## Chạy ứng dụng trên máy local
 
-Ứng dụng tự nhận biết môi trường theo địa chỉ đang chạy (xem `utils/firebase.js` và [docs/phan-tich/04-tach-moi-truong.md](docs/phan-tich/04-tach-moi-truong.md)):
+> **Lưu ý (03/11/2026):** giao diện nay gọi API của máy chủ (`/api`), không còn nối Firebase hay Emulator. Chạy đủ hệ thống cần API Python và nginx như trong [server/README.md](server/README.md). Với `npm run serve`, chỉ chế độ `?offline=1` (tài khoản demo cục bộ) còn dùng được. Phần Emulator dưới đây chỉ còn phục vụ kiểm thử `firestore.rules`; bảng môi trường và tài khoản demo bên dưới là của bản cũ.
+
+Ứng dụng (bản cũ) tự nhận biết môi trường theo địa chỉ đang chạy (xem `utils/firebase.js` và [docs/phan-tich/04-tach-moi-truong.md](docs/phan-tich/04-tach-moi-truong.md)):
 
 | Địa chỉ | Firebase dùng | Ghi chú |
 |---|---|---|
