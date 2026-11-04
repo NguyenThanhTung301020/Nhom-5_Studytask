@@ -113,13 +113,13 @@ function UserList({ subjects, onUpdateSubjects }) {
     h('i', { className: 'bi bi-people fs-2 d-block mb-2 opacity-25' }),
     isFirebaseReady()
       ? 'Chưa có người dùng nào trong hệ thống'
-      : 'Chế độ demo – kết nối Firebase để quản lý người dùng thực'
+      : 'Chế độ demo – kết nối máy chủ để quản lý người dùng thực'
   )
 
   return h('div', { className: 'd-flex flex-column gap-3' },
     !isFirebaseReady() && h('div', { className: 'alert alert-info small py-2 mb-0' },
       h('i', { className: 'bi bi-info-circle me-1' }),
-      'Đang xem tài khoản demo. Kết nối Firebase để quản lý người dùng thực.'
+      'Đang xem tài khoản demo. Kết nối máy chủ để quản lý người dùng thực.'
     ),
     users.map(user => {
       const role    = ROLES[user.role]
