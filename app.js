@@ -43,24 +43,31 @@ const { useState, useEffect, useRef, useCallback, useMemo, createElement: h } = 
 
 const FIREBASE_OK = initFirebase()
 
+// V6: khi có Firebase (production hoặc Emulator) KHÔNG dùng dữ liệu mẫu làm giá trị mặc định và không ghi nó lên Firestore.
+// Dữ liệu mẫu chỉ còn ở chế độ cục bộ (?offline=1) và được nạp vào Emulator bằng `npm run seed`.
+const SEED = FIREBASE_OK
+  ? { subjects: [], deadlines: [], homeworks: [], quizzes: [], materials: [], schedule: [], exams: [], news: [], forms: [], library: [] }
+  : { subjects: SAMPLE_SUBJECTS, deadlines: SAMPLE_DEADLINES, homeworks: SAMPLE_HOMEWORKS, quizzes: SAMPLE_QUIZZES,
+      materials: SAMPLE_MATERIALS, schedule: SAMPLE_SCHEDULE, exams: SAMPLE_EXAMS, news: SAMPLE_NEWS, forms: SAMPLE_FORMS, library: DEFAULT_LIBRARY }
+
 function App() {
   const [user,         setUser]         = useState(null)
   const [allUsers,     setAllUsers]     = useState([])   // danh sách tất cả user (cho subjectTeacherMap)
   const [authChecked,  setAuthChecked]  = useState(!FIREBASE_OK)
   const [page,         setPage]         = useState('dashboard')
-  const [subjects,     setSubjects]     = useState(SAMPLE_SUBJECTS)
-  const [deadlines,    setDeadlines]    = useState(SAMPLE_DEADLINES)
-  const [homeworks,    setHomeworks]    = useState(SAMPLE_HOMEWORKS)   // ĐỊNH NGHĨA bài tập (dùng chung)
+  const [subjects,     setSubjects]     = useState(SEED.subjects)
+  const [deadlines,    setDeadlines]    = useState(SEED.deadlines)
+  const [homeworks,    setHomeworks]    = useState(SEED.homeworks)   // ĐỊNH NGHĨA bài tập (dùng chung)
   const [homeworkSubs, setHomeworkSubs] = useState({})                 // trạng thái/nộp bài theo từng SV (cá nhân)
-  const [quizzes,      setQuizzes]      = useState(SAMPLE_QUIZZES)
-  const [materials,    setMaterials]    = useState(SAMPLE_MATERIALS) // tài liệu học phần
-  const [schedule,     setSchedule]     = useState(SAMPLE_SCHEDULE)  // thời khóa biểu (dùng chung)
-  const [exams,        setExams]        = useState(SAMPLE_EXAMS)     // lịch thi (dùng chung)
-  const [news,         setNews]         = useState(SAMPLE_NEWS)      // tin tức (dùng chung)
-  const [forms,        setForms]        = useState(SAMPLE_FORMS)     // biểu mẫu (dùng chung)
+  const [quizzes,      setQuizzes]      = useState(SEED.quizzes)
+  const [materials,    setMaterials]    = useState(SEED.materials) // tài liệu học phần
+  const [schedule,     setSchedule]     = useState(SEED.schedule)  // thời khóa biểu (dùng chung)
+  const [exams,        setExams]        = useState(SEED.exams)     // lịch thi (dùng chung)
+  const [news,         setNews]         = useState(SEED.news)      // tin tức (dùng chung)
+  const [forms,        setForms]        = useState(SEED.forms)     // biểu mẫu (dùng chung)
   const [submissions,  setSubmissions]  = useState([])          // kết quả làm bài của student
-  const [profile,      setProfile]      = useState(DEFAULT_PROFILE)
-  const [library,      setLibrary]      = useState(DEFAULT_LIBRARY)
+  const [profile,      setProfile]      = useState(FIREBASE_OK ? BLANK_STUDENT_PROFILE : DEFAULT_PROFILE)
+  const [library,      setLibrary]      = useState(SEED.library)
   const [contacts,     setContacts]     = useState([])
   const [settings,     setSettings]     = useState(() => load('st_settings', DEFAULT_SETTINGS))
   const [showSettings, setShowSettings] = useState(false)
@@ -108,15 +115,15 @@ function App() {
 
     // ── Dữ liệu chung (tất cả user đọc chung) ──
     const dShared = {
-      subjects:  ss.subjects  ?? load('st_subjects',  SAMPLE_SUBJECTS),
-      deadlines: ss.deadlines ?? load('st_deadlines', SAMPLE_DEADLINES),
-      quizzes:   ss.quizzes   ?? load('st_quizzes',   SAMPLE_QUIZZES),
-      materials: ss.materials ?? load('st_materials', SAMPLE_MATERIALS),
-      homeworks: ss.homeworks ?? load('st_homeworks', SAMPLE_HOMEWORKS),
-      schedule:  ss.schedule  ?? load('st_schedule',  SAMPLE_SCHEDULE),
-      exams:     ss.exams     ?? load('st_exams',     SAMPLE_EXAMS),
-      news:      ss.news      ?? load('st_news',      SAMPLE_NEWS),
-      forms:     ss.forms     ?? load('st_forms',     SAMPLE_FORMS),
+      subjects:  ss.subjects ?? (FIREBASE_OK ? SEED.subjects : load('st_subjects', SEED.subjects)),
+      deadlines: ss.deadlines ?? (FIREBASE_OK ? SEED.deadlines : load('st_deadlines', SEED.deadlines)),
+      quizzes:   ss.quizzes ?? (FIREBASE_OK ? SEED.quizzes : load('st_quizzes', SEED.quizzes)),
+      materials: ss.materials ?? (FIREBASE_OK ? SEED.materials : load('st_materials', SEED.materials)),
+      homeworks: ss.homeworks ?? (FIREBASE_OK ? SEED.homeworks : load('st_homeworks', SEED.homeworks)),
+      schedule:  ss.schedule ?? (FIREBASE_OK ? SEED.schedule : load('st_schedule', SEED.schedule)),
+      exams:     ss.exams ?? (FIREBASE_OK ? SEED.exams : load('st_exams', SEED.exams)),
+      news:      ss.news ?? (FIREBASE_OK ? SEED.news : load('st_news', SEED.news)),
+      forms:     ss.forms ?? (FIREBASE_OK ? SEED.forms : load('st_forms', SEED.forms)),
     }
 
     // ── Dữ liệu cá nhân (mỗi user một bản) ──
@@ -124,7 +131,7 @@ function App() {
       homeworkSubs: ps.homeworkSubs ?? loadMine('st_homeworkSubs', {}),
       submissions:  ps.submissions  ?? loadMine('st_submissions', []),
       profile:      ps.profile      ?? loadMine('st_profile',     defaultProfile),
-      library:      ps.library      ?? loadMine('st_library',     DEFAULT_LIBRARY),
+      library:      ps.library      ?? loadMine('st_library',     SEED.library),
       contacts:     ps.contacts     ?? loadMine('st_contacts',    []),
     }
 
@@ -151,14 +158,8 @@ function App() {
     dataReady.current = true
 
     if (isFirebaseReady()) {
-      // Sync shared data lên Firestore nếu thiếu key
-      const missingShared = shared ? Object.keys(dShared).filter(k => shared[k] === undefined) : Object.keys(dShared)
-      if (missingShared.length > 0) {
-        try {
-          await Promise.all(missingShared.map(k => saveSharedKey(k, dShared[k])))
-          console.info('[Firebase] Sync sharedData ✅:', missingShared.join(', '))
-        } catch (e) { console.warn('[Firebase] Sync sharedData lỗi:', e.message) }
-      }
+      // V6: không còn tự ghi dữ liệu dùng chung (sharedData) lên Firestore khi thiếu key.
+      // Dữ liệu chung chỉ do Admin/Giáo viên/Phòng Đào tạo nhập, hoặc `npm run seed` nạp vào Emulator.
       // Sync personal data nếu thiếu key
       if (uid) {
         const missingPersonal = personal ? Object.keys(dPersonal).filter(k => personal[k] === undefined) : Object.keys(dPersonal)
@@ -229,13 +230,13 @@ function App() {
     if (isFirebaseReady()) fbLogout().catch(e => console.warn('[Firebase] signOut:', e.message))
     setUser(null)
     save('st_user', null)
-    setSubjects(SAMPLE_SUBJECTS);   setDeadlines(SAMPLE_DEADLINES)
-    setHomeworks(SAMPLE_HOMEWORKS); setQuizzes(SAMPLE_QUIZZES)
+    setSubjects(SEED.subjects);     setDeadlines(SEED.deadlines)
+    setHomeworks(SEED.homeworks);   setQuizzes(SEED.quizzes)
     setHomeworkSubs({})
-    setMaterials(SAMPLE_MATERIALS); setSubmissions([])
-    setSchedule(SAMPLE_SCHEDULE);   setExams(SAMPLE_EXAMS)
-    setNews(SAMPLE_NEWS);           setForms(SAMPLE_FORMS)
-    setProfile(DEFAULT_PROFILE);    setLibrary(DEFAULT_LIBRARY)
+    setMaterials(SEED.materials);   setSubmissions([])
+    setSchedule(SEED.schedule);     setExams(SEED.exams)
+    setNews(SEED.news);             setForms(SEED.forms)
+    setProfile(FIREBASE_OK ? BLANK_STUDENT_PROFILE : DEFAULT_PROFILE); setLibrary(SEED.library)
     setContacts([])
     setPage('dashboard')
   }
