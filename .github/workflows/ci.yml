@@ -40,3 +40,21 @@ jobs:
       - run: npm ci
       - run: npm run test:logic
       - run: npm run test:rules
+
+  # Máy chủ thay Firebase (server/studytask_api.py): chỉ dùng thư viện chuẩn của Python, không cần cài gì thêm
+  server-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Chuyển tài khoản email → tên đăng nhập
+        run: python3 tests/server/test_migrate.py
+      - name: Tài khoản, email cá nhân, quên mật khẩu, ảnh đại diện, chat realtime
+        run: python3 tests/server/test_account.py
+      - name: Tạo và đăng nhập tài khoản theo tên đăng nhập
+        run: python3 tests/server/test_users.py
+      - name: Nộp bài theo định dạng giáo viên chọn
+        run: bash tests/server/test_submit.sh
