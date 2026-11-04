@@ -100,7 +100,7 @@ export default function Navbar({ user, profile, currentPage, onNavigate, onLogou
           h('div', { className: 'dropdown', ref: menuRef, style: { position: 'relative' } },
             h('button', { className: 'btn btn-link p-1 d-flex align-items-center gap-2 text-decoration-none border-0', type: 'button', onClick: () => setMenuOpen(o => !o) },
               h('div', { className: 'nav-avatar', style: { borderColor: roleInfo.color } },
-                h('div', { className: 'nav-avatar-initials' }, initials)
+                user.avatar ? h('img', { className: 'nav-avatar-img', src: user.avatar, alt: '' }) : h('div', { className: 'nav-avatar-initials' }, initials)
               ),
               h('div', { className: 'd-none d-md-flex flex-column align-items-start' },
                 h('span', { className: 'text-white small fw-semibold lh-1 mb-1' }, profile.name || user.name),
@@ -113,7 +113,7 @@ export default function Navbar({ user, profile, currentPage, onNavigate, onLogou
             menuOpen && h('ul', { className: 'dropdown-menu dropdown-menu-end shadow border-0 show', style: { position: 'absolute', right: 0, top: '100%' } },
               h('li', null,
                 h('div', { className: 'dropdown-header d-flex flex-column gap-1' },
-                  h('span', null, user.email),
+                  h('span', null, user.username || user.email),
                   h('span', { className: `role-badge role-badge-${role} align-self-start mt-1` },
                     h('i', { className: `bi bi-${roleInfo.icon} me-1` }), roleInfo.label
                   )

@@ -46,7 +46,7 @@ function StudentGraduation({ user, profile, subjects }) {
         setApp(a)
         setForm(a ? { ...a, certs: { ...(a.certs || {}) } } : {
           name: profile?.name || user.name || '', studentId: profile?.studentId || '', className: profile?.className || '',
-          major: profile?.major || '', faculty: profile?.faculty || '', email: user.email || profile?.email || '', phone: profile?.phone || '',
+          major: profile?.major || '', faculty: profile?.faculty || '', email: profile?.email || '', phone: profile?.phone || '',
           gpa: profile?.gpa || '', credits: '', round: '', thesisTitle: '', certs: {}, evidence: '', note: '', pledge: false,
         })
         // Đối chiếu: tổng TC của CTĐT (khớp ngành nếu có) và công nợ học phí
@@ -194,7 +194,7 @@ function TrainingGraduation({ user }) {
 
   const save = async (status, review) => {
     try {
-      await setDocument('graduationApps', open.id, { status, review, reviewedBy: user.name || user.email || '', reviewedAt: new Date().toISOString() })
+      await setDocument('graduationApps', open.id, { status, review, reviewedBy: user.name || user.username || '', reviewedAt: new Date().toISOString() })
       setOpen(null); setMsg({ type: 'success', text: 'Đã lưu kết quả xét.' }); load()
     } catch (e) { setMsg({ type: 'danger', text: errorText(e) }) }
   }

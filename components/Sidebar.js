@@ -3,7 +3,7 @@ import { NAV_ITEMS, NAV_GROUPS } from '../utils/constants.js'
 
 const { useState, createElement: h } = window.React
 
-export default function Sidebar({ user, currentPage, onNavigate, open, onClose }) {
+export default function Sidebar({ user, currentPage, onNavigate, open, onClose, badges = {} }) {
   const role = user.role || 'student'
   // Mặc định mở tất cả nhóm; có thể mở nhiều nhóm cùng lúc
   const [openGroups, setOpenGroups] = useState(() => NAV_GROUPS.map(g => g.id))
@@ -44,7 +44,8 @@ export default function Sidebar({ user, currentPage, onNavigate, open, onClose }
                 },
                   h('i', { className: `bi bi-${item.icon}` }),
                   h('span', null, item.label),
-                  item.key === 'admin' && h('span', { className: 'sidebar-badge' }, 'Admin')
+                  item.key === 'admin' && h('span', { className: 'sidebar-badge' }, 'Admin'),
+                  badges[item.key] > 0 && h('span', { className: 'sidebar-unread' }, badges[item.key] > 99 ? '99+' : badges[item.key])
                 )
               )
             )

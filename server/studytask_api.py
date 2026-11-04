@@ -1,0 +1,857 @@
+#!/usr/bin/env python3
+"""StudyTask API – thay thế Firebase Auth + Firestore bằng SQLite trên server.
+
+Chạy:       python3 studytask_api.py serve
+Tạo user:   python3 studytask_api.py create-user USERNAME PASSWORD ROLE "Tên"
+Đặt mật khẩu: python3 studytask_api.py set-password USERNAME PASSWORD
+Cấu hình mail: python3 studytask_api.py mail-config SMTP_HOST PORT USER "StudyTask <mail@domain>"
+Thử gửi mail:  python3 studytask_api.py mail-test EMAIL_NHAN
+Xóa user:   python3 studytask_api.py delete-user USERNAME
+
+Biến môi trường: STUDYTASK_DATA (mặc định /var/lib/studytask), STUDYTASK_PORT (8787).
+Phân quyền được chuyển từ firestore.rules (xem hàm can()).
+"""
+import hashlib, hmac, json, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time
+from email.message import EmailMessage
+from http import cookies
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse, parse_qs, unquote
+
+DATA_DIR   = os.environ.get('STUDYTASK_DATA', '/var/lib/studytask')
+UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
+DB_PATH    = os.path.join(DATA_DIR, 'studytask.db')
+PORT       = int(os.environ.get('STUDYTASK_PORT', '8787'))
+SESSION_TTL = 30 * 24 * 3600
+MAX_JSON    = 5 * 1024 * 1024
+MAX_UPLOAD  = 25 * 1024 * 1024
+UPLOAD_EXTS = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'ppt', 'pptx',
+               'xls', 'xlsx', 'txt', 'zip', 'rar', '7z', 'mp4', 'mp3'}
+STAFF = ('admin', 'teacher', 'training')
+MAX_SUBMIT = 15 * 1024 * 1024
+SUBMIT_DEFAULT = ['pdf', 'doc', 'docx', 'txt', 'zip', 'jpg', 'jpeg', 'png']          # khi giáo viên chưa chọn định dạng
+SUBMIT_EXTS = UPLOAD_EXTS - {'mp4', 'mp3'}
+MAGIC = {'pdf': (b'%PDF',), 'docx': (b'PK',), 'xlsx': (b'PK',), 'pptx': (b'PK',), 'zip': (b'PK',), 'rar': (b'Rar!',), '7z': (b'7z\xbc\xaf',),
+         'png': (b'\x89PNG',), 'jpg': (b'\xff\xd8',), 'jpeg': (b'\xff\xd8',), 'gif': (b'GIF8',), 'webp': (b'RIFF',),
+         'doc': (b'\xd0\xcf\x11\xe0',), 'xls': (b'\xd0\xcf\x11\xe0',), 'ppt': (b'\xd0\xcf\x11\xe0',)}
+
+_lock = threading.RLock()
+_db = None
+
+
+def db():
+    global _db
+    if _db is None:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        _db = sqlite3.connect(DB_PATH, check_same_thread=False, isolation_level=None)
+        _db.execute('PRAGMA journal_mode=WAL')
+        _db.executescript('''
+          CREATE TABLE IF NOT EXISTS accounts (
+            uid TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE,
+            salt TEXT NOT NULL, pwhash TEXT NOT NULL, created_at TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS sessions (
+            token TEXT PRIMARY KEY, uid TEXT NOT NULL, expires REAL NOT NULL);
+          CREATE TABLE IF NOT EXISTS docs (
+            col TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL,
+            PRIMARY KEY (col, id));
+          CREATE TABLE IF NOT EXISTS contact_email (
+            uid TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL COLLATE NOCASE, verified_at REAL NOT NULL);
+          CREATE TABLE IF NOT EXISTS codes (
+            purpose TEXT NOT NULL, uid TEXT NOT NULL, email TEXT NOT NULL, code_hash TEXT NOT NULL,
+            expires REAL NOT NULL, attempts INTEGER NOT NULL DEFAULT 0, created REAL NOT NULL,
+            PRIMARY KEY (purpose, uid));
+          CREATE TABLE IF NOT EXISTS chat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, thread TEXT NOT NULL, sender TEXT NOT NULL,
+            from_staff INTEGER NOT NULL, text TEXT NOT NULL, ts REAL NOT NULL, read INTEGER NOT NULL DEFAULT 0);
+          CREATE INDEX IF NOT EXISTS chat_thread ON chat(thread, id);
+        ''')
+        migrate_username(_db)
+    return _db
+
+
+def migrate_username(conn):
+    """Bản cũ dùng email làm tên đăng nhập → chuyển sang username (phần trước @), giữ nguyên mật khẩu đã mã hóa."""
+    if 'username' in [r[1] for r in conn.execute('PRAGMA table_info(accounts)')]:
+        return
+    bak = DB_PATH + '.bak-pre-username'
+    if not os.path.exists(bak):
+        dst = sqlite3.connect(bak)
+        conn.backup(dst)
+        dst.close()
+    used, rows = set(), []
+    for uid, email, salt, pw, created in conn.execute('SELECT uid, email, salt, pwhash, created_at FROM accounts').fetchall():
+        base = re.sub(r'[^a-z0-9._-]', '', email.split('@')[0].lower()).strip('._-') or 'user'
+        if len(base) < 3:
+            base = (base + 'user')[:8]
+        name, n = base[:32], 1
+        while name in used:
+            n += 1
+            name = f'{base[:28]}{n}'
+        used.add(name)
+        rows.append((uid, name, salt, pw, created))
+    conn.execute('BEGIN')
+    conn.execute('ALTER TABLE accounts RENAME TO accounts_old')
+    conn.execute('CREATE TABLE accounts (uid TEXT PRIMARY KEY, username TEXT UNIQUE NOT NULL COLLATE NOCASE, '
+                 'salt TEXT NOT NULL, pwhash TEXT NOT NULL, created_at TEXT NOT NULL)')
+    for uid, name, salt, pw, created in rows:
+        conn.execute('INSERT INTO accounts VALUES (?,?,?,?,?)', (uid, name, salt, pw, created))
+        r = conn.execute("SELECT data FROM docs WHERE col='user' AND id=?", (uid,)).fetchone()
+        if r:
+            d = json.loads(r[0])
+            d.pop('email', None)
+            d['username'] = name
+            conn.execute("UPDATE docs SET data=? WHERE col='user' AND id=?", (json.dumps(d, ensure_ascii=False), uid))
+    conn.execute('DROP TABLE accounts_old')
+    conn.execute('COMMIT')
+    sys.stderr.write('MIGRATE tài khoản chuyển sang tên đăng nhập: %s\n' % ', '.join(r[1] for r in rows))
+
+
+# ── Mật khẩu / phiên ─────────────────────────────────────────────
+def hash_pw(password, salt):
+    return hashlib.pbkdf2_hmac('sha256', password.encode(), bytes.fromhex(salt), 200_000).hex()
+
+
+def new_uid():
+    return secrets.token_hex(14)
+
+
+USERNAME_RE = re.compile(r'^[a-z0-9][a-z0-9._-]{2,31}$')
+
+
+def norm_user(s):
+    s = str(s).strip().lower()
+    return s[:-len('@studytask.vn')] if s.endswith('@studytask.vn') else s     # tương thích cách đăng nhập cũ
+
+
+def create_account(username, password, profile):
+    username = str(username).strip().lower()
+    if not USERNAME_RE.match(username):
+        raise ApiError(400, 'bad-username', 'Tên đăng nhập gồm 3–32 ký tự: chữ thường không dấu, số, dấu . _ - (bắt đầu bằng chữ hoặc số).')
+    if len(password) < 6:
+        raise ApiError(400, 'auth/weak-password', 'Mật khẩu tối thiểu 6 ký tự.')
+    salt = secrets.token_hex(16)
+    uid = new_uid()
+    with _lock:
+        try:
+            db().execute('INSERT INTO accounts VALUES (?,?,?,?,?)',
+                         (uid, username, salt, hash_pw(password, salt), time.strftime('%Y-%m-%d')))
+        except sqlite3.IntegrityError:
+            raise ApiError(409, 'auth/username-already-in-use', 'Tên đăng nhập đã tồn tại.')
+        data = dict(profile)
+        data.pop('email', None)
+        data['username'] = username
+        db().execute('INSERT OR REPLACE INTO docs VALUES (?,?,?)', ('user', uid, json.dumps(data, ensure_ascii=False)))
+    return uid
+
+
+def set_password(uid, password):
+    if len(password) < 6:
+        raise ApiError(400, 'auth/weak-password', 'Mật khẩu tối thiểu 6 ký tự.')
+    salt = secrets.token_hex(16)
+    with _lock:
+        db().execute('UPDATE accounts SET salt=?, pwhash=? WHERE uid=?', (salt, hash_pw(password, salt), uid))
+        db().execute('DELETE FROM sessions WHERE uid=?', (uid,))
+
+
+def check_login(username, password):
+    row = db().execute('SELECT uid, salt, pwhash FROM accounts WHERE username=?', (norm_user(username),)).fetchone()
+    fake_salt = '00' * 16
+    ok = hmac.compare_digest(hash_pw(password, row[1] if row else fake_salt), row[2] if row else 'x' * 64)
+    return row[0] if (row and ok) else None
+
+
+_attempts = {}   # ip -> [timestamps]
+
+
+def too_many_attempts(ip):
+    now = time.time()
+    lst = [t for t in _attempts.get(ip, []) if now - t < 300]
+    _attempts[ip] = lst
+    return len(lst) >= 10
+
+
+# ── Tài liệu (thay Firestore) ───────────────────────────────────
+def doc_get(col, id_):
+    r = db().execute('SELECT data FROM docs WHERE col=? AND id=?', (col, id_)).fetchone()
+    return json.loads(r[0]) if r else None
+
+
+def doc_put(col, id_, data):
+    db().execute('INSERT OR REPLACE INTO docs VALUES (?,?,?)', (col, id_, json.dumps(data, ensure_ascii=False)))
+
+
+def deep_merge(a, b):
+    out = dict(a)
+    for k, v in b.items():
+        out[k] = deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
+def role_of(user):
+    p = doc_get('user', user['uid']) if user else None
+    return (p or {}).get('role')
+
+
+def can(op, col, id_, user, old=None, new=None):
+    """Chuyển từ firestore.rules. op: read | create | update | delete."""
+    signed = user is not None
+    role = role_of(user) if signed else None
+    admin = role == 'admin'
+    owner = signed and user['uid'] == id_
+    write = op in ('create', 'update', 'delete')
+
+    if col == 'user':
+        if op == 'read': return signed
+        if op == 'create':
+            return admin or (owner and set(new) <= {'name', 'username', 'role'} and new.get('role') == 'student'
+                             and new.get('username') == user['username'])
+        if op == 'update':
+            if admin: return True
+            changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
+            nm = new.get('name')
+            ph = new.get('phone', '')
+            return (owner and changed <= {'name', 'phone'} and isinstance(nm, str) and 0 < len(nm) <= 100
+                    and isinstance(ph, str) and re.fullmatch(r'[0-9+ ().-]{0,20}', ph) is not None)
+        return admin
+    if col == 'userData':      return owner or admin
+    if col == 'activities':    return signed if op == 'read' else (owner or admin)
+    if col == 'sharedData':    return signed if op == 'read' else role in STAFF
+    if col in ('gradingPolicies', 'curriculum', 'theses'):
+        return signed if op == 'read' else role in ('admin', 'training')
+    if col == 'financeConfig': return signed if op == 'read' else role in ('admin', 'finance')
+    if col == 'tuition':       return (owner or role in ('admin', 'finance')) if op == 'read' else role in ('admin', 'finance')
+    if col == 'gradingColumns':
+        if op == 'read': return signed
+        if admin: return True
+        if role != 'teacher': return False
+        ids = (doc_get('user', user['uid']) or {}).get('subjectIds') or []
+        try: return int(id_) in ids
+        except ValueError: return False
+    if col == 'graduationApps':
+        if op == 'read': return owner or role in ('admin', 'training')
+        mgr = role in ('admin', 'training')
+        rev = {'review', 'reviewedBy', 'reviewedAt'}
+        if op == 'create':
+            return role == 'student' and owner and new.get('status') == 'submitted' and not (set(new) & rev)
+        if op == 'update':
+            if mgr: return True
+            changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
+            return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev)
+        return mgr or (owner and old and old.get('status') == 'submitted')
+    return False   # collection lạ → từ chối (userSecrets không còn dùng)
+
+
+# ── HTTP ────────────────────────────────────────────────────────
+class ApiError(Exception):
+    def __init__(self, status, code, message):
+        super().__init__(message)
+        self.status, self.code, self.message = status, code, message
+
+
+# ── Email khôi phục + mã xác nhận ────────────────────────────────
+MAIL_CFG = os.path.join(DATA_DIR, 'mail.json')
+EMAIL_RE = re.compile(r'^[^@\s]{1,64}@[^@\s]{1,200}\.[^@\s.]{2,}$')
+CODE_TTL = 15 * 60
+_sendlog = {}   # ip -> [timestamps] giới hạn số lần yêu cầu gửi mail
+
+
+def mail_ready():
+    return os.environ.get('STUDYTASK_MAIL_DEBUG') == '1' or os.path.exists(MAIL_CFG)
+
+
+def mail_send(to, subject, body):
+    """Gửi email nền (không chặn API). Chưa cấu hình SMTP → báo lỗi rõ ràng cho người dùng."""
+    if os.environ.get('STUDYTASK_MAIL_DEBUG') == '1':
+        sys.stderr.write('[MAIL-DEBUG] to=%s subject=%s\n%s\n' % (to, subject, body))
+        return
+    try:
+        cfg = json.load(open(MAIL_CFG, encoding='utf-8'))
+    except (OSError, ValueError):
+        raise ApiError(503, 'mail-not-configured', 'Máy chủ chưa cấu hình gửi email. Hãy liên hệ quản trị viên.')
+
+    def run():
+        try:
+            msg = EmailMessage()
+            msg['Subject'], msg['From'], msg['To'] = subject, cfg['from'], to
+            msg.set_content(body)
+            port = int(cfg.get('port', 587))
+            srv = smtplib.SMTP_SSL(cfg['host'], port, timeout=20) if port == 465 else smtplib.SMTP(cfg['host'], port, timeout=20)
+            if port != 465:
+                srv.starttls()
+            if cfg.get('user'):
+                srv.login(cfg['user'], cfg.get('password', ''))
+            srv.send_message(msg)
+            srv.quit()
+        except Exception as e:
+            sys.stderr.write('MAIL-ERROR %r\n' % (e,))
+    threading.Thread(target=run, daemon=True).start()
+
+
+def throttle_mail(ip, limit=6):
+    now = time.time()
+    lst = [t for t in _sendlog.get(ip, []) if now - t < 3600]
+    if len(lst) >= limit:
+        raise ApiError(429, 'too-many-requests', 'Bạn yêu cầu quá nhiều lần. Thử lại sau ít phút.')
+    lst.append(now)
+    _sendlog[ip] = lst
+
+
+def make_code(purpose, uid, email):
+    now = time.time()
+    row = db().execute('SELECT created FROM codes WHERE purpose=? AND uid=?', (purpose, uid)).fetchone()
+    if row and now - row[0] < 60:
+        raise ApiError(429, 'too-soon', 'Vui lòng đợi 1 phút trước khi gửi lại mã.')
+    code = '%06d' % secrets.randbelow(10 ** 6)
+    db().execute('INSERT OR REPLACE INTO codes VALUES (?,?,?,?,?,0,?)',
+                 (purpose, uid, email.lower(), hashlib.sha256((code + uid).encode()).hexdigest(), now + CODE_TTL, now))
+    return code
+
+
+def check_code(purpose, uid, code):
+    row = db().execute('SELECT email, code_hash, expires, attempts FROM codes WHERE purpose=? AND uid=?', (purpose, uid)).fetchone()
+    bad = ApiError(400, 'bad-code', 'Mã không đúng hoặc đã hết hạn.')
+    if not row or row[2] < time.time() or row[3] >= 5:
+        raise bad
+    if not hmac.compare_digest(row[1], hashlib.sha256((str(code).strip() + uid).encode()).hexdigest()):
+        db().execute('UPDATE codes SET attempts=attempts+1 WHERE purpose=? AND uid=?', (purpose, uid))
+        raise bad
+    db().execute('DELETE FROM codes WHERE purpose=? AND uid=?', (purpose, uid))
+    return row[0]
+
+
+def find_uid(identifier):
+    """Tìm tài khoản theo tên đăng nhập HOẶC email cá nhân đã xác minh."""
+    raw = str(identifier).strip().lower()
+    r = db().execute('SELECT uid FROM accounts WHERE username=?', (norm_user(raw),)).fetchone() or \
+        db().execute('SELECT uid FROM contact_email WHERE email=?', (raw,)).fetchone()
+    return r[0] if r else None
+
+
+# ── Sự kiện thời gian thực (SSE) + hiện diện online ──────────────
+_subs, _sub_roles = {}, {}      # uid -> [Queue]; uid -> role
+_sub_lock = threading.Lock()
+
+
+def publish(uids, ev):
+    """uids=None → gửi cho mọi người đang online."""
+    with _sub_lock:
+        targets = [q for uid, lst in _subs.items() if uids is None or uid in uids for q in lst]
+    for q in targets:
+        try:
+            q.put_nowait(ev)
+        except queue.Full:
+            pass
+
+
+def online_admins():
+    with _sub_lock:
+        return {u for u, r in _sub_roles.items() if r == 'admin' and u in _subs}
+
+
+def support_online():
+    return bool(online_admins())
+
+
+def sub_add(uid, role, q):
+    with _sub_lock:
+        first = uid not in _subs
+        _subs.setdefault(uid, []).append(q)
+        _sub_roles[uid] = role
+    if first:
+        presence(uid, role, True)
+
+
+def sub_remove(uid, role, q):
+    with _sub_lock:
+        lst = _subs.get(uid, [])
+        if q in lst:
+            lst.remove(q)
+        gone = not lst
+        if gone:
+            _subs.pop(uid, None)
+    if gone:
+        presence(uid, role, False)
+
+
+def presence(uid, role, online):
+    if role == 'admin':
+        publish(None, {'type': 'support', 'online': support_online()})
+    else:
+        publish(online_admins(), {'type': 'presence', 'uid': uid, 'online': online})
+
+
+def sse(ev):
+    return ('data: %s\n\n' % json.dumps(ev, ensure_ascii=False)).encode()
+
+
+def chat_msg(r):
+    return {'id': r[0], 'thread': r[1], 'sender': r[2], 'fromStaff': bool(r[3]), 'text': r[4], 'ts': r[5], 'read': bool(r[6])}
+
+
+_chat_rate = {}   # uid -> [timestamps]
+
+
+def avatar_dir():
+    d = os.path.join(UPLOAD_DIR, 'avatars')
+    os.makedirs(d, mode=0o755, exist_ok=True)
+    return d
+
+
+def drop_avatar_file(url):
+    if url and url.startswith('/uploads/avatars/'):
+        try:
+            os.remove(os.path.join(avatar_dir(), os.path.basename(url)))
+        except OSError:
+            pass
+
+
+class Handler(BaseHTTPRequestHandler):
+    server_version = 'StudyTaskAPI'
+    protocol_version = 'HTTP/1.1'
+
+    def log_message(self, fmt, *a):
+        sys.stderr.write('%s %s\n' % (self.address_string(), fmt % a))
+
+    # tiện ích
+    def ip(self):
+        return self.headers.get('CF-Connecting-IP') or self.headers.get('X-Real-IP') or self.client_address[0]
+
+    def body(self, limit):
+        n = int(self.headers.get('Content-Length') or 0)
+        if n > limit:
+            raise ApiError(413, 'too-large', 'Dữ liệu quá lớn.')
+        return self.rfile.read(n)
+
+    def json_body(self):
+        try:
+            v = json.loads(self.body(MAX_JSON) or b'{}')
+        except ValueError:
+            raise ApiError(400, 'bad-json', 'JSON không hợp lệ.')
+        if not isinstance(v, dict):
+            raise ApiError(400, 'bad-json', 'Cần một đối tượng JSON.')
+        return v
+
+    def send(self, status, obj, headers=None):
+        raw = json.dumps(obj, ensure_ascii=False).encode()
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(raw)))
+        self.send_header('Cache-Control', 'no-store')
+        for k, v in (headers or {}).items():
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def current_user(self):
+        c = cookies.SimpleCookie(self.headers.get('Cookie') or '')
+        if 'st_session' not in c:
+            return None
+        r = db().execute('SELECT s.uid, a.username, s.expires FROM sessions s JOIN accounts a ON a.uid=s.uid WHERE s.token=?',
+                         (c['st_session'].value,)).fetchone()
+        if not r or r[2] < time.time():
+            return None
+        return {'uid': r[0], 'username': r[1]}
+
+    def cookie(self, token, max_age):
+        secure = '; Secure' if self.headers.get('X-Forwarded-Proto') == 'https' or self.headers.get('CF-Visitor') else ''
+        return {'Set-Cookie': f'st_session={token}; Path=/; HttpOnly; SameSite=Lax; Max-Age={max_age}{secure}'}
+
+    def same_origin_ok(self):
+        o = self.headers.get('Origin')
+        return not o or urlparse(o).netloc == self.headers.get('Host')
+
+    def need_user(self):
+        u = self.current_user()
+        if not u:
+            raise ApiError(401, 'unauthenticated', 'Chưa đăng nhập.')
+        return u
+
+    def dispatch(self, method):
+        try:
+            if method != 'GET' and not self.same_origin_ok():
+                raise ApiError(403, 'bad-origin', 'Origin không hợp lệ.')
+            path = urlparse(self.path)
+            parts = [unquote(p) for p in path.path.strip('/').split('/')]
+            if parts[:1] != ['api']:
+                raise ApiError(404, 'not-found', 'Không tìm thấy.')
+            parts = parts[1:]
+            if method == 'GET' and parts == ['events']:
+                return self.stream_events()
+            with _lock:
+                return self.route(method, parts, parse_qs(path.query))
+        except ApiError as e:
+            self.send(e.status, {'error': {'code': e.code, 'message': e.message}})
+        except Exception as e:   # lỗi không lường trước
+            sys.stderr.write('ERROR %r\n' % (e,))
+            self.send(500, {'error': {'code': 'internal', 'message': 'Lỗi máy chủ.'}})
+
+    do_GET = lambda self: self.dispatch('GET')
+    do_POST = lambda self: self.dispatch('POST')
+    do_PUT = lambda self: self.dispatch('PUT')
+    do_DELETE = lambda self: self.dispatch('DELETE')
+
+    def stream_events(self):
+        with _lock:
+            u = self.need_user()
+            role = role_of(u)
+        q = queue.Queue(maxsize=200)
+        sub_add(u['uid'], role, q)
+        try:
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/event-stream; charset=utf-8')
+            self.send_header('Cache-Control', 'no-cache, no-transform')
+            self.send_header('X-Accel-Buffering', 'no')
+            self.send_header('Connection', 'close')
+            self.end_headers()
+            self.close_connection = True
+            self.wfile.write(sse({'type': 'hello', 'supportOnline': support_online()}))
+            self.wfile.flush()
+            while True:
+                try:
+                    chunk = sse(q.get(timeout=20))
+                except queue.Empty:
+                    chunk = b': ping\n\n'
+                self.wfile.write(chunk)
+                self.wfile.flush()
+        except OSError:
+            pass
+        finally:
+            sub_remove(u['uid'], role, q)
+
+    def route(self, method, p, q):
+        # ── xác thực ──
+        if p == ['auth', 'login'] and method == 'POST':
+            ip = self.ip()
+            if too_many_attempts(ip):
+                raise ApiError(429, 'auth/too-many-requests', 'Đăng nhập sai quá nhiều lần. Thử lại sau vài phút.')
+            b = self.json_body()
+            uid = check_login(str(b.get('username', b.get('email', ''))), str(b.get('password', '')))
+            if not uid:
+                _attempts.setdefault(ip, []).append(time.time())
+                raise ApiError(401, 'auth/invalid-credential', 'Tên đăng nhập hoặc mật khẩu không đúng.')
+            token = secrets.token_urlsafe(32)
+            db().execute('INSERT INTO sessions VALUES (?,?,?)', (token, uid, time.time() + SESSION_TTL))
+            username = db().execute('SELECT username FROM accounts WHERE uid=?', (uid,)).fetchone()[0]
+            return self.send(200, {'user': {'uid': uid, 'username': username}}, self.cookie(token, SESSION_TTL))
+        if p == ['auth', 'logout'] and method == 'POST':
+            c = cookies.SimpleCookie(self.headers.get('Cookie') or '')
+            if 'st_session' in c:
+                db().execute('DELETE FROM sessions WHERE token=?', (c['st_session'].value,))
+            return self.send(200, {'ok': True}, self.cookie('', 0))
+        if p == ['auth', 'me'] and method == 'GET':
+            return self.send(200, {'user': self.current_user()})
+        if p == ['auth', 'forgot'] and method == 'POST':
+            throttle_mail(self.ip())
+            if not mail_ready():
+                raise ApiError(503, 'mail-not-configured', 'Máy chủ chưa cấu hình gửi email. Hãy liên hệ quản trị viên.')
+            uid = find_uid(str(self.json_body().get('identifier', '')))
+            row = db().execute('SELECT email FROM contact_email WHERE uid=?', (uid,)).fetchone() if uid else None
+            if row:
+                try:
+                    code = make_code('reset', uid, row[0])
+                    mail_send(row[0], 'StudyTask – mã đặt lại mật khẩu',
+                              f'Mã đặt lại mật khẩu StudyTask của bạn là: {code}\n\nMã có hiệu lực 15 phút. '
+                              'Nếu bạn không yêu cầu, hãy bỏ qua email này – mật khẩu của bạn không thay đổi.')
+                except ApiError as e:
+                    if e.code != 'too-soon':
+                        raise
+            return self.send(200, {'ok': True})     # luôn trả lời giống nhau để không lộ tài khoản nào tồn tại
+        if p == ['auth', 'reset'] and method == 'POST':
+            ip = self.ip()
+            if too_many_attempts(ip):
+                raise ApiError(429, 'auth/too-many-requests', 'Thử sai quá nhiều lần. Thử lại sau vài phút.')
+            b = self.json_body()
+            uid = find_uid(str(b.get('identifier', '')))
+            if len(str(b.get('newPassword', ''))) < 6:     # kiểm tra trước để không tiêu hao mã
+                raise ApiError(400, 'auth/weak-password', 'Mật khẩu tối thiểu 6 ký tự.')
+            try:
+                if not uid:
+                    raise ApiError(400, 'bad-code', 'Mã không đúng hoặc đã hết hạn.')
+                check_code('reset', uid, b.get('code', ''))
+            except ApiError:
+                _attempts.setdefault(ip, []).append(time.time())
+                raise
+            set_password(uid, str(b.get('newPassword', '')))     # đồng thời đăng xuất mọi phiên cũ
+            return self.send(200, {'ok': True})
+        if p == ['auth', 'change-password'] and method == 'POST':
+            u = self.need_user()
+            b = self.json_body()
+            if not check_login(u['username'], str(b.get('currentPassword', ''))):
+                raise ApiError(401, 'auth/wrong-password', 'Mật khẩu hiện tại không đúng.')
+            set_password(u['uid'], str(b.get('newPassword', '')))
+            token = secrets.token_urlsafe(32)   # set_password đã xóa phiên cũ → cấp phiên mới
+            db().execute('INSERT INTO sessions VALUES (?,?,?)', (token, u['uid'], time.time() + SESSION_TTL))
+            return self.send(200, {'ok': True}, self.cookie(token, SESSION_TTL))
+
+        # ── email khôi phục + ảnh đại diện ──
+        if p[:1] == ['account']:
+            u = self.need_user()
+            prof = doc_get('user', u['uid']) or {}
+            if p == ['account'] and method == 'GET':
+                row = db().execute('SELECT email FROM contact_email WHERE uid=?', (u['uid'],)).fetchone()
+                return self.send(200, {'username': u['username'], 'recoveryEmail': row[0] if row else None,
+                                       'avatar': prof.get('avatar', ''), 'mailReady': mail_ready()})
+            if p == ['account', 'email'] and method == 'POST':
+                b = self.json_body()
+                email = str(b.get('email', '')).strip().lower()
+                if not EMAIL_RE.match(email) or len(email) > 254:
+                    raise ApiError(400, 'bad-email', 'Email không hợp lệ.')
+                if not check_login(u['username'], str(b.get('password', ''))):
+                    raise ApiError(401, 'auth/wrong-password', 'Mật khẩu hiện tại không đúng.')
+                if db().execute('SELECT 1 FROM contact_email WHERE email=? AND uid<>?', (email, u['uid'])).fetchone():
+                    raise ApiError(409, 'email-in-use', 'Email này đã được dùng cho tài khoản khác.')
+                throttle_mail(self.ip())
+                if not mail_ready():
+                    raise ApiError(503, 'mail-not-configured', 'Máy chủ chưa cấu hình gửi email. Hãy liên hệ quản trị viên.')
+                code = make_code('link', u['uid'], email)
+                mail_send(email, 'StudyTask – xác nhận email cá nhân',
+                          f'Mã xác nhận liên kết email cá nhân với tài khoản StudyTask "{u["username"]}": {code}\n\nMã có hiệu lực 15 phút. '
+                          'Nếu không phải bạn thực hiện, hãy bỏ qua email này.')
+                return self.send(200, {'ok': True})
+            if p == ['account', 'email', 'verify'] and method == 'POST':
+                email = check_code('link', u['uid'], self.json_body().get('code', ''))
+                db().execute('INSERT OR REPLACE INTO contact_email VALUES (?,?,?)', (u['uid'], email, time.time()))
+                return self.send(200, {'ok': True, 'recoveryEmail': email})
+            if p == ['account', 'email'] and method == 'DELETE':
+                if not check_login(u['username'], str(self.json_body().get('password', ''))):
+                    raise ApiError(401, 'auth/wrong-password', 'Mật khẩu hiện tại không đúng.')
+                db().execute('DELETE FROM contact_email WHERE uid=?', (u['uid'],))
+                return self.send(200, {'ok': True})
+            if p == ['account', 'avatar'] and method == 'POST':
+                name = (q.get('filename') or ['a.jpg'])[0]
+                ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+                if ext not in ('jpg', 'jpeg', 'png', 'webp'):
+                    raise ApiError(400, 'bad-file-type', 'Ảnh đại diện chỉ nhận JPG, PNG hoặc WebP.')
+                data = self.body(1024 * 1024)
+                if not data or not data.startswith(MAGIC[ext][0]):
+                    raise ApiError(400, 'bad-file-content', 'File không phải ảnh hợp lệ.')
+                stored = f'{u["uid"][:8]}_{secrets.token_hex(6)}.{ext}'
+                path = os.path.join(avatar_dir(), stored)
+                with open(path, 'wb') as f:
+                    f.write(data)
+                os.chmod(path, 0o644)
+                drop_avatar_file(prof.get('avatar'))
+                prof['avatar'] = f'/uploads/avatars/{stored}'
+                doc_put('user', u['uid'], prof)
+                return self.send(200, {'avatar': prof['avatar']})
+            if p == ['account', 'avatar'] and method == 'DELETE':
+                drop_avatar_file(prof.pop('avatar', ''))
+                doc_put('user', u['uid'], prof)
+                return self.send(200, {'ok': True})
+
+        # ── hỗ trợ trực tuyến (chat) ──
+        if p[:1] == ['chat']:
+            u = self.need_user()
+            uid = u['uid']
+            admin = role_of(u) == 'admin'
+            if p == ['chat', 'status'] and method == 'GET':
+                unread = db().execute('SELECT COUNT(*) FROM chat WHERE from_staff=0 AND read=0' if admin else
+                                      'SELECT COUNT(*) FROM chat WHERE thread=? AND from_staff=1 AND read=0',
+                                      () if admin else (uid,)).fetchone()[0]
+                return self.send(200, {'unread': unread, 'supportOnline': support_online()})
+            if p == ['chat', 'threads'] and method == 'GET':
+                if not admin:
+                    raise ApiError(403, 'permission-denied', 'Chỉ quản trị viên xem danh sách hội thoại.')
+                rows = db().execute('''SELECT c.thread, MAX(c.id),
+                      SUM(CASE WHEN c.from_staff=0 AND c.read=0 THEN 1 ELSE 0 END) FROM chat c GROUP BY c.thread ORDER BY MAX(c.id) DESC LIMIT 200''').fetchall()
+                online = online_admins() | {x for x in _subs}
+                out = []
+                for th, last_id, unread in rows:
+                    m = db().execute('SELECT id,thread,sender,from_staff,text,ts,read FROM chat WHERE id=?', (last_id,)).fetchone()
+                    pr = doc_get('user', th) or {}
+                    out.append({'thread': th, 'name': pr.get('name', '(đã xóa)'), 'role': pr.get('role', ''), 'avatar': pr.get('avatar', ''),
+                                'username': pr.get('username', ''), 'unread': unread or 0, 'last': chat_msg(m), 'online': th in online})
+                return self.send(200, {'threads': out})
+            if p == ['chat', 'messages'] and method == 'GET':
+                thread = (q.get('thread') or [''])[0] if admin else uid
+                if not thread:
+                    raise ApiError(400, 'bad-request', 'Thiếu thread.')
+                after = int((q.get('after') or ['0'])[0] or 0)
+                rows = db().execute('SELECT id,thread,sender,from_staff,text,ts,read FROM chat WHERE thread=? AND id>? ORDER BY id LIMIT 300',
+                                    (thread, after)).fetchall()
+                return self.send(200, {'messages': [chat_msg(r) for r in rows], 'supportOnline': support_online()})
+            if p == ['chat', 'messages'] and method == 'POST':
+                b = self.json_body()
+                text = str(b.get('text', '')).strip()
+                if not text or len(text) > 2000:
+                    raise ApiError(400, 'bad-message', 'Tin nhắn phải từ 1 đến 2000 ký tự.')
+                now = time.time()
+                lst = [t for t in _chat_rate.get(uid, []) if now - t < 60]
+                if len(lst) >= 20:
+                    raise ApiError(429, 'too-many-requests', 'Bạn gửi quá nhanh, vui lòng chậm lại.')
+                _chat_rate[uid] = lst + [now]
+                thread = str(b.get('thread', '')) if admin else uid
+                if admin and not doc_get('user', thread):
+                    raise ApiError(404, 'not-found', 'Không tìm thấy người dùng.')
+                cur = db().execute('INSERT INTO chat (thread,sender,from_staff,text,ts,read) VALUES (?,?,?,?,?,0)',
+                                   (thread, uid, 1 if admin else 0, text, now))
+                msg = chat_msg((cur.lastrowid, thread, uid, 1 if admin else 0, text, now, 0))
+                sender = doc_get('user', uid) or {}
+                publish(online_admins() | {thread}, {'type': 'chat', 'thread': thread, 'msg': msg,
+                                                      'fromName': sender.get('name', ''), 'fromRole': sender.get('role', '')})
+                return self.send(200, {'message': msg})
+            if p == ['chat', 'read'] and method == 'POST':
+                thread = str(self.json_body().get('thread', '')) if admin else uid
+                db().execute('UPDATE chat SET read=1 WHERE thread=? AND from_staff=?', (thread, 0 if admin else 1))
+                publish(online_admins() | {thread}, {'type': 'read', 'thread': thread, 'by': 'staff' if admin else 'user'})
+                return self.send(200, {'ok': True})
+
+        # ── quản trị tài khoản ──
+        if p[:2] == ['admin', 'users']:
+            u = self.need_user()
+            if role_of(u) != 'admin':
+                raise ApiError(403, 'permission-denied', 'Chỉ quản trị viên được thực hiện.')
+            if len(p) == 2 and method == 'POST':
+                b = self.json_body()
+                prof = b.get('profile') or {}
+                allowed = {k: prof[k] for k in ('name', 'role', 'subjectIds', 'phone', 'expiresAt') if k in prof}
+                allowed.setdefault('name', b.get('username', b.get('email')))
+                allowed.setdefault('role', 'student')
+                allowed.setdefault('subjectIds', [])
+                allowed['createdAt'] = time.strftime('%Y-%m-%d')
+                uid = create_account(str(b.get('username', b.get('email', ''))), str(b.get('password', '')), allowed)
+                return self.send(200, {'uid': uid})
+            if len(p) == 4 and p[3] == 'password' and method == 'POST':
+                set_password(p[2], str(self.json_body().get('newPassword', '')))
+                return self.send(200, {'ok': True})
+            if len(p) == 3 and method == 'DELETE':
+                drop_avatar_file((doc_get('user', p[2]) or {}).get('avatar'))
+                for t in ('accounts', 'sessions', 'contact_email', 'codes'):
+                    db().execute(f'DELETE FROM {t} WHERE uid=?', (p[2],))
+                db().execute('DELETE FROM chat WHERE thread=?', (p[2],))
+                for col in ('user', 'userData', 'activities'):
+                    db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, p[2]))
+                return self.send(200, {'ok': True})
+
+        # ── tài liệu ──
+        if p[:1] == ['doc'] and len(p) in (2, 3, 4):
+            u = self.current_user()
+            col = p[1]
+            if len(p) == 2 and method == 'GET':
+                rows = db().execute('SELECT id, data FROM docs WHERE col=?', (p[1],)).fetchall()
+                out = []
+                for id_, data in rows:   # lọc theo quyền đọc từng tài liệu
+                    if can('read', col, id_, u):
+                        out.append({'id': id_, **json.loads(data)})
+                return self.send(200, {'docs': out})
+            id_ = p[2]
+            old = doc_get(col, id_)
+            if len(p) == 3 and method == 'GET':
+                if not can('read', col, id_, u):
+                    raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                return self.send(200, {'exists': old is not None, 'data': old})
+            if len(p) == 3 and method == 'PUT':
+                b = self.json_body()
+                new = b.get('data')
+                if not isinstance(new, dict):
+                    raise ApiError(400, 'bad-json', 'Thiếu data.')
+                merged = deep_merge(old or {}, new) if b.get('merge', True) else new
+                if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
+                    raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                doc_put(col, id_, merged)
+                return self.send(200, {'ok': True})
+            if len(p) == 3 and method == 'DELETE':
+                if old is None:
+                    return self.send(200, {'ok': True})
+                if not can('delete', col, id_, u, old):
+                    raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, id_))
+                return self.send(200, {'ok': True})
+            if len(p) == 4 and p[3] == 'append' and method == 'POST':   # thay arrayUnion
+                b = self.json_body()
+                field, value = b.get('field'), b.get('value')
+                merged = dict(old or {})
+                for k, v in (b.get('set') or {}).items():
+                    merged[k] = v
+                arr = list(merged.get(field) or [])
+                if value not in arr:
+                    arr.append(value)
+                merged[field] = arr
+                if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
+                    raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                doc_put(col, id_, merged)
+                return self.send(200, {'ok': True})
+
+        # ── tải file lên ──
+        if p == ['upload'] and method == 'POST':
+            u = self.need_user()
+            role = role_of(u)
+            name = (q.get('filename') or ['file'])[0]
+            ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+            hw_id = (q.get('hw') or [''])[0]
+            sub_dir, limit = '', MAX_UPLOAD
+            if hw_id:      # sinh viên nộp bài: chỉ nhận đúng định dạng giáo viên đã chọn
+                if role != 'student':
+                    raise ApiError(403, 'permission-denied', 'Chỉ sinh viên nộp bài bằng cách này.')
+                hw = next((h for h in (doc_get('sharedData', 'global') or {}).get('homeworks', []) if str(h.get('id')) == hw_id), None)
+                if not hw or hw.get('allowSubmit') is False:
+                    raise ApiError(400, 'no-submit', 'Bài tập này không nhận bài nộp.')
+                prof = doc_get('user', u['uid']) or {}
+                if prof.get('subjectIds') is not None and hw.get('subjectId') not in prof['subjectIds']:
+                    raise ApiError(403, 'permission-denied', 'Bạn không học môn này.')
+                allowed = [x.lower().lstrip('.') for x in (hw.get('allowedExts') or SUBMIT_DEFAULT)]
+                allowed = [x for x in allowed if x in SUBMIT_EXTS]
+                if ext not in allowed:
+                    raise ApiError(400, 'bad-file-type', 'Bài tập này chỉ nhận file: ' + ', '.join('.' + x for x in allowed))
+                sub_dir, limit = 'submissions', MAX_SUBMIT
+            elif role not in STAFF:
+                raise ApiError(403, 'permission-denied', 'Chỉ quản trị viên / giáo viên được tải file lên.')
+            elif ext not in UPLOAD_EXTS:
+                raise ApiError(400, 'bad-file-type', 'Định dạng file không được hỗ trợ.')
+            data = self.body(limit)
+            if not data:
+                raise ApiError(400, 'empty', 'File rỗng.')
+            sig = MAGIC.get(ext)
+            if hw_id and sig and not data.startswith(sig):
+                raise ApiError(400, 'bad-file-content', f'Nội dung file không đúng định dạng .{ext}.')
+            stem = re.sub(r'[^A-Za-z0-9._-]+', '_', name.rsplit('.', 1)[0])[:60] or 'file'
+            stored = f'{secrets.token_hex(8)}_{stem}.{ext}'
+            folder = os.path.join(UPLOAD_DIR, sub_dir)
+            os.makedirs(folder, mode=0o755, exist_ok=True)
+            with open(os.path.join(folder, stored), 'wb') as f:
+                f.write(data)
+            os.chmod(os.path.join(folder, stored), 0o644)
+            rel = f'{sub_dir}/{stored}' if sub_dir else stored
+            return self.send(200, {'url': f'/uploads/{rel}', 'name': name, 'size': len(data)})
+
+        raise ApiError(404, 'not-found', 'Không tìm thấy.')
+
+
+def cli(argv):
+    if argv[1:2] == ['serve'] or len(argv) == 1:
+        db()
+        srv = ThreadingHTTPServer(('127.0.0.1', PORT), Handler)
+        print(f'StudyTask API tại 127.0.0.1:{PORT}, dữ liệu: {DATA_DIR}', flush=True)
+        srv.serve_forever()
+    elif argv[1] == 'create-user':
+        _, _, username, pw, role, name = argv
+        print(create_account(username, pw, {'name': name, 'role': role, 'subjectIds': [], 'phone': '',
+                                         'createdAt': time.strftime('%Y-%m-%d')}))
+    elif argv[1] == 'set-password':
+        r = db().execute('SELECT uid FROM accounts WHERE username=?', (norm_user(argv[2]),)).fetchone()
+        set_password(r[0], argv[3]); print('OK')
+    elif argv[1] == 'delete-user':
+        r = db().execute('SELECT uid FROM accounts WHERE username=?', (norm_user(argv[2]),)).fetchone()
+        for t in ('accounts', 'sessions'):
+            db().execute(f'DELETE FROM {t} WHERE uid=?', (r[0],))
+        for col in ('user', 'userData', 'activities'):
+            db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, r[0]))
+        print('OK')
+    elif argv[1:2] == ['mail-config']:
+        import getpass
+        host, port, user, sender = argv[2:6]
+        pw = getpass.getpass('Mật khẩu SMTP (ẩn khi gõ; với Gmail dùng "mật khẩu ứng dụng"): ')
+        with open(MAIL_CFG, 'w', encoding='utf-8') as f:
+            json.dump({'host': host, 'port': int(port), 'user': user, 'password': pw, 'from': sender}, f)
+        os.chmod(MAIL_CFG, 0o600)
+        print('Đã lưu', MAIL_CFG)
+    elif argv[1:2] == ['mail-test']:
+        os.environ.pop('STUDYTASK_MAIL_DEBUG', None)
+        mail_send(argv[2], 'StudyTask – thử gửi email', 'Nếu bạn nhận được thư này, cấu hình gửi email đã hoạt động.')
+        time.sleep(6)
+        print('Đã gửi (xem lỗi, nếu có, ở dòng MAIL-ERROR phía trên).')
+    else:
+        print(__doc__)
+
+
+if __name__ == '__main__':
+    cli(sys.argv)

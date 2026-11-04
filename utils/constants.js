@@ -1,11 +1,11 @@
 // utils/constants.js – Hằng số & dữ liệu mẫu
 
 export const DEMO_ACCOUNTS = [
-  { id: 'u1', email: 'admin@studytask.vn',   password: 'admin123',   name: 'Quản trị viên',     role: 'admin',   subjectIds: null      }, // null = xem tất cả
-  { id: 'u2', email: 'teacher@studytask.vn', password: 'teacher123', name: 'TS. Nguyễn Văn An', role: 'teacher', subjectIds: [1, 2]    }, // dạy Toán + Vật lý
-  { id: 'u3', email: 'student@studytask.vn', password: 'student123', name: 'Trần Minh Khoa',    role: 'student', subjectIds: [1, 3, 4] }, // học Toán + Lập trình + Tiếng Anh
-  { id: 'u4', email: 'daotao@studytask.vn',   password: 'daotao123',   name: 'Phòng Đào tạo',   role: 'training' },
-  { id: 'u5', email: 'taichinh@studytask.vn', password: 'taichinh123', name: 'Phòng Tài chính', role: 'finance' },
+  { id: 'u1', username: 'admin',   password: 'demo',   name: 'Quản trị viên',     role: 'admin',   subjectIds: null      }, // null = xem tất cả
+  { id: 'u2', username: 'teacher', password: 'demo', name: 'TS. Nguyễn Văn An', role: 'teacher', subjectIds: [1, 2]    }, // dạy Toán + Vật lý
+  { id: 'u3', username: 'student', password: 'demo', name: 'Trần Minh Khoa',    role: 'student', subjectIds: [1, 3, 4] }, // học Toán + Lập trình + Tiếng Anh
+  { id: 'u4', username: 'daotao',   password: 'demo',   name: 'Phòng Đào tạo',   role: 'training' },
+  { id: 'u5', username: 'taichinh', password: 'demo', name: 'Phòng Tài chính', role: 'finance' },
 ]
 // ✅ Email domain: studytask.vn (khớp với Firebase Auth)
 export const DEMO_USER = DEMO_ACCOUNTS[2]
@@ -61,7 +61,7 @@ export const HW_TYPES = {
 }
 
 export const SAMPLE_HOMEWORKS = [
-  { id: 1, subjectId: 1, title: 'Bài tập Chương 1',    type: 'assign', dueDate: relDate(5),  status: 'pending',   description: 'Hoàn thành bài 1.1 đến 1.5 trong giáo trình. Trình bày lời giải chi tiết, nộp file PDF.', fileUrl: 'https://drive.google.com', fileName: 'De_bai_chuong1.pdf', score: null },
+  { id: 1, subjectId: 1, title: 'Bài tập Chương 1',    type: 'assign', dueDate: relDate(5),  status: 'pending',   description: 'Hoàn thành bài 1.1 đến 1.5 trong giáo trình. Trình bày lời giải chi tiết, nộp file PDF.', fileUrl: '', fileName: 'De_bai_chuong1.pdf', score: null },
   { id: 2, subjectId: 1, title: 'Nộp bài tuần 2',      type: 'submit', dueDate: relDate(2),  status: 'pending',   description: '', score: null },
   { id: 3, subjectId: 1, title: 'Quiz Chương 1',        type: 'quiz',   dueDate: relDate(3),  status: 'completed', description: '20 câu trắc nghiệm', score: 8.5 },
   { id: 4, subjectId: 2, title: 'Bài tập Thí nghiệm',  type: 'assign', dueDate: relDate(7),  status: 'pending',   description: 'Tổng hợp kết quả TN', score: null },
@@ -203,14 +203,14 @@ export const MATERIAL_TYPES = {
 }
 
 export const SAMPLE_MATERIALS = [
-  { id: 1, subjectId: 1, title: 'Giáo trình Toán cao cấp A1',      type: 'giaoTrinh', description: 'Tài liệu chính thức của môn học – NXB ĐHQG',   url: 'https://drive.google.com', uploadedBy: 'TS. Nguyễn Văn An',  uploadedAt: relDate(-30) },
-  { id: 2, subjectId: 1, title: 'Slide Chương 1–3: Giới hạn',       type: 'slide',     description: 'Bài giảng điện tử tuần 1–3',                    url: 'https://drive.google.com', uploadedBy: 'TS. Nguyễn Văn An',  uploadedAt: relDate(-20) },
-  { id: 3, subjectId: 1, title: 'Đề kiểm tra giữa kỳ các năm',     type: 'baiTap',    description: 'Tổng hợp đề + đáp án từ 2020–2024',             url: 'https://drive.google.com', uploadedBy: 'TS. Nguyễn Văn An',  uploadedAt: relDate(-15) },
-  { id: 4, subjectId: 2, title: 'Giáo trình Vật lý đại cương',      type: 'giaoTrinh', description: 'Lương Duyên Bình & Nguyễn Quang Báu',           url: 'https://drive.google.com', uploadedBy: 'PGS. Trần Thị Bích', uploadedAt: relDate(-25) },
-  { id: 5, subjectId: 2, title: 'Slide Điện từ trường – Chương 4',  type: 'slide',     description: '',                                              url: 'https://drive.google.com', uploadedBy: 'PGS. Trần Thị Bích', uploadedAt: relDate(-12) },
-  { id: 6, subjectId: 3, title: 'Tài liệu lập trình C',             type: 'giaoTrinh', description: 'Ngôn ngữ lập trình C – NXB Giáo dục',          url: 'https://drive.google.com', uploadedBy: 'ThS. Lê Minh Châu',  uploadedAt: relDate(-28) },
-  { id: 7, subjectId: 3, title: 'Slide Lập trình C – Tuần 1–4',    type: 'slide',     description: 'Kiểu dữ liệu, vòng lặp, hàm',                  url: 'https://drive.google.com', uploadedBy: 'ThS. Lê Minh Châu',  uploadedAt: relDate(-10) },
-  { id: 8, subjectId: 4, title: 'Cambridge Grammar in Use',          type: 'thamKhao',  description: 'Tài liệu ngữ pháp tham khảo',                   url: 'https://drive.google.com', uploadedBy: 'ThS. Phạm Thị Dung', uploadedAt: relDate(-22) },
+  { id: 1, subjectId: 1, title: 'Giáo trình Toán cao cấp A1',      type: 'giaoTrinh', description: 'Tài liệu chính thức của môn học – NXB ĐHQG',   url: '', uploadedBy: 'TS. Nguyễn Văn An',  uploadedAt: relDate(-30) },
+  { id: 2, subjectId: 1, title: 'Slide Chương 1–3: Giới hạn',       type: 'slide',     description: 'Bài giảng điện tử tuần 1–3',                    url: '', uploadedBy: 'TS. Nguyễn Văn An',  uploadedAt: relDate(-20) },
+  { id: 3, subjectId: 1, title: 'Đề kiểm tra giữa kỳ các năm',     type: 'baiTap',    description: 'Tổng hợp đề + đáp án từ 2020–2024',             url: '', uploadedBy: 'TS. Nguyễn Văn An',  uploadedAt: relDate(-15) },
+  { id: 4, subjectId: 2, title: 'Giáo trình Vật lý đại cương',      type: 'giaoTrinh', description: 'Lương Duyên Bình & Nguyễn Quang Báu',           url: '', uploadedBy: 'PGS. Trần Thị Bích', uploadedAt: relDate(-25) },
+  { id: 5, subjectId: 2, title: 'Slide Điện từ trường – Chương 4',  type: 'slide',     description: '',                                              url: '', uploadedBy: 'PGS. Trần Thị Bích', uploadedAt: relDate(-12) },
+  { id: 6, subjectId: 3, title: 'Tài liệu lập trình C',             type: 'giaoTrinh', description: 'Ngôn ngữ lập trình C – NXB Giáo dục',          url: '', uploadedBy: 'ThS. Lê Minh Châu',  uploadedAt: relDate(-28) },
+  { id: 7, subjectId: 3, title: 'Slide Lập trình C – Tuần 1–4',    type: 'slide',     description: 'Kiểu dữ liệu, vòng lặp, hàm',                  url: '', uploadedBy: 'ThS. Lê Minh Châu',  uploadedAt: relDate(-10) },
+  { id: 8, subjectId: 4, title: 'Cambridge Grammar in Use',          type: 'thamKhao',  description: 'Tài liệu ngữ pháp tham khảo',                   url: '', uploadedBy: 'ThS. Phạm Thị Dung', uploadedAt: relDate(-22) },
 ]
 
 // ── Thời khóa biểu & Lịch thi ──
@@ -312,11 +312,11 @@ export const FORM_CATEGORIES = {
   khac:      { label: 'Khác',          icon: 'file-earmark',       color: '#858796' },
 }
 export const SAMPLE_FORMS = [
-  { id: 1, title: 'Đơn xin nghỉ học tạm thời',     category: 'donTu',    description: 'Mẫu đơn xin bảo lưu / nghỉ học tạm thời có xác nhận của khoa', url: 'https://drive.google.com', uploadedBy: 'Phòng Đào tạo', date: relDate(-20) },
-  { id: 2, title: 'Đơn phúc khảo điểm thi',        category: 'donTu',    description: 'Dùng khi sinh viên có nhu cầu phúc khảo điểm thi kết thúc học phần', url: 'https://drive.google.com', uploadedBy: 'Phòng Đào tạo', date: relDate(-25) },
-  { id: 3, title: 'Mẫu báo cáo thực tập tốt nghiệp', category: 'baoCao', description: 'Mẫu trình bày báo cáo thực tập chuẩn của nhà trường', url: 'https://drive.google.com', uploadedBy: 'Khoa CNTT', date: relDate(-30) },
-  { id: 4, title: 'Hướng dẫn định dạng khóa luận',  category: 'huongDan', description: 'Quy định trình bày, font chữ, lề, mục lục cho khóa luận tốt nghiệp', url: 'https://drive.google.com', uploadedBy: 'Phòng Đào tạo', date: relDate(-35) },
-  { id: 5, title: 'Quy chế đào tạo tín chỉ',        category: 'quyChe',   description: 'Quy chế học vụ, điểm, xếp loại theo hệ thống tín chỉ', url: 'https://drive.google.com', uploadedBy: 'Phòng Đào tạo', date: relDate(-40) },
+  { id: 1, title: 'Đơn xin nghỉ học tạm thời',     category: 'donTu',    description: 'Mẫu đơn xin bảo lưu / nghỉ học tạm thời có xác nhận của khoa', url: '', uploadedBy: 'Phòng Đào tạo', date: relDate(-20) },
+  { id: 2, title: 'Đơn phúc khảo điểm thi',        category: 'donTu',    description: 'Dùng khi sinh viên có nhu cầu phúc khảo điểm thi kết thúc học phần', url: '', uploadedBy: 'Phòng Đào tạo', date: relDate(-25) },
+  { id: 3, title: 'Mẫu báo cáo thực tập tốt nghiệp', category: 'baoCao', description: 'Mẫu trình bày báo cáo thực tập chuẩn của nhà trường', url: '', uploadedBy: 'Khoa CNTT', date: relDate(-30) },
+  { id: 4, title: 'Hướng dẫn định dạng khóa luận',  category: 'huongDan', description: 'Quy định trình bày, font chữ, lề, mục lục cho khóa luận tốt nghiệp', url: '', uploadedBy: 'Phòng Đào tạo', date: relDate(-35) },
+  { id: 5, title: 'Quy chế đào tạo tín chỉ',        category: 'quyChe',   description: 'Quy chế học vụ, điểm, xếp loại theo hệ thống tín chỉ', url: '', uploadedBy: 'Phòng Đào tạo', date: relDate(-40) },
 ]
 
 // Dữ liệu hoạt động MẪU (chỉ dùng cho chế độ demo – không có Firebase)
@@ -325,7 +325,7 @@ export const SAMPLE_ACTIVITY = [
   { uid: 'sv1', name: 'Nguyễn Văn Bình',  email: 'binh@sv.vn',  subjectIds: [1, 2], events: [
     { type: 'material', subjectId: 1, refId: 1, refTitle: 'Giáo trình Toán cao cấp A1', at: relDate(-5) },
     { type: 'material', subjectId: 1, refId: 2, refTitle: 'Slide Chương 1–3: Giới hạn',  at: relDate(-4) },
-    { type: 'homework', subjectId: 1, refId: 1, refTitle: 'Bài tập Chương 1',            url: 'https://drive.google.com', note: 'Em nộp bài, có 2 câu chưa chắc ạ.', at: relDate(-3) },
+    { type: 'homework', subjectId: 1, refId: 1, refTitle: 'Bài tập Chương 1',            url: '', note: 'Em nộp bài, có 2 câu chưa chắc ạ.', at: relDate(-3) },
     { type: 'quiz',     subjectId: 1, refId: 1, refTitle: 'Quiz Chương 1 – Giới hạn hàm số', score: 8.5, total: 3, correct: 3, at: relDate(-2) },
     { type: 'material', subjectId: 2, refId: 4, refTitle: 'Giáo trình Vật lý đại cương', at: relDate(-2) },
   ]},

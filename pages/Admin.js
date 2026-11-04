@@ -134,7 +134,7 @@ function UserList({ subjects, onUpdateSubjects }) {
           ),
           h('div', { className: 'flex-grow-1 min-w-0' },
             h('div', { className: 'fw-semibold' }, user.name || '(Chưa đặt tên)'),
-            h('div', { className: 'small text-muted text-truncate' }, user.email),
+            h('div', { className: 'small text-muted text-truncate' }, user.username),
             h('div', { className: 'd-flex gap-2 align-items-center mt-1 flex-wrap' },
               h(RoleBadge, { role: user.role }),
               (user.subjectIds || []).length > 0

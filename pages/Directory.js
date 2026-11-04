@@ -26,8 +26,8 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
   const teachers = useMemo(() => allUsers.filter(u => u.role === 'teacher'), [allUsers])
 
   const list = (tab === 'student' ? students : teachers)
-    .filter(u => !search || (u.name || '').toLowerCase().includes(search.toLowerCase()) || (u.email || '').toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => (a.name || a.email || '').localeCompare(b.name || b.email || ''))
+    .filter(u => !search || (u.name || '').toLowerCase().includes(search.toLowerCase()) || (u.username || '').toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => (a.name || a.username || '').localeCompare(b.name || b.username || ''))
 
   const card = (u) => {
     const r = ROLES[u.role] || ROLES.student
@@ -37,10 +37,10 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
       h('div', { className: 'card border-0 shadow-sm h-100' },
         h('div', { className: 'card-body' },
           h('div', { className: 'd-flex align-items-center gap-3 mb-3' },
-            h('div', { className: 'dir-avatar', style: { background: `linear-gradient(135deg, ${r.color}dd, ${r.color}88)` } }, initials(u.name || u.email)),
+            h('div', { className: 'dir-avatar', style: { background: `linear-gradient(135deg, ${r.color}dd, ${r.color}88)` } }, initials(u.name || u.username)),
             h('div', { className: 'min-w-0 flex-grow-1' },
               h('div', { className: 'fw-bold text-truncate' }, u.name || '(Chưa đặt tên)'),
-              h('div', { className: 'small text-muted text-truncate' }, u.email),
+              h('div', { className: 'small text-muted text-truncate' }, u.username),
               h('span', { className: `role-badge role-badge-${u.role} mt-1` }, h('i', { className: `bi bi-${r.icon} me-1` }), r.label)
             )
           ),
@@ -69,7 +69,7 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
       ),
       h('div', { className: 'input-group input-group-sm', style: { width: 220 } },
         h('span', { className: 'input-group-text bg-light border-end-0 text-muted' }, h('i', { className: 'bi bi-search' })),
-        h('input', { className: 'form-control border-start-0', placeholder: 'Tìm tên, email...', value: search, onChange: e => setSearch(e.target.value) })
+        h('input', { className: 'form-control border-start-0', placeholder: 'Tìm tên, tên đăng nhập...', value: search, onChange: e => setSearch(e.target.value) })
       )
     ),
 

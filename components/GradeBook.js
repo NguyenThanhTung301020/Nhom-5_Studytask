@@ -130,16 +130,16 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
     studentSubjects(s).forEach(sub => {
       const ev = evalOf(s.uid, sub)
       const w = ev.eff.weights
-      quizzes.filter(q => q.subjectId === sub.id).forEach(q => { const v = effQuiz(s.uid, sub.id, q.id); rows.push([s.name, s.email, sub.name, 'Trắc nghiệm', q.title, v == null ? '' : v, '']) })
-      homeworks.filter(hw => hw.subjectId === sub.id).forEach(hw => { const v = hwGrade(s.uid, sub.id, hw.id); rows.push([s.name, s.email, sub.name, 'Bài tập', hw.title, v == null ? '' : v, '']) })
-      ;['cc', 'bt', 'gk', 'ck'].filter(k => +w[k] > 0).forEach(k => rows.push([s.name, s.email, sub.name, COMPONENT_LABEL[k], '', fmt(ev.scores[k]), `${w[k]}%`]))
-      if (ev.eff.practice?.enabled) rows.push([s.name, s.email, sub.name, 'Điểm thực hành', '', fmt(ev.scores.th), `${ev.eff.practice.practiceCredits} TC`])
-      rows.push([s.name, s.email, sub.name, ev.result.final != null ? 'ĐIỂM MÔN' : 'ĐIỂM MÔN (tạm tính)', '', fmt(ev.result.final ?? ev.result.provisional), ''])
+      quizzes.filter(q => q.subjectId === sub.id).forEach(q => { const v = effQuiz(s.uid, sub.id, q.id); rows.push([s.name, s.username, sub.name, 'Trắc nghiệm', q.title, v == null ? '' : v, '']) })
+      homeworks.filter(hw => hw.subjectId === sub.id).forEach(hw => { const v = hwGrade(s.uid, sub.id, hw.id); rows.push([s.name, s.username, sub.name, 'Bài tập', hw.title, v == null ? '' : v, '']) })
+      ;['cc', 'bt', 'gk', 'ck'].filter(k => +w[k] > 0).forEach(k => rows.push([s.name, s.username, sub.name, COMPONENT_LABEL[k], '', fmt(ev.scores[k]), `${w[k]}%`]))
+      if (ev.eff.practice?.enabled) rows.push([s.name, s.username, sub.name, 'Điểm thực hành', '', fmt(ev.scores.th), `${ev.eff.practice.practiceCredits} TC`])
+      rows.push([s.name, s.username, sub.name, ev.result.final != null ? 'ĐIỂM MÔN' : 'ĐIỂM MÔN (tạm tính)', '', fmt(ev.result.final ?? ev.result.provisional), ''])
     })
     return rows
   }
-  const HEAD = ['Họ tên', 'Email', 'Môn học', 'Hạng mục', 'Tên', 'Điểm (hệ 10)', 'Trọng số']
-  const exportStudent = (s) => downloadCSV(`bang-diem-${(s.name || s.email).replace(/\s+/g, '-')}.csv`, [HEAD, ...studentRows(s)])
+  const HEAD = ['Họ tên', 'Tên đăng nhập', 'Môn học', 'Hạng mục', 'Tên', 'Điểm (hệ 10)', 'Trọng số']
+  const exportStudent = (s) => downloadCSV(`bang-diem-${(s.name || s.username).replace(/\s+/g, '-')}.csv`, [HEAD, ...studentRows(s)])
   const exportAll = () => { const body = []; students.forEach(s => body.push(...studentRows(s))); downloadCSV('bang-diem-tat-ca-sinh-vien.csv', [HEAD, ...body]) }
 
   if (activities === null) return h('div', { className: 'text-center py-4' },
@@ -162,7 +162,7 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
       h('div', { className: 'd-flex align-items-center gap-2' },
         h('span', { className: 'fw-semibold small text-muted' }, 'Sinh viên:'),
         h('select', { className: 'form-select form-select-sm', style: { width: 'auto', minWidth: 220 }, value: studentUid ?? '', onChange: e => setStudentUid(e.target.value) },
-          students.map(s => h('option', { key: s.uid, value: s.uid }, `${s.name || s.email}`))
+          students.map(s => h('option', { key: s.uid, value: s.uid }, `${s.name || s.username}`))
         )
       ),
       h('div', { className: 'd-flex gap-2' },
@@ -186,8 +186,8 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
     student && h('div', { className: 'card border-0 shadow-sm mb-3' },
       h('div', { className: 'card-body d-flex align-items-center justify-content-between flex-wrap gap-2' },
         h('div', null,
-          h('div', { className: 'fw-bold fs-5' }, student.name || student.email),
-          h('div', { className: 'small text-muted' }, student.email)
+          h('div', { className: 'fw-bold fs-5' }, student.name || student.username),
+          h('div', { className: 'small text-muted' }, student.username)
         ),
         h('div', { className: 'text-center' },
           h('div', { className: 'fw-bold', style: { fontSize: '1.8rem', color: scoreColor(overall) } }, overall == null ? '—' : overall.toFixed(2)),

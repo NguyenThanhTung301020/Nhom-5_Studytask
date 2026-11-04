@@ -59,7 +59,7 @@ export default function Theses({ user }) {
   const save = async (data) => {
     const { id, ...rest } = data
     try {
-      await setDocument('theses', modal.item?.id || `t${Date.now()}`, { ...rest, publishedBy: user.name || user.email || '', publishedAt: modal.item?.publishedAt || new Date().toISOString() }, false)
+      await setDocument('theses', modal.item?.id || `t${Date.now()}`, { ...rest, publishedBy: user.name || user.username || '', publishedAt: modal.item?.publishedAt || new Date().toISOString() }, false)
       setModal(null); load()
     } catch (e) { setMsg(errorText(e)) }
   }

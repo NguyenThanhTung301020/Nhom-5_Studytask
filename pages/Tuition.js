@@ -22,7 +22,7 @@ function downloadCSV(filename, rows) {
 
 // ── Nội dung thông báo công nợ mặc định ──
 const noticeText = (student, sum, cfg) =>
-  `Thông báo học phí ${cfg.semester || ''}: ${student.name || student.email} đăng ký ${sum.credits} tín chỉ, ` +
+  `Thông báo học phí ${cfg.semester || ''}: ${student.name || student.username} đăng ký ${sum.credits} tín chỉ, ` +
   `học phí ${formatVND(sum.total)}, đã nộp ${formatVND(sum.paid)}, còn nợ ${formatVND(sum.debt)}. ` +
   (cfg.dueDate ? `Hạn nộp: ${fmtDate(cfg.dueDate)}.` : '')
 
@@ -123,7 +123,7 @@ function PaymentModal({ student, sum, onSave, onClose }) {
         h('div', { className: 'modal-header' }, h('h5', { className: 'modal-title fw-bold' }, h('i', { className: 'bi bi-cash-stack me-2 text-success' }), 'Ghi nhận thanh toán'),
           h('button', { className: 'btn-close', onClick: onClose })),
         h('div', { className: 'modal-body' },
-          h('div', { className: 'small mb-3' }, h('strong', null, student.name || student.email), ' · còn nợ ', h('strong', { className: 'text-danger' }, formatVND(sum.debt))),
+          h('div', { className: 'small mb-3' }, h('strong', null, student.name || student.username), ' · còn nợ ', h('strong', { className: 'text-danger' }, formatVND(sum.debt))),
           h('div', { className: 'row g-3' },
             h('div', { className: 'col-6' }, h('label', { className: 'form-label fw-semibold' }, 'Số tiền nộp (đ)'),
               h('input', { type: 'number', min: 0, step: 1000, className: 'form-control', value: f.amount, onChange: e => setF({ ...f, amount: e.target.value }) })),
@@ -188,7 +188,7 @@ function FinanceTuition({ allUsers, subjects }) {
   const students = allUsers.filter(u => u.role === 'student')
   const rows = useMemo(() => !cfg ? [] : students.map(s => ({ s, sum: tuitionSummary(s, subjects, cfg, accounts[s.uid] || {}) })), [students, subjects, cfg, accounts])
   const shown = rows.filter(r => (filter === 'all' || r.sum.status === filter || (filter === 'debt' && r.sum.debt > 0)) &&
-    (!q || `${r.s.name} ${r.s.email}`.toLowerCase().includes(q.toLowerCase())))
+    (!q || `${r.s.name} ${r.s.username}`.toLowerCase().includes(q.toLowerCase())))
   const totals = rows.reduce((t, r) => ({ total: t.total + r.sum.total, paid: t.paid + Math.min(r.sum.paid, r.sum.total), debt: t.debt + r.sum.debt }), { total: 0, paid: 0, debt: 0 })
 
   const cfgErr = !form ? '' : Number(form.pricePerCredit) <= 0 ? 'Đơn giá tín chỉ phải lớn hơn 0.'
@@ -207,8 +207,8 @@ function FinanceTuition({ allUsers, subjects }) {
     const payments = [...(cur.payments || [])]
     if (Number(f.amount) > 0) payments.push({ amount: Number(f.amount), date: f.date, method: f.method, note: f.note, at: new Date().toISOString() })
     try {
-      await setDocument('tuition', s.uid, { payments, discount: Number(f.discount) || 0, studentName: s.name || '', email: s.email || '' })
-      setPayFor(null); setMsg({ type: 'success', text: `Đã ghi nhận cho ${s.name || s.email}.` }); reload()
+      await setDocument('tuition', s.uid, { payments, discount: Number(f.discount) || 0, studentName: s.name || '', username: s.username || '' })
+      setPayFor(null); setMsg({ type: 'success', text: `Đã ghi nhận cho ${s.name || s.username}.` }); reload()
     } catch (e) { setMsg({ type: 'danger', text: errorText(e) }) }
   }
 
@@ -217,7 +217,7 @@ function FinanceTuition({ allUsers, subjects }) {
       for (const { s, sum } of noticeFor) {
         const cur = accounts[s.uid] || {}
         const message = text.trim() || noticeText(s, sum, cfg)
-        await setDocument('tuition', s.uid, { notices: [...(cur.notices || []), { at: todayISO(), message }], studentName: s.name || '', email: s.email || '' })
+        await setDocument('tuition', s.uid, { notices: [...(cur.notices || []), { at: todayISO(), message }], studentName: s.name || '', username: s.username || '' })
       }
       setMsg({ type: 'success', text: `Đã gửi thông báo cho ${noticeFor.length} sinh viên.` }); setNoticeFor(null); reload()
     } catch (e) { setMsg({ type: 'danger', text: errorText(e) }) }
@@ -225,7 +225,7 @@ function FinanceTuition({ allUsers, subjects }) {
 
   const exportCSV = () => downloadCSV(`hoc-phi-${(cfg.semester || '').replace(/\s+/g, '-')}.csv`, [
     ['Họ tên', 'Email', 'Tín chỉ', 'Học phí', 'Miễn giảm', 'Phải nộp', 'Đã nộp', 'Còn nợ', 'Trạng thái'],
-    ...rows.map(({ s, sum }) => [s.name, s.email, sum.credits, sum.gross, sum.discount, sum.total, sum.paid, sum.debt, STATUS_INFO[sum.status].label]),
+    ...rows.map(({ s, sum }) => [s.name, s.username, sum.credits, sum.gross, sum.discount, sum.total, sum.paid, sum.debt, STATUS_INFO[sum.status].label]),
   ])
 
   if (!cfg || !form) return h('div', { className: 'text-center py-5' }, h('div', { className: 'spinner-border text-primary' }))
@@ -269,7 +269,7 @@ function FinanceTuition({ allUsers, subjects }) {
     // Danh sách sinh viên
     h('div', { className: 'card border-0 shadow-sm' },
       h('div', { className: 'card-body d-flex flex-wrap gap-2 align-items-center' },
-        h('input', { className: 'form-control form-control-sm', style: { maxWidth: 240 }, placeholder: 'Tìm tên, email…', value: q, onChange: e => setQ(e.target.value) }),
+        h('input', { className: 'form-control form-control-sm', style: { maxWidth: 240 }, placeholder: 'Tìm tên, tên đăng nhập…', value: q, onChange: e => setQ(e.target.value) }),
         h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: filter, onChange: e => setFilter(e.target.value) },
           h('option', { value: 'all' }, 'Tất cả'), h('option', { value: 'debt' }, 'Còn nợ'),
           ['overdue', 'unpaid', 'partial', 'paid'].map(k => h('option', { key: k, value: k }, STATUS_INFO[k].label))),
@@ -284,7 +284,7 @@ function FinanceTuition({ allUsers, subjects }) {
           h('tbody', null,
             shown.length === 0 && h('tr', null, h('td', { colSpan: 7, className: 'text-center text-muted py-4' }, 'Không có sinh viên phù hợp.')),
             shown.map(({ s, sum }) => h('tr', { key: s.uid },
-              h('td', null, h('div', { className: 'fw-semibold' }, s.name || s.email), h('div', { className: 'small text-muted' }, s.email)),
+              h('td', null, h('div', { className: 'fw-semibold' }, s.name || s.username), h('div', { className: 'small text-muted' }, s.username)),
               h('td', { className: 'text-end' }, sum.credits),
               h('td', { className: 'text-end' }, formatVND(sum.total)),
               h('td', { className: 'text-end text-success' }, formatVND(sum.paid)),
