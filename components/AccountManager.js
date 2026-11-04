@@ -264,7 +264,7 @@ export default function AccountManager({ subjects = [] }) {
   return h('div', null,
     !fb && h('div', { className: 'alert alert-warning small py-2' },
       h('i', { className: 'bi bi-exclamation-triangle me-1' }),
-      'Chế độ demo: thao tác chỉ minh họa trên danh sách tạm, không lưu thật. Kết nối Firebase để quản lý tài khoản thực.'
+      'Chế độ demo: thao tác chỉ minh họa trên danh sách tạm, không lưu thật. Kết nối máy chủ để quản lý tài khoản thực.'
     ),
 
     // Thanh công cụ

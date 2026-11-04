@@ -180,7 +180,7 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
     ),
 
     !fb && h('div', { className: 'alert alert-warning small py-2' },
-      h('i', { className: 'bi bi-exclamation-triangle me-1' }), 'Chế độ demo: điểm chỉnh sửa lưu tạm trên trình duyệt này. Kết nối Firebase để đồng bộ thật.'
+      h('i', { className: 'bi bi-exclamation-triangle me-1' }), 'Chế độ demo: điểm chỉnh sửa lưu tạm trên trình duyệt này. Kết nối máy chủ để đồng bộ thật.'
     ),
 
     student && h('div', { className: 'card border-0 shadow-sm mb-3' },

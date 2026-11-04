@@ -65,8 +65,8 @@ export default function Login({ onLogin }) {
           await setUserProfile(uid, profile)
         }
 
-        // Truyền cả subjectIds: thiếu trường này thì app coi như 'xem tất cả môn' cho tới khi tải lại trang
-        onLogin({ uid, username: cred.user.username, name: profile.name, role: profile.role, subjectIds: profile.subjectIds !== undefined ? profile.subjectIds : null })
+        // Truyền cả subjectIds và avatar: thiếu thì app coi như 'xem tất cả môn' và mất ảnh đại diện cho tới khi tải lại trang
+        onLogin({ uid, username: cred.user.username, name: profile.name, role: profile.role, subjectIds: profile.subjectIds !== undefined ? profile.subjectIds : null, avatar: profile.avatar || '' })
         return
       } catch (err) {
         // auth/wrong-password, auth/user-not-found …
