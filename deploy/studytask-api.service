@@ -1,0 +1,18 @@
+[Unit]
+Description=StudyTask API (thay Firebase)
+After=network.target
+
+[Service]
+User=studytask
+Group=studytask
+Environment=STUDYTASK_DATA=/var/lib/studytask
+ExecStart=/usr/bin/python3 /opt/studytask/studytask_api.py serve
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/studytask
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
