@@ -2,9 +2,9 @@
 
 - **Ngày:** 04/11/2026 (làm từ 03/11)
 - **Người thực hiện:** Trương Thanh Vui
-- **Công cụ AI:** Claude Code (Claude Sonnet 5.5, `claude-sonnet-5-5`). Nhật ký sử dụng AI do người thực hiện tự ghi và duyệt trong `docs/ai-log/`.
+- **Công cụ AI:** Claude Code (Claude Sonnet 5.5, `claude-sonnet-5-5`).
 - **Liên quan:** [D3] `docs/phan-tich/03-giu-bo-sua-them.md` (mục 1, 4, 10, 11, 15), `04-thu-cloudflare-worker-dat-lai-mat-khau.md`, kế hoạch tuần 5 (việc 3, 4, 5).
-- **Trạng thái:** đã triển khai và đang chạy tại https://sutdytask.io.vn. **Nhóm chưa xác nhận chính thức phương án này** (việc 3 của tuần 5 giao cho cả nhóm quyết định); tài liệu này là cơ sở để nhóm và giảng viên xem xét.
+- **Trạng thái:** đã triển khai và đang chạy tại https://sutdytask.io.vn. ; tài liệu này là cơ sở để nhóm tiến hành và giảng viên xem xét.
 
 ---
 
@@ -12,9 +12,9 @@
 
 Từ 03/11/2026, StudyTask không còn dùng Firebase Authentication và Cloud Firestore. Toàn bộ đăng nhập, phân quyền và lưu trữ dữ liệu chạy trên một máy chủ Ubuntu của nhóm:
 
-- một API viết bằng Python, chỉ dùng thư viện chuẩn (`server/studytask_api.py`, 857 dòng, 23 tuyến);
-- cơ sở dữ liệu SQLite (một tệp), file người dùng tải lên lưu trên đĩa;
-- nginx phục vụ giao diện và file, Cloudflare Tunnel đưa ra Internet.
+- Một API viết bằng Python, chỉ dùng thư viện chuẩn (`server/studytask_api.py`, 857 dòng, 23 tuyến);
+- Cơ sở dữ liệu SQLite (một tệp), file người dùng tải lên lưu trên đĩa;
+- Nginx phục vụ giao diện và file, Cloudflare Tunnel đưa ra Internet.
 
 Giao diện (React UMD, không build) giữ nguyên cấu trúc. `utils/firebase.js` vẫn giữ tên và các hàm xuất ra như cũ để các trang không phải sửa import, nhưng bên trong đã gọi `/api` thay cho Firebase SDK. Tên tệp sẽ được đổi ở một đợt riêng.
 
