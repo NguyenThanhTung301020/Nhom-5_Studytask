@@ -75,6 +75,17 @@ npm run test:logic          # tính điểm, học phí, chương trình đào t
 npm run test:rules          # Security Rules: tự bật Firestore Emulator, chạy, rồi tắt
 ```
 
+#### Kiểm thử tự động trên GitHub (CI)
+
+Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) chạy trên GitHub Actions mỗi khi mở hoặc cập nhật Pull Request vào `master` và khi gộp vào `master`:
+
+1. Cài Node.js 24 và Java 21 (Firestore Emulator cần Java).
+2. `npm ci`
+3. `npm run test:logic`
+4. `npm run test:rules` (tự bật Firestore Emulator project `demo-studytask`, không cần tài khoản Firebase hay secret)
+
+Xem kết quả: tab **Checks** của PR, hoặc tab **Actions** của repo. Dấu tích xanh là đạt. Nếu có dấu X đỏ, bấm vào bước bị lỗi để xem log, sửa trên máy, chạy lại đúng lệnh đó rồi push. CI sẽ tự chạy lại.
+
 ### Lỗi thường gặp
 
 | Hiện tượng | Nguyên nhân | Cách xử lý |
@@ -91,7 +102,7 @@ npm run test:rules          # Security Rules: tự bật Firestore Emulator, ch�
 - Mỗi thành viên commit bằng tài khoản GitHub của mình (`git config user.name` / `user.email` đúng tên, đúng email).
 - Thông điệp commit: `<loai>: <mo ta ngan>`, loại gồm `feat`, `fix`, `docs`, `test`, `chore`, `refactor`. Ví dụ: `fix: luu ho so khong bao loi khi mat mang`.
 - Mã hoặc tài liệu do AI sinh: thêm nhãn `[AI]` ở đầu thông điệp, ghi lần dùng AI vào `docs/ai-log/tuan-XX.md` kèm mã commit.
-- Thay đổi `firestore.rules` phải chạy `npm run test:rules` đạt trước khi tạo Pull Request.
+- Thay đổi `firestore.rules` phải chạy `npm run test:rules` đạt trước khi tạo Pull Request. Mỗi PR phải có CI xanh mới gộp.
 - Không commit `node_modules/`, tệp log của Emulator, tệp `.env`.
 
 ## Triển khai Security Rules lên production
