@@ -90,10 +90,37 @@ Xem kết quả: tab **Checks** của PR, hoặc tab **Actions** của repo. D�
 
 | Hiện tượng | Nguyên nhân | Cách xử lý |
 |---|---|---|
-| `Could not start Firestore Emulator, port taken` | Còn tiến trình Java của Emulator lần trước (trên Windows `emulators:exec` đôi khi không tắt hẳn) | Tắt tiến trình `java.exe` đang giữ cổng 8080 (Task Manager hoặc `Get-NetTCPConnection -LocalPort 8080`) |
+| `Could not start Firestore Emulator, port taken` | Trên Windows, sau mỗi lần `npm run test:rules` / `test:rules:deep` (`emulators:exec`), tiến trình `java.exe` của Firestore Emulator thường còn sót và giữ cổng 8080, nên lần chạy sau báo lỗi | Chạy lệnh tắt tiến trình ở mục "Lưu ý khi chạy trên Windows" bên dưới, rồi chạy lại |
 | Đăng nhập báo `auth/network-request-failed` | Chưa bật Emulator | Chạy `npm run emulators`, hoặc dùng `?offline=1` |
 | Mở trực tiếp `index.html` (file://) bị trắng trang | Trình duyệt chặn ES module khi mở bằng file:// | Luôn chạy qua `npm run serve` |
 | `java` không nhận | Chưa cài Java hoặc chưa có trong PATH | Cài JDK 11+ rồi mở lại terminal |
+| `npm run serve` báo `EADDRINUSE` cổng 5500 | Còn một `http-server` cũ chạy nền | Tắt tiến trình giữ cổng 5500 (cùng lệnh bên dưới, đổi 8080 thành 5500) |
+| Đang mở `npm run emulators` mà chạy `npm run test:rules` thì báo port taken, hoặc dữ liệu seed bị mất | Hai lệnh dùng chung cổng 8080; file kiểm thử gọi `clearFirestore()` sẽ xóa dữ liệu đang dùng | Tắt `npm run emulators` (Ctrl+C) trước khi chạy test, chạy xong bật lại và `npm run seed` |
+| Emulator tự tắt, terminal báo mã `0xC000013A` | Đã nhấn Ctrl+C hoặc đóng cửa sổ terminal đang chạy Emulator | Bật lại `npm run emulators` rồi chạy `npm run seed` (dữ liệu Emulator mất khi tắt) |
+| `npm run test:rules` hoặc `npm run emulators` thoát mã 1, log có `FileNotFoundException` khi mở `firestore.rules` | Repo nằm ở đường dẫn có dấu tiếng Việt, Java không đọc được tên thư mục | Clone repo vào đường dẫn không dấu, ví dụ `C:\dev\studytask` |
+| Thoát mã 1, log có `Unable to establish loopback connection` hoặc `Invalid argument: connect` | Thư mục tạm của Java 21 dùng đường dẫn rút gọn có dấu `~`, Java không tạo được kênh nội bộ | Đặt `jdk.net.unixdomain.tmpdir` theo mục "Lưu ý khi chạy trên Windows" bên dưới |
+
+#### Lưu ý khi chạy trên Windows
+
+Tìm và tắt tiến trình đang giữ cổng (thay `8080` bằng cổng báo lỗi: 8080, 9099, 4000, 4400, 4500 hoặc 5500), chạy trong PowerShell:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+- Lệnh không in gì nghĩa là đã tắt xong, hoặc không có tiến trình nào giữ cổng.
+- Nên chạy lệnh này sau mỗi lần `npm run test:rules` hoặc `test:rules:deep` nếu định chạy tiếp.
+- CI trên GitHub chạy Ubuntu nên không gặp lỗi này.
+
+Nếu thư mục tạm có dạng rút gọn (ví dụ `C:\Users\TENNGU~1\AppData\Local\Temp`) và Java 21 báo lỗi kênh nội bộ, chạy trong PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force C:\dev\tmp
+$env:JAVA_TOOL_OPTIONS = "-Djdk.net.unixdomain.tmpdir=C:\dev\tmp"
+npm run test:rules
+```
+
+Biến này chỉ có tác dụng trong cửa sổ PowerShell hiện tại. Các tùy chọn `-Djava.net.preferIPv4Stack=true` và `-Djava.io.tmpdir` không xử lý được lỗi này.
 
 ## Quy ước làm việc với Git
 
