@@ -1,7 +1,7 @@
 # Thiết kế 06. Chuyển lưu trữ và xác thực từ Firebase sang máy chủ riêng
 
 - **Ngày:** 04/11/2026 (làm từ 03/11)
-- **Người thực hiện:** _(điền tên thành viên thực hiện)_
+- **Người thực hiện:** Trương Thanh Vui
 - **Công cụ AI:** Claude Code (Claude Sonnet 5.5, `claude-sonnet-5-5`). Nhật ký sử dụng AI do người thực hiện tự ghi và duyệt trong `docs/ai-log/`.
 - **Liên quan:** [D3] `docs/phan-tich/03-giu-bo-sua-them.md` (mục 1, 4, 10, 11, 15), `04-thu-cloudflare-worker-dat-lai-mat-khau.md`, kế hoạch tuần 5 (việc 3, 4, 5).
 - **Trạng thái:** đã triển khai và đang chạy tại https://sutdytask.io.vn. **Nhóm chưa xác nhận chính thức phương án này** (việc 3 của tuần 5 giao cho cả nhóm quyết định); tài liệu này là cơ sở để nhóm và giảng viên xem xét.
@@ -226,7 +226,7 @@ Cloudflare Tunnel trỏ tên miền tới `http://localhost:80`. Script chạy l
 
 | Việc tuần 5 | Trạng thái sau đợt chuyển |
 |---|---|
-| 3. Chốt phương án máy chủ | Đã triển khai; **chờ nhóm xác nhận** và ý kiến giảng viên |
+| 3. Chốt phương án máy chủ | Đã triển khai; chờ ý kiến giảng viên |
 | 4. Bỏ lưu mật khẩu (V1) và instance Firebase phụ | Đã bỏ trên bản đang chạy (mục 3.1, 6.4) |
 | 5. Bỏ tự nạp dữ liệu mẫu (V6) | Máy chủ không tự nạp; dữ liệu mẫu chỉ nạp bằng script thủ công |
 | 6. Hoàn thiện rules (V4) | Chưa (mục 8.2) |
