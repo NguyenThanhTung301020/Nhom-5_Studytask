@@ -50,10 +50,10 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
     // Roster: SV được phân công môn + SV có hoạt động trong môn
     const map = new Map()
     allUsers.filter(u => u.role === 'student' && Array.isArray(u.subjectIds) && u.subjectIds.includes(sid))
-      .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.email, email: u.email || '' }))
+      .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.username, username: u.username || '' }))
     activities.forEach(a => {
       if ((a.events || []).some(e => e.subjectId === sid) && !map.has(a.uid))
-        map.set(a.uid, { uid: a.uid, name: a.name || a.email || a.uid, email: a.email || '' })
+        map.set(a.uid, { uid: a.uid, name: a.name || a.username || a.email || a.uid, username: a.username || a.email || '' })
     })
     const roster = Array.from(map.values())
 
@@ -192,7 +192,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                                 h('div', { className: 'report-avatar' }, initials(s.name)),
                                 h('div', { className: 'min-w-0' },
                                   h('div', { className: 'fw-semibold text-truncate' }, s.name),
-                                  s.email && h('div', { className: 'small text-muted text-truncate' }, s.email)
+                                  s.username && h('div', { className: 'small text-muted text-truncate' }, s.username)
                                 )
                               )
                             ),
@@ -299,12 +299,13 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                                             h('span', { className: 'fw-semibold small' }, s.name),
                                             sub.at && h('small', { className: 'text-muted' }, h('i', { className: 'bi bi-calendar3 me-1' }), new Date(sub.at).toLocaleDateString('vi-VN'))
                                           ),
+                                          sub.fileName && h('div', { className: 'small' }, h('i', { className: 'bi bi-file-earmark me-1' }), sub.fileName),
                                           sub.note && h('div', { className: 'small text-muted fst-italic' }, '“', sub.note, '”')
                                         ),
                                         sub.url
                                           ? h('a', { href: sub.url, target: '_blank', rel: 'noopener noreferrer', className: 'btn btn-sm btn-outline-primary flex-shrink-0', title: 'Mở bài nộp' },
-                                              h('i', { className: 'bi bi-box-arrow-up-right me-1' }), 'Xem bài')
-                                          : h('span', { className: 'badge bg-secondary-subtle text-secondary flex-shrink-0 align-self-center' }, 'Không có link')
+                                              h('i', { className: 'bi bi-box-arrow-up-right me-1' }), 'Tải bài')
+                                          : h('span', { className: 'badge bg-secondary-subtle text-secondary flex-shrink-0 align-self-center' }, 'Không có file')
                                       )
                                     })
                                   )

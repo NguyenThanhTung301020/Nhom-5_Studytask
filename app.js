@@ -14,6 +14,8 @@ import { initFirebase, isFirebaseReady, onAuth, fbLogout,
 
 import Login          from './components/Login.js'
 import Navbar         from './components/Navbar.js'
+import ChatNotifier   from './components/ChatNotifier.js'
+import { startRealtime, stopRealtime, subscribe as subscribeChat, chatStatus, desktopNotify, beep } from './utils/chat.js'
 import Sidebar        from './components/Sidebar.js'
 import SettingsDrawer from './components/SettingsDrawer.js'
 
@@ -99,7 +101,7 @@ function App() {
     // Dữ liệu cá nhân trong localStorage chỉ dùng lại khi nó thuộc ĐÚNG tài khoản đang đăng nhập.
     // (Lỗi cũ: tài khoản B đăng nhập sau tài khoản A trên cùng máy sẽ nhận hồ sơ của A
     //  từ st_profile và bản đó còn bị ghi ngược lên Firestore của B.)
-    const ownerKey  = uid || fbUser?.email || 'guest'
+    const ownerKey  = uid || fbUser?.username || fbUser?.email || 'guest'
     const sameOwner = load('st_owner', null) === ownerKey
     const loadMine  = (key, fallback) => sameOwner ? load(key, fallback) : fallback
 
@@ -110,7 +112,7 @@ function App() {
     const defaultProfile = {
       ...roleDefault,
       name:  fbUser?.name  || roleDefault.name,
-      email: fbUser?.email || roleDefault.email,
+      email: roleDefault.email,
     }
 
     // ── Dữ liệu chung (tất cả user đọc chung) ──
@@ -181,10 +183,11 @@ function App() {
         const userDoc = await getUserProfile(fbUser.uid).catch(() => null)
         const u = {
           uid:        fbUser.uid,
-          email:      fbUser.email,
-          name:       userDoc?.name  || fbUser.email,
+          username:   fbUser.username,
+          name:       userDoc?.name  || fbUser.username,
           role:       userDoc?.role  || 'student',
           subjectIds: userDoc?.subjectIds !== undefined ? userDoc.subjectIds : null,
+          avatar:     userDoc?.avatar || '',
         }
         setUser(u)
         await loadAppData(fbUser.uid, u)
@@ -370,7 +373,7 @@ function App() {
       .forEach(u => {
         ;(u.subjectIds || []).forEach(sid => {
           if (!map[sid]) map[sid] = []
-          if (!map[sid].find(t => t.uid === u.uid)) map[sid].push({ uid: u.uid, name: u.name || u.email })
+          if (!map[sid].find(t => t.uid === u.uid)) map[sid].push({ uid: u.uid, name: u.name || u.username })
         })
       })
     return map
@@ -412,12 +415,12 @@ function App() {
     if (!user || user.role !== 'student') return
     const ev = { ...event, at: new Date().toISOString().split('T')[0] }
     if (uid && isFirebaseReady()) {
-      logActivity(uid, { name: user.name, email: user.email }, ev).catch(e => console.warn('[Firebase] logActivity:', e.message))
+      logActivity(uid, { name: user.name, username: user.username }, ev).catch(e => console.warn('[Firebase] logActivity:', e.message))
     } else {
       // Demo: lưu localStorage
       const all = load('st_activities', [])
       let rec = all.find(a => a.uid === user.uid)
-      if (!rec) { rec = { uid: user.uid, name: user.name, email: user.email, subjectIds: user.subjectIds || [], events: [] }; all.push(rec) }
+      if (!rec) { rec = { uid: user.uid, name: user.name, username: user.username, subjectIds: user.subjectIds || [], events: [] }; all.push(rec) }
       rec.events.push(ev)
       save('st_activities', all)
     }
@@ -443,11 +446,12 @@ function App() {
       [hw.id]: {
         status: data.status || 'completed',
         url:  data.url  || '',
+        fileName: data.fileName || '',
         note: data.note || '',
         at:   new Date().toISOString().split('T')[0],
       },
     }))
-    if (user?.role === 'student') trackActivity({ type: 'homework', subjectId: hw.subjectId, refId: hw.id, refTitle: hw.title, url: data.url || '', note: data.note || '' })
+    if (user?.role === 'student') trackActivity({ type: 'homework', subjectId: hw.subjectId, refId: hw.id, refTitle: hw.title, url: data.url || '', fileName: data.fileName || '', note: data.note || '' })
   }, [user, trackActivity])
 
   // Hủy nộp / bỏ đánh dấu hoàn thành
@@ -546,6 +550,40 @@ function App() {
     if (pg === 'deadlines') setDlFilter({ ...filter, _ts: Date.now() })
   }
 
+  // ── Hỗ trợ trực tuyến: nhận tin nhắn thời gian thực, đếm chưa đọc, thông báo cho người đang online ──
+  const [chatUnread, setChatUnread] = useState(0)
+  const [chatToasts, setChatToasts] = useState([])
+  const pageRef = useRef(page)
+  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    if (!user?.uid || !isFirebaseReady()) return
+    const isAdmin = user.role === 'admin'
+    const refresh = () => chatStatus().then(r => setChatUnread(r.unread)).catch(() => {})
+    refresh()
+    startRealtime()
+    const off = subscribeChat((ev) => {
+      if (ev.type === 'chat') {
+        const incoming = isAdmin ? !ev.msg.fromStaff : ev.msg.fromStaff
+        const watching = pageRef.current === 'contact' && !document.hidden
+        if (incoming && !watching) {
+          const name = isAdmin ? (ev.fromName || 'Người dùng') : 'Bộ phận hỗ trợ'
+          setChatToasts(ts => [...ts.slice(-2), { id: ev.msg.id, name, text: ev.msg.text }])
+          beep()
+          if (document.hidden) desktopNotify(name + ' vừa nhắn tin', ev.msg.text, 'chat-' + ev.thread, () => setPage('contact'))
+        }
+        refresh()
+      } else if (ev.type === 'read' || ev.type === 'hello' || (ev.type === 'conn' && ev.connected)) refresh()
+    })
+    const poll = setInterval(refresh, 60000)
+    return () => { off(); clearInterval(poll); stopRealtime(); setChatUnread(0) }
+  }, [user?.uid, user?.role])
+  useEffect(() => {
+    const base = 'StudyTask – Quản lý Học tập Sinh viên'
+    document.title = chatUnread > 0 ? `(${chatUnread}) ${base}` : base
+  }, [chatUnread])
+  const closeToast = useCallback((id) => setChatToasts(ts => ts.filter(t => t.id !== id)), [])
+  const handleAvatarChange = useCallback((url) => setUser(u => u ? { ...u, avatar: url } : u), [])
+
   if (!authChecked) {
     return h('div', { className: 'login-page' },
       h('div', { className: 'text-center' },
@@ -560,15 +598,15 @@ function App() {
   return h(window.React.Fragment, null,
     h(Navbar, { user, profile, currentPage: page, onNavigate: navigate, onLogout: handleLogout, onOpenSettings: () => setShowSettings(true), onToggleSidebar: () => setSidebarOpen(v => !v), notifications, unreadNotif, onOpenNotifications: markNotifSeen }),
     h('div', { className: 'app-layout' },
-      h(Sidebar, { user, currentPage: page, onNavigate: navigate, open: sidebarOpen, onClose: () => setSidebarOpen(false) }),
+      h(Sidebar, { user, currentPage: page, onNavigate: navigate, open: sidebarOpen, onClose: () => setSidebarOpen(false), badges: { contact: chatUnread } }),
       h('main', { className: 'app-main' },
         page === 'dashboard'  && h(Dashboard,  { subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, onNavigate: navigate }),
         page === 'subjects'   && h(Subjects,   { subjects: mySubjects, setSubjects, deadlines: myDeadlines, homeworks: myHomeworks, setHomeworks, materials: myMaterials, setMaterials, role: user.role, subjectTeacherMap, user, quizzes: myQuizzes, submissions, setSubmissions, onNavigate: navigate, onActivity: trackActivity, onSubmitHomework: handleHomeworkSubmit, onUndoHomework: handleHomeworkUndo }),
         page === 'deadlines'  && h(Deadlines,  { subjects: mySubjects, deadlines: myDeadlines, setDeadlines, filterPreset: dlFilter, role: user.role }),
         page === 'statistics' && h(Statistics, { subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks }),
-        page === 'profile'    && h(Profile,    { profile, setProfile, onSave: handleProfileSave, subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, user }),
+        page === 'profile'    && h(Profile,    { profile, setProfile, onSave: handleProfileSave, subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, user, onAvatarChange: handleAvatarChange }),
         page === 'library'    && h(Library,    { libraryLinks: library, setLibraryLinks: setLibrary, role: user.role }),
-        page === 'contact'    && h(Contact,    { contacts, setContacts }),
+        page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
         page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity }),
         page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role }),
         page === 'tools'      && h(Tools,      {}),
@@ -585,6 +623,7 @@ function App() {
         page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities }),
       )
     ),
+    h(ChatNotifier, { toasts: chatToasts, onClose: closeToast, onOpen: (t) => { closeToast(t.id); navigate('contact') } }),
     showSettings && h(SettingsDrawer, { settings, onChange: (s) => setSettings(s), onClose: () => setShowSettings(false) }),
     !showSettings && h('button', { className: 'fab-settings', title: 'Tùy chỉnh giao diện', onClick: () => setShowSettings(true) },
       h('i', { className: 'bi bi-palette-fill' })

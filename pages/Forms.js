@@ -3,6 +3,7 @@ import { FORM_CATEGORIES } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 import ActionMenu from '../components/ActionMenu.js'
 import Portal from '../components/Portal.js'
+import { uploadFile } from '../utils/firebase.js'
 
 const { useState, createElement: h } = window.React
 const fmtDate = (d) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -41,8 +42,15 @@ function FormModal({ item, onSave, onClose }) {
             h('textarea', { className: 'form-control', rows: 2, placeholder: 'Mô tả ngắn về biểu mẫu, cách dùng...', value: form.description, onChange: e => setForm({ ...form, description: e.target.value }) })
           ),
           h('div', null,
-            h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-link-45deg me-1' }), 'Link tải biểu mẫu'),
-            h('input', { className: 'form-control', placeholder: 'Dán link Google Drive / file văn bản...', value: form.url, onChange: e => setForm({ ...form, url: e.target.value }) })
+            h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-cloud-upload me-1' }), 'File biểu mẫu'),
+            h('input', { type: 'file', className: 'form-control mb-2', accept: '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip',
+              onChange: async (e) => {
+                const file = e.target.files && e.target.files[0]
+                if (!file) return
+                try { const r = await uploadFile(file); setForm(f => ({ ...f, url: r.url, fileName: r.name })) }
+                catch (err) { alert(err.message || 'Tải lên thất bại') }
+              } }),
+            h('input', { className: 'form-control', placeholder: 'Hoặc đường dẫn tới file biểu mẫu...', value: form.url, onChange: e => setForm({ ...form, url: e.target.value }) })
           )
         ),
         h('div', { className: 'modal-footer' },

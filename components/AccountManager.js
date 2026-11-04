@@ -9,8 +9,8 @@ const { useState, useEffect, createElement: h } = window.React
 
 const today = () => new Date().toISOString().split('T')[0]
 const isExpired = (u) => u.expiresAt && u.expiresAt < today()
-// Mật khẩu mặc định = phần trước @ của email + '123'
-const defaultPassword = (u) => ((u.email || 'user').split('@')[0] || 'user') + '123'
+// Mật khẩu mặc định = tên đăng nhập + '123'
+const defaultPassword = (u) => (u.username || 'user') + '123'
 
 // ── Modal đổi mật khẩu cho một user ──
 function PasswordModal({ user, onApply, onResetEmail, onClose, working }) {
@@ -29,8 +29,8 @@ function PasswordModal({ user, onApply, onResetEmail, onClose, working }) {
         ),
         h('div', { className: 'modal-body' },
           h('div', { className: 'mb-3 small' },
-            h('div', null, h('span', { className: 'text-muted' }, 'Tài khoản: '), h('strong', null, user.name || user.email)),
-            h('div', null, h('span', { className: 'text-muted' }, 'Email: '), user.email),
+            h('div', null, h('span', { className: 'text-muted' }, 'Tài khoản: '), h('strong', null, user.name || user.username)),
+            h('div', null, h('span', { className: 'text-muted' }, 'Email: '), user.username),
             h('div', null, h('span', { className: 'text-muted' }, 'Mật khẩu hiện tại: '),
               h('code', null, user.password || '(chưa lưu)'))
           ),
@@ -51,8 +51,8 @@ function PasswordModal({ user, onApply, onResetEmail, onClose, working }) {
           )
         ),
         h('div', { className: 'modal-footer justify-content-between' },
-          h('button', { className: 'btn btn-sm btn-outline-secondary', onClick: () => onResetEmail(user.email) },
-            h('i', { className: 'bi bi-envelope me-1' }), 'Gửi email đặt lại'),
+          h('button', { className: 'btn btn-sm btn-outline-secondary', onClick: () => onResetEmail(user.username) },
+            h('i', { className: 'bi bi-envelope me-1' }), 'Gửi mã qua email cá nhân'),
           h('div', { className: 'd-flex gap-2' },
             h('button', { className: 'btn btn-secondary', onClick: onClose }, 'Hủy'),
             h('button', { className: 'btn btn-primary', disabled: !valid || working || !user.password,
@@ -71,14 +71,14 @@ function PasswordModal({ user, onApply, onResetEmail, onClose, working }) {
 function AccountModal({ item, subjects, onSave, onClose, saving }) {
   const editing = !!item
   const [form, setForm] = useState(item
-    ? { email: item.email || '', password: '', name: item.name || '', role: item.role || 'student',
+    ? { username: item.username || '', password: '', name: item.name || '', role: item.role || 'student',
         subjectIds: item.subjectIds || [], expiresAt: item.expiresAt || '', phone: item.phone || '' }
-    : { email: '', password: '', name: '', role: 'student', subjectIds: [], expiresAt: '', phone: '' })
+    : { username: '', password: '', name: '', role: 'student', subjectIds: [], expiresAt: '', phone: '' })
 
   const toggleSub = (id) => setForm(f => ({ ...f, subjectIds: f.subjectIds.includes(id) ? f.subjectIds.filter(x => x !== id) : [...f.subjectIds, id] }))
   const valid = editing
     ? form.name.trim()
-    : form.email.trim() && form.password.length >= 6 && form.name.trim()
+    : /^[a-z0-9][a-z0-9._-]{2,31}$/.test(form.username.trim().toLowerCase()) && form.password.length >= 6 && form.name.trim()
 
   return h('div', { className: 'modal show d-block', style: { backgroundColor: 'rgba(0,0,0,0.5)' } },
     h('div', { className: 'modal-dialog modal-dialog-centered modal-dialog-scrollable' },
@@ -91,10 +91,10 @@ function AccountModal({ item, subjects, onSave, onClose, saving }) {
         ),
         h('div', { className: 'modal-body' },
           h('div', { className: 'mb-3' },
-            h('label', { className: 'form-label fw-semibold' }, 'Email ', h('span', { className: 'text-danger' }, '*')),
-            h('input', { type: 'email', className: 'form-control', placeholder: 'sinhvien@example.com', value: form.email,
-              disabled: editing, onChange: e => setForm({ ...form, email: e.target.value }) }),
-            editing && h('div', { className: 'form-text' }, 'Không thể đổi email của tài khoản đã tạo.')
+            h('label', { className: 'form-label fw-semibold' }, 'Tên đăng nhập ', h('span', { className: 'text-danger' }, '*')),
+            h('input', { type: 'text', className: 'form-control', placeholder: 'vd: nguyenvana hoặc sv2021001', value: form.username, autoCapitalize: 'none', spellCheck: false,
+              disabled: editing, onChange: e => setForm({ ...form, username: e.target.value.toLowerCase() }) }),
+            h('div', { className: 'form-text' }, editing ? 'Không thể đổi tên đăng nhập của tài khoản đã tạo.' : '3–32 ký tự: chữ thường không dấu, số, dấu . _ - ; không có khoảng trắng.')
           ),
           !editing && h('div', { className: 'mb-3' },
             h('label', { className: 'form-label fw-semibold' }, 'Mật khẩu ', h('span', { className: 'text-danger' }, '*')),
@@ -208,15 +208,15 @@ export default function AccountManager({ subjects = [] }) {
         setUsers(prev => prev.map(u => u.uid === editItem.uid ? { ...u, ...data } : u))
       } else {
         if (fb) {
-          const uid = await createAccountSecondary(form.email, form.password, { name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt, phone: form.phone })
-          setUsers(prev => [...prev, { uid, email: form.email, name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt, phone: form.phone, password: form.password }])
+          const uid = await createAccountSecondary(form.username.trim(), form.password, { name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt, phone: form.phone })
+          setUsers(prev => [...prev, { uid, username: form.username.trim().toLowerCase(), name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt, phone: form.phone, password: form.password }])
         } else {
-          setUsers(prev => [...prev, { uid: 'demo-' + Date.now(), email: form.email, name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt, phone: form.phone, password: form.password }])
+          setUsers(prev => [...prev, { uid: 'demo-' + Date.now(), username: form.username.trim().toLowerCase(), name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt, phone: form.phone, password: form.password }])
         }
       }
       setModal(null)
     } catch (e) {
-      alert('Lỗi: ' + (e.code === 'auth/email-already-in-use' ? 'Email đã được sử dụng.' : e.message))
+      alert('Lỗi: ' + (e.code === 'auth/username-already-in-use' ? 'Tên đăng nhập đã tồn tại.' : e.message))
     }
     setSaving(false)
   }
@@ -234,19 +234,19 @@ export default function AccountManager({ subjects = [] }) {
   }
 
   const handleReset = async (email) => {
-    if (!fb) return alert('Chế độ demo: cần kết nối Firebase để gửi email đặt lại mật khẩu.')
-    try { await sendResetEmail(email); alert(`Đã gửi email đặt lại mật khẩu tới:\n${email}`) }
+    if (!fb) return alert('Chế độ demo: cần kết nối máy chủ để gửi mã đặt lại mật khẩu.')
+    try { await sendResetEmail(email); alert(`Đã gửi mã đặt lại mật khẩu cho "${email}" (chỉ gửi được khi người dùng đã liên kết email cá nhân).`) }
     catch (e) { alert('Gửi lỗi: ' + e.message) }
   }
 
   const handleSetPassword = async (u, newPw) => {
     setPwWorking(true)
     try {
-      if (fb) await adminSetPassword(u.uid, u.email, u.password, newPw)
+      if (fb) await adminSetPassword(u.uid, u.username, u.password, newPw)
       setUsers(prev => prev.map(x => x.uid === u.uid ? { ...x, password: newPw } : x))
       setReveal(r => ({ ...r, [u.uid]: true }))
       setPwUser(null)
-      alert(`Đã đổi mật khẩu cho "${u.name || u.email}" thành:\n${newPw}`)
+      alert(`Đã đổi mật khẩu cho "${u.name || u.username}" thành:\n${newPw}`)
     } catch (e) {
       const msg = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
         ? 'Mật khẩu hiện tại đã lưu không khớp với tài khoản thật (có thể đã bị đổi nơi khác). Hãy dùng "Gửi email đặt lại".'
@@ -313,7 +313,7 @@ export default function AccountManager({ subjects = [] }) {
                   ),
                   h('div', { className: 'min-w-0' },
                     h('div', { className: 'fw-semibold text-truncate' }, u.name || '(Chưa đặt tên)'),
-                    h('div', { className: 'small text-muted text-truncate' }, u.email)
+                    h('div', { className: 'small text-muted text-truncate' }, u.username)
                   )
                 )
               ),
@@ -339,7 +339,7 @@ export default function AccountManager({ subjects = [] }) {
                 h('div', { className: 'btn-group btn-group-sm' },
                   h('button', { className: 'btn btn-outline-secondary', title: 'Sửa thông tin', onClick: () => { setEditItem(u); setModal('edit') } }, h('i', { className: 'bi bi-pencil' })),
                   h('button', { className: 'btn btn-outline-primary', title: 'Đổi mật khẩu', onClick: () => setPwUser(u) }, h('i', { className: 'bi bi-shield-lock' })),
-                  h('button', { className: 'btn btn-outline-danger', title: 'Xóa tài khoản', onClick: () => setConfirm({ type: 'one', uid: u.uid, message: `Xóa tài khoản "${u.name || u.email}"? Toàn bộ dữ liệu Firestore của tài khoản này sẽ bị xóa.` }) }, h('i', { className: 'bi bi-trash' }))
+                  h('button', { className: 'btn btn-outline-danger', title: 'Xóa tài khoản', onClick: () => setConfirm({ type: 'one', uid: u.uid, message: `Xóa tài khoản "${u.name || u.username}"? Toàn bộ dữ liệu Firestore của tài khoản này sẽ bị xóa.` }) }, h('i', { className: 'bi bi-trash' }))
                 )
               )
             )

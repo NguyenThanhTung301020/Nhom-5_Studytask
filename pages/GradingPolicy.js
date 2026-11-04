@@ -78,7 +78,7 @@ export default function GradingPolicy({ user, subjects = [], quizzes = [], homew
     try {
       const data = { preset: draft.preset, auto: !!draft.auto, weights: draft.auto ? eff.weights : draft.weights, dropLowest: draft.dropLowest,
         ckOnline: !!draft.ckOnline, attendance: draft.attendance, practice: draft.practice,
-        updatedBy: user.name || user.email || '', updatedAt: new Date().toISOString() }
+        updatedBy: user.name || user.username || '', updatedAt: new Date().toISOString() }
       await setDocument('gradingPolicies', subject.id, data, false)
       setMsg({ type: 'success', text: `Đã lưu quy chế điểm môn ${subject.name}.` }); await load()
     } catch (e) { setMsg({ type: 'danger', text: errorText(e) }) }
@@ -87,7 +87,7 @@ export default function GradingPolicy({ user, subjects = [], quizzes = [], homew
   const saveColumns = async () => {
     setBusy(true)
     try {
-      await setDocument('gradingColumns', subject.id, { counted: colDraft, updatedBy: user.name || user.email || '', updatedAt: new Date().toISOString() }, false)
+      await setDocument('gradingColumns', subject.id, { counted: colDraft, updatedBy: user.name || user.username || '', updatedAt: new Date().toISOString() }, false)
       setMsg({ type: 'success', text: 'Đã lưu các cột tính điểm bài tập.' }); await load()
     } catch (e) { setMsg({ type: 'danger', text: errorText(e) }) }
     setBusy(false)

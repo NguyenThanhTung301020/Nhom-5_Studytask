@@ -1,43 +1,9 @@
 // pages/Profile.js – Hồ sơ người dùng (role-aware)
 import { DEFAULT_PROFILE, BLANK_STUDENT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, ROLES } from '../utils/constants.js'
-import { isFirebaseReady, changeOwnPassword, sendEmailVerify, isEmailVerified } from '../utils/firebase.js'
+import { isFirebaseReady, changeOwnPassword } from '../utils/firebase.js'
+import { AvatarPicker, RecoveryEmailCard } from '../components/AccountCards.js'
 
 const { useState, useEffect, createElement: h } = window.React
-
-// ─── Card xác thực email ─────────────────────────────────────────
-function EmailVerifyCard({ uid, email }) {
-  const fb = isFirebaseReady()
-  const verified = fb && isEmailVerified()
-  const [msg,  setMsg]  = useState(null)
-  const [busy, setBusy] = useState(false)
-  const send = async () => {
-    setBusy(true); setMsg(null)
-    try { await sendEmailVerify(); setMsg({ type: 'ok', text: 'Đã gửi email xác thực. Kiểm tra hộp thư rồi đăng nhập lại để cập nhật trạng thái.' }) }
-    catch (e) { setMsg({ type: 'err', text: e.message }) }
-    setBusy(false)
-  }
-  return h('div', { className: 'card border-0 shadow-sm p-3 mt-3' },
-    h('div', { className: 'fw-bold small mb-2', style: { color: 'var(--primary)' } },
-      h('i', { className: 'bi bi-patch-check me-1' }), 'Xác thực tài khoản'),
-    h('div', { className: 'd-flex align-items-center justify-content-between mb-2' },
-      h('span', { className: 'small text-muted text-truncate me-2' }, h('i', { className: 'bi bi-envelope me-1' }), email),
-      verified
-        ? h('span', { className: 'badge bg-success-subtle text-success flex-shrink-0' }, h('i', { className: 'bi bi-check-circle-fill me-1' }), 'Đã xác thực')
-        : h('span', { className: 'badge bg-warning-subtle text-warning flex-shrink-0' }, h('i', { className: 'bi bi-exclamation-circle me-1' }), 'Chưa xác thực')
-    ),
-    !fb
-      ? h('div', { className: 'small text-muted' }, 'Chế độ demo: cần Firebase để xác thực.')
-      : !uid
-        ? null
-        : !verified && h(window.React.Fragment, null,
-            h('button', { className: 'btn btn-outline-primary btn-sm w-100', disabled: busy, onClick: send },
-              busy ? h('span', { className: 'spinner-border spinner-border-sm' }) : h(window.React.Fragment, null, h('i', { className: 'bi bi-envelope-check me-1' }), 'Gửi email xác thực')),
-            h('div', { className: 'form-text mt-1' }, 'Xác thực email để có thể tự đặt lại mật khẩu khi quên.')
-          ),
-    msg && h('div', { className: `small mt-2 text-${msg.type === 'ok' ? 'success' : 'danger'}` },
-      h('i', { className: `bi bi-${msg.type === 'ok' ? 'check-circle' : 'x-circle'} me-1` }), msg.text)
-  )
-}
 
 // ─── Card đổi mật khẩu đăng nhập của chính mình ──────────────────
 function PasswordChangeCard({ uid }) {
@@ -223,7 +189,7 @@ function StatsPanel({ role, subjects, deadlines, homeworks }) {
 }
 
 // ─── Main Profile component ──────────────────────────────────────
-export default function Profile({ profile, setProfile, onSave, subjects, deadlines, homeworks, user }) {
+export default function Profile({ profile, setProfile, onSave, subjects, deadlines, homeworks, user, onAvatarChange }) {
   const role     = user?.role || 'student'
   const cfg0     = ROLE_CONFIG[role] || ROLE_CONFIG.student
   // Chế độ demo (không có uid) giữ hồ sơ mẫu; tài khoản thật dùng hồ sơ trống theo vai trò
@@ -282,7 +248,9 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
       // ── Cột trái: Avatar card ──
       h('div', { className: 'col-12 col-md-4 col-lg-3' },
         h('div', { className: 'card border-0 shadow-sm text-center p-4 mb-4' },
-          h(Avatar, { name: profile.name || user?.name, role }),
+          user?.uid && isFirebaseReady()
+            ? h(AvatarPicker, { name: profile.name || user?.name, color: roleInfo.color, user, canEdit: true, onChange: onAvatarChange })
+            : h(Avatar, { name: profile.name || user?.name, role }),
 
           // Tên – editable
           editing
@@ -324,7 +292,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
         h(StatsPanel, { role, subjects, deadlines, homeworks }),
 
         // Xác thực email
-        h(EmailVerifyCard, { uid: user?.uid, email: user?.email || profile.email }),
+        user?.uid && isFirebaseReady() && h(RecoveryEmailCard),
 
         // Đổi mật khẩu đăng nhập của chính mình
         h(PasswordChangeCard, { uid: user?.uid }),
@@ -356,13 +324,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
                   h('label', { className: 'profile-field-label' },
                     h('i', { className: `bi bi-${f.icon} me-1` }), f.label),
                   editing
-                    ? (f.key === 'email' && user?.uid)
-                      ? h('div', { className: 'd-flex align-items-center gap-2' },
-                          h('input', { type: 'email', className: 'form-control', value: form[f.key] || '', disabled: true }),
-                          h('span', { className: 'badge flex-shrink-0', style: { backgroundColor: 'rgba(255,160,0,.15)', color: '#f6a623', fontSize: '0.7rem' } },
-                            h('i', { className: 'bi bi-lock-fill me-1' }), 'Firebase')
-                        )
-                      : h(window.React.Fragment, null,
+                    ? h(window.React.Fragment, null,
                           h('input', { type: f.type, className: `form-control${errors[f.key] ? ' is-invalid' : ''}`, value: form[f.key] || '',
                             placeholder: f.placeholder, onChange: e => setForm({ ...form, [f.key]: e.target.value }) }),
                           fieldError(f.key))

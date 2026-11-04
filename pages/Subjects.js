@@ -5,6 +5,22 @@ import ConfirmModal from '../components/ConfirmModal.js'
 import ActionMenu from '../components/ActionMenu.js'
 import Portal from '../components/Portal.js'
 import { QuizTaker } from './Quiz.js'
+import { uploadFile, isFirebaseReady } from '../utils/firebase.js'
+
+// Nhóm định dạng file nộp bài mà giáo viên có thể chọn
+const SUBMIT_FORMATS = [
+  { key: 'pdf',   label: 'PDF',            exts: ['pdf'] },
+  { key: 'word',  label: 'Word',           exts: ['doc', 'docx'] },
+  { key: 'ppt',   label: 'PowerPoint',     exts: ['ppt', 'pptx'] },
+  { key: 'excel', label: 'Excel',          exts: ['xls', 'xlsx'] },
+  { key: 'txt',   label: 'Văn bản (.txt)', exts: ['txt'] },
+  { key: 'image', label: 'Ảnh',            exts: ['jpg', 'jpeg', 'png', 'gif', 'webp'] },
+  { key: 'zip',   label: 'Nén (zip, rar, 7z)', exts: ['zip', 'rar', '7z'] },
+]
+const DEFAULT_EXTS = ['pdf', 'doc', 'docx']
+const extOf = (n = '') => (n.includes('.') ? n.split('.').pop().toLowerCase() : '')
+
+const isImageUrl = (u = '') => /\.(jpe?g|png|gif|webp)(\?|$)/i.test(u)
 
 const QUIZ_STATUS_LABELS = { draft: 'Bản nháp', active: 'Đang mở', closed: 'Đã đóng' }
 const QUIZ_STATUS_COLORS = { draft: 'secondary', active: 'success', closed: 'danger' }
@@ -122,9 +138,21 @@ function HomeworkModal({ subjectId, item, onSave, onClose }) {
   const [form, setForm] = useState(
     item ? { title: item.title || '', dueDate: item.dueDate || '', description: item.description || '',
              fileUrl: item.fileUrl || '', fileName: item.fileName || '',
-             allowSubmit: item.allowSubmit !== false }
-         : { title: '', dueDate: '', description: '', fileUrl: '', fileName: '', allowSubmit: true }
+             allowSubmit: item.allowSubmit !== false, allowedExts: item.allowedExts || ['pdf', 'doc', 'docx', 'txt', 'zip', 'jpg', 'jpeg', 'png'] }
+         : { title: '', dueDate: '', description: '', fileUrl: '', fileName: '', allowSubmit: true, allowedExts: DEFAULT_EXTS }
   )
+  const [hwUploading, setHwUploading] = useState(false)
+  const [hwError, setHwError] = useState('')
+  const handleHwFile = async (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    setHwUploading(true); setHwError('')
+    try {
+      const r = await uploadFile(file)
+      setForm(f => ({ ...f, fileUrl: r.url, fileName: r.name }))
+    } catch (err) { setHwError(err.message || 'Tải lên thất bại') }
+    setHwUploading(false)
+  }
   const valid = form.title.trim() && form.dueDate
   return (
     h('div', { className: 'modal show d-block', style: { backgroundColor: 'rgba(0,0,0,0.5)' } },
@@ -153,26 +181,43 @@ function HomeworkModal({ subjectId, item, onSave, onClose }) {
             // ── File đề bài đính kèm ──
             h('div', { className: 'p-3 rounded-3 mb-3', style: { background: 'rgba(78,115,223,.05)', border: '1px dashed var(--border-color)' } },
               h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-paperclip me-1' }), 'File đề bài đính kèm'),
-              h('input', { className: 'form-control mb-2', placeholder: 'Dán link file đề bài (Google Drive, OneDrive...)', value: form.fileUrl, onChange: (e) => setForm({ ...form, fileUrl: e.target.value }) }),
-              h('input', { className: 'form-control', placeholder: 'Tên file hiển thị (VD: De_bai_chuong3.pdf)', value: form.fileName, onChange: (e) => setForm({ ...form, fileName: e.target.value }) }),
-              h('div', { className: 'form-text' }, 'Tải file lên Drive/OneDrive rồi dán link chia sẻ vào đây. Để trống nếu không có file.')
+              h('input', { type: 'file', className: 'form-control mb-2', disabled: hwUploading, onChange: handleHwFile,
+                accept: '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z' }),
+              form.fileUrl && h('div', { className: 'small mb-2' }, h('i', { className: 'bi bi-file-earmark-check text-success me-1' }), form.fileName || form.fileUrl,
+                h('button', { type: 'button', className: 'btn btn-link btn-sm text-danger py-0', onClick: () => setForm({ ...form, fileUrl: '', fileName: '' }) }, 'Gỡ')),
+              hwUploading && h('div', { className: 'form-text' }, 'Đang tải lên...'),
+              hwError && h('div', { className: 'form-text text-danger' }, hwError),
+              h('div', { className: 'form-text' }, 'Chọn file đề bài từ máy tính (tối đa 25MB). Để trống nếu không có file.')
             ),
             // ── Tùy chọn nộp bài ──
             h('div', { className: 'form-check form-switch p-3 rounded-3', style: { background: 'rgba(28,200,138,.07)' } },
               h('input', { className: 'form-check-input', type: 'checkbox', role: 'switch', id: 'allowSubmit', checked: form.allowSubmit,
                 onChange: (e) => setForm({ ...form, allowSubmit: e.target.checked }) }),
               h('label', { className: 'form-check-label fw-semibold', htmlFor: 'allowSubmit' },
-                h('i', { className: 'bi bi-cloud-upload me-1 text-success' }), 'Cho phép sinh viên nộp bài (kèm link)'),
+                h('i', { className: 'bi bi-cloud-upload me-1 text-success' }), 'Cho phép sinh viên nộp bài (nộp file)'),
               h('div', { className: 'form-text mt-1' },
                 form.allowSubmit
-                  ? 'Sinh viên sẽ thấy ô nộp link bài làm và ghi chú.'
-                  : 'Bài tập chỉ để xem / thông báo — sinh viên chỉ đánh dấu hoàn thành, không nộp link.')
+                  ? 'Sinh viên sẽ tải file bài làm lên và ghi chú; chỉ nhận đúng các định dạng chọn bên dưới.'
+                  : 'Bài tập chỉ để xem / thông báo — sinh viên chỉ đánh dấu hoàn thành, không nộp file.')
+            ),
+            form.allowSubmit && h('div', { className: 'p-3 rounded-3 mt-3', style: { background: 'rgba(78,115,223,.05)', border: '1px dashed var(--border-color)' } },
+              h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-funnel me-1' }), 'Định dạng file được nhận'),
+              h('div', { className: 'd-flex flex-wrap gap-2' },
+                SUBMIT_FORMATS.map(f => {
+                  const on = f.exts.every(x => form.allowedExts.includes(x))
+                  return h('button', { key: f.key, type: 'button', className: `btn btn-sm ${on ? 'btn-primary' : 'btn-outline-secondary'}`,
+                    onClick: () => setForm({ ...form, allowedExts: on ? form.allowedExts.filter(x => !f.exts.includes(x)) : [...new Set([...form.allowedExts, ...f.exts])] }) },
+                    on && h('i', { className: 'bi bi-check-lg me-1' }), f.label)
+                })
+              ),
+              h('div', { className: `form-text ${form.allowedExts.length ? '' : 'text-danger'}` },
+                form.allowedExts.length ? 'Đang nhận: ' + form.allowedExts.map(x => '.' + x).join(', ') + '. File khác định dạng sẽ bị từ chối.' : 'Hãy chọn ít nhất một định dạng.')
             )
           ),
           h('div', { className: 'modal-footer' },
             h('button', { className: 'btn btn-secondary', onClick: onClose }, 'Hủy'),
-            h('button', { className: 'btn btn-primary', disabled: !valid,
-              onClick: () => valid && onSave({ title: form.title.trim(), type: 'assign', allowSubmit: form.allowSubmit, dueDate: form.dueDate, description: form.description, fileUrl: form.fileUrl.trim(), fileName: form.fileName.trim(), subjectId }) },
+            h('button', { className: 'btn btn-primary', disabled: !valid || (form.allowSubmit && !form.allowedExts.length),
+              onClick: () => valid && onSave({ title: form.title.trim(), type: 'assign', allowSubmit: form.allowSubmit, allowedExts: form.allowedExts, dueDate: form.dueDate, description: form.description, fileUrl: form.fileUrl.trim(), fileName: form.fileName.trim(), subjectId }) },
               item ? 'Lưu thay đổi' : 'Giao bài'
             )
           )
@@ -188,7 +233,23 @@ function HomeworkDetailModal({ hw, role, onSubmit, onUndo, onClose }) {
   const isStudent = role === 'student'
   const allowSubmit = hw.allowSubmit !== false   // mặc định cho nộp
   const [url,  setUrl]  = useState(sub?.url  || '')
+  const [fileName, setFileName] = useState(sub?.fileName || '')
   const [note, setNote] = useState(sub?.note || '')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr]   = useState('')
+  const okExts = (hw.allowedExts && hw.allowedExts.length ? hw.allowedExts : ['pdf', 'doc', 'docx', 'txt', 'zip', 'jpg', 'jpeg', 'png'])
+  const pickFile = async (e) => {
+    const file = e.target.files && e.target.files[0]
+    e.target.value = ''
+    if (!file) return
+    const ext = extOf(file.name)
+    if (!okExts.includes(ext)) { setErr(`File .${ext || '?'} không hợp lệ. Bài tập này chỉ nhận: ${okExts.map(x => '.' + x).join(', ')}`); return }
+    if (file.size > 15 * 1024 * 1024) { setErr('File quá lớn (tối đa 15MB).'); return }
+    setBusy(true); setErr('')
+    try { const r = await uploadFile(file, hw.id); setUrl(r.url); setFileName(r.name) }
+    catch (ex) { setErr(ex.message || 'Tải lên thất bại') }
+    setBusy(false)
+  }
   const days = getDaysUntil(hw.dueDate)
   const overdue = hw.status !== 'completed' && days < 0
 
@@ -232,8 +293,13 @@ function HomeworkDetailModal({ hw, role, onSubmit, onUndo, onClose }) {
           isStudent && allowSubmit && h('div', { className: 'p-3 rounded-3 mt-2', style: { background: 'rgba(28,200,138,.06)', border: '1px solid rgba(28,200,138,.25)' } },
             h('div', { className: 'fw-semibold mb-2' }, h('i', { className: 'bi bi-cloud-upload me-1 text-success' }), sub ? 'Bài nộp của bạn' : 'Nộp bài'),
             sub && sub.at && h('div', { className: 'small text-success mb-2' }, h('i', { className: 'bi bi-check-circle-fill me-1' }), `Đã nộp ngày ${new Date(sub.at).toLocaleDateString('vi-VN')}`),
-            h('label', { className: 'form-label small fw-semibold mb-1' }, 'Link bài làm (Google Drive, OneDrive, GitHub...)'),
-            h('input', { className: 'form-control form-control-sm mb-2', placeholder: 'https://drive.google.com/...', value: url, onChange: e => setUrl(e.target.value) }),
+            h('label', { className: 'form-label small fw-semibold mb-1' }, 'File bài làm'),
+            h('input', { type: 'file', className: 'form-control form-control-sm mb-1', disabled: busy, onChange: pickFile, accept: okExts.map(x => '.' + x).join(',') }),
+            h('div', { className: 'form-text mb-2' }, 'Định dạng được nhận: ' + okExts.map(x => '.' + x).join(', ') + ' · tối đa 15MB'),
+            busy && h('div', { className: 'small text-muted mb-2' }, 'Đang tải lên...'),
+            err && h('div', { className: 'small text-danger mb-2' }, h('i', { className: 'bi bi-exclamation-triangle me-1' }), err),
+            url && h('div', { className: 'small mb-2' }, h('i', { className: 'bi bi-file-earmark-check text-success me-1' }),
+              h('a', { href: url, target: '_blank', rel: 'noopener noreferrer' }, fileName || 'File đã nộp')),
             h('label', { className: 'form-label small fw-semibold mb-1' }, 'Ghi chú cho giảng viên'),
             h('textarea', { className: 'form-control form-control-sm', rows: 2, placeholder: 'Ghi chú thêm (nếu có)...', value: note, onChange: e => setNote(e.target.value) })
           ),
@@ -245,7 +311,7 @@ function HomeworkDetailModal({ hw, role, onSubmit, onUndo, onClose }) {
           h('button', { className: 'btn btn-secondary', onClick: onClose }, 'Đóng'),
           isStudent && sub && h('button', { className: 'btn btn-outline-danger', onClick: () => { onUndo(hw.id); onClose() } },
             h('i', { className: 'bi bi-arrow-counterclockwise me-1' }), allowSubmit ? 'Hủy nộp' : 'Bỏ đánh dấu'),
-          isStudent && allowSubmit && h('button', { className: 'btn btn-success', onClick: () => { onSubmit(hw, { status: 'completed', url, note }); onClose() } },
+          isStudent && allowSubmit && h('button', { className: 'btn btn-success', disabled: busy || !url, onClick: () => { onSubmit(hw, { status: 'completed', url, fileName, note }); onClose() } },
             h('i', { className: 'bi bi-send-fill me-1' }), sub ? 'Cập nhật bài nộp' : 'Nộp bài'
           ),
           isStudent && !allowSubmit && !sub && h('button', { className: 'btn btn-success', onClick: () => { onSubmit(hw, { status: 'completed' }); onClose() } },
@@ -265,6 +331,21 @@ function MaterialModal({ subjectId, item, user, onSave, onClose }) {
   )
   const valid    = form.title.trim()
   const typeInfo = MATERIAL_TYPES[form.type] || MATERIAL_TYPES.giaoTrinh
+  const [uploading, setUploading] = useState(false)
+  const [upError,   setUpError]   = useState('')
+
+  // Tải file lên server rồi điền đường dẫn vào form
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true); setUpError('')
+    try {
+      const r = await uploadFile(file)
+      setForm(f => ({ ...f, url: r.url, fileName: r.name, title: f.title || r.name.replace(/\.[^.]+$/, '') }))
+    } catch (err) { setUpError(err.message) }
+    setUploading(false)
+    e.target.value = ''
+  }
 
   return (
     h('div', { className: 'modal show d-block', style: { backgroundColor: 'rgba(0,0,0,0.5)' } },
@@ -301,13 +382,23 @@ function MaterialModal({ subjectId, item, user, onSave, onClose }) {
               h('textarea', { className: 'form-control', rows: 2, placeholder: 'Ghi chú về nội dung tài liệu...', value: form.description,
                 onChange: e => setForm({ ...form, description: e.target.value }) })
             ),
+            isFirebaseReady() && h('div', { className: 'mb-3' },
+              h('label', { className: 'form-label fw-semibold' },
+                h('i', { className: 'bi bi-cloud-upload me-1' }), 'Tải file lên máy chủ'
+              ),
+              h('input', { type: 'file', className: 'form-control', disabled: uploading, onChange: handleFile,
+                accept: '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.7z,.mp4,.mp3' }),
+              uploading && h('div', { className: 'form-text' }, 'Đang tải lên...'),
+              upError && h('div', { className: 'form-text text-danger' }, upError),
+              isImageUrl(form.url) && h('img', { src: form.url, alt: '', className: 'img-thumbnail mt-2', style: { maxHeight: 120 } })
+            ),
             h('div', { className: 'mb-1' },
               h('label', { className: 'form-label fw-semibold' },
                 h('i', { className: 'bi bi-link-45deg me-1' }), 'Đường dẫn tải về / xem trực tuyến'
               ),
-              h('input', { className: 'form-control', placeholder: 'https://drive.google.com/...', value: form.url,
+              h('input', { className: 'form-control', placeholder: 'https://... (hoặc tải file lên ở trên)', value: form.url,
                 onChange: e => setForm({ ...form, url: e.target.value }) }),
-              h('div', { className: 'form-text' }, 'Dán link Google Drive, OneDrive, GitHub... Để trống nếu chưa có.')
+              h('div', { className: 'form-text' }, 'Có thể dán đường dẫn bên ngoài. Để trống nếu chưa có.')
             )
           ),
           h('div', { className: 'modal-footer' },
@@ -542,6 +633,8 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
                           h('span', { className: 'badge rounded-pill', style: { backgroundColor: mt.color + '22', color: mt.color, fontSize: '0.65rem' } }, mt.label)
                         ),
                         m.description && h('div', { className: 'small text-muted mt-1' }, m.description),
+                        isImageUrl(m.url) && h('a', { href: m.url, target: '_blank', rel: 'noopener noreferrer' },
+                          h('img', { src: m.url, alt: m.title, loading: 'lazy', className: 'img-thumbnail mt-2', style: { maxHeight: 110 } })),
                         h('div', { className: 'd-flex align-items-center gap-3 mt-1 flex-wrap' },
                           h('small', { className: 'text-muted' },
                             h('i', { className: 'bi bi-person me-1' }), m.uploadedBy
