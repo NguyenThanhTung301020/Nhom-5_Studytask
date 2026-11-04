@@ -393,6 +393,18 @@ function App() {
 
   const handleProfileSave = useCallback(async (newProfile) => {
     const clean = { ...newProfile, name: (newProfile.name || '').trim() }
+    if (uid && (user?.role === 'student' || user?.role === 'teacher')) {
+      // Sinh viên/giáo viên chỉ được sửa email và số điện thoại; máy chủ bỏ qua mọi trường khác.
+      // Sau khi lưu, đọc lại hồ sơ từ máy chủ để giao diện luôn hiển thị đúng dữ liệu đã được cấp.
+      await withTimeout(saveUserKey(uid, 'profile', { email: clean.email || '', phone: clean.phone || '' }))
+      try { await withTimeout(setUserProfile(uid, { phone: clean.phone || '' })) }
+      catch (e) { throw new Error('Đã lưu hồ sơ nhưng chưa cập nhật được số điện thoại trong danh bạ: ' + e.message) }
+      const fresh = await withTimeout(loadUserData(uid))
+      const saved = { ...(fresh?.profile || clean) }
+      setProfile(saved); save('st_profile', saved)
+      save('st_allUsers_cache_ts', 0)
+      return
+    }
     if (uid) {
       await withTimeout(saveUserKey(uid, 'profile', clean))
       // Đồng bộ tên + số điện thoại sang user/{uid} (Admin, Danh bạ đọc từ đây).
@@ -408,7 +420,7 @@ function App() {
     }
     setProfile(clean)
     save('st_profile', clean)
-  }, [uid])
+  }, [uid, user?.role])
 
   // ── Ghi nhật ký hoạt động (chỉ sinh viên) cho trang Quản lý lớp học ──
   const trackActivity = useCallback((event) => {

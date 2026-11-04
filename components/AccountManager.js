@@ -1,7 +1,7 @@
 // components/AccountManager.js – Quản lý tài khoản người dùng (Admin)
 import { ROLES, DEMO_ACCOUNTS } from '../utils/constants.js'
 import { isFirebaseReady, getAllUsers, createAccountSecondary,
-         adminUpdateUser, deleteUserData, sendResetEmail, adminSetPassword,
+         adminUpdateUser, adminGetProfile, adminSetProfile, deleteUserData, sendResetEmail, adminSetPassword,
          getAllSecrets, migrateLegacyPasswords } from '../utils/firebase.js'
 import ConfirmModal from './ConfirmModal.js'
 
@@ -67,9 +67,25 @@ function PasswordModal({ user, onApply, onResetEmail, onClose, working }) {
   )
 }
 
+// Hồ sơ học vụ: chỉ Admin sửa; sinh viên/giáo viên chỉ tự sửa email và số điện thoại
+const ACADEMIC_FIELDS = {
+  student: [['studentId', 'Mã số sinh viên'], ['faculty', 'Khoa / Bộ môn'], ['major', 'Ngành học'], ['className', 'Lớp'],
+            ['semester', 'Học kỳ hiện tại'], ['gpa', 'GPA tích lũy (0–4)']],
+  teacher: [['teacherId', 'Mã giáo viên'], ['faculty', 'Khoa / Trường'], ['department', 'Bộ môn'], ['position', 'Học hàm / Chức vụ']],
+  other:   [['department', 'Phòng / Ban']],
+}
+const academicFor = (role) => ACADEMIC_FIELDS[role] || ACADEMIC_FIELDS.other
+const gpaError = (v) => { const s = String(v ?? '').trim(); if (!s) return ''; const g = Number(s.replace(',', '.')); return isNaN(g) || g < 0 || g > 4 ? 'GPA phải là số từ 0 đến 4.' : '' }
+
 // ── Modal Thêm / Sửa tài khoản ──────────────────────────────────
 function AccountModal({ item, subjects, onSave, onClose, saving }) {
   const editing = !!item
+  const [prof, setProf] = useState({})          // hồ sơ học vụ của tài khoản đang sửa
+  const [profReady, setProfReady] = useState(!item)
+  useEffect(() => {
+    if (!item || !item.uid || String(item.uid).startsWith('demo-')) { setProfReady(true); return }
+    adminGetProfile(item.uid).then(p => setProf(p || {})).catch(() => {}).finally(() => setProfReady(true))
+  }, [])
   const [form, setForm] = useState(item
     ? { username: item.username || '', password: '', name: item.name || '', role: item.role || 'student',
         subjectIds: item.subjectIds || [], expiresAt: item.expiresAt || '', phone: item.phone || '' }
@@ -77,7 +93,7 @@ function AccountModal({ item, subjects, onSave, onClose, saving }) {
 
   const toggleSub = (id) => setForm(f => ({ ...f, subjectIds: f.subjectIds.includes(id) ? f.subjectIds.filter(x => x !== id) : [...f.subjectIds, id] }))
   const valid = editing
-    ? form.name.trim()
+    ? form.name.trim() && !(form.role === 'student' && gpaError(prof.gpa)) && profReady
     : /^[a-z0-9][a-z0-9._-]{2,31}$/.test(form.username.trim().toLowerCase()) && form.password.length >= 6 && form.name.trim()
 
   return h('div', { className: 'modal show d-block', style: { backgroundColor: 'rgba(0,0,0,0.5)' } },
@@ -118,6 +134,21 @@ function AccountModal({ item, subjects, onSave, onClose, saving }) {
             h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-telephone me-1' }), 'Số điện thoại'),
             h('input', { className: 'form-control', placeholder: 'VD: 0901234567', value: form.phone, onChange: e => setForm({ ...form, phone: e.target.value }) })
           ),
+          editing && h('div', { className: 'mb-3 p-3 rounded border' },
+            h('div', { className: 'fw-semibold mb-1' }, h('i', { className: 'bi bi-person-vcard me-1' }), 'Hồ sơ học vụ'),
+            h('div', { className: 'form-text mb-2' }, 'Do quản trị viên cấp. Người dùng chỉ tự sửa được email và số điện thoại.'),
+            !profReady ? h('div', { className: 'small text-muted' }, 'Đang tải hồ sơ…')
+              : h('div', { className: 'row g-2' },
+                  academicFor(form.role).map(([key, label]) =>
+                    h('div', { key, className: 'col-sm-6' },
+                      h('label', { className: 'form-label small mb-1' }, label),
+                      h('input', { className: `form-control form-control-sm${key === 'gpa' && gpaError(prof.gpa) ? ' is-invalid' : ''}`,
+                        value: prof[key] || '', onChange: e => setProf({ ...prof, [key]: e.target.value }) }),
+                      key === 'gpa' && gpaError(prof.gpa) && h('div', { className: 'invalid-feedback' }, gpaError(prof.gpa))
+                    )
+                  )
+                )
+          ),
           h('div', { className: 'mb-3' },
             h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-calendar-x me-1' }), 'Ngày hết hạn tài khoản'),
             h('input', { type: 'date', className: 'form-control', value: form.expiresAt, onChange: e => setForm({ ...form, expiresAt: e.target.value }) }),
@@ -143,7 +174,7 @@ function AccountModal({ item, subjects, onSave, onClose, saving }) {
         h('div', { className: 'modal-footer' },
           h('button', { className: 'btn btn-secondary', onClick: onClose }, 'Hủy'),
           h('button', { className: 'btn btn-primary', disabled: !valid || saving,
-            onClick: () => valid && onSave(form) },
+            onClick: () => valid && onSave({ ...form, profile: editing ? prof : null }) },
             saving ? h(window.React.Fragment, null, h('span', { className: 'spinner-border spinner-border-sm me-1' }), 'Đang lưu…')
                    : (editing ? 'Lưu thay đổi' : 'Tạo tài khoản')
           )
@@ -204,7 +235,15 @@ export default function AccountManager({ subjects = [] }) {
     try {
       if (modal === 'edit') {
         const data = { name: form.name, role: form.role, subjectIds: form.subjectIds, expiresAt: form.expiresAt || '', phone: form.phone || '' }
-        if (fb) await adminUpdateUser(editItem.uid, data)
+        if (fb) {
+          await adminUpdateUser(editItem.uid, data)
+          if (form.profile) {
+            // Giữ họ tên trong hồ sơ khớp với tài khoản (trang Hồ sơ hiển thị từ đây)
+            const keep = academicFor(form.role).map(([k]) => k)
+            const fields = Object.fromEntries(keep.map(k => [k, String(form.profile[k] ?? '').trim()]))
+            await adminSetProfile(editItem.uid, { ...fields, name: form.name.trim() })
+          }
+        }
         setUsers(prev => prev.map(u => u.uid === editItem.uid ? { ...u, ...data } : u))
       } else {
         if (fb) {

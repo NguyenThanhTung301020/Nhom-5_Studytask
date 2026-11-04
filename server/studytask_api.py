@@ -191,6 +191,40 @@ def role_of(user):
     return (p or {}).get('role')
 
 
+LOCKED_ROLES = ('student', 'teacher')     # chỉ được tự sửa email và số điện thoại; còn lại do Admin cấp
+PROFILE_SELF_KEYS = {'email', 'phone'}
+PHONE_RE = re.compile(r'[0-9+ ().-]{0,20}')
+
+
+def lock_profile(user, old, merged):
+    """Sinh viên/giáo viên ghi userData/{uid}: giữ nguyên hồ sơ cũ, chỉ nhận email và số điện thoại mới.
+    Họ tên (nếu hồ sơ chưa có) lấy từ tài khoản, không lấy từ client."""
+    prof_new = merged.get('profile')
+    if not isinstance(prof_new, dict):
+        return merged
+    fixed = dict((old or {}).get('profile') or {})
+    for k in PROFILE_SELF_KEYS:
+        if k in prof_new:
+            fixed[k] = prof_new[k]
+    if not fixed.get('name'):
+        fixed['name'] = (doc_get('user', user['uid']) or {}).get('name', '')
+    return {**merged, 'profile': fixed}
+
+
+def profile_ok(user, old, new):
+    op_, np_ = (old or {}).get('profile') or {}, (new or {}).get('profile') or {}
+    if not isinstance(np_, dict):
+        return False
+    changed = {k for k in set(op_) | set(np_) if op_.get(k) != np_.get(k)}
+    if 'name' in changed and np_.get('name') == (doc_get('user', user['uid']) or {}).get('name'):
+        changed.discard('name')           # đồng bộ từ tài khoản, không phải do người dùng sửa
+    if not changed <= PROFILE_SELF_KEYS:
+        return False
+    ph, em = np_.get('phone', ''), np_.get('email', '')
+    return (isinstance(ph, str) and PHONE_RE.fullmatch(ph) is not None
+            and isinstance(em, str) and (em == '' or EMAIL_RE.fullmatch(em) is not None))
+
+
 def can(op, col, id_, user, old=None, new=None):
     """Chuyển từ firestore.rules. op: read | create | update | delete."""
     signed = user is not None
@@ -209,10 +243,16 @@ def can(op, col, id_, user, old=None, new=None):
             changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
             nm = new.get('name')
             ph = new.get('phone', '')
-            return (owner and changed <= {'name', 'phone'} and isinstance(nm, str) and 0 < len(nm) <= 100
+            allowed = {'phone'} if role in LOCKED_ROLES else {'name', 'phone'}   # họ tên của SV/GV do Admin cấp
+            return (owner and changed <= allowed and isinstance(nm, str) and 0 < len(nm) <= 100
                     and isinstance(ph, str) and re.fullmatch(r'[0-9+ ().-]{0,20}', ph) is not None)
         return admin
-    if col == 'userData':      return owner or admin
+    if col == 'userData':
+        if admin: return True
+        if not owner: return False
+        if role in LOCKED_ROLES and op in ('create', 'update'):
+            return profile_ok(user, old, new)
+        return True
     if col == 'activities':    return signed if op == 'read' else (owner or admin)
     if col == 'sharedData':    return signed if op == 'read' else role in STAFF
     if col in ('gradingPolicies', 'curriculum', 'theses'):
@@ -745,6 +785,8 @@ class Handler(BaseHTTPRequestHandler):
                 if not isinstance(new, dict):
                     raise ApiError(400, 'bad-json', 'Thiếu data.')
                 merged = deep_merge(old or {}, new) if b.get('merge', True) else new
+                if col == 'userData' and u and u['uid'] == id_ and role_of(u) in LOCKED_ROLES:
+                    merged = lock_profile(u, old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
                 doc_put(col, id_, merged)
