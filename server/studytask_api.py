@@ -11,7 +11,7 @@ Xóa user:   python3 studytask_api.py delete-user USERNAME
 Biến môi trường: STUDYTASK_DATA (mặc định /var/lib/studytask), STUDYTASK_PORT (8787).
 Phân quyền được chuyển từ firestore.rules (xem hàm can()).
 """
-import hashlib, hmac, json, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time
+import hashlib, hmac, json, math, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time
 from email.message import EmailMessage
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -225,6 +225,68 @@ def profile_ok(user, old, new):
             and isinstance(em, str) and (em == '' or EMAIL_RE.fullmatch(em) is not None))
 
 
+# Nhật ký hoạt động activities/{uid} (V4): chỉ kiểm tra được hình thức, KHÔNG chứng minh được điểm là thật (V3).
+ACTIVITY_DOC_KEYS = {'uid', 'name', 'username', 'email', 'events'}
+ACTIVITY_EVENT_KEYS = {'type', 'at', 'subjectId', 'refId', 'refTitle', 'score', 'total', 'correct', 'url', 'fileName', 'note'}
+ACTIVITY_TYPES = ('quiz', 'homework', 'material')
+ACTIVITY_MAX_EVENTS = 2000
+ACTIVITY_DATE_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
+
+
+def is_number(v):
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return False
+    return isinstance(v, int) or math.isfinite(v)     # json.loads của Python nhận cả NaN, Infinity
+
+
+def short_str(d, key, max_len):
+    v = d.get(key, '')
+    return isinstance(v, str) and len(v) <= max_len
+
+
+def is_count(d, key):
+    v = d.get(key, 0)
+    return isinstance(v, int) and not isinstance(v, bool) and v >= 0
+
+
+def teaches_student(teacher_uid, student_uid):
+    """Giáo viên dạy ít nhất một môn của sinh viên.
+    Hồ sơ cũ chưa có subjectIds được coi là học mọi môn, giống app.js và nhánh nộp bài ở /api/upload."""
+    mine = (doc_get('user', teacher_uid) or {}).get('subjectIds') or []
+    student = doc_get('user', student_uid)
+    if not mine or student is None:
+        return False
+    theirs = student.get('subjectIds')
+    return theirs is None or any(s in theirs for s in mine)
+
+
+def valid_activity_event(e):
+    if not isinstance(e, dict) or not set(e) <= ACTIVITY_EVENT_KEYS:
+        return False
+    at, ref, score = e.get('at'), e.get('refId', 0), e.get('score', 0)
+    return (e.get('type') in ACTIVITY_TYPES
+            and isinstance(at, str) and ACTIVITY_DATE_RE.fullmatch(at) is not None
+            and is_number(e.get('subjectId', 0))
+            and (is_number(ref) or isinstance(ref, str))
+            and short_str(e, 'refTitle', 500) and short_str(e, 'url', 2048)
+            and short_str(e, 'fileName', 255) and short_str(e, 'note', 2000)
+            and is_number(score) and 0 <= score <= 10
+            and is_count(e, 'total') and is_count(e, 'correct')
+            and e.get('correct', 0) <= e.get('total', 0))
+
+
+def activity_write_ok(uid, old, new):
+    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ vào cuối; phần cũ giữ nguyên, kể cả sự kiện từ bản cũ."""
+    if not set(new) <= ACTIVITY_DOC_KEYS or new.get('uid', uid) != uid:
+        return False
+    if not (short_str(new, 'name', 100) and short_str(new, 'username', 254) and short_str(new, 'email', 254)):
+        return False
+    cur, prev = new.get('events', []), old.get('events', [])
+    if not isinstance(cur, list) or not isinstance(prev, list) or len(cur) > ACTIVITY_MAX_EVENTS:
+        return False
+    return cur == prev or (len(cur) == len(prev) + 1 and cur[:-1] == prev and valid_activity_event(cur[-1]))
+
+
 def can(op, col, id_, user, old=None, new=None):
     """Chuyển từ firestore.rules. op: read | create | update | delete."""
     signed = user is not None
@@ -253,7 +315,10 @@ def can(op, col, id_, user, old=None, new=None):
         if role in LOCKED_ROLES and op in ('create', 'update'):
             return profile_ok(user, old, new)
         return True
-    if col == 'activities':    return signed if op == 'read' else (owner or admin)
+    if col == 'activities':
+        if op == 'read': return owner or admin or (role == 'teacher' and teaches_student(user['uid'], id_))
+        if op == 'delete': return owner or admin
+        return admin or (owner and activity_write_ok(id_, old, new))
     if col == 'sharedData':    return signed if op == 'read' else role in STAFF
     if col in ('gradingPolicies', 'curriculum', 'theses'):
         return signed if op == 'read' else role in ('admin', 'training')

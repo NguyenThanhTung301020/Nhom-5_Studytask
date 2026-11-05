@@ -3,7 +3,7 @@
 import { test, before, after, beforeEach, describe } from 'node:test'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing'
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, arrayUnion } from 'firebase/firestore'
 
 let env
 
@@ -224,6 +224,56 @@ describe('Phiếu đăng ký xét tốt nghiệp', () => {
     await assertSucceeds(setDoc(doc(as(STUDENT), 'graduationApps', STUDENT.uid), app))
     await assertSucceeds(setDoc(doc(as(TRAINING), 'graduationApps', STUDENT.uid), { status: 'needsFix', review: 'Thiếu chứng chỉ' }, { merge: true }))
     await assertFails(setDoc(doc(as(STUDENT), 'graduationApps', STUDENT.uid), { status: 'submitted', review: '' }, { merge: true }))
+  })
+})
+
+describe('V4 – activities/{uid}: giới hạn đọc, kiểm tra khi ghi', () => {
+  const material = { type: 'material', subjectId: 1, refId: 11, refTitle: 'Giáo trình', at: '2026-11-01' }
+  const quiz = { type: 'quiz', subjectId: 1, refId: 'q1', refTitle: 'Quiz', score: 8.5, total: 4, correct: 3, at: '2026-11-02' }
+  const seedLog = () => env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), 'activities', STUDENT.uid), { uid: STUDENT.uid, name: 'Sinh viên', username: 'student', events: [material] })
+  })
+  test('chủ tài khoản, admin, giáo viên dạy cùng môn ĐỌC được', async () => {
+    await seedLog()
+    await assertSucceeds(getDoc(doc(as(STUDENT), 'activities', STUDENT.uid)))
+    await assertSucceeds(getDoc(doc(as(ADMIN), 'activities', STUDENT.uid)))
+    await assertSucceeds(getDoc(doc(as(TEACHER), 'activities', STUDENT.uid)))
+  })
+  test('sinh viên khác, Đào tạo, Tài chính, chưa đăng nhập KHÔNG đọc được', async () => {
+    await seedLog()
+    await assertFails(getDoc(doc(as(OTHER), 'activities', STUDENT.uid)))
+    await assertFails(getDoc(doc(as(TRAINING), 'activities', STUDENT.uid)))
+    await assertFails(getDoc(doc(as(FINANCE), 'activities', STUDENT.uid)))
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'activities', STUDENT.uid)))
+  })
+  test('giáo viên KHÔNG đọc nhật ký của sinh viên không học môn mình dạy', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => { await updateDoc(doc(ctx.firestore(), 'user', STUDENT.uid), { subjectIds: [5] }) })
+    await seedLog()
+    await assertFails(getDoc(doc(as(TEACHER), 'activities', STUDENT.uid)))
+  })
+  test('sinh viên ĐƯỢC thêm một sự kiện đúng khuôn vào nhật ký của mình (luồng logActivity)', async () => {
+    await seedLog()
+    await assertSucceeds(setDoc(doc(as(STUDENT), 'activities', STUDENT.uid),
+      { uid: STUDENT.uid, name: 'Sinh viên', username: 'student', events: arrayUnion(quiz) }, { merge: true }))
+  })
+  test('KHÔNG ghi nhật ký của người khác', async () => {
+    await assertFails(setDoc(doc(as(OTHER), 'activities', STUDENT.uid), { events: arrayUnion(material) }, { merge: true }))
+    await assertFails(setDoc(doc(as(TEACHER), 'activities', STUDENT.uid), { events: arrayUnion(material) }, { merge: true }))
+  })
+  test('KHÔNG thêm trường lạ, sai kiểu dữ liệu, mạo danh uid', async () => {
+    await seedLog()
+    const ref = doc(as(STUDENT), 'activities', STUDENT.uid)
+    await assertFails(setDoc(ref, { role: 'admin' }, { merge: true }))
+    await assertFails(setDoc(ref, { name: 123 }, { merge: true }))
+    await assertFails(setDoc(ref, { uid: OTHER.uid }, { merge: true }))
+    await assertFails(setDoc(ref, { events: arrayUnion({ ...material, type: 'hacked' }) }, { merge: true }))
+    await assertFails(setDoc(ref, { events: arrayUnion({ ...quiz, score: '10' }) }, { merge: true }))
+    await assertFails(setDoc(ref, { events: arrayUnion({ ...quiz, score: 11 }) }, { merge: true }))
+  })
+  test('KHÔNG sửa hoặc xóa bớt sự kiện đã ghi', async () => {
+    await seedLog()
+    await assertFails(updateDoc(doc(as(STUDENT), 'activities', STUDENT.uid), { events: [] }))
+    await assertFails(updateDoc(doc(as(STUDENT), 'activities', STUDENT.uid), { events: [{ ...material, refId: 12 }] }))
   })
 })
 

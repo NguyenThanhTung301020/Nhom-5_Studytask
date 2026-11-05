@@ -197,7 +197,7 @@ bash deploy/server-report.sh
 Nhóm ghi rõ các điểm chưa đạt để không hiểu nhầm phạm vi:
 
 1. **V3 (chấm trắc nghiệm ở máy chủ) chưa làm.** Thiết kế ở tài liệu 05 vẫn là việc của tuần 6; hiện đáp án và điểm trắc nghiệm vẫn do trình duyệt xử lý.
-2. **V4 chưa vá.** `can()` giữ nguyên quy tắc của rules cũ: mọi người dùng đã đăng nhập đọc được `activities`. Cần giới hạn theo vai trò ở đợt sau.
+2. **V4 mới vá một phần.** `can()` đã giới hạn đọc `activities` cho chủ tài khoản, Admin và giáo viên dạy chung ít nhất một môn, đồng thời kiểm tra sự kiện khi ghi (`tests/server/test_activities.py`). Vẫn còn: giáo viên đọc được cả tài liệu nên thấy sự kiện của các môn mình không dạy; sinh viên vẫn tự ghi được điểm trắc nghiệm đúng định dạng cho đến khi làm V3 và vẫn xóa được nhật ký của mình.
 3. **Gửi email cần cấu hình SMTP.** Khi chưa cấu hình, giao diện báo "máy chủ chưa cấu hình gửi email"; hướng dẫn trong `server/README.md`.
 4. **Chưa có sao lưu tự động.** Hiện chỉ có sao lưu thủ công và bản sao tự động trước khi chuyển lược đồ.
 5. **Một máy chủ duy nhất.** Máy hỏng hoặc mất điện thì dịch vụ dừng; Firebase có độ sẵn sàng cao hơn. Đây là đánh đổi nhóm chấp nhận để đổi lấy quyền kiểm soát và chi phí.

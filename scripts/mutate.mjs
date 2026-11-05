@@ -4,13 +4,15 @@
 // Chạy trong `firebase emulators:exec` (cwd = thư mục dự án):
 //   npx firebase emulators:exec --only firestore --project demo-studytask "node scripts/mutate.mjs [thư-mục-kết-quả] [số-bản]"
 //   ONLY=14,89 ... chỉ chạy các bản có số thứ tự đã cho
+//   SHARD=0/4 ... chỉ chạy lô 0 trong 4 lô, để chạy song song trên nhiều Emulator (mỗi lô một thư-mục-kết-quả riêng)
 import { readFileSync, writeFileSync, mkdirSync, unlinkSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
 const SP = process.argv[2] || join(tmpdir(), 'studytask-mutants')
-const orig = readFileSync('firestore.rules', 'utf8')
+// Chuẩn hóa về LF: tệp CRLF trên Windows làm các regex kết thúc bằng $ không khớp, thiếu đột biến
+const orig = readFileSync('firestore.rules', 'utf8').replace(/\r\n/g, '\n')
 const lines = orig.split('\n')
 const mutants = []
 const add = (desc, text) => { if (text !== orig) mutants.push({ desc, text }) }
@@ -27,7 +29,7 @@ lines.forEach((ln, i) => {
       const left = roles.filter((x) => x !== r)
       if (left.length) rep(`bỏ vai trò ${r}`, ln.replace(m[0], `hasRole([${left.join(', ')}])`))
     }
-    rep('thêm vai trò student', ln.replace(m[0], `hasRole([${m[1]}, 'student'])`))
+    if (!roles.includes("'student'")) rep('thêm vai trò student', ln.replace(m[0], `hasRole([${m[1]}, 'student'])`))
   }
   // 2. isOwner -> signedIn ; isAdmin -> signedIn
   if (/isOwner\((uid)\)/.test(ln) && !ln.includes('function')) rep('isOwner→signedIn', ln.replace(/isOwner\(uid\)/, 'signedIn()'))
@@ -41,8 +43,9 @@ lines.forEach((ln, i) => {
   // 5. == -> !=
   idx = -1
   while ((idx = ln.indexOf('==', idx + 1)) !== -1) rep('==→!=', ln.slice(0, idx) + '!=' + ln.slice(idx + 2))
-  // 6. xóa riêng dòng điều kiện kết thúc bằng &&
-  if (ln.trim().endsWith('&&') && !ln.includes('allow') && !ln.includes('function') && !ln.includes('return')) {
+  // 6. xóa riêng dòng điều kiện kết thúc bằng && (bỏ qua dòng nối của một danh sách viết nhiều dòng: xóa sẽ sai cú pháp)
+  const closesEarlierBracket = /^[^[]*\]/.test(ln)
+  if (ln.trim().endsWith('&&') && !closesEarlierBracket && !ln.includes('allow') && !ln.includes('function') && !ln.includes('return')) {
     const c = [...lines]; c.splice(i, 1); add(`${lineOf(i)} xóa điều kiện: ${ln.trim()}`, c.join('\n'))
   }
   // 7. biên số
@@ -71,6 +74,44 @@ lines.forEach((ln, i) => {
   // 10. read: signedIn -> true ; request.auth != null -> true
   if (ln.includes('request.auth != null')) rep('signedIn luôn đúng', ln.replace('request.auth != null', 'true'))
   if (ln.includes('request.auth.uid == uid')) rep('isOwner luôn đúng', ln.replace('request.auth.uid == uid', 'true'))
+  // 11. || -> &&
+  idx = -1
+  while ((idx = ln.indexOf('||', idx + 1)) !== -1) rep('||→&&', ln.slice(0, idx) + '&&' + ln.slice(idx + 2))
+  // 12. bỏ kiểm tra kiểu / định dạng
+  for (const m of ln.matchAll(/[\w.]+(?:\([^()]*\))? is (?:string|number|int|list|map|bool)\b/g)) rep(`bỏ kiểm tra kiểu ${m[0]}`, ln.replace(m[0], 'true'))
+  for (const m of ln.matchAll(/[\w.]+(?:\([^()]*\))?\.matches\('[^']*'\)/g)) rep('bỏ kiểm tra định dạng', ln.replace(m[0], 'true'))
+  // 13. biên số: lệch 1 về mỗi phía
+  for (const m of ln.matchAll(/(<=|>=|>|<) (\d+)\b/g)) {
+    for (const d of [1, -1]) rep(`biên ${m[0]} → ${m[1]} ${+m[2] + d}`, ln.slice(0, m.index) + `${m[1]} ${+m[2] + d}` + ln.slice(m.index + m[0].length))
+  }
+  // 14. danh sách trường hasOnly: bỏ từng trường, thêm trường lạ
+  for (const m of ln.matchAll(/hasOnly\(\[([^\]]*)\]\)/g)) {
+    const keys = m[1].split(',').map((s) => s.trim())
+    for (const k of keys) rep(`bỏ ${k} khỏi hasOnly`, ln.replace(m[0], `hasOnly([${keys.filter((x) => x !== k).join(', ')}])`))
+    if (!keys.includes("'role'")) rep("thêm 'role' vào hasOnly", ln.replace(m[0], `hasOnly([${m[1]}, 'role'])`))
+  }
+  // 15. kiểm tra từng trường không bắt buộc: bỏ hẳn, hoặc nới giới hạn độ dài
+  for (const m of ln.matchAll(/optional(?:String|Count)\((\w+), '(\w+)'(?:, (\d+))?\)/g)) {
+    if (ln.includes('function')) continue
+    rep(`bỏ kiểm tra trường ${m[2]}`, ln.replace(m[0], 'true'))
+    if (m[3]) rep(`nới độ dài ${m[2]}`, ln.replace(m[0], m[0].replace(`, ${m[3]})`, `, ${+m[3] + 1})`)))
+  }
+  // 16. riêng activities
+  if (ln.includes("e.type in [")) {
+    for (const t of ['quiz', 'homework', 'material']) rep(`bỏ loại ${t}`, ln.replace(new RegExp(`'${t}',?\\s*`), '').replace(/,\s*\]/, ']'))
+    rep('thêm loại sự kiện lạ', ln.replace("'material']", "'material', 'hacked']"))
+  }
+  if (ln.includes('old.size() + 1')) rep('cho thêm 2 sự kiện', ln.replace('old.size() + 1', 'old.size() + 2'))
+  if (ln.includes('validActivityEvent(cur[old.size()])')) {
+    rep('kiểm tra phần tử đầu thay vì phần tử mới', ln.replace('cur[old.size()]', 'cur[0]'))
+    rep('bỏ kiểm tra sự kiện mới', ln.replace('validActivityEvent(cur[old.size()])', 'true'))
+  }
+  if (ln.includes('teachesStudent(uid);') && !ln.includes('function')) rep('giáo viên nào cũng đọc được', ln.replace('teachesStudent(uid)', "hasRole(['teacher'])"))
+  if (ln.includes('.hasAny(get(')) rep('môn của sinh viên mặc định không rỗng', ln.replace(/get\('subjectIds', \[\]\)\);$/, "get('subjectIds', [1,2,3,4,5]));"))
+  if (ln.includes('appendsOneEvent(') && !ln.includes('function')) rep('bỏ kiểm tra chỉ thêm cuối', ln.replace(/appendsOneEvent\((?:[^()]|\([^()]*\))*\)/, 'true'))
+  if (ln.includes('validActivityDoc(uid)') && !ln.includes('function')) rep('bỏ kiểm tra tài liệu nhật ký', ln.replace('validActivityDoc(uid)', 'true'))
+  if (ln.includes('validUserData()') && !ln.includes('function')) rep('bỏ kiểm tra userData', ln.replace('validUserData()', 'true'))
+  if (ln.includes('validGraduationApp(uid)') && !ln.includes('function')) rep('bỏ kiểm tra phiếu', ln.replace('validGraduationApp(uid)', 'true'))
 })
 
 // loại trùng
@@ -83,7 +124,7 @@ mkdirSync(join(SP, 'mut'), { recursive: true })
 const origTest = readFileSync('tests/firestore.rules.test.mjs', 'utf8')
   .replace("readFileSync('firestore.rules', 'utf8')", "readFileSync(process.env.RULES_FILE, 'utf8')")
   .replace('port: 8080', 'port: Number(process.env.FIRESTORE_EMULATOR_HOST.split(":")[1])')
-const tmpOrig = 'tests/.tmp-orig-mut.test.mjs'
+const tmpOrig = `tests/.tmp-orig-mut-${process.pid}.test.mjs`
 writeFileSync(tmpOrig, origTest)
 
 const run = (testFile, rulesFile) => {
@@ -102,8 +143,10 @@ const results = []
 try {
   const limit = +(process.argv[3] ?? list.length)
   const only = process.env.ONLY ? process.env.ONLY.split(',').map(Number) : null
+  const [shard, shards] = (process.env.SHARD ?? '0/1').split('/').map(Number)
   for (const [n, m] of list.slice(0, limit).entries()) {
     if (only && !only.includes(n)) continue
+    if (n % shards !== shard) continue
     const f = join(SP, 'mut', `m${n}.rules`)
     writeFileSync(f, m.text)
     const a = run(tmpOrig, f)

@@ -34,6 +34,101 @@ service cloud.firestore {
         get(/databases/$(database)/documents/user/$(request.auth.uid)).data.get('subjectIds', []).hasAny([int(subjectId)]);
     }
 
+    // V4: giáo viên có ít nhất một môn trùng với môn của sinh viên uid.
+    // Điều kiện đọc theo từng tài liệu: truy vấn cả collection của giáo viên sẽ bị từ chối, phải đọc từng activities/{uid}.
+    function teachesStudent(uid) {
+      return hasRole(['teacher']) &&
+        get(/databases/$(database)/documents/user/$(request.auth.uid)).data.get('subjectIds', []).hasAny(get(/databases/$(database)/documents/user/$(uid)).data.get('subjectIds', []));
+    }
+
+    // Trường m[k] không bắt buộc; nếu có thì phải là chuỗi dài tối đa max ký tự
+    function optionalString(m, k, max) {
+      return m.get(k, '') is string && m.get(k, '').size() <= max;
+    }
+
+    // Trường m[k] không bắt buộc; nếu có thì phải là số nguyên không âm
+    function optionalCount(m, k) {
+      return m.get(k, 0) is int && m.get(k, 0) >= 0;
+    }
+
+    // Một sự kiện trong activities/{uid}.events: chỉ kiểm tra được hình thức, KHÔNG chứng minh được điểm là thật (V3).
+    function validActivityEvent(e) {
+      return e.keys().hasOnly(['type', 'at', 'subjectId', 'refId', 'refTitle', 'score', 'total', 'correct', 'url', 'fileName', 'note']) &&
+        e.type in ['quiz', 'homework', 'material'] &&
+        e.at.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        e.get('subjectId', 0) is number &&
+        (e.get('refId', 0) is number || e.get('refId', 0) is string) &&
+        optionalString(e, 'refTitle', 500) &&
+        optionalString(e, 'url', 2048) &&
+        optionalString(e, 'fileName', 255) &&
+        optionalString(e, 'note', 2000) &&
+        e.get('score', 0) >= 0 &&
+        e.get('score', 0) <= 10 &&
+        optionalCount(e, 'total') &&
+        optionalCount(e, 'correct') &&
+        e.get('correct', 0) <= e.get('total', 0);
+    }
+
+    // Tài liệu activities/{uid} sau khi ghi: { uid, name, username, email (bản cũ), events }
+    function validActivityDoc(uid) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['uid', 'name', 'username', 'email', 'events']) &&
+        d.get('uid', uid) == uid &&
+        optionalString(d, 'name', 100) &&
+        optionalString(d, 'username', 254) &&
+        optionalString(d, 'email', 254) &&
+        d.get('events', []).size() <= 2000;
+    }
+
+    // Rules không duyệt được từng phần tử của mảng, nên chỉ cho thêm MỘT sự kiện vào cuối mỗi lần ghi và
+    // kiểm tra sự kiện đó; phần cũ phải giữ nguyên. Nhờ vậy mọi sự kiện do chủ tài khoản ghi đều đã qua kiểm tra.
+    function appendsOneEvent(old) {
+      let cur = request.resource.data.get('events', []);
+      return cur == old || (
+        cur.size() == old.size() + 1 &&
+        (old.size() == 0 || cur[0:old.size()] == old) &&
+        validActivityEvent(cur[old.size()])
+      );
+    }
+
+    // userData/{uid} sau khi chủ tài khoản ghi
+    function validUserData() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['profile', 'homeworkSubs', 'submissions', 'library', 'contacts']) &&
+        d.get('profile', {}) is map &&
+        d.get('homeworkSubs', {}) is map &&
+        d.get('submissions', []) is list &&
+        d.get('library', []) is list &&
+        d.get('contacts', []) is list;
+    }
+
+    // Phiếu xét tốt nghiệp sau khi sinh viên ghi (kết quả duyệt đã được chặn riêng ở create/update)
+    function validGraduationApp(uid) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['uid', 'status', 'name', 'studentId', 'className', 'major', 'faculty', 'email', 'phone', 'gpa',
+          'credits', 'round', 'thesisTitle', 'certs', 'evidence', 'note', 'pledge', 'selfCheck', 'submittedAt',
+          'review', 'reviewedBy', 'reviewedAt']) &&
+        d.get('uid', uid) == uid &&
+        optionalString(d, 'name', 100) &&
+        optionalString(d, 'studentId', 32) &&
+        optionalString(d, 'className', 64) &&
+        optionalString(d, 'major', 100) &&
+        optionalString(d, 'faculty', 100) &&
+        optionalString(d, 'email', 254) &&
+        optionalString(d, 'phone', 20) &&
+        optionalString(d, 'gpa', 8) &&
+        optionalString(d, 'round', 64) &&
+        optionalString(d, 'thesisTitle', 500) &&
+        optionalString(d, 'evidence', 2000) &&
+        optionalString(d, 'note', 2000) &&
+        optionalString(d, 'submittedAt', 40) &&
+        d.get('credits', 0) >= 0 &&
+        d.get('credits', 0) <= 999 &&
+        d.get('certs', {}) is map &&
+        d.get('pledge', false) is bool &&
+        d.get('selfCheck', []) is list;
+    }
+
     // Hồ sơ tài khoản: { email, name, role, subjectIds, phone, expiresAt, createdAt }
     match /user/{uid} {
       allow read: if signedIn();
@@ -44,6 +139,8 @@ service cloud.firestore {
         isOwner(uid) &&
         request.resource.data.keys().hasOnly(['name', 'email', 'role']) &&
         request.resource.data.role == 'student' &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100 &&
         request.resource.data.email == request.auth.token.email
       );
 
@@ -52,7 +149,8 @@ service cloud.firestore {
         isOwner(uid) &&
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone']) &&
         request.resource.data.name is string && request.resource.data.name.size() > 0 &&
-        request.resource.data.name.size() <= 100
+        request.resource.data.name.size() <= 100 &&
+        request.resource.data.get('phone', '').matches('^[0-9+ ().-]{0,20}$')
       );
 
       allow delete: if isAdmin();
@@ -66,13 +164,18 @@ service cloud.firestore {
       allow create, update: if isAdmin() || (
         isOwner(uid) &&
         request.resource.data.keys().hasOnly(['password', 'updatedAt']) &&
-        request.resource.data.password is string
+        request.resource.data.password is string &&
+        request.resource.data.password.size() > 0 &&
+        request.resource.data.password.size() <= 128 &&
+        request.resource.data.updatedAt is string
       );
     }
 
     match /userData/{uid} {
-      // Chủ sở hữu đọc/ghi; admin được phép (để xóa khi thanh lý tài khoản)
-      allow read, write: if isOwner(uid) || isAdmin();
+      // Chủ sở hữu đọc/xóa; admin được phép (để xóa khi thanh lý tài khoản)
+      allow read, delete: if isOwner(uid) || isAdmin();
+      // Chủ sở hữu chỉ ghi đúng các trường cá nhân, đúng kiểu
+      allow create, update: if isAdmin() || (isOwner(uid) && validUserData());
     }
 
     match /sharedData/{docId} {
@@ -117,13 +220,15 @@ service cloud.firestore {
       // Sinh viên tự nộp phiếu của mình, trạng thái ban đầu luôn là "submitted", không tự ghi kết quả duyệt
       allow create: if hasRole(['student']) && isOwner(uid) &&
         request.resource.data.status == 'submitted' &&
-        !request.resource.data.keys().hasAny(['review', 'reviewedBy', 'reviewedAt']);
+        !request.resource.data.keys().hasAny(['review', 'reviewedBy', 'reviewedAt']) &&
+        validGraduationApp(uid);
       // Sinh viên chỉ sửa khi phiếu đang chờ duyệt hoặc cần bổ sung, và nộp lại ở trạng thái "submitted"
       allow update: if hasRole(['admin', 'training']) || (
         isOwner(uid) &&
         resource.data.status in ['submitted', 'needsFix'] &&
         request.resource.data.status == 'submitted' &&
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['review', 'reviewedBy', 'reviewedAt'])
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['review', 'reviewedBy', 'reviewedAt']) &&
+        validGraduationApp(uid)
       );
       allow delete: if hasRole(['admin', 'training']) || (isOwner(uid) && resource.data.status == 'submitted');
     }
@@ -134,12 +239,14 @@ service cloud.firestore {
       allow write: if hasRole(['admin', 'training']);
     }
 
-    // Nhật ký hoạt động: ai cũng đọc được (admin/giáo viên tổng hợp);
-    // mỗi người ghi nhật ký của chính mình, admin được ghi/xóa để quản lý.
-    // (V4 – giới hạn đọc và chặn tự ghi điểm: kế hoạch tuần 4–6)
+    // Nhật ký hoạt động. V4 (tuần 5): chỉ chủ tài khoản, admin và giáo viên dạy cùng môn được đọc.
+    // Chủ tài khoản chỉ thêm được từng sự kiện đúng khuôn vào cuối nhật ký, admin được ghi/xóa để quản lý.
+    // Chưa chặn được việc tự ghi điểm: sự kiện quiz đúng khuôn vẫn lọt, xử lý cùng V3 khi chấm ở máy chủ (tuần 6).
     match /activities/{uid} {
-      allow read: if signedIn();
-      allow write: if isOwner(uid) || isAdmin();
+      allow read: if isOwner(uid) || isAdmin() || teachesStudent(uid);
+      allow create: if isAdmin() || (isOwner(uid) && validActivityDoc(uid) && appendsOneEvent([]));
+      allow update: if isAdmin() || (isOwner(uid) && validActivityDoc(uid) && appendsOneEvent(resource.data.get('events', [])));
+      allow delete: if isOwner(uid) || isAdmin();
     }
   }
 }
