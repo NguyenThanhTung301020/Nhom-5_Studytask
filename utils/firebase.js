@@ -161,6 +161,14 @@ export const getAllUsers = async () => {
   }
 }
 
+// Hồ sơ học vụ (mã số, khoa, lớp, học kỳ, GPA…) do Admin cấp; sinh viên/giáo viên chỉ tự sửa email và số điện thoại
+export const adminGetProfile = async (targetUid) => {
+  if (!_ready) return {}
+  const d = await fsGetData('userData', targetUid).catch(() => null)
+  return (d && d.profile) || {}
+}
+export const adminSetProfile = (targetUid, profile) =>
+  _ready ? api('PUT', docPath('userData', targetUid), { data: { profile }, merge: true }) : Promise.resolve()
 export const adminUpdateUser = (targetUid, data) =>
   _ready ? api('PUT', docPath('user', targetUid), { data, merge: true }) : Promise.resolve()
 

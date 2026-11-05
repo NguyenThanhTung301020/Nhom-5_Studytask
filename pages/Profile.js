@@ -97,15 +97,18 @@ const ROLE_CONFIG = {
   finance: { fields: ADMIN_FIELDS,   title: 'Hồ sơ Phòng Tài chính', icon: 'cash-coin',     default: { ...DEFAULT_ADMIN_PROFILE, department: 'Phòng Tài chính' } },
 }
 
+const SELF_EDIT_KEYS = ['email', 'phone']   // SV/GV tự sửa; các trường còn lại do Admin hoặc hồ sơ cấp
+
 // ─── Kiểm tra dữ liệu trước khi lưu → { field: 'thông báo lỗi' } ──
-export function validateProfile(form) {
+export function validateProfile(form, locked = false) {
   const err = {}
   const name = (form.name || '').trim()
-  if (!name) err.name = 'Họ và tên không được để trống.'
+  if (locked) { /* SV/GV chỉ sửa email, số điện thoại: họ tên do quản trị viên cấp */ }
+  else if (!name) err.name = 'Họ và tên không được để trống.'
   else if (name.length > 100) err.name = 'Họ và tên tối đa 100 ký tự.'
   if (form.phone && !/^(\+84|0)\d{9,10}$/.test(String(form.phone).replace(/[\s.-]/g, '')))
     err.phone = 'Số điện thoại không hợp lệ (VD: 0901234567).'
-  if (form.gpa !== undefined && String(form.gpa).trim() !== '') {
+  if (!locked && form.gpa !== undefined && String(form.gpa).trim() !== '') {
     const g = Number(String(form.gpa).replace(',', '.'))
     if (isNaN(g) || g < 0 || g > 4) err.gpa = 'GPA phải là số từ 0 đến 4.'
   }
@@ -195,6 +198,8 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
   // Chế độ demo (không có uid) giữ hồ sơ mẫu; tài khoản thật dùng hồ sơ trống theo vai trò
   const cfg      = (role === 'student' && !user?.uid) ? { ...cfg0, default: DEFAULT_PROFILE } : cfg0
   const roleInfo = ROLES[role] || ROLES.student
+  const locked   = role === 'student' || role === 'teacher'   // chỉ được sửa email và số điện thoại
+  const canEditField = (key) => !locked || SELF_EDIT_KEYS.includes(key)
 
   const [editing, setEditing] = useState(false)
   const [form,    setForm]    = useState({ ...cfg.default, ...profile })
@@ -207,7 +212,7 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
   useEffect(() => { if (!editing) setForm({ ...cfg.default, ...profile }) }, [profile, editing])
 
   const handleSave = async () => {
-    const err = validateProfile(form)
+    const err = validateProfile(form, locked)
     setErrors(err)
     if (Object.keys(err).length) return
     setSaveMsg('saving'); setSaveErr('')
@@ -252,8 +257,8 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
             ? h(AvatarPicker, { name: profile.name || user?.name, color: roleInfo.color, user, canEdit: true, onChange: onAvatarChange })
             : h(Avatar, { name: profile.name || user?.name, role }),
 
-          // Tên – editable
-          editing
+          // Tên – chỉ quản trị viên/phòng ban tự sửa; sinh viên, giáo viên do quản trị viên cấp
+          editing && !locked
             ? h('div', { className: 'mb-2' },
                 h('input', { className: `form-control text-center fw-bold${errors.name ? ' is-invalid' : ''}`,
                   value: form.name || '', placeholder: 'Họ và tên', maxLength: 100,
@@ -316,14 +321,19 @@ export default function Profile({ profile, setProfile, onSave, subjects, deadlin
         h('div', { className: 'card border-0 shadow-sm p-4' },
           h('h6', { className: 'fw-bold mb-4', style: { color: 'var(--primary)' } },
             h('i', { className: 'bi bi-info-circle me-2' }), 'Thông tin cá nhân'),
+          locked && h('div', { className: 'alert alert-light border small py-2 mb-3' },
+            h('i', { className: 'bi bi-lock-fill me-1' }),
+            'Bạn chỉ được sửa ', h('strong', null, 'email'), ' và ', h('strong', null, 'số điện thoại'),
+            '. Họ tên, mã số, khoa, lớp, học kỳ, GPA… do quản trị viên hoặc nhà trường cập nhật.'),
 
           h('div', { className: 'row g-3' },
             cfg.fields.map(f =>
               h('div', { key: f.key, className: 'col-12 col-sm-6' },
                 h('div', { className: 'profile-field' },
                   h('label', { className: 'profile-field-label' },
-                    h('i', { className: `bi bi-${f.icon} me-1` }), f.label),
-                  editing
+                    h('i', { className: `bi bi-${f.icon} me-1` }), f.label,
+                    locked && !canEditField(f.key) && h('i', { className: 'bi bi-lock-fill ms-1 text-muted', title: 'Do quản trị viên cập nhật' })),
+                  editing && canEditField(f.key)
                     ? h(window.React.Fragment, null,
                           h('input', { type: f.type, className: `form-control${errors[f.key] ? ' is-invalid' : ''}`, value: form[f.key] || '',
                             placeholder: f.placeholder, onChange: e => setForm({ ...form, [f.key]: e.target.value }) }),
