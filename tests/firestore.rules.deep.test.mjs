@@ -7,7 +7,7 @@
 import { test, before, after, beforeEach, describe } from 'node:test'
 import { readFileSync } from 'node:fs'
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing'
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField } from 'firebase/firestore'
+import { doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc, deleteField, arrayUnion } from 'firebase/firestore'
 
 let env
 // emulators:exec đặt FIRESTORE_EMULATOR_HOST; mặc định cổng 8080 như npm run emulators
@@ -23,6 +23,12 @@ const FINANCE  = { uid: 'finance1',  email: 'taichinh@studytask.vn' }
 const NEW      = { uid: 'student3',  email: 'student3@studytask.vn' }
 const GHOST    = { uid: 'ghost1',    email: 'ghost@studytask.vn' }      // đã đăng nhập nhưng không có hồ sơ
 const ANON     = null
+
+// Sự kiện nhật ký đúng khuôn, giống dữ liệu do trackActivity trong app.js ghi
+const EV_MATERIAL = { type: 'material', subjectId: 1, refId: 11, refTitle: 'Giáo trình', at: '2026-11-01' }
+const EV_QUIZ     = { type: 'quiz', subjectId: 1, refId: 'q1', refTitle: 'Quiz', score: 8.5, total: 4, correct: 3, at: '2026-11-02' }
+const EV_HOMEWORK = { type: 'homework', subjectId: 1, refId: 5, refTitle: 'Bài 1', url: 'https://x.vn/a.pdf', fileName: 'a.pdf', note: 'Em nộp', at: '2026-11-03' }
+const LOG = { uid: STUDENT.uid, name: 'Sinh viên', username: 'student', events: [EV_MATERIAL] }
 
 // Cấp hồ sơ sinh viên cho u (ghi bỏ qua rules) – để ca "bị chặn" thật sự bị chặn bởi rules phiếu, không phải vì thiếu hồ sơ
 const giveStudentProfile = (u) => env.withSecurityRulesDisabled(async (ctx) => {
@@ -59,7 +65,7 @@ async function seedBase() {
     await setDoc(doc(db, 'tuition', STUDENT.uid),     { payments: [{ amount: 1000000, date: '2026-10-01' }] })
     await setDoc(doc(db, 'curriculum', 'ktpm'),       { name: 'KTPM' })
     await setDoc(doc(db, 'theses', 't1'),             { title: 'Khóa luận A' })
-    await setDoc(doc(db, 'activities', STUDENT.uid),  { log: ['login'] })
+    await setDoc(doc(db, 'activities', STUDENT.uid),  LOG)
     await setDoc(doc(db, 'graduationApps', STUDENT.uid), { status: 'submitted', credits: 120 })
     await setDoc(doc(db, 'graduationApps', OTHER.uid),   { status: 'approved', review: 'OK', reviewedBy: 'training1' })
   })
@@ -170,11 +176,31 @@ describe('user/{uid} – ca biên', () => {
   test('admin tạo được hồ sơ giáo viên kèm subjectIds, hạn tài khoản', async () => {
     await assertSucceeds(put(as(ADMIN), ['user', 'tNew'], { name: 'GV mới', email: 'gv@x.vn', role: 'teacher', subjectIds: [3], expiresAt: '2027-01-01' }))
   })
-  test('sửa tên: dài đúng 100 ký tự được, 101 ký tự bị chặn; kiểu không phải chuỗi bị chặn', async () => {
+  test('sửa tên: dài 1 hoặc đúng 100 ký tự được; rỗng, 101 ký tự hoặc không phải chuỗi bị chặn', async () => {
+    await assertSucceeds(upd(as(STUDENT), ['user', STUDENT.uid], { name: 'a' }))
+    await assertFails(upd(as(STUDENT), ['user', STUDENT.uid], { name: '' }))
     await assertSucceeds(upd(as(STUDENT), ['user', STUDENT.uid], { name: 'a'.repeat(100) }))
     await assertFails(upd(as(STUDENT), ['user', STUDENT.uid], { name: 'a'.repeat(101) }))
     await assertFails(upd(as(STUDENT), ['user', STUDENT.uid], { name: 12345 }))
     await assertFails(upd(as(STUDENT), ['user', STUDENT.uid], { name: null }))
+  })
+  test('tạo hồ sơ: tên thiếu, rỗng, sai kiểu hoặc quá 100 ký tự bị chặn; đúng 100 ký tự được', async () => {
+    for (const name of ['', ['x'], 123, 'a'.repeat(101)])
+      await assertFails(put(as(NEW), ['user', NEW.uid], { name, email: NEW.email, role: 'student' })).catch((e) => { throw new Error(`${JSON.stringify(name)}: ${e.message}`) })
+    await assertFails(put(as(NEW), ['user', NEW.uid], { email: NEW.email, role: 'student' }))
+    await assertSucceeds(put(as(NEW), ['user', NEW.uid], { name: 'a'.repeat(100), email: NEW.email, role: 'student' }))
+  })
+  test('sửa tên: kiểu danh sách bị chặn (size() của danh sách vẫn chạy nên phải kiểm kiểu)', async () => {
+    await assertFails(upd(as(STUDENT), ['user', STUDENT.uid], { name: ['x'] }))
+  })
+  test('phone: chỉ nhận chuỗi số điện thoại tối đa 20 ký tự', async () => {
+    for (const phone of [123, { a: 1 }, ['0901'], 'x'.repeat(5000), 'abc', '1'.repeat(21)])
+      await assertFails(upd(as(STUDENT), ['user', STUDENT.uid], { phone })).catch((e) => { throw new Error(`${JSON.stringify(phone)}: ${e.message}`) })
+    for (const phone of ['', '0901234567', '+84 (90) 123-45.67', '1'.repeat(20)])
+      await assertSucceeds(upd(as(STUDENT), ['user', STUDENT.uid], { phone }))
+  })
+  test('hồ sơ chưa có phone vẫn sửa được tên', async () => {
+    await assertSucceeds(upd(as(OTHER), ['user', OTHER.uid], { name: 'Tên mới' }))
   })
   test('chủ tài khoản KHÔNG xóa được trường role / expiresAt / subjectIds, KHÔNG đổi email, KHÔNG sửa createdAt', async () => {
     for (const f of ['role', 'expiresAt', 'subjectIds'])
@@ -219,6 +245,14 @@ describe('userSecrets – ma trận', () => {
     await assertFails(put(db, ['userSecrets', STUDENT.uid], { password: 'a', updatedAt: 'x', role: 'admin' }))
     await assertSucceeds(put(db, ['userSecrets', STUDENT.uid], { password: 'a', updatedAt: 'x' }))
   })
+  test('chủ tài khoản: mật khẩu rỗng, danh sách, quá 128 ký tự; updatedAt thiếu hoặc sai kiểu đều bị chặn', async () => {
+    const db = as(STUDENT)
+    for (const password of ['', ['a'], 'a'.repeat(129)])
+      await assertFails(put(db, ['userSecrets', STUDENT.uid], { password, updatedAt: 'x' })).catch((e) => { throw new Error(`${JSON.stringify(password)}: ${e.message}`) })
+    await assertFails(put(db, ['userSecrets', STUDENT.uid], { password: 'a' }))
+    await assertFails(put(db, ['userSecrets', STUDENT.uid], { password: 'a', updatedAt: 1 }))
+    await assertSucceeds(put(db, ['userSecrets', STUDENT.uid], { password: 'a'.repeat(128), updatedAt: 'x' }))
+  })
 })
 
 // ───────────────────────────────────────────────────────────────
@@ -229,6 +263,22 @@ describe('userData / sharedData – ma trận', () => {
     { allow: [STUDENT, ADMIN], deny: [OTHER, TEACHER, TRAINING, FINANCE, ANON] })
   matrix('userData xóa: chủ + admin', (db) => del(db, ['userData', STUDENT.uid]),
     { allow: [STUDENT, ADMIN], deny: [OTHER, TEACHER, TRAINING, FINANCE, ANON] })
+  test('userData chủ tài khoản: đủ 5 trường đúng kiểu thì được', async () => {
+    await assertSucceeds(put(as(STUDENT), ['userData', STUDENT.uid],
+      { profile: {}, homeworkSubs: {}, submissions: [], library: [], contacts: [] }))
+    await assertSucceeds(put(as(NEW), ['userData', NEW.uid], { contacts: [] }))
+  })
+  test('userData chủ tài khoản: từng trường sai kiểu, hoặc trường lạ, đều bị chặn', async () => {
+    const bad = [{ profile: 'x' }, { homeworkSubs: [] }, { submissions: {} }, { library: {} }, { contacts: {} }, { role: 'admin' }]
+    for (const data of bad) {
+      await assertFails(put(as(STUDENT), ['userData', STUDENT.uid], data, { merge: true })).catch((e) => { throw new Error(`sửa ${JSON.stringify(data)}: ${e.message}`) })
+      await assertFails(put(as(NEW), ['userData', NEW.uid], data)).catch((e) => { throw new Error(`tạo ${JSON.stringify(data)}: ${e.message}`) })
+    }
+  })
+  test('userData: admin không bị giới hạn khuôn dữ liệu (ghi để quản lý)', async () => {
+    await assertSucceeds(put(as(ADMIN), ['userData', STUDENT.uid], { ghiChuQuanTri: 1 }))
+    await assertSucceeds(put(as(ADMIN), ['userData', NEW.uid], { ghiChuQuanTri: 1 }))
+  })
   matrix('sharedData ghi: admin, giáo viên, đào tạo', (db) => put(db, ['sharedData', 'global'], { x: 1 }, { merge: true }),
     { allow: [ADMIN, TEACHER, TEACHER2, TRAINING], deny: [STUDENT, OTHER, FINANCE, ANON] })
   matrix('sharedData xóa: admin, giáo viên, đào tạo', (db) => del(db, ['sharedData', 'global']),
@@ -335,7 +385,49 @@ describe('graduationApps – ca biên', () => {
   test('sinh viên khi "needsFix" nộp lại: xóa trường review bị chặn, giữ nguyên thì được', async () => {
     await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'graduationApps', STUDENT.uid), { status: 'needsFix', review: 'Thiếu' }) })
     await assertFails(upd(as(STUDENT), ['graduationApps', STUDENT.uid], { status: 'submitted', review: deleteField() }))
-    await assertSucceeds(upd(as(STUDENT), ['graduationApps', STUDENT.uid], { status: 'submitted', certs: true }))
+    await assertSucceeds(upd(as(STUDENT), ['graduationApps', STUDENT.uid], { status: 'submitted', certs: { english: true } }))
+  })
+  describe('kiểm tra trường và kiểu dữ liệu khi sinh viên ghi', () => {
+    const FULL = { uid: NEW.uid, status: 'submitted', name: 'A', studentId: '24TX1', className: 'K24', major: 'KTPM', faculty: 'CNTT',
+      email: 'a@x.vn', phone: '0901', gpa: '3.2', credits: 120, round: 'Đợt 1', thesisTitle: 'Đề tài', certs: { english: true },
+      evidence: 'https://x.vn', note: 'Ghi chú', pledge: true, selfCheck: [{ label: 'x', ok: true }], submittedAt: '2026-11-05T00:00:00.000Z' }
+    const LIMITS = { name: 100, studentId: 32, className: 64, major: 100, faculty: 100, email: 254, phone: 20, gpa: 8, round: 64, thesisTitle: 500, evidence: 2000, note: 2000, submittedAt: 40 }
+    test('phiếu đầy đủ như trang Tốt nghiệp gửi lên: được', async () => {
+      await giveStudentProfile(NEW)
+      await assertSucceeds(put(as(NEW), ['graduationApps', NEW.uid], FULL))
+    })
+    for (const [field, max] of Object.entries(LIMITS)) {
+      test(`trường ${field}: danh sách hoặc dài hơn ${max} bị chặn, đúng ${max} ký tự được`, async () => {
+        await giveStudentProfile(NEW)
+        await assertFails(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, [field]: ['x'] }))
+        await assertFails(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, [field]: 'a'.repeat(max + 1) }))
+        await assertSucceeds(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, [field]: 'a'.repeat(max) }))
+      })
+    }
+    test('credits, certs, pledge, selfCheck sai kiểu; credits ngoài 0–999 bị chặn; biên 0 và 999 được', async () => {
+      await giveStudentProfile(NEW)
+      for (const bad of [{ credits: '120' }, { credits: -1 }, { credits: 1000 }, { certs: true }, { pledge: 'có' }, { selfCheck: {} }])
+        await assertFails(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, ...bad })).catch((e) => { throw new Error(`${JSON.stringify(bad)}: ${e.message}`) })
+      await assertSucceeds(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, credits: 0 }))
+      await assertSucceeds(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, credits: 999 }))
+    })
+    test('trường lạ hoặc uid của người khác bị chặn (khi nộp mới và khi sửa)', async () => {
+      await giveStudentProfile(NEW)
+      for (const bad of [{ role: 'admin' }, { uid: STUDENT.uid }])
+        await assertFails(put(as(NEW), ['graduationApps', NEW.uid], { ...FULL, ...bad })).catch((e) => { throw new Error(`${JSON.stringify(bad)}: ${e.message}`) })
+      await assertFails(upd(as(STUDENT), ['graduationApps', STUDENT.uid], { role: 'admin' }))
+      await assertFails(upd(as(STUDENT), ['graduationApps', STUDENT.uid], { credits: 'nhiều' }))
+      await assertFails(upd(as(STUDENT), ['graduationApps', STUDENT.uid], { uid: OTHER.uid }))
+    })
+    test('sinh viên nộp lại phiếu đã có lời duyệt, giữ nguyên lời duyệt: được', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'graduationApps', STUDENT.uid), { status: 'needsFix', review: 'Thiếu', reviewedBy: 'Đào tạo', reviewedAt: '2026-11-04' })
+      })
+      await assertSucceeds(put(as(STUDENT), ['graduationApps', STUDENT.uid], { status: 'submitted', note: 'Đã bổ sung' }, { merge: true }))
+    })
+    test('Đào tạo ghi lời duyệt không bị giới hạn khuôn dữ liệu của sinh viên', async () => {
+      await assertSucceeds(upd(as(TRAINING), ['graduationApps', STUDENT.uid], { ghiChuDuyet: 'x' }))
+    })
   })
   test('sinh viên KHÁC không sửa / không xóa được phiếu "submitted" của người khác (không chỉ chặn nhờ trạng thái)', async () => {
     await assertFails(upd(as(OTHER), ['graduationApps', STUDENT.uid], { credits: 1 }))
@@ -352,12 +444,184 @@ describe('graduationApps – ca biên', () => {
 
 // ───────────────────────────────────────────────────────────────
 describe('activities', () => {
-  matrix('ghi nhật ký của sinh viên 1: chính sinh viên 1 + admin', (db) => put(db, ['activities', STUDENT.uid], { log: ['x'] }),
-    { allow: [STUDENT, ADMIN], deny: [OTHER, TEACHER, TRAINING, FINANCE, ANON] })
-  matrix('xóa nhật ký của sinh viên 1: chính sinh viên 1 + admin', (db) => del(db, ['activities', STUDENT.uid]),
-    { allow: [STUDENT, ADMIN], deny: [OTHER, TEACHER, TRAINING, FINANCE, ANON] })
-  matrix('đọc nhật ký: mọi người đã đăng nhập (theo thiết kế hiện tại)', (db) => get(db, ['activities', STUDENT.uid]),
-    { allow: EVERYONE, deny: [ANON] })
+  const LOG_REF = ['activities', STUDENT.uid]
+  const append = (ev) => ({ events: arrayUnion(ev) })
+  const setEvents = (events) => env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), ...LOG_REF), { ...LOG, events })
+  })
+  const setProfile = (u, data) => env.withSecurityRulesDisabled(async (ctx) => { await updateDoc(doc(ctx.firestore(), 'user', u.uid), data) })
+  // Thêm một sự kiện sai khuôn vào nhật ký của sinh viên 1 phải bị chặn
+  const denyEvent = async (ev) => {
+    await assertFails(put(as(STUDENT), LOG_REF, append(ev), { merge: true })).catch((e) => { throw new Error(`${JSON.stringify(ev)}: ${e.message}`) })
+  }
+
+  describe('V4 – quyền đọc', () => {
+    matrix('đọc nhật ký sinh viên 1 (môn 1): chính chủ, admin, giáo viên dạy môn 1', (db) => get(db, LOG_REF),
+      { allow: [STUDENT, ADMIN, TEACHER], deny: [OTHER, TEACHER2, TRAINING, FINANCE, GHOST, ANON] })
+    test('giáo viên chỉ đọc khi có môn trùng; bỏ môn của sinh viên hoặc giáo viên là mất quyền ngay', async () => {
+      await assertSucceeds(get(as(TEACHER), LOG_REF))
+      await setProfile(STUDENT, { subjectIds: [5] })
+      await assertFails(get(as(TEACHER), LOG_REF))
+      await setProfile(TEACHER2, { subjectIds: [5] })
+      await assertSucceeds(get(as(TEACHER2), LOG_REF))
+      await setProfile(TEACHER2, { subjectIds: [] })
+      await assertFails(get(as(TEACHER2), LOG_REF))
+    })
+    test('sinh viên chưa có môn nào, hoặc không có hồ sơ: giáo viên không đọc được', async () => {
+      await setProfile(STUDENT, { subjectIds: deleteField() })
+      await assertFails(get(as(TEACHER), LOG_REF))
+      await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'activities', GHOST.uid), { uid: GHOST.uid, events: [] }) })
+      await assertFails(get(as(TEACHER), ['activities', GHOST.uid]))
+    })
+    test('học cùng môn không cho quyền đọc: sinh viên khác, Đào tạo, Tài chính cùng môn 1 vẫn bị chặn', async () => {
+      for (const u of [OTHER, TRAINING, FINANCE]) {
+        await setProfile(u, { subjectIds: [1] })
+        await assertFails(get(as(u), LOG_REF)).catch((e) => { throw new Error(`${u.uid}: ${e.message}`) })
+      }
+    })
+    test('token tự khai role=teacher không có tác dụng', async () => {
+      await setProfile(OTHER, { subjectIds: [1] })
+      await assertFails(get(as(OTHER, { role: 'teacher' }), LOG_REF))
+    })
+    test('truy vấn cả collection: chỉ admin được; giáo viên, sinh viên bị chặn', async () => {
+      await assertSucceeds(getDocs(collection(as(ADMIN), 'activities')))
+      await assertFails(getDocs(collection(as(TEACHER), 'activities')))
+      await assertFails(getDocs(collection(as(STUDENT), 'activities')))
+    })
+  })
+
+  describe('ghi – quyền', () => {
+    matrix('thêm sự kiện vào nhật ký sinh viên 1: chính chủ + admin', (db) => put(db, LOG_REF, append(EV_QUIZ), { merge: true }),
+      { allow: [STUDENT, ADMIN], deny: [OTHER, TEACHER, TRAINING, FINANCE, ANON] })
+    matrix('tạo nhật ký mới của sinh viên 3: chính chủ + admin', (db) => put(db, ['activities', NEW.uid], { uid: NEW.uid, name: 'x', events: [EV_QUIZ] }),
+      { allow: [NEW, ADMIN], deny: [STUDENT, OTHER, TEACHER, TRAINING, FINANCE, ANON] })
+    matrix('xóa nhật ký của sinh viên 1: chính sinh viên 1 + admin', (db) => del(db, LOG_REF),
+      { allow: [STUDENT, ADMIN], deny: [OTHER, TEACHER, TRAINING, FINANCE, ANON] })
+    test('admin không bị giới hạn khuôn dữ liệu (ghi để quản lý, sửa dữ liệu lỗi)', async () => {
+      await assertSucceeds(put(as(ADMIN), LOG_REF, { ghiChu: 'x', events: [] }))
+      await assertSucceeds(put(as(ADMIN), ['activities', NEW.uid], { ghiChu: 'x' }))
+    })
+  })
+
+  describe('ghi – đúng khuôn thì được', () => {
+    test('đủ 3 loại sự kiện, đúng dữ liệu app ghi, kể cả lần ghi đầu tiên', async () => {
+      await assertSucceeds(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, name: 'A', username: 'a', events: arrayUnion(EV_MATERIAL) }, { merge: true }))
+      await assertSucceeds(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, name: 'A', username: 'a', events: arrayUnion(EV_QUIZ) }, { merge: true }))
+      await assertSucceeds(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, name: 'A', username: 'a', events: arrayUnion(EV_HOMEWORK) }, { merge: true }))
+    })
+    test('ghi lại đúng sự kiện đã có (arrayUnion không đổi mảng) và đổi tên hiển thị: được', async () => {
+      await assertSucceeds(put(as(STUDENT), LOG_REF, { name: 'Tên mới', events: arrayUnion(EV_MATERIAL) }, { merge: true }))
+    })
+    test('tài liệu chưa có sự kiện nào, hoặc thiếu mảng events: được', async () => {
+      await assertSucceeds(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, name: 'A', events: [] }))
+      await assertSucceeds(put(as(OTHER), ['activities', OTHER.uid], { uid: OTHER.uid, name: 'A' }))
+      await assertSucceeds(upd(as(OTHER), ['activities', OTHER.uid], { name: 'B' }))
+      await assertSucceeds(upd(as(OTHER), ['activities', OTHER.uid], append(EV_MATERIAL)))
+    })
+    test('dữ liệu bản Firebase cũ có trường email: được', async () => {
+      await assertSucceeds(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, name: 'A', email: NEW.email, events: [EV_MATERIAL] }))
+    })
+    test('sự kiện chỉ có type và at (subjectId, refId... không bắt buộc): được', async () => {
+      await assertSucceeds(put(as(STUDENT), LOG_REF, append({ type: 'material', at: '2026-11-04' }), { merge: true }))
+    })
+    test('refId kiểu số và kiểu chuỗi đều được', async () => {
+      await assertSucceeds(put(as(STUDENT), LOG_REF, append({ ...EV_MATERIAL, refId: 99 }), { merge: true }))
+      await assertSucceeds(put(as(STUDENT), LOG_REF, append({ ...EV_MATERIAL, refId: 'q99' }), { merge: true }))
+    })
+    test('biên điểm: 0 và 10 được; total = correct = 0 được; correct = total được', async () => {
+      for (const ev of [{ ...EV_QUIZ, score: 0 }, { ...EV_QUIZ, score: 10 }, { ...EV_QUIZ, total: 0, correct: 0 }, { ...EV_QUIZ, total: 3, correct: 3 }])
+        await assertSucceeds(put(as(STUDENT), LOG_REF, append(ev), { merge: true }))
+    })
+    test('biên độ dài chuỗi của sự kiện và của tài liệu: đúng giới hạn thì được', async () => {
+      for (const [k, max] of [['refTitle', 500], ['url', 2048], ['fileName', 255], ['note', 2000]])
+        await assertSucceeds(put(as(STUDENT), LOG_REF, append({ ...EV_HOMEWORK, [k]: 'a'.repeat(max) }), { merge: true }))
+      for (const [k, max] of [['name', 100], ['username', 254], ['email', 254]])
+        await assertSucceeds(put(as(STUDENT), LOG_REF, { [k]: 'a'.repeat(max) }, { merge: true }))
+    })
+    test('nhật ký có đúng 1999 sự kiện: thêm được sự kiện thứ 2000', async () => {
+      await setEvents(Array.from({ length: 1999 }, (_, i) => ({ ...EV_MATERIAL, refId: i })))
+      await assertSucceeds(put(as(STUDENT), LOG_REF, append(EV_QUIZ), { merge: true }))
+    })
+  })
+
+  describe('ghi – sai khuôn bị chặn', () => {
+    test('trường lạ ở tài liệu, hoặc mạo danh uid của sinh viên khác', async () => {
+      for (const bad of [{ role: 'admin' }, { log: ['x'] }, { uid: OTHER.uid }])
+        await assertFails(put(as(STUDENT), LOG_REF, bad, { merge: true })).catch((e) => { throw new Error(`${JSON.stringify(bad)}: ${e.message}`) })
+      await assertFails(put(as(NEW), ['activities', NEW.uid], { uid: OTHER.uid, events: [] }))
+    })
+    test('name, username, email: danh sách hoặc quá dài', async () => {
+      for (const [k, max] of [['name', 100], ['username', 254], ['email', 254]]) {
+        await assertFails(put(as(STUDENT), LOG_REF, { [k]: ['x'] }, { merge: true })).catch((e) => { throw new Error(`${k} danh sách: ${e.message}`) })
+        await assertFails(put(as(STUDENT), LOG_REF, { [k]: 'a'.repeat(max + 1) }, { merge: true })).catch((e) => { throw new Error(`${k} quá dài: ${e.message}`) })
+      }
+    })
+    test('events không phải danh sách', async () => {
+      for (const events of ['x', 5, { a: 1 }, null]) {
+        await assertFails(put(as(STUDENT), LOG_REF, { events }, { merge: true })).catch((e) => { throw new Error(`${JSON.stringify(events)}: ${e.message}`) })
+        await assertFails(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, events })).catch((e) => { throw new Error(`tạo ${JSON.stringify(events)}: ${e.message}`) })
+      }
+    })
+    test('nhật ký đã có 2000 sự kiện: không thêm được nữa', async () => {
+      await setEvents(Array.from({ length: 2000 }, (_, i) => ({ ...EV_MATERIAL, refId: i })))
+      await assertFails(put(as(STUDENT), LOG_REF, append(EV_QUIZ), { merge: true }))
+    })
+    test('chỉ được thêm vào cuối: sửa, xóa bớt, đổi thứ tự, chèn đầu, xóa cả mảng đều bị chặn', async () => {
+      await setEvents([EV_MATERIAL, EV_QUIZ])
+      for (const events of [[], [EV_MATERIAL], [EV_QUIZ], [EV_QUIZ, EV_MATERIAL], [EV_HOMEWORK, EV_MATERIAL, EV_QUIZ], [{ ...EV_MATERIAL, refId: 1 }, EV_QUIZ], [EV_MATERIAL, { ...EV_QUIZ, score: 10 }]])
+        await assertFails(upd(as(STUDENT), LOG_REF, { events })).catch((e) => { throw new Error(`${JSON.stringify(events)}: ${e.message}`) })
+      await assertFails(upd(as(STUDENT), LOG_REF, { events: deleteField() }))
+    })
+    test('mỗi lần ghi chỉ thêm một sự kiện, kể cả khi tạo mới', async () => {
+      await assertFails(put(as(STUDENT), LOG_REF, { events: arrayUnion(EV_QUIZ, EV_HOMEWORK) }, { merge: true }))
+      await assertFails(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, events: [EV_MATERIAL, EV_QUIZ] }))
+    })
+    test('sự kiện mới được kiểm tra đúng phần tử vừa thêm, không phải phần tử cũ', async () => {
+      await setEvents([EV_MATERIAL])
+      await denyEvent({ ...EV_MATERIAL, type: 'hacked' })
+    })
+    test('khi tạo mới, sự kiện đầu tiên cũng phải đúng khuôn', async () => {
+      await assertFails(put(as(NEW), ['activities', NEW.uid], { uid: NEW.uid, events: [{ ...EV_QUIZ, score: 11 }] }))
+    })
+    test('sự kiện có trường lạ', async () => { await denyEvent({ ...EV_QUIZ, role: 'admin' }) })
+    test('sự kiện không phải đối tượng', async () => {
+      for (const ev of ['x', 5, null]) await denyEvent(ev)
+    })
+    test('type: thiếu, sai giá trị, sai kiểu', async () => {
+      for (const type of ['hacked', 'Quiz', 1]) await denyEvent({ ...EV_QUIZ, type })
+      const { type, ...noType } = EV_QUIZ
+      await denyEvent(noType)
+    })
+    test('at: thiếu, sai định dạng, sai kiểu', async () => {
+      for (const at of ['05/11/2026', '2026-11-5', '2026-11-05T00:00:00Z', '', 20261105]) await denyEvent({ ...EV_QUIZ, at })
+      const { at, ...noAt } = EV_QUIZ
+      await denyEvent(noAt)
+    })
+    test('subjectId không phải số', async () => {
+      for (const subjectId of ['1', [1], true]) await denyEvent({ ...EV_QUIZ, subjectId })
+    })
+    test('refId không phải số hay chuỗi', async () => {
+      for (const refId of [[1], { a: 1 }, true]) await denyEvent({ ...EV_QUIZ, refId })
+    })
+    test('refTitle, url, fileName, note: danh sách hoặc quá dài', async () => {
+      for (const [k, max] of [['refTitle', 500], ['url', 2048], ['fileName', 255], ['note', 2000]]) {
+        await denyEvent({ ...EV_HOMEWORK, [k]: ['x'] })
+        await denyEvent({ ...EV_HOMEWORK, [k]: 'a'.repeat(max + 1) })
+      }
+    })
+    test('score: sai kiểu hoặc ngoài 0–10', async () => {
+      for (const score of ['9', -1, 11, 10.5, true, null]) await denyEvent({ ...EV_QUIZ, score })
+    })
+    test('total, correct: không phải số nguyên không âm, hoặc correct lớn hơn total', async () => {
+      for (const v of ['3', 1.5, -1]) {
+        await denyEvent({ ...EV_QUIZ, total: v })
+        await denyEvent({ ...EV_QUIZ, correct: v })
+      }
+      await denyEvent({ ...EV_QUIZ, total: 3, correct: 4 })
+      // total lẻ nhưng vẫn lớn hơn correct: chỉ kiểm tra số nguyên mới chặn được
+      await denyEvent({ ...EV_QUIZ, total: 4.5, correct: 3 })
+    })
+  })
 })
 
 // ───────────────────────────────────────────────────────────────
@@ -368,16 +632,14 @@ describe('Rủi ro còn tồn tại (ghi lại hiện trạng)', () => {
     const snap = await assertSucceeds(get(as(OTHER), ['user', STUDENT.uid]))
     assert_equal(snap.data().password, 'legacy123')
   })
-  test('R2: userSecrets chấp nhận mật khẩu rỗng hoặc rất ngắn (rules không kiểm độ dài)', async () => {
-    await assertSucceeds(put(as(STUDENT), ['userSecrets', STUDENT.uid], { password: '', updatedAt: 'x' }))
+  test('R2 (đã siết một phần): mật khẩu rỗng bị chặn nhưng rất ngắn vẫn lọt', async () => {
+    await assertSucceeds(put(as(STUDENT), ['userSecrets', STUDENT.uid], { password: 'a', updatedAt: 'x' }))
   })
-  test('R3: nhật ký hoạt động của người khác đọc được bởi mọi sinh viên', async () => {
-    await assertSucceeds(get(as(OTHER), ['activities', STUDENT.uid]))
+  test('V4 còn lại: sinh viên vẫn tự ghi được điểm trắc nghiệm đúng khuôn; chỉ hết khi chấm ở máy chủ (V3)', async () => {
+    await assertSucceeds(put(as(STUDENT), ['activities', STUDENT.uid], { events: arrayUnion({ ...EV_QUIZ, score: 10, total: 4, correct: 4 }) }, { merge: true }))
   })
-  test('R4: trường phone không được kiểm kiểu/độ dài (số, đối tượng, chuỗi rất dài đều lọt)', async () => {
-    await assertSucceeds(upd(as(STUDENT), ['user', STUDENT.uid], { phone: 123 }))
-    await assertSucceeds(upd(as(STUDENT), ['user', STUDENT.uid], { phone: { a: 1 } }))
-    await assertSucceeds(upd(as(STUDENT), ['user', STUDENT.uid], { phone: 'x'.repeat(5000) }))
+  test('V4 còn lại: sinh viên vẫn tự xóa được nhật ký của mình', async () => {
+    await assertSucceeds(del(as(STUDENT), ['activities', STUDENT.uid]))
   })
   test('R5: giáo viên (không chỉ admin) xóa/ghi đè được toàn bộ sharedData', async () => {
     await assertSucceeds(del(as(TEACHER2), ['sharedData', 'global']))
