@@ -41,7 +41,7 @@ docs/                           Báo cáo tuần, nhật ký AI, phân tích, th
 |---|---|---|
 | `http://127.0.0.1:5500` hoặc `localhost` | Emulator, project `demo-studytask` | Mặc định khi chạy local; không chạm dữ liệu thật |
 | `http://127.0.0.1:5500/?offline=1` | Không dùng | Đăng nhập bằng tài khoản demo cục bộ, không cần Emulator |
-| Domain khác (Cloudflare, sutdytask.io.vn) | Production `sutdytask` | Bản đang vận hành |
+| Domain khác (Cloudflare, sutdytask.io.vn) | Production `sutdytask` (đã gỡ 06/11/2026) | Không còn dùng; bản đang vận hành chạy trên máy chủ riêng |
 
 ### Yêu cầu
 
@@ -147,22 +147,9 @@ npm run test:rules
 - Thay đổi `firestore.rules` phải chạy `npm run test:rules` đạt trước khi tạo Pull Request. Mỗi PR phải có CI xanh mới gộp.
 - Không commit `node_modules/`, tệp log của Emulator, tệp `.env`.
 
-## Triển khai Security Rules lên production
+## Security Rules
 
-Rules trong repo **không tự động** lên production. Sau khi đã kiểm thử, người có quyền trên project `sutdytask` chạy:
-
-```bash
-npx firebase login
-npx firebase deploy --only firestore:rules --project sutdytask
-```
-
-Thứ tự bắt buộc cho bản tuần 2:
-
-1. Export Firestore để sao lưu (Firebase Console → Firestore → Import/Export, hoặc `gcloud firestore export`).
-2. Deploy **rules trước**. Mã mới ghi mật khẩu vào `userSecrets`, mà rules cũ không có quy tắc nào cho collection này, nên nếu mã mới lên Cloudflare trước thì tạo tài khoản và đổi mật khẩu sẽ bị từ chối.
-3. Upload mã lên Cloudflare (upload thủ công; gộp vào `master` không tự deploy).
-4. Quản trị viên đăng nhập, vào **Quản trị → Tài khoản**, bấm **"Chuyển N mật khẩu sang kho riêng"** để chuyển mật khẩu cũ ra khỏi hồ sơ công khai.
-5. Thử đăng nhập và lưu hồ sơ với cả 3 vai trò.
+`firestore.rules` không còn được triển khai ở đâu: project Firebase `sutdytask` đã được gỡ ngày 06/11/2026 ([biên bản](docs/van-hanh/02-bien-ban-go-firebase-sutdytask.md)). Tệp này chỉ còn làm đặc tả cho hàm `can()` trong `server/studytask_api.py` và được kiểm thử trên Emulator bằng `npm run test:rules`.
 
 ## Tài liệu
 
