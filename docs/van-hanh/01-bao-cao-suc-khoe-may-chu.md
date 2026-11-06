@@ -16,13 +16,13 @@ Trong khoảng theo dõi, máy chủ **hoạt động ổn định**. Chưa ghi 
 | RAM đã dùng | 576 MiB trên 7,2 GiB; swap 0 B trên 4 GiB |
 | Ổ đĩa gốc | 7,3 GB trên 295 GB (3%); inode 1% |
 | Dịch vụ `studytask-api`, `nginx`, `cloudflared` | Cả ba `active`, 0 lần tự khởi động lại |
-| Lỗi mức `err` trong nhật ký hệ thống (lần chạy hiện tại) | Chỉ có thông báo do chính thao tác kiểm thử của nhóm (mục 5.6) |
-| Lỗi 5xx của API | 0 |
+| Lỗi mức `err` trong nhật ký hệ thống (lần chạy hiện tại) | 1.655 dòng: 1.647 dòng do thao tác thử nghiệm của nhóm (mục 5.6) và 8 dòng thông báo phần cứng/BIOS khi khởi động (mục 5.3); không có lỗi OOM, I/O, hệ tệp |
+| Lỗi 5xx của API | 1 (mã 501 do một yêu cầu `HEAD`, không phải lỗi dịch vụ); không có 500/502/503 |
 | Toàn vẹn cơ sở dữ liệu (`PRAGMA integrity_check`) | `ok` |
 | Truy cập từ Internet | HTTP 200 trong 0,21 giây |
 | Mất gói tin ra ngoài (ping 1.1.1.1, 3 gói) | 0%, trễ trung bình 31,6 ms |
 
-**Việc chưa đạt, cần làm:** chưa có sao lưu tự động (mục 8), có 10 gói chờ cập nhật, chưa đo được tình trạng ổ cứng (SMART) và băng thông theo ngày.
+**Việc chưa đạt, cần làm:** chưa có sao lưu tự động (mục 7), có 10 gói chờ cập nhật, chưa đo được tình trạng ổ cứng (SMART) và băng thông theo ngày. Kế hoạch kiểm tra lại sau 1 tuần và sau 15 ngày ở **mục 8**.
 
 ## 2. Phương pháp
 
@@ -75,7 +75,14 @@ Dung lượng còn dư rất lớn so với nhu cầu hiện tại.
 
 ### 4.3. Nhiệt độ
 
-Ba vùng nhiệt ACPI đọc được từ `/sys/class/thermal`: **16,8 °C, 27,8 °C, 29,8 °C**. Nhật ký nhân không có dòng giảm xung nhiệt (throttling). Lưu ý: đây là cảm biến vùng ACPI của bo mạch, **không phải nhiệt độ từng lõi CPU** (chưa cài `lm-sensors`).
+Đọc từ `/sys/class/thermal` (khi máy gần như nhàn rỗi):
+
+| Cảm biến | Nhiệt độ |
+|---|---|
+| `x86_pkg_temp` (gói CPU) | **39–42 °C** (hai lần đo cách nhau vài phút) |
+| 3 vùng `acpitz` (bo mạch) | 16,8 °C, 27,8 °C, 29,8 °C |
+
+Nhật ký nhân không có dòng giảm xung nhiệt (throttling). Chưa cài `lm-sensors` nên chưa có nhiệt độ từng lõi.
 
 ## 5. Độ ổn định và các sự kiện bất thường
 
@@ -106,7 +113,9 @@ Nhật ký ghi 3 lần chạy trong khoảng theo dõi:
 ### 5.3. Lỗi hệ thống
 
 - Không có dòng OOM-killer, lỗi I/O ổ đĩa, lỗi hệ tệp (`EXT4-fs error`) hay `Call Trace` trong nhật ký nhân.
-- Lỗi mức `err` duy nhất ở lần chạy hiện tại: các dòng `sshd: connect_to 127.0.0.1 port 8800: failed`, xem 5.6.
+- Nhật ký mức `err` của lần chạy hiện tại có **1.655 dòng**, gồm:
+  - **1.647 dòng** `sshd: connect_to 127.0.0.1 port 8800: failed`, từ 04/11 07:25:59 đến 08:46:39, do thao tác thử nghiệm của nhóm (mục 5.6).
+  - **8 dòng khi khởi động (04/11 06:19–06:20)**: `ACPI BIOS Error ... _GTF ... AE_NOT_FOUND` (lỗi phương thức ACPI của bo mạch cho cổng SATA, 4 dòng), `ACPI Error: AE_NOT_FOUND` (1), `SGX disabled or unsupported by BIOS` (1), `KHO: Failed to reserve lowmem scratch buffer` (1), `nouveau ... MMIO read ... FAULT` (1, trình điều khiển card đồ họa không dùng đến). Đây là thông báo phần cứng/BIOS thường gặp, chỉ xuất hiện một lần lúc khởi động, hệ thống vẫn chạy bình thường. Nên theo dõi xem có lặp lại sau mỗi lần khởi động không.
 
 ### 5.4. Cloudflare Tunnel
 
@@ -139,7 +148,7 @@ Phân bố mã HTTP (toàn bộ nhật ký, 2.178 yêu cầu):
 | 404 | 43 | 2,0% | Đường dẫn không tồn tại |
 | 501 | 1 | 0,05% | Một yêu cầu `HEAD /api/auth/me` (API chưa hỗ trợ phương thức HEAD) |
 | 400 | 1 | 0,05% | Đặt lại mật khẩu với mã sai (đúng như thiết kế) |
-| 5xx | 0 | 0% | Không có lỗi phía máy chủ |
+| 5xx | 1 | 0,05% | Chính là mã 501 ở trên; **không có 500/502/503**, tức không có lỗi thực thi phía máy chủ |
 
 **Về 182 lỗi 403:**
 
@@ -157,7 +166,7 @@ Phân bố mã HTTP (toàn bộ nhật ký, 2.178 yêu cầu):
 
 ### 5.6. Nhật ký lỗi do thao tác thử nghiệm của nhóm
 
-Lúc ~08:45–08:46 (04/11), nhật ký SSH ghi nhiều dòng `connect_to 127.0.0.1 port 8800: failed`. Đây là **hậu quả của việc thử giao diện**: một đường hầm SSH tạm chuyển cổng 8800 tới môi trường thử đã bị tắt trong lúc trình duyệt còn đang gọi. Môi trường thử và đường hầm đã được dọn, không còn cổng 8800 nào đang lắng nghe. Không phải sự cố của hệ thống thật.
+Từ 07:25:59 đến 08:46:39 (04/11), nhật ký SSH ghi 1.647 dòng `connect_to 127.0.0.1 port 8800: failed`, cách nhau khoảng 3 giây. Đây là **hậu quả của việc thử giao diện**: một đường hầm SSH tạm chuyển cổng 8800 tới môi trường thử vẫn còn mở và được trình duyệt gọi liên tục sau khi môi trường thử trên máy chủ đã bị tắt. Từ 08:46:39 không còn dòng nào, và hiện không có cổng 8800 nào đang lắng nghe. Không phải sự cố của hệ thống thật, nhưng là bài học: dọn đường hầm tạm ngay sau khi thử.
 
 ### 5.7. nginx và hoạt động dò quét
 
@@ -169,8 +178,9 @@ Lúc ~08:45–08:46 (04/11), nhật ký SSH ghi nhiều dòng `connect_to 127.0.
 ### 5.8. Bảo mật truy cập quản trị
 
 - Đăng nhập SSH sai: **22 lần**, tất cả từ máy `192.168.2.175` (máy của thành viên nhóm) với tên `studtask` (gõ thiếu chữ `y`). **Không có nguồn lạ.**
+- Đăng nhập SSH thành công: 201 lần, cũng **chỉ từ `192.168.2.175`** (gồm các phiên kiểm tra tự động của lần làm việc này).
 - Không có phiên SSH nào đang mở ngoài phiên kiểm tra.
-- SSH lắng nghe trên mọi giao diện (`0.0.0.0:22`) nhưng máy chủ nằm sau mạng nội bộ; **cần kiểm tra bộ định tuyến tại nơi đặt máy mới không chuyển tiếp cổng 22 hay 80 ra Internet** (mục 8).
+- SSH lắng nghe trên mọi giao diện (`0.0.0.0:22`) nhưng máy chủ nằm sau mạng nội bộ; **cần kiểm tra bộ định tuyến tại nơi đặt máy mới không chuyển tiếp cổng 22 hay 80 ra Internet** (mục 7).
 
 ### 5.9. Mạng và băng thông
 
@@ -213,7 +223,106 @@ Xếp theo mức ưu tiên.
 
 Việc nhỏ về mã nguồn có thể làm sau: hỗ trợ `HEAD /api/auth/me` (hiện trả 501), và không gọi `/api/chat/status` khi chưa đăng nhập (đang gây 40 dòng 401 vô hại).
 
-## 8. Hạn chế của báo cáo
+## 8. Kế hoạch kiểm tra lại
+
+Mục đích: xác nhận máy chủ **tiếp tục ổn định theo thời gian** và phát hiện sớm các xu hướng xấu (rò rỉ bộ nhớ, đĩa đầy dần, kết nối chập chờn, tăng lỗi). Mốc gốc (T0) là báo cáo này, đo ngày **06/11/2026**.
+
+### 8.1. Lịch
+
+| Mốc | Ngày đề xuất | Cửa sổ nhật ký | Người thực hiện | Đầu ra |
+|---|---|---|---|---|
+| **T0** (báo cáo này) | Thứ Sáu 06/11/2026 | từ 03/11 | _(điền)_ | Tài liệu này + `~/health-logs/2026-11-06.txt` |
+| **T+7 ngày** (hơn 1 tuần) | Thứ Sáu 13/11/2026 (làm trong 13–16/11) | `"-7 days"` | _(điền)_ | `~/health-logs/<ngày>.txt` + mục 8.4 |
+| **T+15 ngày** | Thứ Bảy 21/11/2026 | `"-15 days"` | _(điền)_ | `~/health-logs/<ngày>.txt` + mục 8.4 + kết luận chung |
+
+Nên đo vào **cùng khung giờ** (khoảng 09:30 giờ Việt Nam) để so sánh công bằng. Ngoài lịch cố định, đo thêm ngay sau mọi sự kiện: mất điện, khởi động lại, thay đổi router/mạng, cập nhật hệ điều hành, triển khai phiên bản mới.
+
+### 8.2. Việc chuẩn bị trước T+7 (hoàn thành trước 13/11)
+
+1. Cài `smartmontools` và ghi SMART của ổ: `sudo apt install smartmontools -y && sudo smartctl -H -A /dev/sda`. Lưu kết quả (tình trạng, `Reallocated_Sector_Ct`, `Current_Pending_Sector`, giờ hoạt động, nhiệt độ).
+2. Cài `vnstat` để có băng thông theo ngày: `sudo apt install vnstat -y` (để vài ngày cho có dữ liệu).
+3. Thiết lập **sao lưu tự động** và ghi lại lần sao lưu đầu tiên (mục 7, việc #1). Script kiểm tra sẽ hiển thị tuổi bản sao lưu mới nhất trong `~/backups`.
+4. Áp dụng 10 gói cập nhật đang chờ trong khung giờ ít dùng, ghi nhận việc có khởi động lại hay không.
+5. Kiểm tra bộ định tuyến nơi đặt máy mới không mở cổng 22/80 ra Internet.
+6. (Khuyến nghị) Đăng ký giám sát HTTP bên ngoài (ví dụ UptimeRobot, kiểm tra mỗi 5 phút) để có **tỷ lệ uptime thật** cho mốc T+15.
+
+### 8.3. Cách đo
+
+Chạy trên máy chủ (không cần `sudo`, chỉ đọc), script nằm trong repo ở [deploy/health-check.sh](../../deploy/health-check.sh):
+
+```bash
+# nếu máy chủ chưa có repo, chép riêng script từ máy cá nhân:
+#   scp deploy/health-check.sh studytask@192.168.2.187:~/health-check.sh
+bash ~/health-check.sh "-7 days"  --save     # mốc T+7
+bash ~/health-check.sh "-15 days" --save     # mốc T+15
+```
+
+`--save` ghi kết quả vào `~/health-logs/AAAA-MM-DD.txt`. Chép các số vào bảng 8.4 rồi cập nhật báo cáo (tạo tài liệu mới `docs/van-hanh/02-...md` cho mỗi mốc, hoặc thêm cột vào bảng này).
+
+Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A /dev/sda`), nhật ký nginx có `sudo` nếu cần (`sudo tail -50 /var/log/nginx/error.log`), tải trang https://sutdytask.io.vn từ điện thoại dùng mạng 4G (kiểm tra truy cập từ ngoài), đăng nhập thử một tài khoản và gửi một mã email thử (`mail-test`).
+
+### 8.4. Bảng so sánh và ngưỡng cảnh báo
+
+Điền vào cột T+7 và T+15. Cột "Ngưỡng" là điều kiện để coi là **bình thường**; vượt ngưỡng thì điều tra theo mục 8.5.
+
+| Chỉ số | T0 (06/11) | T+7 | T+15 | Ngưỡng bình thường |
+|---|---|---|---|---|
+| Thời gian chạy liên tục / số lần khởi động lại ngoài kế hoạch | 1 ngày 20 giờ / 0 | | | Không có lần khởi động ngoài kế hoạch |
+| Load trung bình 15 phút | 0,00 | | | < 1,0 (4 luồng) |
+| RAM đã dùng (MiB) | 576 | | | Không tăng liên tục; < 2.000 |
+| Swap đã dùng (MiB) | 0 | | | ≈ 0 |
+| RSS `studytask-api` / `cloudflared` / `nginx` (MB) | 30 / 41 / 29 | | | Không tăng đều theo thời gian (rò rỉ); ≤ 2 lần T0 |
+| Ổ đĩa gốc đã dùng | 3% (7,3 GB) | | | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
+| Inode đã dùng | 1% | | | < 50% |
+| Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | | | < 60 °C khi nhàn rỗi |
+| SMART: tình trạng / sector hỏng / sector chờ | _(chưa đo)_ | | | `PASSED`; hai số sector = 0 và không tăng |
+| `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | | | 0 |
+| Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | | | 0 |
+| Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | | | 0 |
+| Lỗi mức `err` mới (không tính các dòng đã biết ở 5.3, 5.6) | 0 | | | 0 |
+| Yêu cầu API trong cửa sổ | 2.178 (03–06/11) | | | Tham khảo để thấy xu hướng sử dụng |
+| Mã 5xx (ngoài 501 do `HEAD`) | 0 | | | 0 |
+| Mã 403 mới | 0 từ 05/11 | | | Gần 0; điều tra nếu tăng |
+| Mã 429 (bị giới hạn tần suất) | 0 | | | 0 (có nghĩa là có người dò mật khẩu) |
+| `Traceback` / `MAIL-ERROR` trong nhật ký API | 0 | | | 0 |
+| `cloudflared` kết nối lại (72 giờ / cửa sổ) | 23 / 72 giờ | | | Tương đương; mỗi lần < vài giây, không có đợt kéo dài |
+| Site từ ngoài (HTTP / thời gian) | 200 / 0,20 giây | | | 200 và < 1 giây |
+| Ping 1.1.1.1 mất gói / trễ trung bình | 0% / ≈ 32–34 ms | | | < 1% / < 100 ms |
+| Lưu lượng card mạng (MB nhận/gửi từ lần khởi động) | 72,6 / 72,0 | | | Tham khảo; `vnstat` cho số theo ngày |
+| SSH đăng nhập sai / nguồn lạ | 22 / 0 | | | Không có nguồn ngoài `192.168.2.175` |
+| Cổng đang lắng nghe | 22, 80, 8787 (nội bộ), 20241 (nội bộ) | | | Không thêm cổng lạ |
+| Toàn vẹn cơ sở dữ liệu | ok | | | `ok` |
+| Số bảng ghi `accounts` / `docs` / `chat` | 5 / 13 / 6 | | | Tăng hợp lý theo việc sử dụng |
+| Bản sao lưu tự động mới nhất | _(chưa có)_ | | | < 24 giờ |
+| Gói chờ cập nhật / cần khởi động lại | 10 / không | | | < 20; áp dụng bản vá bảo mật trong vòng 1 tuần |
+
+### 8.5. Cần làm gì khi vượt ngưỡng
+
+| Dấu hiệu | Kiểm tra trước | Hướng xử lý |
+|---|---|---|
+| RAM hoặc RSS tăng đều | `ps aux --sort=-%mem \| head`; so sánh RSS API giữa các mốc | Khởi động lại dịch vụ (`sudo systemctl restart studytask-api`), ghi lại; nếu tái diễn, xem nhật ký để tìm nguyên nhân rò rỉ |
+| Ổ đĩa tăng nhanh | `du -sh /var/lib/studytask/uploads /var/log /var/lib/studytask` | Dọn nhật ký/bản sao lưu cũ; kiểm tra tệp tải lên bất thường |
+| Có sector hỏng hoặc SMART không `PASSED` | `sudo smartctl -a /dev/sda` | **Sao lưu ngay**, chuẩn bị thay ổ |
+| Dịch vụ tự khởi động lại, lỗi 5xx, `Traceback` | `journalctl -u studytask-api -n 100` | Điều tra nguyên nhân gốc trước khi tiếp tục; ghi vào báo cáo |
+| `cloudflared` kết nối lại dày đặc hoặc kéo dài | `journalctl -u cloudflared --since "-24 hours" \| grep -E "ERR\|WRN"` | Kiểm tra mạng nơi đặt máy; cân nhắc đặt `protocol: http2` trong cấu hình tunnel nếu QUIC bị chặn |
+| 403 tăng | `grep ' 403 '` theo đường dẫn (script đã liệt kê) | Xác định tài khoản/trình duyệt gây ra, kiểm tra quyền; nếu là dò quét thì chặn bằng Cloudflare |
+| Có 429 hoặc đăng nhập sai nhiều | `journalctl -u studytask-api \| grep 429` | Kiểm tra nguồn; khóa tài khoản bị dò, đổi mật khẩu |
+| SSH có nguồn lạ hoặc cổng lạ đang lắng nghe | `journalctl -u ssh`, `ss -tlnp` | Kiểm tra router, tắt chuyển tiếp cổng, cân nhắc chỉ cho phép khóa SSH |
+| Mất điện / khởi động lại ngoài kế hoạch | `journalctl --list-boots`, `journalctl -b -1 -n 50` | Ghi nguyên nhân; kiểm tra toàn vẹn CSDL; cân nhắc UPS |
+
+### 8.6. Tiêu chí kết luận ở mốc T+15
+
+Máy chủ được coi là **ổn định ở mức đề tài** nếu cả năm điều kiện sau đều đạt:
+
+1. Không có lần khởi động lại ngoài kế hoạch; ba dịch vụ không tự khởi động lại.
+2. Không có lỗi 5xx (ngoài 501 do `HEAD`) và không có `Traceback` trong nhật ký API.
+3. Các chỉ số tài nguyên (RAM, RSS, đĩa) không có xu hướng tăng liên tục và nằm trong ngưỡng 8.4.
+4. Tỷ lệ truy cập thành công từ ngoài ≥ 99% (cần giám sát HTTP bên ngoài; nếu chưa có thì ghi rõ "chưa đo").
+5. Có ít nhất một bản sao lưu tự động trong 24 giờ gần nhất và đã thử khôi phục thành công một lần.
+
+Nếu có điều kiện không đạt, ghi rõ trong báo cáo cùng nguyên nhân và hướng khắc phục thay vì bỏ qua.
+
+## 9. Hạn chế của báo cáo
 
 - Chỉ phản ánh **2 ngày 19 giờ** và **tải rất thấp** (chưa có người dùng thật đáng kể). Kết quả không chứng minh khả năng chịu tải; cần thêm phép thử tải riêng nếu muốn kết luận.
 - Không đo được SMART, nhiệt độ từng lõi CPU, băng thông theo ngày (thiếu công cụ hoặc cần `sudo`).
@@ -222,6 +331,8 @@ Việc nhỏ về mã nguồn có thể làm sau: hỗ trợ `HEAD /api/auth/me`
 - Nguyên nhân các lỗi 403 ngày 03–04/11 chưa được xác minh.
 
 ## Phụ lục: các lệnh đã dùng (chạy được lại)
+
+Các lệnh dưới đây đã được gộp thành một script chạy một lần: `bash deploy/health-check.sh "-7 days" --save` (xem mục 8.3).
 
 ```bash
 # Thời gian chạy, tải, RAM, đĩa
