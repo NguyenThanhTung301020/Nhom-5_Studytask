@@ -287,6 +287,11 @@ def activity_write_ok(uid, old, new):
     return cur == prev or (len(cur) == len(prev) + 1 and cur[:-1] == prev and valid_activity_event(cur[-1]))
 
 
+def valid_evidence(value):
+    """Link minh chứng để trống hoặc là http(s); giao diện đưa giá trị này vào href."""
+    return not value or (isinstance(value, str) and re.fullmatch(r'https?://\S+', value.strip(), re.I) is not None)
+
+
 def can(op, col, id_, user, old=None, new=None):
     """Chuyển từ firestore.rules. op: read | create | update | delete."""
     signed = user is not None
@@ -336,11 +341,11 @@ def can(op, col, id_, user, old=None, new=None):
         mgr = role in ('admin', 'training')
         rev = {'review', 'reviewedBy', 'reviewedAt'}
         if op == 'create':
-            return role == 'student' and owner and new.get('status') == 'submitted' and not (set(new) & rev)
+            return role == 'student' and owner and new.get('status') == 'submitted' and not (set(new) & rev) and valid_evidence(new.get('evidence'))
         if op == 'update':
             if mgr: return True
             changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
-            return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev)
+            return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev) and valid_evidence(new.get('evidence'))
         return mgr or (owner and old and old.get('status') == 'submitted')
     return False   # collection lạ → từ chối (userSecrets không còn dùng)
 

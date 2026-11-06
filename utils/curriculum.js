@@ -7,6 +7,22 @@
 
 const norm = (c) => String(c || '').trim().toUpperCase()
 
+// Các môn còn thiếu của mọi module; một mã môn nằm ở nhiều module chỉ tính một lần
+export function missingCourses(report) {
+  const seen = new Set()
+  return (report?.modules || []).flatMap(m => m.missing || []).filter(c => {
+    const code = norm(c.code)
+    if (!code) return true
+    if (seen.has(code)) return false
+    seen.add(code)
+    return true
+  })
+}
+
+// Số lịch học, lịch thi, deadline còn gắn với một môn
+export const subjectUsage = (subjectId, { schedule = [], exams = [], deadlines = [] } = {}) =>
+  [schedule, exams, deadlines].reduce((n, list) => n + list.filter(x => x.subjectId === subjectId).length, 0)
+
 export function checkCurriculum(curriculum, subjects) {
   const byCode = new Map(subjects.filter(s => s.code).map(s => [norm(s.code), s]))
   const inProgram = new Set()

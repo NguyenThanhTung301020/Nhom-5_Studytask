@@ -4,6 +4,7 @@
 import { getDocument, setDocument, listDocuments, deleteDocument, errorText } from '../utils/store.js'
 import { tuitionSummary, DEFAULT_FINANCE_CONFIG } from '../utils/tuition.js'
 import { GRAD_STATUS, GRAD_CERTS } from '../utils/constants.js'
+import { isHttpUrl, toCSV } from '../utils/sanitize.js'
 
 const { useState, useEffect, createElement: h } = window.React
 const Frag = window.React.Fragment
@@ -71,6 +72,7 @@ function StudentGraduation({ user, profile, subjects }) {
   if (!form.round?.trim()) errs.push('Đợt xét')
   if (!(Number(form.credits) > 0)) errs.push('Số tín chỉ tích lũy')
   if (form.gpa === '' || isNaN(Number(String(form.gpa).replace(',', '.')))) errs.push('GPA tích lũy')
+  if (form.evidence?.trim() && !isHttpUrl(form.evidence)) errs.push('Link minh chứng (phải bắt đầu bằng http:// hoặc https://)')
   if (!form.pledge) errs.push('Cam kết')
   const list = checks(form, ctx)
 
@@ -166,7 +168,7 @@ function ReviewModal({ app, onSave, onClose }) {
             ['MSSV', app.studentId], ['Lớp', app.className], ['Ngành', app.major], ['Khoa', app.faculty], ['Email', app.email], ['SĐT', app.phone],
             ['Đợt xét', app.round], ['TC tích lũy', app.credits], ['GPA', app.gpa], ['Khóa luận', app.thesisTitle || '—'],
           ].map(([k, v]) => h('div', { key: k, className: 'col-6 col-md-4' }, h('span', { className: 'text-muted' }, k + ': '), h('strong', null, v || '—')))),
-          app.evidence && h('a', { href: app.evidence, target: '_blank', rel: 'noopener noreferrer', className: 'btn btn-sm btn-outline-primary mb-3' }, h('i', { className: 'bi bi-box-arrow-up-right me-1' }), 'Xem minh chứng'),
+          isHttpUrl(app.evidence) && h('a', { href: app.evidence.trim(), target: '_blank', rel: 'noopener noreferrer', className: 'btn btn-sm btn-outline-primary mb-3' }, h('i', { className: 'bi bi-box-arrow-up-right me-1' }), 'Xem minh chứng'),
           h('div', { className: 'fw-semibold small mb-1' }, 'Sinh viên tự kiểm tra'),
           (app.selfCheck || []).map(c => h('div', { key: c.label, className: 'small' }, checkIcon(c.ok), ' ', c.label)),
           app.note && h('div', { className: 'small mt-2' }, h('strong', null, 'Ghi chú SV: '), app.note),
@@ -201,7 +203,7 @@ function TrainingGraduation({ user }) {
   const exportCSV = () => {
     const rows = [['MSSV', 'Họ tên', 'Lớp', 'Ngành', 'Đợt', 'TC', 'GPA', 'Trạng thái', 'Ý kiến'],
       ...apps.map(a => [a.studentId, a.name, a.className, a.major, a.round, a.credits, a.gpa, GRAD_STATUS[a.status]?.label, a.review || ''])]
-    const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')
+    const csv = toCSV(rows)
     const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); el.download = 'xet-tot-nghiep.csv'; el.click()
   }
 

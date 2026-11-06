@@ -9,7 +9,8 @@ import {
   subjectColumns, countedColumns, evaluateStudentSubject,
 } from '../utils/grading.js'
 import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.js'
-import { checkCurriculum } from '../utils/curriculum.js'
+import { checkCurriculum, missingCourses, subjectUsage } from '../utils/curriculum.js'
+import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
@@ -227,5 +228,55 @@ describe('Quy chế điểm – cột do giáo viên chọn', () => {
     assert.equal(r.participation, 10)                // Q1 đã làm → 1/1 cột
     assert.equal(round1(r.scores.cc), 9.4)           // 0,6×9 + 0,4×10
     assert.equal(r.result.final, round1(0.10 * 9.4 + 0.15 * 8 + 0.20 * 6.5 + 0.55 * 7))
+  })
+})
+
+describe('Xuất CSV và link an toàn', () => {
+  test('isHttpUrl chỉ nhận http(s)', () => {
+    for (const ok of ['https://x.vn/a', 'http://x.vn', 'HTTPS://X.VN', '  https://x.vn/a  ']) assert.equal(isHttpUrl(ok), true, ok)
+    for (const bad of ['javascript:alert(1)', ' javascript:alert(1)', 'data:text/html,x', 'x.vn/a', 'https://x y', '', null, undefined]) assert.equal(isHttpUrl(bad), false, String(bad))
+  })
+  test('csvCell vô hiệu hóa công thức ở đầu ô', () => {
+    assert.equal(csvCell('=HYPERLINK("http://x/","a")'), `"'=HYPERLINK(""http://x/"",""a"")"`)
+    assert.equal(csvCell('@SUM(1)'), `"'@SUM(1)"`)
+    assert.equal(csvCell('+1+1'), `"'+1+1"`)
+    assert.equal(csvCell('-1+1'), `"'-1+1"`)
+    assert.equal(csvCell(' =1+1'), `"' =1+1"`)
+    assert.equal(csvCell('\t=1+1'), `"'\t=1+1"`)
+  })
+  test('csvCell giữ nguyên số và văn bản thường', () => {
+    assert.equal(csvCell(-5), '"-5"')
+    assert.equal(csvCell('3,20'), '"3,20"')
+    assert.equal(csvCell('+84901234567'), '"+84901234567"')
+    assert.equal(csvCell('Nguyễn A'), '"Nguyễn A"')
+    assert.equal(csvCell(null), '""')
+    assert.equal(csvCell(0), '"0"')
+  })
+  test('toCSV nối hàng bằng CRLF', () => {
+    assert.equal(toCSV([['a', 1], ['@b', 2]]), `"a","1"\r\n"'@b","2"`)
+  })
+})
+
+describe('Mở và bớt môn theo CTĐT', () => {
+  const X1 = { code: 'X1', name: 'Môn X', credits: 3 }
+  const program = { modules: [
+    { id: 'a', kind: 'required', courses: [X1, { code: 'X2', name: 'Môn Y', credits: 2 }] },
+    { id: 'b', kind: 'required', courses: [{ ...X1, code: ' x1 ' }] },
+  ] }
+  test('checkCurriculum giữ môn trùng theo từng module, missingCourses chỉ tính một lần', () => {
+    const report = checkCurriculum(program, [])
+    assert.equal(report.modules.flatMap(m => m.missing).length, 3)
+    assert.deepEqual(missingCourses(report).map(c => c.code), ['X1', 'X2'])
+  })
+  test('missingCourses không gộp các môn chưa có mã', () => {
+    const report = checkCurriculum({ modules: [{ id: 'a', kind: 'required', courses: [{ name: 'A' }, { name: 'B' }] }] }, [])
+    assert.equal(missingCourses(report).length, 2)
+  })
+  test('subjectUsage đếm lịch học, lịch thi, deadline của đúng môn', () => {
+    const data = { schedule: [{ subjectId: 1 }, { subjectId: 2 }], exams: [{ subjectId: 1 }], deadlines: [{ subjectId: 1 }] }
+    assert.equal(subjectUsage(1, data), 3)
+    assert.equal(subjectUsage(2, data), 1)
+    assert.equal(subjectUsage(3, data), 0)
+    assert.equal(subjectUsage(1), 0)
   })
 })

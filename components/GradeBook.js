@@ -5,6 +5,7 @@ import { isFirebaseReady, loadSharedData, saveSharedKey } from '../utils/firebas
 import { load, save } from '../utils/helpers.js'
 import { listDocuments } from '../utils/store.js'
 import { COMPONENT_LABEL, defaultPolicy, subjectColumns, countedColumns, evaluateStudentSubject, round1 } from '../utils/grading.js'
+import { toCSV } from '../utils/sanitize.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -13,7 +14,7 @@ const scoreColor = (s) => s == null ? '#858796' : s >= 8 ? '#1cc88a' : s >= 6.5 
 const avgOf = (nums) => nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length) : null
 
 function downloadCSV(filename, rows) {
-  const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')
+  const csv = toCSV(rows)
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob); a.download = filename; a.click()
