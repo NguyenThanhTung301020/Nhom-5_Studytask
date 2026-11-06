@@ -91,8 +91,8 @@ PY
   else echo "csdl: khong doc duoc"; fi
   echo
   echo "--- Sao luu"
-  LB=$(ls -t ~/backups/* 2>/dev/null | head -1)
-  if [ -n "$LB" ]; then echo "ban_sao_luu_moi_nhat: $LB ($(( ( $(date +%s) - $(stat -c %Y "$LB") ) / 3600 )) gio truoc)"; else echo "ban_sao_luu_tu_dong: CHUA CO (thu muc ~/backups trong)"; fi
+  LB=$(readlink -f /mnt/backup/studytask/LATEST 2>/dev/null); [ -d "$LB" ] || LB=$(ls -dt ~/backups/* 2>/dev/null | head -1)
+  if [ -n "$LB" ]; then echo "ban_sao_luu_moi_nhat: $LB ($(( ( $(date +%s) - $(stat -c %Y "$LB") ) / 3600 )) gio truoc)"; else echo "ban_sao_luu_tu_dong: CHUA CO (chua co /mnt/backup/studytask/LATEST)"; fi
   echo "bao_cao_xong: $(date -u '+%H:%M:%S')"
 }
 

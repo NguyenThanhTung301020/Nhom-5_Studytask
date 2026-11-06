@@ -3,7 +3,7 @@
 - Thời điểm đo: **06/11/2026, 02:36–02:38 UTC** (09:36 giờ Việt Nam)
 - Khoảng theo dõi: từ **03/11/2026 07:19 UTC** (bản ghi nhật ký hệ thống đầu tiên còn lưu) đến thời điểm đo, khoảng **2 ngày 19 giờ**
 - Đối tượng: máy chủ chạy https://sutdytask.io.vn (nginx + API Python + SQLite, ra Internet qua Cloudflare Tunnel). Bối cảnh chuyển từ Firebase sang máy chủ riêng xem [06-chuyen-firebase-sang-may-chu-rieng.md](../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md)
-- Người thực hiện: _(điền tên thành viên nhóm)_
+- Người thực hiện: **Trương Thanh Vui** (24TX810021)
 
 ## 1. Kết luận tóm tắt
 
@@ -22,7 +22,9 @@ Trong khoảng theo dõi, máy chủ **hoạt động ổn định**. Chưa ghi 
 | Truy cập từ Internet | HTTP 200 trong 0,21 giây |
 | Mất gói tin ra ngoài (ping 1.1.1.1, 3 gói) | 0%, trễ trung bình 31,6 ms |
 
-**Việc chưa đạt, cần làm:** chưa có sao lưu tự động (mục 7), có 10 gói chờ cập nhật, chưa đo được tình trạng ổ cứng (SMART) và băng thông theo ngày. Kế hoạch kiểm tra lại sau 1 tuần và sau 15 ngày ở **mục 8**.
+**Cập nhật 06/11/2026 (sau khi đo):** đã bật **sao lưu tự động** hằng ngày vào ổ `/mnt/backup` (LVM 98 GB, cùng ổ vật lý; bản đầu tiên lúc 06:34 UTC, thử khôi phục thành công) và đã đọc được **SMART**: ổ báo `PASSED` nhưng có một số chỉ số tích lũy đáng theo dõi (mục 4.4).
+
+**Việc chưa đạt, cần làm:** theo dõi các chỉ số SMART đáng chú ý ở 4.4, chưa có bản sao lưu ngoài ổ vật lý, có 10 gói chờ cập nhật, chưa có băng thông theo ngày (`vnstat` mới cài). Kế hoạch kiểm tra lại sau 1 tuần và sau 15 ngày ở **mục 8**.
 
 ## 2. Phương pháp
 
@@ -82,7 +84,35 @@ Dung lượng còn dư rất lớn so với nhu cầu hiện tại.
 | `x86_pkg_temp` (gói CPU) | **39–42 °C** (hai lần đo cách nhau vài phút) |
 | 3 vùng `acpitz` (bo mạch) | 16,8 °C, 27,8 °C, 29,8 °C |
 
-Nhật ký nhân không có dòng giảm xung nhiệt (throttling). Chưa cài `lm-sensors` nên chưa có nhiệt độ từng lõi.
+Nhật ký nhân không có dòng giảm xung nhiệt (throttling). Nhiệt độ ổ cứng xem ở 4.4.
+
+### 4.4. Sức khỏe ổ cứng (SMART)
+
+Đọc bằng `sudo smartctl -H -A /dev/sda` ngày **06/11/2026** (sau lần sao lưu đầu tiên lúc 06:34 UTC; smartctl 7.5). Kết luận tự đánh giá của ổ: **`PASSED`**. Ổ quay, đã dùng **4.699 giờ** (khoảng 196 ngày), 4.355 lần bật nguồn.
+
+| Chỉ số | Giá trị thô | Giá trị chuẩn hóa / ngưỡng | Nhận xét |
+|---|---|---|---|
+| `Reallocated_Sector_Ct` (5) | **2** | 200 / 140 | Có 2 sector đã được thay thế; còn xa ngưỡng |
+| `Reallocated_Event_Count` (196) | 2 | 198 / 000 | Khớp với trên |
+| `Current_Pending_Sector` (197) | 0 | 200 / 000 | Tốt |
+| `Offline_Uncorrectable` (198) | 0 | 100 / 000 | Tốt |
+| `UDMA_CRC_Error_Count` (199) | 0 | 200 / 000 | Tốt (cáp dữ liệu không lỗi) |
+| `Raw_Read_Error_Rate` (1) | 0 | 200 / 051 | Tốt |
+| `Seek_Error_Rate` (7) | 176 | 191 / 051 | Bình thường |
+| `Spin_Retry_Count` (10) | 0 | 100 / 051 | Tốt |
+| `Reported_Uncorrect` (187) | **1.650** | **001** / 000 | **Đáng chú ý**: ổ từng báo 1.650 lỗi đọc không sửa được; giá trị chuẩn hóa đã chạm đáy (001) |
+| `Command_Timeout` (188) | **1.624** | **001** / 000 | **Đáng chú ý**: 1.624 lệnh bị quá thời gian; giá trị chuẩn hóa đã chạm đáy |
+| `G-Sense_Error_Rate` (191) | **3.682** | **001** / 000 | **Đáng chú ý**: cảm biến va đập ghi nhiều lần rung/va chạm (phù hợp ổ từng bị di chuyển hoặc dùng ở máy xách tay) |
+| `Load_Cycle_Count` (193) | 322.437 | 093 / 000 | Cao (đầu đọc đỗ/nhả nhiều lần), thường gặp ở ổ tiết kiệm điện |
+| `Power_On_Hours` (9) / `Power_Cycle_Count` (12) | 4.699 / 4.355 | 094 / 096 | Ổ đã qua sử dụng, bật tắt nhiều |
+| Nhiệt độ (190, 194) | 33 °C (31–34) | | Tốt |
+
+**Đánh giá thận trọng:**
+
+- Không có dấu hiệu hỏng cấp tính: không có sector chờ xử lý, không có lỗi không sửa được ngoại tuyến, lỗi cáp bằng 0, nhiệt độ tốt, và ổ không báo ngưỡng vi phạm (các ngưỡng của 187/188/191 đặt là 000 nên ổ không bao giờ coi chúng là "failed").
+- Ba chỉ số 187, 188, 191 có giá trị lớn và đã chạm đáy. Chỉ từ **một lần đọc** thì chưa biết các lỗi này xảy ra **trong quá khứ (trước khi nhóm dùng ổ)** hay **vẫn đang tăng**. Đây chính là điều mốc T+7 và T+15 phải xác định: nếu 187 và 188 **không tăng**, rủi ro thấp hơn; nếu **tăng**, coi ổ là không đáng tin.
+- 2 sector đã thay thế ở mức này chưa đáng lo, nhưng cần theo dõi xem có tăng không.
+- Với một ổ đã qua sử dụng và có các dấu hiệu trên, **sao lưu ra thiết bị vật lý khác là bắt buộc** khi triển khai thật (ổ `/mnt/backup` hiện tại nằm cùng ổ vật lý này nên không bảo vệ khi ổ hỏng).
 
 ## 5. Độ ổn định và các sự kiện bất thường
 
@@ -201,10 +231,10 @@ Lưu lượng rất thấp. **Chưa có số liệu băng thông theo ngày** v�
 |---|---|---|
 | Sẵn sàng (availability) | Tốt, chưa đo tỷ lệ chính xác | Dịch vụ không tự khởi động lại; site trả 200; chưa có giám sát ngoài để tính % uptime |
 | Hiệu năng | Tốt ở tải hiện tại | Load ≈ 0, RAM còn 6,6 GiB, phản hồi 0,21 giây |
-| Độ tin cậy phần cứng | Chưa kết luận | Chưa đọc SMART của ổ quay; nhiệt độ thấp |
+| Độ tin cậy phần cứng | **Cần theo dõi** | SMART `PASSED`, nhiệt độ tốt, không có sector chờ; nhưng 187/188/191 rất cao (4.4) và ổ đã qua sử dụng; chưa biết các lỗi này còn tăng hay không |
 | Toàn vẹn dữ liệu | Tốt | `integrity_check = ok` |
 | Bảo mật vận hành | Chấp nhận được | API chỉ nội bộ; không có truy cập SSH lạ; còn việc kiểm tra router và cập nhật gói |
-| Khả năng khôi phục | **Chưa đạt** | Chưa có sao lưu tự động |
+| Khả năng khôi phục | **Đạt một phần** | Đã có sao lưu tự động hằng ngày và thử khôi phục thành công (06/11); chưa có bản sao lưu ngoài ổ vật lý |
 
 ## 7. Rủi ro và khuyến nghị
 
@@ -212,8 +242,8 @@ Xếp theo mức ưu tiên.
 
 | # | Rủi ro / việc cần làm | Khuyến nghị |
 |---|---|---|
-| 1 | **Chưa có sao lưu tự động** `/var/lib/studytask` (cơ sở dữ liệu, tệp tải lên, `mail.json`). Máy chủ có một ổ quay duy nhất; hỏng ổ là mất toàn bộ | Sao lưu theo lịch (cron), giữ nhiều bản và chép ra ổ/máy khác; thử khôi phục định kỳ |
-| 2 | Chưa đọc được SMART của ổ cứng duy nhất | Cài `smartmontools` và chạy `sudo smartctl -H -A /dev/sda` |
+| 1 | **Sao lưu mới nằm cùng ổ vật lý** (đã bật 06/11: hằng ngày, giữ 14 bản + 8 bản Chủ nhật, thử khôi phục đạt). Hỏng ổ cứng duy nhất vẫn mất cả dữ liệu lẫn bản sao lưu | Khi triển khai thật gắn ổ di động vào `/mnt/backup` (script không cần sửa); trong lúc này chép tay bản mới nhất ra máy khác định kỳ |
+| 2 | **Ổ cứng có chỉ số SMART đáng chú ý** (187 = 1.650, 188 = 1.624, 191 = 3.682, 2 sector đã thay thế; xem 4.4) | Đọc lại SMART ở mốc T+7 và T+15, chạy tự kiểm tra: `sudo smartctl -t short /dev/sda` rồi `sudo smartctl -l selftest -l error /dev/sda`; nếu 187/188 tăng hoặc có sector chờ thì thay ổ |
 | 3 | Sau khi dời máy, chưa xác nhận cấu hình bộ định tuyến | Kiểm tra không mở/chuyển tiếp cổng 22, 80 ra Internet; chỉ để Cloudflare Tunnel là đường vào |
 | 4 | 10 gói chờ cập nhật | `sudo apt update && sudo apt upgrade` vào khung giờ ít dùng |
 | 5 | Chưa có giám sát từ bên ngoài và theo dõi băng thông theo ngày | Cài `vnstat`; dùng dịch vụ kiểm tra HTTP bên ngoài (ví dụ UptimeRobot) để đo uptime thật |
@@ -231,17 +261,17 @@ Mục đích: xác nhận máy chủ **tiếp tục ổn định theo thời gia
 
 | Mốc | Ngày đề xuất | Cửa sổ nhật ký | Người thực hiện | Đầu ra |
 |---|---|---|---|---|
-| **T0** (báo cáo này) | Thứ Sáu 06/11/2026 | từ 03/11 | _(điền)_ | Tài liệu này + `~/health-logs/2026-11-06.txt` |
-| **T+7 ngày** (hơn 1 tuần) | Thứ Sáu 13/11/2026 (làm trong 13–16/11) | `"-7 days"` | _(điền)_ | `~/health-logs/<ngày>.txt` + mục 8.4 |
-| **T+15 ngày** | Thứ Bảy 21/11/2026 | `"-15 days"` | _(điền)_ | `~/health-logs/<ngày>.txt` + mục 8.4 + kết luận chung |
+| **T0** (báo cáo này) | Thứ Sáu 06/11/2026 | từ 03/11 | Trương Thanh Vui | Tài liệu này + `~/health-logs/2026-11-06.txt` |
+| **T+7 ngày** (hơn 1 tuần) | Thứ Sáu 13/11/2026 (làm trong 13–16/11) | `"-7 days"` | Trương Thanh Vui | `~/health-logs/<ngày>.txt` + mục 8.4 |
+| **T+15 ngày** | Thứ Bảy 21/11/2026 | `"-15 days"` | Trương Thanh Vui | `~/health-logs/<ngày>.txt` + mục 8.4 + kết luận chung |
 
 Nên đo vào **cùng khung giờ** (khoảng 09:30 giờ Việt Nam) để so sánh công bằng. Ngoài lịch cố định, đo thêm ngay sau mọi sự kiện: mất điện, khởi động lại, thay đổi router/mạng, cập nhật hệ điều hành, triển khai phiên bản mới.
 
 ### 8.2. Việc chuẩn bị trước T+7 (hoàn thành trước 13/11)
 
-1. Cài `smartmontools` và ghi SMART của ổ: `sudo apt install smartmontools -y && sudo smartctl -H -A /dev/sda`. Lưu kết quả (tình trạng, `Reallocated_Sector_Ct`, `Current_Pending_Sector`, giờ hoạt động, nhiệt độ).
-2. Cài `vnstat` để có băng thông theo ngày: `sudo apt install vnstat -y` (để vài ngày cho có dữ liệu).
-3. Thiết lập **sao lưu tự động** và ghi lại lần sao lưu đầu tiên (mục 7, việc #1). Script kiểm tra sẽ hiển thị tuổi bản sao lưu mới nhất trong `~/backups`.
+1. ✅ **Đã xong 06/11:** cài `smartmontools` và đọc SMART lần đầu (kết quả ở 4.4). Việc còn lại: chạy tự kiểm tra ổ (`sudo smartctl -t short /dev/sda`, đợi vài phút, rồi `sudo smartctl -l selftest -l error /dev/sda`) và lưu kết quả, đặc biệt nhật ký lỗi ATA để biết lỗi 187/188 xảy ra khi nào.
+2. ✅ **Đã xong 06/11:** cài `vnstat` (cần vài ngày để có số liệu theo ngày; xem bằng `vnstat -d`).
+3. ✅ **Đã xong 06/11:** thiết lập **sao lưu tự động** (ổ LVM 98 GB gắn tại `/mnt/backup`, chạy lúc 20:00 UTC mỗi ngày, bản đầu tiên 06:34 UTC). Script kiểm tra hiển thị tuổi bản sao lưu mới nhất; cần ghi thêm kết quả `bash ~/setup/studytask-restore-test.sh` ở mỗi mốc.
 4. Áp dụng 10 gói cập nhật đang chờ trong khung giờ ít dùng, ghi nhận việc có khởi động lại hay không.
 5. Kiểm tra bộ định tuyến nơi đặt máy mới không mở cổng 22/80 ra Internet.
 6. (Khuyến nghị) Đăng ký giám sát HTTP bên ngoài (ví dụ UptimeRobot, kiểm tra mỗi 5 phút) để có **tỷ lệ uptime thật** cho mốc T+15.
@@ -275,7 +305,15 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 | Ổ đĩa gốc đã dùng | 3% (7,3 GB) | | | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
 | Inode đã dùng | 1% | | | < 50% |
 | Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | | | < 60 °C khi nhàn rỗi |
-| SMART: tình trạng / sector hỏng / sector chờ | _(chưa đo)_ | | | `PASSED`; hai số sector = 0 và không tăng |
+| SMART: tình trạng tự đánh giá | `PASSED` | | | `PASSED` |
+| SMART `Reallocated_Sector_Ct` (5) | 2 | | | Không tăng so với T0 |
+| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | | | 0 / 0 |
+| SMART `Reported_Uncorrect` (187) | 1.650 | | | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
+| SMART `Command_Timeout` (188) | 1.624 | | | **Không tăng** so với T0 |
+| SMART `G-Sense_Error_Rate` (191) | 3.682 | | | Không tăng (máy đặt cố định, không bị rung) |
+| SMART `UDMA_CRC_Error_Count` (199) | 0 | | | 0 |
+| SMART nhiệt độ ổ (194) | 33 °C | | | < 45 °C |
+| SMART `Power_On_Hours` (9) | 4.699 | | | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
 | `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | | | 0 |
 | Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | | | 0 |
 | Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | | | 0 |
@@ -293,7 +331,9 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 | Cổng đang lắng nghe | 22, 80, 8787 (nội bộ), 20241 (nội bộ) | | | Không thêm cổng lạ |
 | Toàn vẹn cơ sở dữ liệu | ok | | | `ok` |
 | Số bảng ghi `accounts` / `docs` / `chat` | 5 / 13 / 6 | | | Tăng hợp lý theo việc sử dụng |
-| Bản sao lưu tự động mới nhất | _(chưa có)_ | | | < 24 giờ |
+| Bản sao lưu tự động mới nhất / số bản | 06/11 06:34 UTC / 1 | | | < 24 giờ / tăng dần đến 14 |
+| Thử khôi phục (`studytask-restore-test.sh`) | Đạt (06/11) | | | Đạt: checksum khớp, `integrity_check: ok` |
+| Ổ sao lưu `/mnt/backup` còn trống | 97 GB / 98 GB | | | > 20 GB |
 | Gói chờ cập nhật / cần khởi động lại | 10 / không | | | < 20; áp dụng bản vá bảo mật trong vòng 1 tuần |
 
 ### 8.5. Cần làm gì khi vượt ngưỡng
@@ -302,7 +342,7 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 |---|---|---|
 | RAM hoặc RSS tăng đều | `ps aux --sort=-%mem \| head`; so sánh RSS API giữa các mốc | Khởi động lại dịch vụ (`sudo systemctl restart studytask-api`), ghi lại; nếu tái diễn, xem nhật ký để tìm nguyên nhân rò rỉ |
 | Ổ đĩa tăng nhanh | `du -sh /var/lib/studytask/uploads /var/log /var/lib/studytask` | Dọn nhật ký/bản sao lưu cũ; kiểm tra tệp tải lên bất thường |
-| Có sector hỏng hoặc SMART không `PASSED` | `sudo smartctl -a /dev/sda` | **Sao lưu ngay**, chuẩn bị thay ổ |
+| SMART không `PASSED`, có sector chờ/ngoại tuyến > 0, hoặc 187/188 tăng so với T0 | `sudo smartctl -a /dev/sda`, `sudo smartctl -l error /dev/sda` | **Chép bản sao lưu ra thiết bị khác ngay**, chuẩn bị thay ổ |
 | Dịch vụ tự khởi động lại, lỗi 5xx, `Traceback` | `journalctl -u studytask-api -n 100` | Điều tra nguyên nhân gốc trước khi tiếp tục; ghi vào báo cáo |
 | `cloudflared` kết nối lại dày đặc hoặc kéo dài | `journalctl -u cloudflared --since "-24 hours" \| grep -E "ERR\|WRN"` | Kiểm tra mạng nơi đặt máy; cân nhắc đặt `protocol: http2` trong cấu hình tunnel nếu QUIC bị chặn |
 | 403 tăng | `grep ' 403 '` theo đường dẫn (script đã liệt kê) | Xác định tài khoản/trình duyệt gây ra, kiểm tra quyền; nếu là dò quét thì chặn bằng Cloudflare |
@@ -325,14 +365,14 @@ Nếu có điều kiện không đạt, ghi rõ trong báo cáo cùng nguyên nh
 ## 9. Hạn chế của báo cáo
 
 - Chỉ phản ánh **2 ngày 19 giờ** và **tải rất thấp** (chưa có người dùng thật đáng kể). Kết quả không chứng minh khả năng chịu tải; cần thêm phép thử tải riêng nếu muốn kết luận.
-- Không đo được SMART, nhiệt độ từng lõi CPU, băng thông theo ngày (thiếu công cụ hoặc cần `sudo`).
+- SMART chỉ có **một lần đọc**, nên chưa phân biệt được lỗi quá khứ với lỗi đang diễn ra; chưa đọc nhật ký lỗi ATA và kết quả tự kiểm tra. Chưa có băng thông theo ngày (`vnstat` mới cài) và nhiệt độ từng lõi CPU.
 - Nhật ký nginx đọc được chỉ gồm tệp hiện hành (không đọc được các tệp đã nén nếu thiếu quyền), nên số liệu nginx không phủ toàn bộ khoảng theo dõi.
 - Không có số liệu của Firebase trước đây để so sánh tốc độ hoặc độ ổn định.
 - Nguyên nhân các lỗi 403 ngày 03–04/11 chưa được xác minh.
 
 ## Phụ lục: các lệnh đã dùng (chạy được lại)
 
-Các lệnh dưới đây đã được gộp thành một script chạy một lần: `bash deploy/health-check.sh "-7 days" --save` (xem mục 8.3).
+Script sao lưu, khôi phục thử và cài đặt nằm trong [deploy/backup/](../../deploy/backup/). Các lệnh dưới đây đã được gộp thành một script chạy một lần: `bash deploy/health-check.sh "-7 days" --save` (xem mục 8.3).
 
 ```bash
 # Thời gian chạy, tải, RAM, đĩa

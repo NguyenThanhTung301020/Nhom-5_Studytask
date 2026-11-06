@@ -1,0 +1,10 @@
+[Unit]
+Description=Sao lưu StudyTask hằng ngày lúc 20:00 UTC (03:00 giờ Việt Nam)
+
+[Timer]
+OnCalendar=*-*-* 20:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
