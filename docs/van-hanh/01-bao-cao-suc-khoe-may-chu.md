@@ -261,9 +261,9 @@ Mục đích: xác nhận máy chủ **tiếp tục ổn định theo thời gia
 
 | Mốc | Ngày đề xuất | Cửa sổ nhật ký | Người thực hiện | Đầu ra |
 |---|---|---|---|---|
-| **T0** (báo cáo này) | Thứ Sáu 06/11/2026 | từ 03/11 | Trương Thanh Vui | Tài liệu này + `~/health-logs/2026-11-06.txt` |
-| **T+7 ngày** (hơn 1 tuần) | Thứ Sáu 13/11/2026 (làm trong 13–16/11) | `"-7 days"` | Trương Thanh Vui | `~/health-logs/<ngày>.txt` + mục 8.4 |
-| **T+15 ngày** | Thứ Bảy 21/11/2026 | `"-15 days"` | Trương Thanh Vui | `~/health-logs/<ngày>.txt` + mục 8.4 + kết luận chung |
+| **T0** (báo cáo này) | Thứ Sáu 06/11/2026 | từ 03/11 | Thanh Vui | Tài liệu này + `~/health-logs/2026-11-06.txt` |
+| **T+7 ngày** (hơn 1 tuần) | Thứ Sáu 13/11/2026 (làm trong 13–16/11) | `"-7 days"` | Thanh Vui | `~/health-logs/<ngày>.txt` + mục 8.4 |
+| **T+15 ngày** | Thứ Bảy 21/11/2026 | `"-15 days"` | Thanh Vui | `~/health-logs/<ngày>.txt` + mục 8.4 + kết luận chung |
 
 Nên đo vào **cùng khung giờ** (khoảng 09:30 giờ Việt Nam) để so sánh công bằng. Ngoài lịch cố định, đo thêm ngay sau mọi sự kiện: mất điện, khởi động lại, thay đổi router/mạng, cập nhật hệ điều hành, triển khai phiên bản mới.
 
