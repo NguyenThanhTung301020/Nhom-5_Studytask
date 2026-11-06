@@ -3,6 +3,7 @@
 //   Phòng Tài chính / Admin: cấu hình đơn giá tín chỉ + hạn nộp, ghi nhận thanh toán, miễn giảm, gửi thông báo công nợ
 import { getDocument, setDocument, listDocuments, errorText } from '../utils/store.js'
 import { DEFAULT_FINANCE_CONFIG, tuitionSummary, tuitionReminder, formatVND, STATUS_INFO, todayISO } from '../utils/tuition.js'
+import { toCSV } from '../utils/sanitize.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 const Frag = window.React.Fragment
@@ -14,7 +15,7 @@ const badge = (status) => {
 }
 
 function downloadCSV(filename, rows) {
-  const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')
+  const csv = toCSV(rows)
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click()
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)

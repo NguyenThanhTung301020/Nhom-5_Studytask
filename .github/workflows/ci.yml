@@ -60,5 +60,7 @@ jobs:
         run: python3 tests/server/test_activities.py
       - name: Tạo và đăng nhập tài khoản theo tên đăng nhập
         run: python3 tests/server/test_users.py
+      - name: Link minh chứng của phiếu xét tốt nghiệp
+        run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn
         run: bash tests/server/test_submit.sh

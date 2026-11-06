@@ -1,7 +1,7 @@
 // pages/Curriculum.js – Phòng Đào tạo: kiểm tra các module môn học có đáp ứng chương trình đào tạo (CTĐT)
 // rồi thêm môn còn thiếu / bớt môn ngoài chương trình. CTĐT lưu ở curriculum/{programId}.
 import { setDocument, listDocuments, deleteDocument, errorText } from '../utils/store.js'
-import { checkCurriculum } from '../utils/curriculum.js'
+import { checkCurriculum, missingCourses, subjectUsage } from '../utils/curriculum.js'
 import { SAMPLE_CURRICULUM, SUBJECT_COLORS } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 
@@ -122,17 +122,21 @@ export default function Curriculum({ subjects = [], setSubjects, schedule = [], 
       : `Đã mở ${courses.length} môn còn thiếu.` })
   }
   const addSubject = (course) => openSubjects([course])
-  const addAllMissing = () => openSubjects(r.modules.flatMap(m => m.missing))
+  const addAllMissing = () => openSubjects(missingCourses(r))
   const syncCredits = (course) => {
     setSubjects(prev => prev.map(s => s.id === course.subject.id ? { ...s, credits: course.credits } : s))
     setMsg({ type: 'success', text: `Đã cập nhật ${course.code} thành ${course.credits} tín chỉ theo CTĐT.` })
   }
-  const usage = (sid) => schedule.filter(c => c.subjectId === sid).length + exams.filter(e => e.subjectId === sid).length + deadlines.filter(d => d.subjectId === sid).length
-  const removeSubject = (s) => setConfirm({
-    message: `Bớt môn ${s.code || ''} – ${s.name} khỏi danh sách môn đang mở?` + (usage(s.id) ? ` Môn này còn ${usage(s.id)} lịch học/lịch thi/deadline liên quan.` : ''),
-    run: () => { setSubjects(prev => prev.filter(x => x.id !== s.id)); setMsg({ type: 'success', text: `Đã bớt môn ${s.name}.` }) },
-    label: 'Bớt môn',
-  })
+  const usage = (sid) => subjectUsage(sid, { schedule, exams, deadlines })
+  const removeSubject = (s) => {
+    // Môn còn dữ liệu liên quan thì chưa cho bớt, tránh để lại lịch và deadline không thuộc môn nào
+    if (usage(s.id)) return setMsg({ type: 'danger', text: `Chưa bớt được môn ${s.name}: còn ${usage(s.id)} lịch học/lịch thi/deadline liên quan. Hãy xử lý các mục đó trước.` })
+    setConfirm({
+      message: `Bớt môn ${s.code || ''} – ${s.name} khỏi danh sách môn đang mở?`,
+      run: () => { setSubjects(prev => prev.filter(x => x.id !== s.id)); setMsg({ type: 'success', text: `Đã bớt môn ${s.name}.` }) },
+      label: 'Bớt môn',
+    })
+  }
   const putInModule = (s, moduleId) => {
     const next = { ...prog, modules: prog.modules.map(m => m.id === moduleId ? { ...m, courses: [...m.courses, { code: s.code, name: s.name, credits: Number(s.credits) || 0 }] } : m) }
     saveProg(next)
@@ -147,7 +151,7 @@ export default function Curriculum({ subjects = [], setSubjects, schedule = [], 
   const deleteProgram = () => setConfirm({ message: `Xóa chương trình "${prog.name}"?`, label: 'Xóa',
     run: async () => { try { await deleteDocument('curriculum', pid); setPid(null); setProg(null); loadPrograms('') } catch (e) { setMsg({ type: 'danger', text: errorText(e) }) } } })
 
-  const totalMissing = r.modules.reduce((s, m) => s + m.missing.length, 0)
+  const totalMissing = missingCourses(r).length
 
   return h('div', { className: 'container-fluid py-4' }, header,
     msg && h('div', { className: `alert alert-${msg.type} alert-dismissible small py-2` }, msg.text, h('button', { className: 'btn-close', onClick: () => setMsg(null) })),
