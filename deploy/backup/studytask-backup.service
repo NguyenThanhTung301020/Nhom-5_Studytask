@@ -1,0 +1,12 @@
+[Unit]
+Description=Sao lưu dữ liệu StudyTask (CSDL, tệp tải lên, cấu hình)
+After=local-fs.target
+RequiresMountsFor=/mnt/backup
+
+[Service]
+Type=oneshot
+User=studytask
+Group=studytask
+ExecStart=/usr/local/bin/studytask-backup.sh
+Nice=10
+IOSchedulingClass=idle
