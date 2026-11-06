@@ -112,11 +112,6 @@ export const createAccountSecondary = async (username, password, profile = {}) =
   return r.uid
 }
 
-// ── Mật khẩu ───────────────────────────────────────────────────
-// Máy chủ chỉ lưu mã băm (PBKDF2) nên không còn "bản mật khẩu" để admin xem.
-export const getAllSecrets = async () => ({})
-export const migrateLegacyPasswords = async () => 0
-
 // ── Email khôi phục, quên mật khẩu, ảnh đại diện ──
 export const apiCall = api
 export const sendResetEmail = (email) => api("POST", "/auth/forgot", { identifier: email })   // admin: gửi mã tới email khôi phục của người dùng (nếu có)
