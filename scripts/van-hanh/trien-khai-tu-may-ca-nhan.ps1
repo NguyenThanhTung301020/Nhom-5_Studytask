@@ -29,7 +29,7 @@ if ($LASTEXITCODE) { throw 'scp thất bại: kiểm tra mạng LAN và khóa SS
 $remote = @"
 set -e
 rm -rf ~/studytask-deploy && mkdir ~/studytask-deploy && tar -xzf ~/studytask-deploy.tar.gz -C ~/studytask-deploy && rm ~/studytask-deploy.tar.gz
-cd ~/studytask-deploy && sed -i 's/\r$//' deploy/deploy.sh && sudo bash deploy/deploy.sh
+cd ~/studytask-deploy && find . -type f \( -name '*.py' -o -name '*.js' -o -name '*.sh' -o -name '*.conf' -o -name '*.html' -o -name '*.css' -o -name '*.service' -o -name '*.timer' \) -exec sed -i 's/\r$//' {} + && sudo bash deploy/deploy.sh
 echo "`$(date -u '+%Y-%m-%d %H:%M:%S') UTC | commit $commit | nhanh $branch | tu may ca nhan" >> ~/deploy-log.txt
 "@
 $remote = $remote -replace "`r", ''     # bash trên máy chủ không chấp nhận CRLF
