@@ -34,6 +34,10 @@ MAGIC = {'pdf': (b'%PDF',), 'docx': (b'PK',), 'xlsx': (b'PK',), 'pptx': (b'PK',)
          'png': (b'\x89PNG',), 'jpg': (b'\xff\xd8',), 'jpeg': (b'\xff\xd8',), 'gif': (b'GIF8',), 'webp': (b'RIFF',),
          'doc': (b'\xd0\xcf\x11\xe0',), 'xls': (b'\xd0\xcf\x11\xe0',), 'ppt': (b'\xd0\xcf\x11\xe0',)}
 
+SUBMISSION_NAME = re.compile(r'[0-9a-f]{16}_[A-Za-z0-9._-]{1,70}\.[a-z0-9]{1,5}')
+INLINE_TYPES = {'pdf': 'application/pdf', 'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+                'gif': 'image/gif', 'webp': 'image/webp'}
+
 _lock = threading.RLock()
 _db = None
 
@@ -63,6 +67,8 @@ def db():
             id INTEGER PRIMARY KEY AUTOINCREMENT, thread TEXT NOT NULL, sender TEXT NOT NULL,
             from_staff INTEGER NOT NULL, text TEXT NOT NULL, ts REAL NOT NULL, read INTEGER NOT NULL DEFAULT 0);
           CREATE INDEX IF NOT EXISTS chat_thread ON chat(thread, id);
+          CREATE TABLE IF NOT EXISTS submission_files (
+            stored TEXT PRIMARY KEY, uid TEXT NOT NULL, hw TEXT NOT NULL, created REAL NOT NULL);
         ''')
         migrate_username(_db)
     return _db
@@ -821,7 +827,10 @@ class Handler(BaseHTTPRequestHandler):
                 uid = create_account(str(b.get('username', b.get('email', ''))), str(b.get('password', '')), allowed)
                 return self.send(200, {'uid': uid})
             if len(p) == 4 and p[3] == 'password' and method == 'POST':
-                set_password(p[2], str(self.json_body().get('newPassword', '')))
+                if not db().execute('SELECT 1 FROM accounts WHERE uid=?', (p[2],)).fetchone():
+                    raise ApiError(404, 'not-found', 'Không tìm thấy tài khoản.')
+                npw = self.json_body().get('newPassword', '')
+                set_password(p[2], npw if isinstance(npw, str) else '')
                 return self.send(200, {'ok': True})
             if len(p) == 3 and method == 'DELETE':
                 drop_avatar_file((doc_get('user', p[2]) or {}).get('avatar'))
@@ -883,6 +892,32 @@ class Handler(BaseHTTPRequestHandler):
                 doc_put(col, id_, merged)
                 return self.send(200, {'ok': True})
 
+        # ── tải bài nộp về: chỉ người nộp và nhân viên (nginx chuyển /uploads/submissions/* về đây) ──
+        if len(p) == 3 and p[:2] == ['files', 'submissions'] and method == 'GET':
+            u = self.need_user()
+            stored = p[2]
+            if not SUBMISSION_NAME.fullmatch(stored):
+                raise ApiError(404, 'not-found', 'Không tìm thấy.')
+            owner = db().execute('SELECT uid FROM submission_files WHERE stored=?', (stored,)).fetchone()
+            if role_of(u) not in STAFF and not (owner and owner[0] == u['uid']):
+                raise ApiError(403, 'permission-denied', 'Bạn không có quyền xem bài nộp này.')
+            path = os.path.join(UPLOAD_DIR, 'submissions', stored)
+            if not os.path.isfile(path):
+                raise ApiError(404, 'not-found', 'Không tìm thấy.')
+            with open(path, 'rb') as f:
+                data = f.read()
+            ext = stored.rsplit('.', 1)[-1].lower()
+            inline = ext in ('pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp')
+            self.send_response(200)
+            self.send_header('Content-Type', INLINE_TYPES.get(ext, 'application/octet-stream'))
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Content-Disposition', ('inline' if inline else 'attachment') + f'; filename="{stored}"')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Cache-Control', 'private, no-store')
+            self.end_headers()
+            self.wfile.write(data)
+            return
+
         # ── tải file lên ──
         if p == ['upload'] and method == 'POST':
             u = self.need_user()
@@ -922,6 +957,8 @@ class Handler(BaseHTTPRequestHandler):
             with open(os.path.join(folder, stored), 'wb') as f:
                 f.write(data)
             os.chmod(os.path.join(folder, stored), 0o644)
+            if sub_dir:    # ghi người nộp để chỉ họ và nhân viên mới tải lại được
+                db().execute('INSERT INTO submission_files VALUES (?,?,?,?)', (stored, u['uid'], hw_id, time.time()))
             rel = f'{sub_dir}/{stored}' if sub_dir else stored
             return self.send(200, {'url': f'/uploads/{rel}', 'name': name, 'size': len(data)})
 

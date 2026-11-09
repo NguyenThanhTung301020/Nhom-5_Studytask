@@ -46,24 +46,48 @@ Thêm 2 lỗi phát hiện khi chạy thử trên Emulator, cùng luồng tài k
 
 Security Rules mới (vá V2) chỉ cho chủ tài khoản sửa `name` và `phone` trong `user/{uid}`. Vì vậy luồng lưu hồ sơ vẫn chạy, còn các trường `role`, `subjectIds`, `expiresAt` bị chặn.
 
-## 4. Tái hiện và kiểm tra lại trên Emulator
+## 4. Tái hiện và kiểm tra lại trên máy chủ riêng (cập nhật tuần 6)
 
-Chuẩn bị: `npm run emulators`, `npm run seed`, `npm run serve` (xem README).
+> Các mục 1–3 mô tả lỗi và cách sửa ở thời điểm tuần 2, khi hệ thống còn dùng Firebase. Từ tuần 5 hệ thống chạy trên máy chủ riêng ([D06]), nên mục 4 và 5 được viết lại cho máy chủ. Bản cũ cho Emulator (`npm run emulators`, `npm run seed`, Emulator UI cổng 4000, "Đã lưu lên Firebase") không còn chạy được và đã bỏ.
 
-| Bước | Trước khi sửa | Sau khi sửa |
-|---|---|---|
-| Đăng nhập `student@studytask.vn`, vào Hồ sơ | Mã SV `2021001234`, GPA `3.20` (dữ liệu mẫu) | Các trường "Chưa cập nhật" |
-| Sửa họ tên = khoảng trắng, bấm Lưu | Lưu được tên rỗng | Báo "Họ và tên không được để trống." |
-| Sửa số điện thoại = `12ab` | Lưu được | Báo "Số điện thoại không hợp lệ" |
-| Nhập đúng, bấm Lưu | Không có thông báo | Hiện "Đã lưu lên Firebase" |
-| Mở Emulator UI (cổng 4000) → `user/{uid}` | `phone` không đổi | `name`, `phone` đã cập nhật |
-| Tắt Emulator rồi bấm Lưu | Treo ở "Đang lưu…" | Sau 10 giây báo "Máy chủ chưa phản hồi…" |
-| Đăng xuất, tải lại trang | Tự đăng nhập lại | Ở lại màn hình đăng nhập |
-| Đăng nhập `teacher@studytask.vn` trên cùng trình duyệt | (với tài khoản chưa có hồ sơ) nhận hồ sơ của người trước | Hồ sơ giáo viên riêng |
+**Chuẩn bị.** Chạy API tạm với dữ liệu tạm, không đụng dữ liệu thật (cần Python 3 và một web server chuyển `/api/` tới API; xem `server/README.md` và `deploy/nginx-studytask.conf`):
 
-Ngày 17/10/2026, AI (Claude Code) chạy các bước trên bằng trình duyệt Edge tự động (Playwright) trên Emulator trên máy của Trương Thanh Vui và báo kết quả đạt, trừ bước "tắt Emulator rồi bấm Lưu" chưa chạy tự động. Nhóm chưa tự kiểm tra lại bằng tay: bước này và các bước còn lại cần thành viên thử tay trước khi coi là đã xác nhận.
+```bash
+export STUDYTASK_DATA=$(mktemp -d) STUDYTASK_PORT=8787
+python3 server/studytask_api.py create-user admin01 matkhau123 admin "Admin Test"
+python3 server/studytask_api.py create-user sv01 matkhau123 student "Sinh Vien Test"
+python3 server/studytask_api.py create-user gv01 matkhau123 teacher "Giao Vien Test"
+python3 server/studytask_api.py serve
+```
+
+Sau khi thử xong: dừng API và xóa thư mục `$STUDYTASK_DATA`.
+
+| Bước | Trước khi sửa (tuần 2) | Sau khi sửa (máy chủ) | Kiểm tra bằng |
+|---|---|---|---|
+| Đăng nhập `sv01`, vào Hồ sơ | Mã SV `2021001234`, GPA `3.20` (dữ liệu mẫu) | Các trường "Chưa cập nhật" | Giao diện |
+| Đăng nhập `admin01`, sửa họ tên = khoảng trắng, bấm Lưu | Lưu được tên rỗng | Báo "Họ và tên không được để trống."; tên trên máy chủ không đổi. Sinh viên/giáo viên không có ô họ tên, chỉ có email và số điện thoại ([PR29]) | Giao diện; `tests/server/test_profile_lock.py` |
+| Số điện thoại `12ab`; email `khong-phai-email` | Lưu được | Báo "Số điện thoại không hợp lệ (VD: 0901234567)." và "Email không hợp lệ." | Giao diện |
+| Nhập đúng, bấm Lưu | Không có thông báo | Hiện "Đã lưu lên máy chủ" | Giao diện |
+| Kiểm tra dữ liệu: `GET /api/doc/user/{uid}` và `GET /api/doc/userData/{uid}` | `phone` không đổi | `phone` đổi ở `user` và `userData.profile`; `email` đổi ở `userData.profile` | `curl` hoặc DevTools (thay cho Emulator UI) |
+| Giữ yêu cầu ghi 15 giây (ví dụ làm chậm bằng proxy) | Treo ở "Đang lưu…" | Sau khoảng 10 giây báo "Lưu thất bại – thử lại: Máy chủ chưa phản hồi…" | Giao diện |
+| Tắt API rồi bấm Lưu | Treo ở "Đang lưu…" | Sau khoảng 2 giây báo "Lưu thất bại – thử lại: Lỗi máy chủ (502)" (qua nginx) | Giao diện |
+| Đăng xuất, tải lại trang | Tự đăng nhập lại | Ở lại màn hình đăng nhập | Giao diện |
+| Đăng nhập `gv01`, rồi `admin01` trên cùng trình duyệt | Nhận hồ sơ của người trước | Hồ sơ riêng theo vai trò, không có dữ liệu của người trước | Giao diện |
+
+**Kết quả đã có.** Ngày 06/11/2026, AI (Claude Code) thao tác trình duyệt thử 8/8 bước trên máy chủ tạm, dữ liệu tạm, máy của Trương Thanh Vui; chưa thử qua nginx và Cloudflare Tunnel ([PR35]). Phần kiểm tra bằng mã (`test_profile_lock.py` 18/18) chạy trong CI.
+
+**Chưa xác nhận.** Chưa có thành viên tự thử tay các bước trên. Người thử ghi kết quả vào bảng dưới đây (ngày, người thử, đạt/không đạt từng bước) trước khi coi là đã xác nhận.
+
+| Ngày | Người thử | Máy / môi trường | Kết quả từng bước | Ghi chú |
+|---|---|---|---|---|
+| | | | | |
 
 ## 5. Còn tồn tại
 
-- Tài khoản thật đã từng nhận dữ liệu mẫu (N5) trên production thì dữ liệu đó vẫn nằm trong `userData/{uid}.profile`. Người dùng tự xóa trong Hồ sơ, hoặc nhóm viết script dọn khi có Admin SDK (tuần 3).
-- Hai tab cùng trình duyệt đăng nhập hai tài khoản khác nhau vẫn có thể gây ghi bị từ chối (Firebase Auth dùng chung phiên giữa các tab). Chưa xử lý vì ít gặp.
+- **Lỗi lưu một nửa dữ liệu khi máy chủ chậm** ([PR35] mục 4.1): giao diện báo "Lưu thất bại" sau 10 giây nhưng yêu cầu đầu vẫn tới máy chủ, nên `userData` có số mới còn `user` giữ số cũ. Cần quyết định có sửa hay không; hướng đề xuất là ghi hai nơi trong một yêu cầu duy nhất ở máy chủ, hoặc để máy chủ tự đồng bộ `phone` từ `userData.profile` khi ghi.
+- Dữ liệu mẫu cũ (N5): tài khoản từng nhận dữ liệu mẫu ở thời Firebase đã được chuyển sang máy chủ cùng hồ sơ; người dùng tự xóa trong Hồ sơ, hoặc Admin dọn bằng script khi cần. Từ [PR23] hệ thống không còn tự nạp dữ liệu mẫu.
+- Hai tab cùng trình duyệt đăng nhập hai tài khoản khác nhau dùng chung cookie phiên, nên tab đăng nhập sau thay phiên của tab trước. Chưa xử lý vì ít gặp.
+
+[D06]: ../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md
+[PR29]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/29
+[PR35]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/35
