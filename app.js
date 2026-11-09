@@ -10,7 +10,7 @@ import { initFirebase, isFirebaseReady, onAuth, fbLogout,
          loadSharedData, saveSharedKey,
          loadUserData, saveUserKey,
          getUserProfile, setUserProfile, getAllUsers,
-         logActivity, loadAllActivities } from './utils/firebase.js'
+         logActivity, loadAllActivities, loadMyQuizResults } from './utils/firebase.js'
 
 import Login          from './components/Login.js'
 import Navbar         from './components/Navbar.js'
@@ -148,6 +148,12 @@ function App() {
     setHomeworks   (dShared.homeworks)
     setHomeworkSubs(dPersonal.homeworkSubs)
     setSubmissions (dPersonal.submissions)
+    // V3: kết quả trắc nghiệm chính thức do máy chủ ghi (quizResults), thay cho bản trình duyệt tự lưu trong userData
+    if (uid && fbUser?.role === 'student' && isFirebaseReady()) {
+      loadMyQuizResults()
+        .then(rs => setSubmissions(rs.map(r => ({ quizId: r.quizId, answers: r.answers, score: r.score, correct: r.correct, total: r.total, submittedAt: r.submittedAt, userId: uid }))))
+        .catch(e => console.warn('[Server] loadMyQuizResults:', e.message))
+    }
     setProfile     (dPersonal.profile)
     setLibrary     (dPersonal.library)
     setContacts    (dPersonal.contacts)
