@@ -93,6 +93,18 @@ try:
           (sv.get('user', sv.uid).get('phone'), sv.get('userData', sv.uid)['profile'].get('phone')))
     sv.put('userData', sv.uid, {'profile': {'email': 'moi@gmail.com'}})
     check('Chỉ đổi email thì số điện thoại ở user giữ nguyên', sv.get('user', sv.uid).get('phone') == '0912345678', sv.get('user', sv.uid))
+    # Chỉ đồng bộ khi chính yêu cầu có gửi profile.phone: Admin đổi user.phone riêng, rồi sinh viên sửa email/thư viện thì không bị ghi đè bằng số cũ
+    ad.put('user', sv.uid, {'phone': '0988888888'})
+    sv.put('userData', sv.uid, {'profile': {'email': 'khac@gmail.com'}})
+    sv.put('userData', sv.uid, {'library': [{'id': 2}]})
+    check('Sửa email hoặc dữ liệu khác (không gửi phone) không ghi đè user.phone do nơi khác đã đổi',
+          sv.get('user', sv.uid).get('phone') == '0988888888' and sv.get('userData', sv.uid)['profile'].get('phone') == '0912345678',
+          (sv.get('user', sv.uid).get('phone'), sv.get('userData', sv.uid)['profile'].get('phone')))
+    sv.put('userData', sv.uid, {'profile': {'phone': '0912345678'}})
+    check('Gửi lại profile.phone thì đồng bộ (kể cả khi bằng số đang lưu ở userData)', sv.get('user', sv.uid).get('phone') == '0912345678', sv.get('user', sv.uid))
+    sv.req('PUT', f'/api/doc/userData/{sv.uid}', {'data': {'profile': {'phone': '0911111111', 'email': 'a@gmail.com'}}, 'merge': False})
+    check('Ghi không merge có profile.phone: đồng bộ theo giá trị đã qua kiểm tra', sv.get('user', sv.uid).get('phone') == '0911111111', sv.get('user', sv.uid))
+    sv.put('userData', sv.uid, {'profile': {'phone': '0912345678'}})
     sv.put('userData', sv.uid, {'profile': {'phone': 'abc'}})
     check('Số điện thoại sai định dạng không làm đổi user.phone', sv.get('user', sv.uid).get('phone') == '0912345678', sv.get('user', sv.uid))
     check('Đồng bộ không đụng vai trò và họ tên trong user', sv.get('user', sv.uid).get('role') == 'student' and sv.get('user', sv.uid).get('name'), sv.get('user', sv.uid))
