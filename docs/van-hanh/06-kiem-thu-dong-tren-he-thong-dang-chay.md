@@ -39,4 +39,4 @@ Tệp: [bang-chung/2026-11-10/smoke-live-2026-11-10.txt](bang-chung/2026-11-10/s
 
 | Ngày giờ | Người chạy | Commit đã triển khai | Kết quả `smoke_live.py` | Ghi chú |
 |---|---|---|---|---|
-| | | | | |
+| 10/11/2026 03:01 UTC (đồng hồ máy cá nhân) | Trương Thanh Vui (chạy triển khai); kiểm thử do Claude Code chạy theo yêu cầu | `d924b69` (nhánh `feat/tuan6-loc-du-lieu-theo-mon-may-chu`, chưa gộp) | **16/16 đạt**, ca `.git` trả 404 ([tệp kết quả](bang-chung/2026-11-10/smoke-live-2026-11-10-sau-trien-khai.txt)) | Cũng kiểm tra từ máy chủ: `.git` qua nginx nội bộ trả 404, trang chủ 200, API 200 |
