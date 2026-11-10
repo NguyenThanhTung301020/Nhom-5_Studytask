@@ -11,7 +11,7 @@ Xóa user:   python3 studytask_api.py delete-user USERNAME
 Biến môi trường: STUDYTASK_DATA (mặc định /var/lib/studytask), STUDYTASK_PORT (8787).
 Phân quyền được chuyển từ firestore.rules (xem hàm can()).
 """
-import hashlib, hmac, json, math, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time
+import hashlib, hmac, json, math, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time, unicodedata
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from http import cookies
@@ -360,7 +360,7 @@ def can(op, col, id_, user, old=None, new=None):
             changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
             return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev) and valid_evidence(new.get('evidence'))
         return mgr or (owner and old and old.get('status') == 'submitted')
-    if col in ('quizKeys', 'quizResults'):
+    if col in ('quizKeys', 'quizResults', 'quizArchive', 'quizBank'):
         return False   # V3: khóa đáp án và kết quả chỉ đi qua /api/quiz/*, không đọc/ghi trực tiếp qua /api/doc
     return False   # collection lạ → từ chối (userSecrets không còn dùng)
 
@@ -378,11 +378,32 @@ def quiz_status(q):
     return q.get('status') or 'active'          # đề cũ chưa có trạng thái được coi là đang mở
 
 
+def blanks_of(qq):
+    """Số chỗ trống của câu điền khuyết (1..10)."""
+    b = qq.get('blanks')
+    return b if isinstance(b, int) and not isinstance(b, bool) and 1 <= b <= 10 else 1
+
+
+def accepted_of(qq):
+    """Đáp án chấp nhận của câu điền khuyết: danh sách theo từng chỗ trống, mỗi chỗ là danh sách chuỗi (nhiều cách viết)."""
+    acc = qq.get('accepted') if isinstance(qq.get('accepted'), list) else []
+    out = []
+    for i in range(blanks_of(qq)):
+        v = acc[i] if i < len(acc) and isinstance(acc[i], list) else []
+        out.append([x.strip()[:200] for x in v if isinstance(x, str) and x.strip()][:20])
+    return out
+
+
+def norm_fill(s):
+    """So khớp câu điền khuyết: bỏ khoảng trắng thừa, không phân biệt hoa thường, chuẩn hóa Unicode (dấu tiếng Việt vẫn phải đúng)."""
+    return ' '.join(unicodedata.normalize('NFC', s).strip().casefold().split())
+
+
 def quiz_strip(q):
-    """Bản công khai của đề: bỏ mọi `correct`."""
+    """Bản công khai của đề: bỏ mọi `correct` và `accepted` (đáp án chấp nhận của câu điền khuyết)."""
     out = {k: v for k, v in q.items() if k != 'questions'}
     out['questions'] = [
-        {**{k: v for k, v in qq.items() if k != 'answers'},
+        {**{k: v for k, v in qq.items() if k not in ('answers', 'accepted')},
          'answers': [{k: v for k, v in a.items() if k != 'correct'} for a in qq.get('answers', []) if isinstance(a, dict)]}
         for qq in q.get('questions', []) if isinstance(qq, dict)]
     return out
@@ -392,7 +413,7 @@ def quiz_key_of(q):
     ca = {}
     for qq in q.get('questions', []):
         if isinstance(qq, dict):
-            ca[str(qq.get('id'))] = sorted(str(a.get('id')) for a in qq.get('answers', []) if isinstance(a, dict) and a.get('correct') is True)
+            ca[str(qq.get('id'))] = accepted_of(qq) if qq.get('type') == 'fill' else                 sorted(str(a.get('id')) for a in qq.get('answers', []) if isinstance(a, dict) and a.get('correct') is True)
     return {'quizId': q.get('id'), 'subjectId': q.get('subjectId'), 'correctAnswers': ca}
 
 
@@ -401,9 +422,12 @@ def quiz_merge(q, key):
     ca = (key or {}).get('correctAnswers') or {}
     out = quiz_strip(q)
     for qq in out['questions']:
-        ids = ca.get(str(qq.get('id')), [])
+        want = ca.get(str(qq.get('id')), [])
+        if qq.get('type') == 'fill':
+            qq['accepted'] = accepted_of({'blanks': qq.get('blanks'), 'accepted': want})
+            continue
         for a in qq['answers']:
-            a['correct'] = str(a.get('id')) in ids
+            a['correct'] = str(a.get('id')) in want
     return out
 
 
@@ -473,19 +497,33 @@ def quiz_shape_ok(q):
         if not isinstance(qq, dict) or not is_number(qq.get('id')) or qq['id'] in seen:
             return False
         seen.add(qq['id'])
-        ans = qq.get('answers')
-        if not isinstance(qq.get('text'), str) or qq.get('type') not in ('single', 'multiple') or not isinstance(ans, list) or not 2 <= len(ans) <= 10:
-            return False
-        ids = [a.get('id') for a in ans if isinstance(a, dict)]
-        if len(ids) != len(ans) or len(set(ids)) != len(ids) or not all(isinstance(i, str) and i for i in ids):
-            return False
-        if not all(isinstance(a.get('text'), str) for a in ans):
+        if not question_shape_ok(qq):
             return False
     return True
 
 
+def question_shape_ok(qq):
+    """Hình thức một câu hỏi: chọn một, chọn nhiều hoặc điền khuyết (không cần chọn A/B/C/D)."""
+    if not isinstance(qq, dict) or not isinstance(qq.get('text'), str) or len(qq['text']) > 5000:
+        return False
+    if qq.get('type') == 'fill':
+        b = qq.get('blanks')
+        return isinstance(b, int) and not isinstance(b, bool) and 1 <= b <= 10 and qq.get('answers') in (None, [])
+    ans = qq.get('answers')
+    if qq.get('type') not in ('single', 'multiple') or not isinstance(ans, list) or not 2 <= len(ans) <= 10:
+        return False
+    ids = [a.get('id') for a in ans if isinstance(a, dict)]
+    if len(ids) != len(ans) or len(set(ids)) != len(ids) or not all(isinstance(i, str) and i for i in ids):
+        return False
+    return all(isinstance(a.get('text'), str) for a in ans)
+
+
 def quiz_key_complete(q):
     for qq in q['questions']:
+        if qq['type'] == 'fill':
+            if not all(accepted_of(qq)):          # mỗi chỗ trống cần ít nhất một đáp án chấp nhận
+                return False
+            continue
         n = sum(1 for a in qq['answers'] if a.get('correct') is True)
         if n < 1 or (qq['type'] == 'single' and n != 1):
             return False
@@ -509,6 +547,8 @@ def quiz_update(oq, okey, nq, ops):
         if nst == 'active' and not quiz_key_complete(nq):
             raise ApiError(400, 'quiz-no-key', 'Mỗi câu cần có đáp án đúng (câu một lựa chọn: đúng một đáp án) trước khi mở đề.')
         ops.append(('put', str(oq['id']), quiz_key_of(nq)))
+        if nst == 'active':     # bản lưu bất biến của đề đúng như đã giao cho sinh viên (dùng khi có khiếu nại)
+            ops.append(('archive', str(oq['id']), quiz_merge(quiz_strip({**nq, 'status': 'active'}), quiz_key_of(nq))))
         return quiz_strip({**nq, 'status': nst})
     view = quiz_merge(oq, okey)
     if not same_json({k: v for k, v in view.items() if k != 'status'}, {k: v for k, v in nq.items() if k != 'status'}):
@@ -569,10 +609,17 @@ def guard_quizzes(user, role, old_doc, merged):
     return {**merged, 'quizzes': out}, ops
 
 
-def apply_quiz_ops(ops):
+def apply_quiz_ops(ops, who=None):
     for op in ops:
         if op[0] == 'put':
             doc_put('quizKeys', op[1], op[2])
+        elif op[0] == 'archive':
+            now = time.time()
+            doc_put('quizArchive', op[1], {
+                'quizId': op[2].get('id'), 'subjectId': op[2].get('subjectId'),
+                'activatedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now)),
+                'activatedBy': (who or {}).get('uid'), 'activatedByName': ((doc_get('user', who['uid']) or {}).get('name') if who else None),
+                'quiz': op[2]})
         else:
             db().execute("DELETE FROM docs WHERE col='quizKeys' AND id=?", (op[1],))
 
@@ -603,6 +650,18 @@ def grade_quiz(quiz, key, answers):
     for qq in questions:
         qid = str(qq.get('id'))
         given = answers.get(qid)
+        if qq.get('type') == 'fill':        # điền khuyết: mỗi chỗ trống phải khớp một trong các đáp án chấp nhận
+            n = blanks_of(qq)
+            given = [] if given is None else [given] if isinstance(given, str) else given
+            if not isinstance(given, list) or len(given) > n or any(not isinstance(g, str) or len(g) > 200 for g in given):
+                raise ApiError(400, 'bad-answers', 'Câu điền khuyết có câu trả lời không hợp lệ.')
+            vals = [g.strip() for g in given] + [''] * (n - len(given))
+            acc = ca.get(qid) or []
+            norm[qid] = vals
+            if all(vals[i] and any(norm_fill(vals[i]) == norm_fill(a) for a in (acc[i] if i < len(acc) and isinstance(acc[i], list) else []))
+                   for i in range(n)):
+                correct += 1
+            continue
         given = [] if given is None else [given] if isinstance(given, str) else given
         valid = {str(a.get('id')) for a in qq.get('answers', []) if isinstance(a, dict)}
         if not isinstance(given, list) or any(not isinstance(g, str) or g not in valid for g in given):
@@ -833,6 +892,43 @@ def drop_avatar_file(url):
             os.remove(os.path.join(avatar_dir(), os.path.basename(url)))
         except OSError:
             pass
+
+
+# ── Kho đề (quizBank): nơi lưu riêng các bộ câu hỏi kèm đáp án để dùng lại cho đề mới ──
+# Chỉ Admin và giáo viên; giáo viên thấy mục của chính mình và của các môn mình dạy. Sinh viên không có quyền.
+BANK_MAX_QUESTIONS, BANK_MAX_ITEMS_PER_USER = 500, 200
+
+
+def bank_clean_questions(qs):
+    """Làm sạch danh sách câu hỏi của kho: chỉ giữ trường hợp lệ; lỗi → 400 kèm số thứ tự câu."""
+    if not isinstance(qs, list) or not 0 < len(qs) <= BANK_MAX_QUESTIONS:
+        raise ApiError(400, 'bad-bank', 'Kho đề cần từ 1 đến %d câu hỏi.' % BANK_MAX_QUESTIONS)
+    out = []
+    for i, qq in enumerate(qs, 1):
+        if not isinstance(qq, dict):
+            raise ApiError(400, 'bad-bank', 'Câu %d không hợp lệ.' % i)
+        base = {'id': i, 'text': qq.get('text'), 'type': qq.get('type')}
+        src_answers = [a for a in (qq.get('answers') or []) if isinstance(a, dict)]
+        if qq.get('type') == 'fill':
+            base.update(blanks=qq.get('blanks'), answers=[])
+        else:
+            base['answers'] = [{'id': a.get('id'), 'text': a.get('text')} for a in src_answers]
+        if not question_shape_ok(base):
+            raise ApiError(400, 'bad-bank', 'Câu %d không hợp lệ (nội dung, loại câu hoặc đáp án).' % i)
+        if qq.get('type') == 'fill':
+            base['accepted'] = accepted_of(qq)
+        else:
+            for a, src in zip(base['answers'], src_answers):
+                a['correct'] = src.get('correct') is True
+        out.append(base)
+    return out
+
+
+def bank_visible(user, role, item):
+    if role == 'admin':
+        return True
+    return role == 'teacher' and (item.get('ownerUid') == user['uid']
+                                  or item.get('subjectId') in ((doc_get('user', user['uid']) or {}).get('subjectIds') or []))
 
 
 def drop_quiz_results(uid):
@@ -1198,7 +1294,7 @@ class Handler(BaseHTTPRequestHandler):
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
-                apply_quiz_ops(quiz_ops)
+                apply_quiz_ops(quiz_ops, u)
                 if sync_phone is None:
                     doc_put(col, id_, merged)
                 else:
@@ -1238,9 +1334,63 @@ class Handler(BaseHTTPRequestHandler):
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
-                apply_quiz_ops(quiz_ops)
+                apply_quiz_ops(quiz_ops, u)
                 doc_put(col, id_, merged)
                 return self.send(200, {'ok': True})
+
+        # ── kho đề: lưu trữ riêng các bộ câu hỏi kèm đáp án để dùng lại ──
+        if p[:1] == ['quizbank']:
+            u = self.need_user()
+            role = role_of(u)
+            if role not in ('admin', 'teacher'):
+                raise ApiError(403, 'permission-denied', 'Chỉ giáo viên và quản trị viên dùng kho đề.')
+            rows = [(r[0], json.loads(r[1])) for r in db().execute("SELECT id, data FROM docs WHERE col='quizBank'").fetchall()]
+            if p == ['quizbank'] and method == 'GET':
+                items = [d for _, d in rows if bank_visible(u, role, d)]
+                items.sort(key=lambda d: d.get('updatedAt', ''), reverse=True)
+                meta = [{**{k: d.get(k) for k in ('id', 'title', 'subjectId', 'source', 'ownerName', 'ownerUid', 'createdAt', 'updatedAt')},
+                         'count': len(d.get('questions') or [])} for d in items]
+                return self.send(200, {'items': meta})
+            if p == ['quizbank'] and method == 'POST':
+                b = self.json_body()
+                title, subject = str(b.get('title', '')).strip(), b.get('subjectId')
+                if not title or len(title) > 200 or not is_number(subject):
+                    raise ApiError(400, 'bad-bank', 'Cần tiêu đề và môn học.')
+                if not quiz_authorized(u, role, subject):
+                    raise ApiError(403, 'permission-denied', 'Bạn không dạy môn này.')
+                if sum(1 for _, d in rows if d.get('ownerUid') == u['uid']) >= BANK_MAX_ITEMS_PER_USER:
+                    raise ApiError(400, 'bank-full', 'Kho đã đủ %d mục; hãy xóa bớt.' % BANK_MAX_ITEMS_PER_USER)
+                now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                item = {'id': secrets.token_hex(8), 'title': title, 'subjectId': subject,
+                        'source': b.get('source') if b.get('source') in ('file', 'quiz', 'manual') else 'manual',
+                        'ownerUid': u['uid'], 'ownerName': (doc_get('user', u['uid']) or {}).get('name', ''),
+                        'createdAt': now, 'updatedAt': now, 'questions': bank_clean_questions(b.get('questions'))}
+                doc_put('quizBank', item['id'], item)
+                return self.send(200, {'id': item['id'], 'count': len(item['questions'])})
+            if len(p) == 2:
+                item = next((d for i, d in rows if i == p[1]), None)
+                if item is None or not bank_visible(u, role, item):
+                    raise ApiError(404, 'not-found', 'Không tìm thấy mục trong kho.')
+                if method == 'GET':
+                    return self.send(200, {'item': item})
+                if role != 'admin' and item.get('ownerUid') != u['uid']:
+                    raise ApiError(403, 'permission-denied', 'Chỉ người tạo hoặc quản trị viên sửa/xóa mục này.')
+                if method == 'DELETE':
+                    db().execute("DELETE FROM docs WHERE col='quizBank' AND id=?", (p[1],))
+                    return self.send(200, {'ok': True})
+                if method == 'PUT':
+                    b = self.json_body()
+                    if 'title' in b:
+                        t = str(b['title']).strip()
+                        if not t or len(t) > 200:
+                            raise ApiError(400, 'bad-bank', 'Tiêu đề không hợp lệ.')
+                        item['title'] = t
+                    if 'questions' in b:
+                        item['questions'] = bank_clean_questions(b['questions'])
+                    item['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                    doc_put('quizBank', p[1], item)
+                    return self.send(200, {'ok': True, 'count': len(item['questions'])})
+            raise ApiError(404, 'not-found', 'Không tìm thấy.')
 
         # ── trắc nghiệm (V3): máy chủ chấm và ghi điểm ──
         if p[:1] == ['quiz']:
@@ -1256,7 +1406,24 @@ class Handler(BaseHTTPRequestHandler):
                 if not quiz or not quiz_authorized(u, role, quiz.get('subjectId')):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền xem kết quả của đề này.')
                 rows = db().execute("SELECT data FROM docs WHERE col='quizResults'").fetchall()
-                return self.send(200, {'results': [d for d in (json.loads(r[0]) for r in rows) if str(d.get('quizId')) == p[1]]})
+                res = [d for d in (json.loads(r[0]) for r in rows) if str(d.get('quizId')) == p[1]]
+                for d in res:      # tên sinh viên để giáo viên đối chiếu khi có khiếu nại
+                    pu = doc_get('user', d.get('uid')) or {}
+                    d['name'], d['username'] = pu.get('name', ''), pu.get('username', '')
+                return self.send(200, {'results': res})
+            if len(p) == 3 and p[2] == 'archive' and method == 'GET':    # bản lưu của đề đúng như đã giao cho sinh viên
+                shared = doc_get('sharedData', 'global') or {}
+                quiz = next((x for x in shared.get('quizzes') or [] if isinstance(x, dict) and str(x.get('id')) == p[1]), None)
+                if not quiz or not quiz_authorized(u, role, quiz.get('subjectId')):
+                    raise ApiError(403, 'permission-denied', 'Bạn không có quyền xem đề này.')
+                arc = doc_get('quizArchive', p[1])
+                if arc is None and quiz_status(quiz) != 'draft':    # đề mở trước khi có bản lưu: đề đang mở là bất biến nên bản hiện tại chính là bản đã giao
+                    arc = {'quizId': quiz.get('id'), 'subjectId': quiz.get('subjectId'), 'activatedAt': None, 'activatedBy': None,
+                           'note': 'Đề mở trước khi có bản lưu lúc mở; đề đang mở/đã đóng không sửa được nên đây là bản đã giao.',
+                           'quiz': quiz_merge(quiz, doc_get('quizKeys', p[1]))}
+                if arc is None:
+                    raise ApiError(404, 'not-found', 'Đề còn là bản nháp, chưa có bản lưu.')
+                return self.send(200, {'archive': arc})
             if len(p) == 3 and p[2] == 'submit' and method == 'POST':
                 if role != 'student':
                     raise ApiError(403, 'permission-denied', 'Chỉ sinh viên nộp bài trắc nghiệm.')
