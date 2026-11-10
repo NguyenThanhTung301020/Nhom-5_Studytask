@@ -7,7 +7,7 @@
     "emulators": "firebase emulators:start --only auth,firestore --project demo-studytask",
     "seed": "node scripts/seed-emulator.mjs",
     "serve": "http-server . -p 5500 -c-1 -a 127.0.0.1",
-    "test:logic": "node --test tests/logic.test.mjs",
+    "test:logic": "node --test tests/logic.test.mjs tests/quizfile.test.mjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-studytask \"node --test tests/firestore.rules.test.mjs\"",
     "test:rules:deep": "firebase emulators:exec --only firestore --project demo-studytask \"node --test tests/firestore.rules.deep.test.mjs\""
   },
