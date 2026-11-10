@@ -30,6 +30,20 @@ Việc 7 của kế hoạch tuần 6 (lập trình V3) do Trương Thanh Vui th�
 
 [D06]: 06-chuyen-firebase-sang-may-chu-rieng.md
 
+### 0.1. Mở rộng 10/11/2026: xem lại đề, điền khuyết, nhập từ tệp, kho đề
+
+Bổ sung theo yêu cầu thực tế của giáo viên (khiếu nại sai đề; nhiều môn chỉ làm lại từ bộ đề cũ và đổi đáp án; có câu điền khuyết; cần nơi lưu riêng trên máy chủ).
+
+| Nhu cầu | Cách làm | Nơi cài đặt |
+|---|---|---|
+| Giáo viên bắt buộc xem lại được đề và đáp án (phòng khiếu nại sai đề) | Mỗi đề có nút **Xem đề** cho Admin và giáo viên dạy môn: câu hỏi, đáp án đúng, đáp án chấp nhận, tab **Bài làm & khiếu nại** (điểm, tên sinh viên, từng câu sinh viên chọn/điền so với đáp án đúng, xuất CSV). Khi đề chuyển `draft → active`, máy chủ lưu **bản lưu bất biến** `quizArchive/{quizId}` (nội dung đúng như đã giao, thời điểm, người mở). Đề mở trước khi có bản lưu: trả bản hiện tại (đề đang mở/đã đóng không sửa được nên là bản đã giao). Người không có quyền (sinh viên, giáo viên môn khác) bị từ chối | `GET /api/quiz/<id>/archive`, `GET /api/quiz/<id>/results` (kèm tên), `pages/QuizTools.js` |
+| Câu **điền khuyết** (không chọn A/B/C/D) | Loại câu `fill`: `blanks` (1–10 chỗ trống) công khai; `accepted` (danh sách đáp án chấp nhận theo từng chỗ trống) chỉ nằm trong khóa `quizKeys`, giống `correct`. Chấm: bỏ khoảng trắng thừa, không phân biệt hoa thường, chuẩn hóa Unicode; **dấu tiếng Việt phải đúng** (muốn chấp nhận không dấu, thêm cách viết đó vào đáp án chấp nhận). Câu chỉ đúng khi mọi chỗ trống đúng. Mở đề cần mỗi chỗ trống có ít nhất một đáp án chấp nhận | `grade_quiz()`, `accepted_of()`, `quiz_key_complete()`; `QuizTaker`, `FillEditor` |
+| Soạn đề **từ tệp** | Nhập CSV (UTF-8, cột Loại, Câu hỏi, A–E, Đáp án), dán trực tiếp từ Excel (tab), hoặc JSON; báo lỗi từng dòng, bỏ dòng lỗi, nhập các dòng đúng; có tệp mẫu; xuất lại ra CSV/JSON để chỉnh đáp án rồi nhập lại | `utils/quizFile.js` (13 ca kiểm thử trong `tests/quizfile.test.mjs`) |
+| Làm lại từ bộ đề cũ, đổi đáp án | **Nhân bản** đề thành bản nháp mới (giữ câu hỏi, đáp án), sửa rồi mở | `QuizModal` (`seed`) |
+| **Kho đề** lưu riêng trên máy chủ | Collection `quizBank` (không đọc/ghi qua `/api/doc`): bộ câu hỏi kèm đáp án để dùng lại. Chỉ Admin và giáo viên; giáo viên thấy mục của mình và của môn mình dạy; chỉ người tạo hoặc Admin sửa/xóa; tối đa 500 câu mỗi mục, 200 mục mỗi người; trường lạ bị bỏ, mã câu đánh lại | `GET/POST /api/quizbank`, `GET/PUT/DELETE /api/quizbank/<id>`, `BankModal` |
+
+Kiểm thử: `tests/server/test_quiz_extra.py` (điền khuyết, bản lưu, kho đề, phân quyền), `tests/quizfile.test.mjs` (nhập/xuất tệp); thử giao diện thật trên máy chủ tạm: xem đề, lưu vào kho, nhân bản, dán từ Excel, lấy từ kho, sinh viên điền khuyết và nộp, giáo viên đối chiếu bài làm. Chưa có: nhập trực tiếp tệp `.xlsx` (dùng CSV hoặc dán từ Excel), hình ảnh trong câu hỏi, xem đáp án sau khi đóng đề cho sinh viên.
+
 ## 1. Mục tiêu và phạm vi
 
 Thiết kế cách lưu đề không chứa đáp án đúng trong dữ liệu sinh viên đọc được, giới hạn khóa đáp án cho giáo viên dạy môn và Admin, đồng thời chuyển việc chấm điểm và ghi kết quả sang một dịch vụ máy chủ đáng tin cậy. Kết quả chấm từ `quizResults` sẽ là nguồn điểm trắc nghiệm chính thức của Bảng điểm, thay cho điểm do trình duyệt ghi vào `activities`.

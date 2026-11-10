@@ -63,6 +63,8 @@ jobs:
         run: python3 tests/server/test_admin_reset.py
       - name: V3 – Trắc nghiệm không lộ đáp án, máy chủ chấm điểm
         run: python3 tests/server/test_quiz_v3.py
+      - name: Trắc nghiệm điền khuyết, bản lưu khi mở đề, kho đề
+        run: python3 tests/server/test_quiz_extra.py
       - name: Phân quyền đọc dữ liệu dùng chung theo môn (việc 14)
         run: python3 tests/server/test_shared_scope.py
       - name: Link minh chứng của phiếu xét tốt nghiệp

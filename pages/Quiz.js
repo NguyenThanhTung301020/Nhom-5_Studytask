@@ -1,6 +1,8 @@
 // pages/Quiz.js – Hệ thống trắc nghiệm
 import { SUBJECT_COLORS } from '../utils/constants.js'
 import { submitQuiz, APP_ENV } from '../utils/firebase.js'
+import { assignIds } from '../utils/quizFile.js'
+import { ImportQuizModal, BankModal, QuizViewer, hasKey } from './QuizTools.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
@@ -26,8 +28,37 @@ function AnswerRow({ ans, onText, onToggle, onRemove, type, canRemove }) {
   )
 }
 
+const defaultAnswers = () => ['a', 'b', 'c', 'd'].map(id => ({ id, text: '', correct: false }))
+
+// Câu điền khuyết: sinh viên gõ vào ô trống, không chọn A/B/C/D
+function FillEditor({ q, onChange }) {
+  const blanks = q.blanks || 1
+  const acc = Array.isArray(q.accepted) ? q.accepted : []
+  const setBlanks = (v) => {
+    const n = Math.max(1, Math.min(10, Number(v) || 1))
+    onChange({ ...q, blanks: n, accepted: Array.from({ length: n }, (_, i) => acc[i] || []) })
+  }
+  const setAcc = (i, text) => onChange({ ...q, accepted: Array.from({ length: blanks }, (_, k) => (k === i ? text.split('\n') : (acc[k] || []))) })
+  return h('div', null,
+    h('small', { className: 'text-muted d-block mb-2' },
+      'Sinh viên gõ câu trả lời vào ô trống (không chọn A/B/C/D). Dùng ____ trong câu hỏi để đánh dấu chỗ trống. ',
+      'Chấm không phân biệt hoa thường và bỏ khoảng trắng thừa; dấu tiếng Việt phải đúng, nên thêm cả cách viết không dấu nếu muốn chấp nhận.'),
+    h('div', { className: 'd-flex align-items-center gap-2 mb-2' },
+      h('label', { className: 'small fw-semibold' }, 'Số chỗ trống'),
+      h('input', { type: 'number', min: 1, max: 10, className: 'form-control form-control-sm', style: { width: 80 }, value: blanks, onChange: e => setBlanks(e.target.value) })),
+    Array.from({ length: blanks }, (_, i) => h('div', { key: i, className: 'mb-2' },
+      h('label', { className: 'small fw-semibold' }, `Chỗ trống ${i + 1}: các đáp án chấp nhận (mỗi dòng một cách viết)`),
+      h('textarea', { className: 'form-control form-control-sm', rows: 2, placeholder: 'Ví dụ:\nHà Nội\nHa Noi', value: (acc[i] || []).join('\n'), onChange: e => setAcc(i, e.target.value) })))
+  )
+}
+
 function QuestionEditor({ q, idx, onChange, onRemove }) {
   const setField   = (k, v) => onChange({ ...q, [k]: v })
+  const setType    = (t) => {
+    if (t === 'fill') onChange({ id: q.id, text: q.text, type: 'fill', blanks: 1, answers: [], accepted: [[]] })
+    else if (q.type === 'fill') onChange({ id: q.id, text: q.text, type: t, answers: defaultAnswers() })
+    else setField('type', t)
+  }
   const setAnswer  = (ai, k, v) => {
     let answers = q.answers.map((a, i) => i === ai ? { ...a, [k]: v } : a)
     // single choice: uncheck others khi check một cái
@@ -46,36 +77,39 @@ function QuestionEditor({ q, idx, onChange, onRemove }) {
         h('span', { className:'fw-bold', style:{color:'var(--primary)'} }, `Câu ${idx + 1}`),
         h('div', { className:'d-flex gap-2 align-items-center' },
           h('select', { className:'form-select form-select-sm', style:{width:'auto'}, value: q.type,
-              onChange: e => setField('type', e.target.value) },
+              onChange: e => setType(e.target.value) },
             h('option', { value:'single' }, '1 đáp án đúng'),
             h('option', { value:'multiple' }, 'Nhiều đáp án đúng'),
+            h('option', { value:'fill' }, 'Điền khuyết'),
           ),
           h('button', { type:'button', className:'btn btn-sm btn-outline-danger', onClick: onRemove },
             h('i', { className:'bi bi-trash' })
           )
         )
       ),
-      h('textarea', { className:'form-control mb-3', rows:2, placeholder:'Nội dung câu hỏi…', value: q.text,
+      h('textarea', { className:'form-control mb-3', rows:2, placeholder: q.type === 'fill' ? 'Nội dung câu hỏi, dùng ____ cho chỗ trống…' : 'Nội dung câu hỏi…', value: q.text,
           onChange: e => setField('text', e.target.value) }),
-      h('div', { className:'mb-2' },
-        h('small', { className:'text-muted' },
-          q.type === 'single' ? '◉ Chọn radio đáp án đúng' : '☑ Chọn tất cả đáp án đúng'
+      q.type === 'fill' ? h(FillEditor, { q, onChange }) : h(window.React.Fragment, null,
+        h('div', { className:'mb-2' },
+          h('small', { className:'text-muted' },
+            q.type === 'single' ? '◉ Chọn radio đáp án đúng' : '☑ Chọn tất cả đáp án đúng'
+          )
+        ),
+        q.answers.map((a, ai) =>
+          h(AnswerRow, { key:ai, ans:a, type:q.type, canRemove: q.answers.length > 2,
+            onText:  v  => setAnswer(ai, 'text', v),
+            onToggle: () => setAnswer(ai, 'correct', !a.correct),
+            onRemove: () => removeAns(ai) })
+        ),
+        q.answers.length < 5 && h('button', { type:'button', className:'btn btn-sm btn-outline-secondary', onClick: addAnswer },
+          h('i', { className:'bi bi-plus-lg me-1' }), 'Thêm đáp án'
         )
-      ),
-      q.answers.map((a, ai) =>
-        h(AnswerRow, { key:ai, ans:a, type:q.type, canRemove: q.answers.length > 2,
-          onText:  v  => setAnswer(ai, 'text', v),
-          onToggle: () => setAnswer(ai, 'correct', !a.correct),
-          onRemove: () => removeAns(ai) })
-      ),
-      q.answers.length < 5 && h('button', { type:'button', className:'btn btn-sm btn-outline-secondary', onClick: addAnswer },
-        h('i', { className:'bi bi-plus-lg me-1' }), 'Thêm đáp án'
       )
     )
   )
 }
 
-function QuizModal({ item, subjects, onSave, onClose }) {
+function QuizModal({ item, seed, subjects, onSave, onClose, user, role }) {
   // V3: đề mới luôn ở dạng bản nháp; mở đề (nháp → đang mở) chỉ sau khi đã lưu đề và đáp án đúng; đề đã mở bị khóa nội dung
   const blank = { title:'', subjectId: subjects[0]?.id || '', description:'', dueDate:'', status:'draft', questions:[
     { id:1, text:'', type:'single', answers:[
@@ -83,8 +117,11 @@ function QuizModal({ item, subjects, onSave, onClose }) {
       {id:'c',text:'',correct:false},{id:'d',text:'',correct:false},
     ]}
   ]}
-  const [form, setForm] = useState(item ? { ...item, questions: item.questions.map(q=>({...q,answers:[...q.answers]})) } : blank)
+  const copyQ = (q) => ({ ...q, answers: [...(q.answers || [])], ...(q.type === 'fill' ? { accepted: (q.accepted || []).map(a => [...a]) } : {}) })
+  const [form, setForm] = useState(item ? { ...item, questions: item.questions.map(copyQ) }
+                                 : seed ? { ...blank, ...seed, questions: assignIds(seed.questions.map(copyQ)) } : blank)
   const [step, setStep] = useState(1)
+  const [tool, setTool] = useState(null)      // null | 'import' | 'bank'
   const locked = !!item && item.status !== 'draft'      // đề đã mở/đóng: chỉ đổi được trạng thái
   const statusOptions = !item || item.status === 'draft' ? (item ? ['draft','active'] : ['draft'])
                       : item.status === 'active' ? ['active','closed'] : ['closed']
@@ -94,14 +131,21 @@ function QuizModal({ item, subjects, onSave, onClose }) {
     id: Date.now(), text:'', type:'single',
     answers:[{id:'a',text:'',correct:false},{id:'b',text:'',correct:false},{id:'c',text:'',correct:false},{id:'d',text:'',correct:false}]
   }]})
+  const addFill = () => setForm({ ...form, questions: [...form.questions, { id: Date.now(), text:'', type:'fill', blanks:1, answers:[], accepted:[[]] }] })
   const delQ  = (qi) => form.questions.length > 1 && setForm({ ...form, questions: form.questions.filter((_,i)=>i!==qi) })
 
   const step1Valid = form.title.trim() && form.subjectId && form.dueDate
-  // Chỉ cần ≥2 đáp án có nội dung và ít nhất 1 đáp án đúng
-  const step2Valid = form.questions.every(q => {
+  // Chọn đáp án: ≥2 đáp án có nội dung và ít nhất 1 đáp án đúng. Điền khuyết: mỗi chỗ trống có ít nhất 1 đáp án chấp nhận
+  const qValid = (q) => {
+    if (!q.text.trim()) return false
+    if (q.type === 'fill') return Array.from({ length: q.blanks || 1 }, (_, i) => ((q.accepted || [])[i] || []).some(x => x.trim())).every(Boolean)
     const filled = q.answers.filter(a => a.text.trim())
-    return q.text.trim() && filled.length >= 2 && filled.some(a => a.correct)
-  })
+    return filled.length >= 2 && filled.some(a => a.correct)
+  }
+  const step2Valid = form.questions.every(qValid)
+  const isBlankQ = (q) => q.type !== 'fill' && !q.text.trim() && q.answers.every(a => !a.text.trim())
+  // Thêm câu hỏi nhập từ tệp / lấy từ kho; bỏ câu trống mặc định nếu chưa soạn gì
+  const addQuestions = (qs) => setForm(f => ({ ...f, questions: [...(f.questions.length === 1 && isBlankQ(f.questions[0]) ? [] : f.questions), ...qs] }))
 
   return h('div', { className:'modal show d-block', style:{ backgroundColor:'rgba(0,0,0,0.55)' } },
     h('div', { className:'modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable' },
@@ -157,15 +201,25 @@ function QuizModal({ item, subjects, onSave, onClose }) {
                 )
               )
             : h('div', null,
+                h('div', { className:'d-flex flex-wrap gap-2 mb-3' },
+                  h('button', { type:'button', className:'btn btn-sm btn-outline-primary', onClick:()=>setTool('import') },
+                    h('i', { className:'bi bi-file-earmark-arrow-up me-1' }), 'Nhập từ file / dán từ Excel'),
+                  h('button', { type:'button', className:'btn btn-sm btn-outline-primary', onClick:()=>setTool('bank') },
+                    h('i', { className:'bi bi-archive me-1' }), 'Kho đề'),
+                  h('small', { className:'text-muted align-self-center' }, `${form.questions.length} câu`)
+                ),
                 form.questions.map((q,qi) =>
                   h(QuestionEditor, { key:q.id, q, idx:qi, onChange:nq=>setQ(qi,nq), onRemove:()=>delQ(qi) })
                 ),
-                h('button', { type:'button', className:'btn btn-outline-primary w-100', onClick:addQ },
-                  h('i', { className:'bi bi-plus-circle me-2' }), 'Thêm câu hỏi'
+                h('div', { className:'d-flex gap-2' },
+                  h('button', { type:'button', className:'btn btn-outline-primary flex-grow-1', onClick:addQ },
+                    h('i', { className:'bi bi-plus-circle me-2' }), 'Thêm câu chọn đáp án'),
+                  h('button', { type:'button', className:'btn btn-outline-primary flex-grow-1', onClick:addFill },
+                    h('i', { className:'bi bi-input-cursor-text me-2' }), 'Thêm câu điền khuyết')
                 ),
                 !step2Valid && h('div', { className:'alert alert-warning mt-3 small py-2' },
                   h('i', { className:'bi bi-exclamation-triangle me-1' }),
-                  'Mỗi câu cần: nội dung câu hỏi, ít nhất 2 đáp án có nội dung và 1 đáp án được đánh dấu đúng.'
+                  'Mỗi câu cần nội dung câu hỏi; câu chọn đáp án cần ít nhất 2 đáp án có nội dung và 1 đáp án đúng; câu điền khuyết cần ít nhất 1 đáp án chấp nhận cho mỗi chỗ trống.'
                 )
               )
         ),
@@ -186,12 +240,18 @@ function QuizModal({ item, subjects, onSave, onClose }) {
                 h('button', { className:'btn btn-success', disabled:!step2Valid,
                     onClick:()=>{
                       if (!step2Valid) return
-                      // Lọc bỏ đáp án rỗng khi lưu
+                      // Lọc bỏ đáp án rỗng khi lưu; câu điền khuyết giữ các đáp án chấp nhận đã cắt khoảng trắng
                       const cleaned = {
                         ...form,
-                        questions: form.questions.map(q => ({
-                          ...q, answers: q.answers.filter(a => a.text.trim())
-                        })),
+                        questions: form.questions.map(q => {
+                          if (q.type === 'fill') {
+                            const blanks = q.blanks || 1
+                            return { id: q.id, text: q.text, type: 'fill', blanks, answers: [],
+                                     accepted: Array.from({ length: blanks }, (_, i) => ((q.accepted || [])[i] || []).map(x => x.trim()).filter(Boolean)) }
+                          }
+                          const { accepted, ...rest } = q
+                          return { ...rest, answers: q.answers.filter(a => a.text.trim()) }
+                        }),
                         id: item?.id || Date.now(),
                         createdAt: item?.createdAt || new Date().toISOString(),
                       }
@@ -202,7 +262,10 @@ function QuizModal({ item, subjects, onSave, onClose }) {
               )
         )
       )
-    )
+    ),
+    tool === 'import' && h(ImportQuizModal, { usedIds: form.questions.map(q => q.id), onImport: addQuestions, onClose: () => setTool(null) }),
+    tool === 'bank' && h(BankModal, { subjects, subjectId: form.subjectId, currentQuestions: form.questions, currentTitle: form.title, user, role,
+                                       onPick: (qs) => addQuestions(assignIds(qs.map(copyQ), form.questions.map(q => q.id))), onClose: () => setTool(null) })
   )
 }
 
@@ -226,8 +289,16 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
     }
   }
 
+  const setFill = (qid, i, value, blanks) => setSelected(s => {
+    const cur = Array.isArray(s[qid]) ? [...s[qid]] : []
+    while (cur.length < blanks) cur.push('')
+    cur[i] = value
+    return { ...s, [qid]: cur }
+  })
+
   const answered = quiz.questions.filter(q => {
     const s = selected[q.id]
+    if (q.type === 'fill') return Array.isArray(s) && s.some(x => x && x.trim())
     return s && (Array.isArray(s) ? s.length > 0 : true)
   }).length
 
@@ -275,6 +346,9 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
               h('i', { className:'bi bi-info-circle me-1' }), 'Đáp án đúng không được hiển thị. Bạn chỉ nhận điểm và số câu đúng.'),
             quiz.questions.map((q, qi) => {
               const givenIds = Array.isArray(result.answers?.[q.id]) ? result.answers[q.id] : result.answers?.[q.id] ? [result.answers[q.id]] : []
+              if (q.type === 'fill') return h('div', { key:q.id, className:'quiz-review-item mb-3 p-3 rounded-3 bg-light' },
+                h('div', { className:'fw-semibold small mb-2' }, `Câu ${qi+1}: ${q.text}`),
+                Array.from({ length: q.blanks || 1 }, (_, i) => h('div', { key:i, className:'small' }, h('span', { className:'text-muted' }, `Chỗ trống ${i+1}: `), h('b', null, givenIds[i] || '(bỏ trống)'))))
               return h('div', { key:q.id, className:'quiz-review-item mb-3 p-3 rounded-3 bg-light' },
                 h('div', { className:'fw-semibold small mb-2' }, `Câu ${qi+1}: ${q.text}`),
                 q.answers.map(a => h('div', { key:a.id, className:`quiz-ans-row small ${givenIds.includes(a.id) ? 'fw-semibold' : 'text-muted'}` },
@@ -324,9 +398,13 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
                 h('span', null, q.text)
               ),
               h('small', { className:'text-muted d-block mb-2 ms-4' },
-                q.type === 'single' ? 'Chọn 1 đáp án đúng' : 'Chọn tất cả đáp án đúng'
+                q.type === 'fill' ? 'Điền vào chỗ trống' : q.type === 'single' ? 'Chọn 1 đáp án đúng' : 'Chọn tất cả đáp án đúng'
               ),
-              h('div', { className:'ms-4' },
+              q.type === 'fill' ? h('div', { className:'ms-4' },
+                Array.from({ length: q.blanks || 1 }, (_, i) => h('input', { key:i, className:'form-control mb-2', maxLength:200,
+                  placeholder: (q.blanks || 1) > 1 ? `Chỗ trống ${i+1}` : 'Câu trả lời của bạn', value: (Array.isArray(sel) && sel[i]) || '',
+                  onChange: e => setFill(q.id, i, e.target.value, q.blanks || 1) }))
+              ) : h('div', { className:'ms-4' },
                 q.answers.map(a => {
                   const checked = q.type==='single' ? sel===a.id : (sel||[]).includes(a.id)
                   return h('label', { key:a.id, className:`quiz-ans-option${checked?' selected':''}` },
@@ -366,6 +444,8 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
 export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions, subjects, user, role, onActivity }) {
   const [modal,       setModal]       = useState(null)  // null | 'add' | 'edit'
   const [editItem,    setEditItem]    = useState(null)
+  const [seed,        setSeed]        = useState(null)  // đề mẫu khi nhân bản
+  const [viewing,     setViewing]     = useState(null)  // đề đang xem lại (giáo viên)
   const [taking,      setTaking]      = useState(null)  // quiz đang làm
   const [filterSub,   setFilterSub]   = useState('')
 
@@ -379,6 +459,14 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
     if (modal === 'edit') setQuizzes(quizzes.map(q => q.id===editItem.id ? form : q))
     else                  setQuizzes([...quizzes, form])
     setModal(null)
+  }
+
+  // Nhân bản: nhiều môn chỉ làm lại từ bộ đề trước và đổi đáp án → tạo bản nháp mới có sẵn câu hỏi và đáp án
+  const duplicate = (quiz) => {
+    if (!hasKey(quiz)) { alert('Bạn không có quyền xem đáp án của đề này nên không nhân bản được.'); return }
+    setViewing(null); setEditItem(null)
+    setSeed({ title: quiz.title + ' (bản sao)', subjectId: quiz.subjectId, description: quiz.description || '', questions: quiz.questions })
+    setModal('add')
   }
 
   const handleDelete = (id) => {
@@ -412,7 +500,7 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
           h('option',{value:''},'Tất cả môn học'),
           subjects.map(s=>h('option',{key:s.id,value:s.id},s.name))
         ),
-        isTeacher && h('button', { className:'btn btn-primary btn-sm', onClick:()=>{ setEditItem(null); setModal('add') } },
+        isTeacher && h('button', { className:'btn btn-primary btn-sm', onClick:()=>{ setEditItem(null); setSeed(null); setModal('add') } },
           h('i',{className:'bi bi-plus-lg me-1'}), 'Tạo đề mới'
         )
       )
@@ -491,6 +579,10 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
 
                 // Teacher/Admin actions
                 isTeacher && h(window.React.Fragment, null,
+                  h('button', { className:'btn btn-outline-secondary btn-sm', title:'Xem lại đề, đáp án và bài làm (khi có khiếu nại)', onClick:()=>setViewing(quiz) },
+                    h('i',{className:'bi bi-eye'})),
+                  h('button', { className:'btn btn-outline-secondary btn-sm', title:'Nhân bản thành đề nháp mới (giữ câu hỏi và đáp án)', onClick:()=>duplicate(quiz) },
+                    h('i',{className:'bi bi-files'})),
                   h('button', { className:'btn btn-outline-primary btn-sm flex-grow-1', onClick:()=>{ setEditItem(quiz); setModal('edit') } },
                     h('i',{className:`bi bi-${quiz.status==='draft'?'pencil':'toggles'} me-1`}), quiz.status==='draft' ? 'Sửa' : quiz.status==='active' ? 'Đóng đề' : 'Xem'
                   ),
@@ -506,7 +598,8 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
     ),
 
     // ── Modals ──
-    modal && h(QuizModal, { item: modal==='edit'?editItem:null, subjects, onSave:handleSave, onClose:()=>setModal(null) }),
+    modal && h(QuizModal, { item: modal==='edit'?editItem:null, seed: modal==='add'?seed:null, subjects, user, role, onSave:handleSave, onClose:()=>{ setModal(null); setSeed(null) } }),
+    viewing && h(QuizViewer, { quiz: viewing, subjectName: subjectName(viewing.subjectId), onDuplicate: duplicate, onClose: () => setViewing(null) }),
     taking && h(QuizTaker, {
       quiz:taking,
       existing: mySubmissions.find(s => s.quizId === taking.id),
