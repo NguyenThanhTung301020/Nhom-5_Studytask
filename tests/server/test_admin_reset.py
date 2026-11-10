@@ -7,7 +7,27 @@ API = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'serv
 for u, pw, role, name in (('ad01', 'adminpass1', 'admin', 'AD'), ('sv01', 'svpass1234', 'student', 'SV 1'),
                           ('sv02', 'svpass5678', 'student', 'SV 2'), ('gv01', 'gvpass1234', 'teacher', 'GV 1')):
     subprocess.run([sys.executable, API, 'create-user', u, pw, role, name], env=ENV, check=True, capture_output=True)
-srv = subprocess.Popen([sys.executable, API, 'serve'], env=ENV, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL); time.sleep(1.5)
+srv = subprocess.Popen([sys.executable, API, 'serve'], env=ENV, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+
+def wait_ready(port=8794, seconds=15):
+    """Chờ API trả lời thật (GET /api/auth/me = 200) thay vì đoán bằng sleep; thoát với lỗi rõ ràng nếu API không lên."""
+    end = time.time() + seconds
+    while time.time() < end:
+        if srv.poll() is not None:
+            print('FAIL API thoát ngay khi khởi động (mã %s), có thể trùng cổng %d' % (srv.returncode, port)); shutil.rmtree(D, ignore_errors=True); sys.exit(1)
+        try:
+            c = http.client.HTTPConnection('127.0.0.1', port, timeout=1); c.request('GET', '/api/auth/me')
+            if c.getresponse().status == 200:
+                return
+        except OSError:
+            pass
+        time.sleep(0.2)
+    srv.terminate(); shutil.rmtree(D, ignore_errors=True)
+    print('FAIL API không sẵn sàng sau %d giây' % seconds); sys.exit(1)
+
+
+wait_ready()
 ok = True
 
 

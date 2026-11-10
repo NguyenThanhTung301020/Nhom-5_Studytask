@@ -18,8 +18,14 @@ for em in ('sv01', 'sv02'):
 PY
 python3 studytask_api.py serve >/tmp/api_test.log 2>&1 &
 PID=$!
-sleep 1.5
 B=http://127.0.0.1:8790
+# Chờ API trả lời thật thay vì sleep cố định; API chết hoặc không lên thì dừng ngay với lỗi rõ ràng
+for i in $(seq 1 75); do
+  curl -sf -o /dev/null "$B/api/auth/me" && break
+  kill -0 $PID 2>/dev/null || { echo "FAIL API thoát ngay khi khởi động:"; tail -5 /tmp/api_test.log; rm -rf $STUDYTASK_DATA; exit 1; }
+  sleep 0.2
+done
+curl -sf -o /dev/null "$B/api/auth/me" || { echo "FAIL API không sẵn sàng sau 15 giây"; kill $PID 2>/dev/null; rm -rf $STUDYTASK_DATA; exit 1; }
 login() { curl -s -c /tmp/ck_$1 -H 'Content-Type: application/json' -d "{\"username\":\"$2\",\"password\":\"$3\"}" $B/api/auth/login >/dev/null; }
 login s sv01 spass12345; login o sv02 opass12345; login t gv01 tpass12345
 printf '%%PDF-1.4 test' > /tmp/ok.pdf

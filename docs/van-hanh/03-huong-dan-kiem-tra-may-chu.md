@@ -26,6 +26,8 @@ Mở PowerShell tại thư mục gốc repo:
 
 Script làm bốn bước: chép script lên máy chủ, chạy qua SSH (hỏi mật khẩu `sudo` một lần, mất khoảng 4–5 phút vì có chờ tự kiểm tra SMART), kéo gói về máy và kiểm tra SHA256, so hash các tệp đang chạy với `master`.
 
+Kết quả cuối cùng là **ĐẠT** hoặc **CHƯA ĐẠT**. Mỗi lệnh thu bằng chứng được ghi đúng mã thoát; có lệnh lỗi (ví dụ dịch vụ không `active`, site không trả 2xx/3xx, khôi phục thử lỗi, `vnstat` chưa cài) thì máy chủ in danh sách mục lỗi ở cuối và script trả mã lỗi, nhưng gói bằng chứng vẫn được kéo về để xem lại. Cảnh báo SMART (bit 3–7 của mã thoát `smartctl`, ví dụ nhật ký lỗi có mục) không bị tính là lệnh lỗi; hãy đọc nội dung tệp 02, 03, 05.
+
 Kết quả nằm ở `docs/van-hanh/bang-chung/AAAA-MM-DD/`:
 
 | Tệp | Nội dung | Điền vào mục 8.4 |
