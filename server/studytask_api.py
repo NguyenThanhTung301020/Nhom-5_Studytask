@@ -289,7 +289,7 @@ def valid_activity_event(e):
 
 
 def activity_write_ok(uid, old, new):
-    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ vào cuối; phần cũ giữ nguyên, kể cả sự kiện từ bản cũ."""
+    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ (loại material hoặc homework, không phải quiz) vào cuối; phần cũ giữ nguyên, kể cả sự kiện quiz đã có."""
     if not set(new) <= ACTIVITY_DOC_KEYS or new.get('uid', uid) != uid:
         return False
     if not (short_str(new, 'name', 100) and short_str(new, 'username', 254) and short_str(new, 'email', 254)):
@@ -297,7 +297,8 @@ def activity_write_ok(uid, old, new):
     cur, prev = new.get('events', []), old.get('events', [])
     if not isinstance(cur, list) or not isinstance(prev, list) or len(cur) > ACTIVITY_MAX_EVENTS:
         return False
-    return cur == prev or (len(cur) == len(prev) + 1 and cur[:-1] == prev and valid_activity_event(cur[-1]))
+    # Sự kiện `quiz` do máy chủ ghi khi chấm bài (doc_put, không qua hàm này) nên chủ tài khoản KHÔNG được tự thêm: chặn việc tự ghi điểm (V3, V4)
+    return cur == prev or (len(cur) == len(prev) + 1 and cur[:-1] == prev and valid_activity_event(cur[-1]) and cur[-1].get('type') != 'quiz')
 
 
 def valid_evidence(value):
