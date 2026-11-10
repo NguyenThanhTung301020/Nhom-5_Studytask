@@ -13,7 +13,7 @@ Việc 7 của kế hoạch tuần 6 (lập trình V3) do Trương Thanh Vui th�
 | `quizResults/{quizId}_{uid}` | Có, ghi bằng `INSERT` với khóa chính `(col, id)` nên mỗi sinh viên chỉ nộp một lần (HTTP 409 khi nộp lại). Không đọc/ghi qua `/api/doc/*` |
 | Cloud Function / Worker | Endpoint trong `server/studytask_api.py`: `POST /api/quiz/{id}/submit`, `GET /api/quiz/mine`, `GET /api/quiz/{id}/results` (Admin, giáo viên dạy môn) |
 | Firestore Security Rules | Hàm `guard_quizzes()` ở máy chủ: đề mới chỉ ở `draft`; `draft → active → closed`, một chiều; sau `draft` chỉ đổi được `status`; chỉ xóa đề `draft` (đồng thời xóa khóa); không đổi môn; giáo viên chỉ ghi đề môn mình dạy; người không có quyền chỉ được gửi lại đúng bản họ thấy (nên trình duyệt tải rồi ghi ngược vẫn chạy); mở đề cần mỗi câu có đáp án đúng (câu một lựa chọn: đúng một đáp án) |
-| Điểm vào Bảng điểm | Máy chủ ghi `quizResults` (nguồn chính thức) và **đồng thời** ghi một sự kiện `quiz` vào `activities/{uid}` để Bảng điểm và Báo cáo lớp tiếp tục chạy. Giao diện không còn ghi điểm trắc nghiệm. Việc 8 (V4) sẽ chặn sinh viên tự ghi sự kiện `quiz` và chuyển hai màn hình sang đọc `quizResults` |
+| Điểm vào Bảng điểm | Máy chủ ghi `quizResults` (nguồn chính thức) và **đồng thời** ghi một sự kiện `quiz` vào `activities/{uid}` để Bảng điểm và Báo cáo lớp tiếp tục chạy. Giao diện không còn ghi điểm trắc nghiệm. `activity_write_ok()` **chặn chủ tài khoản tự thêm sự kiện `quiz`** (máy chủ ghi sự kiện này bằng `doc_put()`, không đi qua hàm kiểm tra nên luồng chấm điểm không bị ảnh hưởng; góp ý review PR40). Việc 8 (V4) còn lại: chuyển hai màn hình sang đọc `quizResults` |
 
 **Quyết định đã cài đặt cho 3 câu còn mở ở mục 8** (đề xuất của người lập trình, cần nhóm xác nhận ở việc 3):
 
