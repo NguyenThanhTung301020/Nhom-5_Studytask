@@ -12,6 +12,7 @@ Biến môi trường: STUDYTASK_DATA (mặc định /var/lib/studytask), STUDYT
 Phân quyền được chuyển từ firestore.rules (xem hàm can()).
 """
 import hashlib, hmac, json, math, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time
+from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -71,6 +72,12 @@ def db():
             stored TEXT PRIMARY KEY, uid TEXT NOT NULL, hw TEXT NOT NULL, created REAL NOT NULL);
         ''')
         migrate_username(_db)
+        try:
+            migrate_quizzes(_db)
+        except Exception:
+            if _db.in_transaction:
+                _db.execute('ROLLBACK')
+            raise            # không phục vụ khi chưa tách được đáp án; CSDL đã có bản sao lưu .bak-pre-quiz-v3
     return _db
 
 
@@ -353,7 +360,294 @@ def can(op, col, id_, user, old=None, new=None):
             changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
             return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev) and valid_evidence(new.get('evidence'))
         return mgr or (owner and old and old.get('status') == 'submitted')
+    if col in ('quizKeys', 'quizResults'):
+        return False   # V3: khóa đáp án và kết quả chỉ đi qua /api/quiz/*, không đọc/ghi trực tiếp qua /api/doc
     return False   # collection lạ → từ chối (userSecrets không còn dùng)
+
+
+# ── Trắc nghiệm (V3) ─────────────────────────────────────────────
+# Đề nằm trong sharedData/global.quizzes nhưng KHÔNG có đáp án đúng (answers[].correct).
+# Khóa đáp án nằm riêng ở quizKeys/{quizId}; kết quả chính thức ở quizResults/{quizId}_{uid}, chỉ máy chủ ghi.
+# Máy chủ lọc khi đọc (sinh viên không thấy khóa) và kiểm tra khi ghi (vòng đời draft → active → closed).
+QUIZ_STATUSES = ('draft', 'active', 'closed')
+VN_TZ = timezone(timedelta(hours=7))
+DATE_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
+
+
+def quiz_status(q):
+    return q.get('status') or 'active'          # đề cũ chưa có trạng thái được coi là đang mở
+
+
+def quiz_strip(q):
+    """Bản công khai của đề: bỏ mọi `correct`."""
+    out = {k: v for k, v in q.items() if k != 'questions'}
+    out['questions'] = [
+        {**{k: v for k, v in qq.items() if k != 'answers'},
+         'answers': [{k: v for k, v in a.items() if k != 'correct'} for a in qq.get('answers', []) if isinstance(a, dict)]}
+        for qq in q.get('questions', []) if isinstance(qq, dict)]
+    return out
+
+
+def quiz_key_of(q):
+    ca = {}
+    for qq in q.get('questions', []):
+        if isinstance(qq, dict):
+            ca[str(qq.get('id'))] = sorted(str(a.get('id')) for a in qq.get('answers', []) if isinstance(a, dict) and a.get('correct') is True)
+    return {'quizId': q.get('id'), 'subjectId': q.get('subjectId'), 'correctAnswers': ca}
+
+
+def quiz_merge(q, key):
+    """Bản đầy đủ cho người có quyền sửa đề: ghép `correct` từ khóa đáp án."""
+    ca = (key or {}).get('correctAnswers') or {}
+    out = quiz_strip(q)
+    for qq in out['questions']:
+        ids = ca.get(str(qq.get('id')), [])
+        for a in qq['answers']:
+            a['correct'] = str(a.get('id')) in ids
+    return out
+
+
+def quiz_authorized(user, role, subject_id):
+    """Admin, hoặc giáo viên được phân công môn của đề."""
+    if role == 'admin':
+        return True
+    if role == 'teacher':
+        return subject_id in ((doc_get('user', user['uid']) or {}).get('subjectIds') or [])
+    return False
+
+
+def quizzes_for(user, role, stored):
+    """Danh sách đề mà người này được thấy: có quyền → đầy đủ khóa; còn lại → bản công khai, không có đề nháp,
+    sinh viên chỉ thấy đề môn mình học."""
+    ids = (doc_get('user', user['uid']) or {}).get('subjectIds') if role == 'student' else None
+    out = []
+    for q in stored or []:
+        if not isinstance(q, dict):
+            continue
+        if quiz_authorized(user, role, q.get('subjectId')):
+            out.append(quiz_merge(q, doc_get('quizKeys', str(q.get('id')))))
+        elif quiz_status(q) != 'draft' and (ids is None or q.get('subjectId') in ids):
+            out.append(quiz_strip(q))
+    return out
+
+
+def project_shared(user, doc):
+    if not doc or not user or 'quizzes' not in doc:
+        return doc
+    return {**doc, 'quizzes': quizzes_for(user, role_of(user), doc.get('quizzes'))}
+
+
+def quiz_shape_ok(q):
+    if not isinstance(q, dict) or not is_number(q.get('id')) or not is_number(q.get('subjectId')):
+        return False
+    if not isinstance(q.get('title'), str) or not 0 < len(q['title'].strip()) <= 200 or q.get('status') not in QUIZ_STATUSES:
+        return False
+    if not isinstance(q.get('dueDate'), str) or not DATE_RE.fullmatch(q['dueDate']):
+        return False
+    qs = q.get('questions')
+    if not isinstance(qs, list) or not 0 < len(qs) <= 200:
+        return False
+    seen = set()
+    for qq in qs:
+        if not isinstance(qq, dict) or not is_number(qq.get('id')) or qq['id'] in seen:
+            return False
+        seen.add(qq['id'])
+        ans = qq.get('answers')
+        if not isinstance(qq.get('text'), str) or qq.get('type') not in ('single', 'multiple') or not isinstance(ans, list) or not 2 <= len(ans) <= 10:
+            return False
+        ids = [a.get('id') for a in ans if isinstance(a, dict)]
+        if len(ids) != len(ans) or len(set(ids)) != len(ids) or not all(isinstance(i, str) and i for i in ids):
+            return False
+        if not all(isinstance(a.get('text'), str) for a in ans):
+            return False
+    return True
+
+
+def quiz_key_complete(q):
+    for qq in q['questions']:
+        n = sum(1 for a in qq['answers'] if a.get('correct') is True)
+        if n < 1 or (qq['type'] == 'single' and n != 1):
+            return False
+    return True
+
+
+def same_json(a, b):
+    return json.dumps(a, sort_keys=True, ensure_ascii=False) == json.dumps(b, sort_keys=True, ensure_ascii=False)
+
+
+def quiz_update(oq, okey, nq, ops):
+    """Một đề đã có, người ghi có quyền với môn: áp quy tắc vòng đời. Trả bản lưu (không có `correct`)."""
+    ost, nst = quiz_status(oq), quiz_status(nq)
+    if nq.get('subjectId') != oq.get('subjectId'):
+        raise ApiError(403, 'quiz-locked', 'Không được đổi môn của đề.')
+    if ost == 'draft':
+        if not quiz_shape_ok({**nq, 'status': nst}):
+            raise ApiError(400, 'bad-quiz', 'Đề không hợp lệ (thiếu tiêu đề, hạn làm bài, câu hỏi hoặc đáp án).')
+        if nst not in ('draft', 'active'):
+            raise ApiError(403, 'quiz-locked', 'Đề nháp chỉ chuyển được sang "đang mở".')
+        if nst == 'active' and not quiz_key_complete(nq):
+            raise ApiError(400, 'quiz-no-key', 'Mỗi câu cần có đáp án đúng (câu một lựa chọn: đúng một đáp án) trước khi mở đề.')
+        ops.append(('put', str(oq['id']), quiz_key_of(nq)))
+        return quiz_strip({**nq, 'status': nst})
+    view = quiz_merge(oq, okey)
+    if not same_json({k: v for k, v in view.items() if k != 'status'}, {k: v for k, v in nq.items() if k != 'status'}):
+        raise ApiError(403, 'quiz-locked', 'Đề đã mở không được sửa nội dung; hãy tạo đề mới.')
+    if not (nst == ost or (ost == 'active' and nst == 'closed')):
+        raise ApiError(403, 'quiz-locked', 'Trạng thái đề chỉ chuyển một chiều: nháp → đang mở → đã đóng.')
+    return {**quiz_strip(oq), 'status': nst}
+
+
+def guard_quizzes(user, role, old_doc, merged):
+    """Kiểm tra thay đổi `quizzes` trong sharedData/global. Trả (merged đã lọc đáp án, danh sách thao tác khóa).
+    Người không có quyền với một đề chỉ được gửi lại đúng bản họ đã được thấy."""
+    new_list = merged.get('quizzes')
+    old_list = (old_doc or {}).get('quizzes') or []
+    if new_list is None and old_list:      # ghi đè không merge mà bỏ mất danh sách đề: coi như xóa hết
+        new_list = []
+    if new_list is None or new_list == old_list:
+        return merged, []
+    if not isinstance(new_list, list):
+        raise ApiError(400, 'bad-quizzes', 'Danh sách đề không hợp lệ.')
+    deny = ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+    new_by_id = {}
+    for q in new_list:
+        if not isinstance(q, dict) or 'id' not in q or str(q['id']) in new_by_id:
+            raise ApiError(400, 'bad-quizzes', 'Danh sách đề không hợp lệ (thiếu hoặc trùng id).')
+        new_by_id[str(q['id'])] = q
+    out, ops, seen = [], [], set()
+    for oq in old_list:
+        if not isinstance(oq, dict):
+            out.append(oq)
+            continue
+        k = str(oq.get('id'))
+        seen.add(k)
+        nq = new_by_id.get(k)
+        if quiz_authorized(user, role, oq.get('subjectId')):
+            if nq is None:
+                if quiz_status(oq) != 'draft':
+                    raise ApiError(403, 'quiz-locked', 'Chỉ được xóa đề ở trạng thái bản nháp.')
+                ops.append(('del', k))
+                continue
+            out.append(quiz_update(oq, doc_get('quizKeys', k), nq, ops))
+        else:
+            proj = quizzes_for(user, role, [oq])
+            if (proj and (nq is None or not same_json(nq, proj[0]))) or (not proj and nq is not None):
+                raise deny
+            out.append(oq)
+    for k, nq in new_by_id.items():
+        if k in seen:
+            continue
+        if not quiz_authorized(user, role, nq.get('subjectId')):
+            raise deny
+        if quiz_status(nq) != 'draft':
+            raise ApiError(403, 'quiz-locked', 'Đề mới phải tạo ở trạng thái bản nháp; mở đề sau khi đã lưu khóa đáp án.')
+        if not quiz_shape_ok({**nq, 'status': 'draft'}):
+            raise ApiError(400, 'bad-quiz', 'Đề không hợp lệ (thiếu tiêu đề, hạn làm bài, câu hỏi hoặc đáp án).')
+        ops.append(('put', k, quiz_key_of(nq)))
+        out.append(quiz_strip({**nq, 'status': 'draft'}))
+    return {**merged, 'quizzes': out}, ops
+
+
+def apply_quiz_ops(ops):
+    for op in ops:
+        if op[0] == 'put':
+            doc_put('quizKeys', op[1], op[2])
+        else:
+            db().execute("DELETE FROM docs WHERE col='quizKeys' AND id=?", (op[1],))
+
+
+def quiz_due_passed(q):
+    """Hạn làm bài là hết ngày `dueDate` theo giờ Việt Nam (UTC+7). Đề không có hạn hợp lệ thì không giới hạn."""
+    d = q.get('dueDate')
+    if not isinstance(d, str) or not DATE_RE.fullmatch(d):
+        return False
+    try:
+        end = datetime.strptime(d, '%Y-%m-%d').replace(tzinfo=VN_TZ) + timedelta(days=1)
+    except ValueError:
+        return False
+    return datetime.now(VN_TZ) >= end
+
+
+def grade_quiz(quiz, key, answers):
+    """Chấm bài: trả (đã chuẩn hóa câu trả lời, số câu đúng, tổng, điểm thang 10).
+    Câu bỏ trống tính sai; mã câu hỏi hoặc mã lựa chọn không tồn tại → 400."""
+    if not isinstance(answers, dict):
+        raise ApiError(400, 'bad-answers', 'Thiếu câu trả lời.')
+    ca = (key or {}).get('correctAnswers') or {}
+    questions = [qq for qq in quiz.get('questions', []) if isinstance(qq, dict)]
+    qids = {str(qq.get('id')) for qq in questions}
+    if any(str(k) not in qids for k in answers):
+        raise ApiError(400, 'bad-answers', 'Có câu trả lời cho câu hỏi không tồn tại.')
+    norm, correct = {}, 0
+    for qq in questions:
+        qid = str(qq.get('id'))
+        given = answers.get(qid)
+        given = [] if given is None else [given] if isinstance(given, str) else given
+        valid = {str(a.get('id')) for a in qq.get('answers', []) if isinstance(a, dict)}
+        if not isinstance(given, list) or any(not isinstance(g, str) or g not in valid for g in given):
+            raise ApiError(400, 'bad-answers', 'Có đáp án không hợp lệ.')
+        given = sorted(set(given))
+        if qq.get('type') == 'single' and len(given) > 1:
+            raise ApiError(400, 'bad-answers', 'Câu một lựa chọn chỉ được chọn một đáp án.')
+        norm[qid] = given
+        want = sorted(ca.get(qid, []))
+        if given and given == want:
+            correct += 1
+    total = len(questions)
+    score = math.floor((correct / total) * 10 * 10 + 0.5) / 10 if total else 0
+    return norm, correct, total, score
+
+
+def migrate_quizzes(conn):
+    """Chạy một lần: tách đáp án đúng khỏi sharedData/global.quizzes sang quizKeys; chuyển bài cũ sang quizResults
+    (đánh dấu migrated, không chấm lại). Có sao lưu CSDL trước khi sửa."""
+    if conn.execute("SELECT 1 FROM docs WHERE col='meta' AND id='quiz_v3'").fetchone():
+        return
+    r = conn.execute("SELECT data FROM docs WHERE col='sharedData' AND id='global'").fetchone()
+    doc = json.loads(r[0]) if r else {}
+    qs = doc.get('quizzes') if isinstance(doc.get('quizzes'), list) else []
+    has_old = bool(qs) or conn.execute("SELECT 1 FROM docs WHERE col IN ('activities','userData') LIMIT 1").fetchone()
+    if has_old:
+        bak = DB_PATH + '.bak-pre-quiz-v3'
+        if not os.path.exists(bak):
+            dst = sqlite3.connect(bak)
+            conn.backup(dst)
+            dst.close()
+    conn.execute('BEGIN')
+    info = {}
+    for q in qs:
+        if isinstance(q, dict) and 'id' in q:
+            info[str(q['id'])] = q
+            conn.execute('INSERT OR IGNORE INTO docs VALUES (?,?,?)',
+                         ('quizKeys', str(q['id']), json.dumps(quiz_key_of(q), ensure_ascii=False)))
+    if qs:
+        doc['quizzes'] = [quiz_strip(q) if isinstance(q, dict) else q for q in qs]
+        conn.execute("UPDATE docs SET data=? WHERE col='sharedData' AND id='global'", (json.dumps(doc, ensure_ascii=False),))
+    moved = 0
+
+    def add(uid, qid, subject_id, score, correct, total, answers, at):
+        nonlocal moved
+        cur = conn.execute('INSERT OR IGNORE INTO docs VALUES (?,?,?)', ('quizResults', f'{qid}_{uid}', json.dumps(
+            {'uid': uid, 'quizId': qid, 'subjectId': subject_id, 'answers': answers, 'score': score, 'correct': correct,
+             'total': total, 'submittedAt': at, 'migrated': True}, ensure_ascii=False)))
+        moved += cur.rowcount
+    for uid, data in conn.execute("SELECT id, data FROM docs WHERE col='userData'").fetchall():
+        for s in (json.loads(data).get('submissions') or []):
+            if isinstance(s, dict) and is_number(s.get('quizId')) and is_number(s.get('score')):
+                q = info.get(str(s['quizId']), {})
+                add(uid, s['quizId'], q.get('subjectId'), s['score'], s.get('correct', 0), s.get('total', 0),
+                    s.get('answers') if isinstance(s.get('answers'), dict) else {}, str(s.get('submittedAt', '')))
+    for uid, data in conn.execute("SELECT id, data FROM docs WHERE col='activities'").fetchall():
+        latest = {}
+        for e in (json.loads(data).get('events') or []):
+            if isinstance(e, dict) and e.get('type') == 'quiz' and is_number(e.get('refId')) and is_number(e.get('score')):
+                latest[e['refId']] = e
+        for qid, e in latest.items():
+            add(uid, qid, e.get('subjectId'), e['score'], e.get('correct', 0), e.get('total', 0), {}, str(e.get('at', '')))
+    conn.execute("INSERT INTO docs VALUES ('meta','quiz_v3',?)", (json.dumps({'at': time.time(), 'keys': len(info), 'results': moved}),))
+    conn.execute('COMMIT')
+    if info or moved:
+        sys.stderr.write('MIGRATE quiz V3: %d khóa đáp án, %d kết quả cũ\n' % (len(info), moved))
 
 
 # ── HTTP ────────────────────────────────────────────────────────
@@ -518,6 +812,12 @@ def drop_avatar_file(url):
             os.remove(os.path.join(avatar_dir(), os.path.basename(url)))
         except OSError:
             pass
+
+
+def drop_quiz_results(uid):
+    """Xóa kết quả trắc nghiệm (quizResults/{quizId}_{uid}) của một tài khoản bị xóa; khóa đáp án và đề không bị đụng."""
+    db().execute("DELETE FROM docs WHERE col='quizResults' AND id LIKE ? ESCAPE '\\'",
+                 ('%\\_' + uid.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_'),))
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -839,6 +1139,7 @@ class Handler(BaseHTTPRequestHandler):
                 db().execute('DELETE FROM chat WHERE thread=?', (p[2],))
                 for col in ('user', 'userData', 'activities'):
                     db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, p[2]))
+                drop_quiz_results(p[2])
                 return self.send(200, {'ok': True})
 
         # ── tài liệu ──
@@ -850,14 +1151,17 @@ class Handler(BaseHTTPRequestHandler):
                 out = []
                 for id_, data in rows:   # lọc theo quyền đọc từng tài liệu
                     if can('read', col, id_, u):
-                        out.append({'id': id_, **json.loads(data)})
+                        d = json.loads(data)
+                        out.append({'id': id_, **(project_shared(u, d) if col == 'sharedData' and id_ == 'global' else d)})
                 return self.send(200, {'docs': out})
             id_ = p[2]
             old = doc_get(col, id_)
             if len(p) == 3 and method == 'GET':
                 if not can('read', col, id_, u):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
-                return self.send(200, {'exists': old is not None, 'data': old})
+                return self.send(200, {'exists': old is not None,
+                                       'data': project_shared(u, old) if col == 'sharedData' and id_ == 'global' else old})
+            quiz_ops = []
             if len(p) == 3 and method == 'PUT':
                 b = self.json_body()
                 new = b.get('data')
@@ -869,8 +1173,11 @@ class Handler(BaseHTTPRequestHandler):
                     merged = lock_profile(u, old, merged)
                     if 'phone' in (merged.get('profile') or {}):
                         sync_phone = merged['profile']['phone']
+                if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
+                    merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                apply_quiz_ops(quiz_ops)
                 if sync_phone is None:
                     doc_put(col, id_, merged)
                 else:
@@ -888,6 +1195,8 @@ class Handler(BaseHTTPRequestHandler):
                         raise
                 return self.send(200, {'ok': True})
             if len(p) == 3 and method == 'DELETE':
+                if col == 'sharedData' and id_ == 'global':
+                    raise ApiError(403, 'permission-denied', 'Không được xóa toàn bộ dữ liệu dùng chung.')
                 if old is None:
                     return self.send(200, {'ok': True})
                 if not can('delete', col, id_, u, old):
@@ -904,10 +1213,64 @@ class Handler(BaseHTTPRequestHandler):
                 if value not in arr:
                     arr.append(value)
                 merged[field] = arr
+                if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
+                    merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                apply_quiz_ops(quiz_ops)
                 doc_put(col, id_, merged)
                 return self.send(200, {'ok': True})
+
+        # ── trắc nghiệm (V3): máy chủ chấm và ghi điểm ──
+        if p[:1] == ['quiz']:
+            u = self.need_user()
+            role = role_of(u)
+            if p == ['quiz', 'mine'] and method == 'GET':       # kết quả chính thức của chính mình
+                rows = db().execute("SELECT data FROM docs WHERE col='quizResults'").fetchall()
+                mine = [d for d in (json.loads(r[0]) for r in rows) if d.get('uid') == u['uid']]
+                return self.send(200, {'results': mine})
+            if len(p) == 3 and p[2] == 'results' and method == 'GET':   # giáo viên dạy môn / Admin xem kết quả của đề
+                shared = doc_get('sharedData', 'global') or {}
+                quiz = next((x for x in shared.get('quizzes') or [] if isinstance(x, dict) and str(x.get('id')) == p[1]), None)
+                if not quiz or not quiz_authorized(u, role, quiz.get('subjectId')):
+                    raise ApiError(403, 'permission-denied', 'Bạn không có quyền xem kết quả của đề này.')
+                rows = db().execute("SELECT data FROM docs WHERE col='quizResults'").fetchall()
+                return self.send(200, {'results': [d for d in (json.loads(r[0]) for r in rows) if str(d.get('quizId')) == p[1]]})
+            if len(p) == 3 and p[2] == 'submit' and method == 'POST':
+                if role != 'student':
+                    raise ApiError(403, 'permission-denied', 'Chỉ sinh viên nộp bài trắc nghiệm.')
+                b = self.json_body()                    # chỉ lấy `answers`; score, uid, subjectId do client gửi bị bỏ qua
+                shared = doc_get('sharedData', 'global') or {}
+                quiz = next((x for x in shared.get('quizzes') or [] if isinstance(x, dict) and str(x.get('id')) == p[1]), None)
+                prof = doc_get('user', u['uid']) or {}
+                if (not quiz or quiz_status(quiz) == 'draft'
+                        or (prof.get('subjectIds') is not None and quiz.get('subjectId') not in prof['subjectIds'])):
+                    raise ApiError(404, 'not-found', 'Không tìm thấy đề hoặc bạn không học môn này.')
+                if quiz_status(quiz) != 'active':
+                    raise ApiError(400, 'quiz-closed', 'Đề đã đóng.')
+                if quiz_due_passed(quiz):
+                    raise ApiError(400, 'quiz-expired', 'Đã quá hạn làm bài.')
+                key = doc_get('quizKeys', p[1])
+                if not key:
+                    raise ApiError(409, 'quiz-no-key', 'Đề chưa có khóa đáp án.')
+                norm, correct, total, score = grade_quiz(quiz, key, b.get('answers'))
+                now = time.time()
+                result = {'uid': u['uid'], 'quizId': quiz['id'], 'subjectId': quiz.get('subjectId'), 'answers': norm,
+                          'score': score, 'correct': correct, 'total': total,
+                          'submittedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(now))}
+                try:     # khóa chính (col, id) bảo đảm mỗi sinh viên chỉ nộp một lần
+                    db().execute('INSERT INTO docs VALUES (?,?,?)', ('quizResults', f'{p[1]}_{u["uid"]}', json.dumps(result, ensure_ascii=False)))
+                except sqlite3.IntegrityError:
+                    raise ApiError(409, 'already-submitted', 'Bạn đã nộp bài này rồi.')
+                act = doc_get('activities', u['uid']) or {}       # bản sao cho Bảng điểm / Báo cáo lớp (V4 sẽ chặn client tự ghi)
+                events = list(act.get('events') or [])
+                events.append({'type': 'quiz', 'at': time.strftime('%Y-%m-%d', time.gmtime(now)), 'subjectId': quiz.get('subjectId'),
+                               'refId': quiz['id'], 'refTitle': str(quiz.get('title', ''))[:500], 'score': score, 'total': total, 'correct': correct})
+                doc_put('activities', u['uid'], {**act, 'uid': u['uid'], 'name': prof.get('name', ''), 'username': u['username'],
+                                                 'events': events[-ACTIVITY_MAX_EVENTS:]})
+                return self.send(200, {'quizId': quiz['id'], 'score': score, 'correct': correct, 'total': total,
+                                       'submittedAt': result['submittedAt']})
+            raise ApiError(404, 'not-found', 'Không tìm thấy.')
 
         # ── tải bài nộp về: chỉ người nộp và nhân viên (nginx chuyển /uploads/submissions/* về đây) ──
         if len(p) == 3 and p[:2] == ['files', 'submissions'] and method == 'GET':
@@ -1001,6 +1364,7 @@ def cli(argv):
             db().execute(f'DELETE FROM {t} WHERE uid=?', (r[0],))
         for col in ('user', 'userData', 'activities'):
             db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, r[0]))
+        drop_quiz_results(r[0])
         print('OK')
     elif argv[1:2] == ['mail-config']:
         import getpass

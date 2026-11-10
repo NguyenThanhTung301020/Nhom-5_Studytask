@@ -2,6 +2,34 @@
 
 Việc 8 của kế hoạch tuần 5, thực hiện ngày 03/11/2026 trong tuần 02/11–07/11/2026: thiết kế chức năng Trắc nghiệm để xử lý V3 và V4. Tuần này chỉ thiết kế, chưa lập trình; phần lập trình dự kiến thực hiện ở tuần 6 theo mục 6 [D3].
 
+## 0. Cập nhật tuần 6: bản cài đặt trên máy chủ riêng (09/11/2026)
+
+Việc 7 của kế hoạch tuần 6 (lập trình V3) do Trương Thanh Vui thực hiện theo thống nhất của nhóm (kế hoạch ghi Trần Đức Tùng). Từ tuần 5 hệ thống chạy trên API Python + SQLite ([D06]) nên các phần dưới đây viết theo Firestore và Worker được thay như sau. Phần mô tả hiện trạng (mục 2), nguyên tắc tách đề/khóa/kết quả (mục 3), luồng chấm (mục 5.2) và ca kiểm thử (mục 6) vẫn đúng về ý tưởng; tên collection giữ nguyên.
+
+| Thiết kế gốc | Bản cài đặt |
+|---|---|
+| `quizzes` collection | Đề vẫn nằm trong `sharedData/global.quizzes` (để Bảng điểm, Báo cáo lớp, Quy chế điểm không phải đổi), nhưng máy chủ **lọc mọi `correct`** khi trả về cho người không có quyền và khi lưu |
+| `quizKeys/{quizId}` | Có, trong bảng `docs`, định dạng `{quizId, subjectId, correctAnswers: {"<mã câu>": ["<mã đáp án>"]}}`. Không đọc/ghi được qua `/api/doc/*`; chỉ Admin và giáo viên dạy môn nhận lại `correct` ghép vào đề khi mở trang Trắc nghiệm |
+| `quizResults/{quizId}_{uid}` | Có, ghi bằng `INSERT` với khóa chính `(col, id)` nên mỗi sinh viên chỉ nộp một lần (HTTP 409 khi nộp lại). Không đọc/ghi qua `/api/doc/*` |
+| Cloud Function / Worker | Endpoint trong `server/studytask_api.py`: `POST /api/quiz/{id}/submit`, `GET /api/quiz/mine`, `GET /api/quiz/{id}/results` (Admin, giáo viên dạy môn) |
+| Firestore Security Rules | Hàm `guard_quizzes()` ở máy chủ: đề mới chỉ ở `draft`; `draft → active → closed`, một chiều; sau `draft` chỉ đổi được `status`; chỉ xóa đề `draft` (đồng thời xóa khóa); không đổi môn; giáo viên chỉ ghi đề môn mình dạy; người không có quyền chỉ được gửi lại đúng bản họ thấy (nên trình duyệt tải rồi ghi ngược vẫn chạy); mở đề cần mỗi câu có đáp án đúng (câu một lựa chọn: đúng một đáp án) |
+| Điểm vào Bảng điểm | Máy chủ ghi `quizResults` (nguồn chính thức) và **đồng thời** ghi một sự kiện `quiz` vào `activities/{uid}` để Bảng điểm và Báo cáo lớp tiếp tục chạy. Giao diện không còn ghi điểm trắc nghiệm. Việc 8 (V4) sẽ chặn sinh viên tự ghi sự kiện `quiz` và chuyển hai màn hình sang đọc `quizResults` |
+
+**Quyết định đã cài đặt cho 3 câu còn mở ở mục 8** (đề xuất của người lập trình, cần nhóm xác nhận ở việc 3):
+
+1. **Hạ tầng:** API Python của máy chủ riêng, không dùng Worker hay Cloud Function.
+2. **Chế độ offline/demo:** tắt nộp bài trắc nghiệm (nút bị khóa kèm thông báo), vì không có máy chủ chấm.
+3. **Điểm cũ không đối chiếu được:** di trú một lần khi máy chủ khởi động (có sao lưu `studytask.db.bak-pre-quiz-v3`): lấy sự kiện mới nhất từ `activities` và bài trong `userData.submissions`, đặt `migrated: true`, **không chấm lại**; sinh viên đã có điểm cũ không nộp lại được.
+4. **Đáp án sau khi nộp:** chỉ trả điểm và số câu đúng; giao diện không hiển thị đáp án đúng (kể cả khi đề đã đóng; xem đáp án chi tiết là việc riêng).
+5. **Hạn làm bài:** `dueDate` hết hiệu lực vào cuối ngày đó theo giờ Việt Nam (UTC+7); đề không có hạn hợp lệ thì không giới hạn.
+6. **Đề đang mở bất biến:** kể cả `dueDate` và mô tả; muốn sửa phải tạo đề mới.
+
+**Kiểm thử:** `tests/server/test_quiz_v3.py` (chạy trong CI) chuyển các ca RULE-01…18 và API-01…12 sang kiểm thử máy chủ, thêm ca di trú. Chưa có ca cho API-13 (token Emulator) vì không còn Firebase.
+
+**Chưa làm:** hạ cờ `correct` ở dữ liệu mẫu `utils/constants.js` (chỉ dùng ở chế độ offline); cập nhật `docs/phan-tich/03` và các mục 4, 5.1, 7 của tài liệu này theo máy chủ riêng (nội dung vẫn mô tả Firestore); thử trên web thật.
+
+[D06]: 06-chuyen-firebase-sang-may-chu-rieng.md
+
 ## 1. Mục tiêu và phạm vi
 
 Thiết kế cách lưu đề không chứa đáp án đúng trong dữ liệu sinh viên đọc được, giới hạn khóa đáp án cho giáo viên dạy môn và Admin, đồng thời chuyển việc chấm điểm và ghi kết quả sang một dịch vụ máy chủ đáng tin cậy. Kết quả chấm từ `quizResults` sẽ là nguồn điểm trắc nghiệm chính thức của Bảng điểm, thay cho điểm do trình duyệt ghi vào `activities`.
