@@ -12,6 +12,11 @@ Mã V1–V7 là 7 vấn đề rà soát ở mục 3 của báo cáo tuần 1.
 
 Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các mục 1, 3, 4, 5, 6, 9, 11 theo đề xuất ở mục 3.4 báo cáo tuần 3 – dồn các mục Bỏ/Sửa liên quan tới mật khẩu sang tuần 5, dời mục 9 sau tuần 5.
 
+**Cập nhật tuần 6 (10/11/2026), theo hệ thống chạy trên máy chủ riêng ([D06](../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md)):**
+- Các mục nhắc Firestore, Security Rules, Cloud Functions, Admin SDK, Firebase Storage nay được hiểu là phần tương ứng trong API Python (`server/studytask_api.py`, hàm `can()`) và SQLite. Mục 1 và 4 đã xong ([PR26], [PR34]); mục 11 (backend) đã thay bằng API Python; mục 15 (nộp tệp) đã làm sớm, tệp nộp chỉ người nộp và nhân viên tải được ([PR39]).
+- **Mục 7: nhóm chọn phân quyền đọc theo môn ở máy chủ, không tách `sharedData/global` thành collection theo môn.** Lý do: giới hạn 1 MB của Firestore không còn (SQLite); mục tiêu còn lại là phân quyền đọc theo môn, đạt được bằng lọc ở máy chủ mà không phải đổi giao diện hay chuyển dữ liệu thật (giảm rủi ro mất dữ liệu). Dữ liệu lưu không đổi; chỉ bản trả về cho sinh viên được lọc. Giáo viên, Admin, Đào tạo và Tài chính vẫn nhận đầy đủ vì giao diện tải rồi ghi ngược cả danh sách. Điểm nhập tay (`grades`) trước đây mọi sinh viên đọc được; nay chỉ còn phần của chính mình.
+- **Mục 13 (kiểm thử tự động) mở rộng:** ngoài rules/Vitest/Playwright dự kiến, nhóm dùng kiểm thử động trên API thật (`tests/server/`, chạy trong CI) và `tests/server/smoke_live.py` để kiểm tra hệ thống đang chạy; thay cho phần lớn kiểm thử thủ công.
+
 | # | Tính năng / thành phần | Quyết định | Lý do | Căn cứ | Tuần |
 |---|---|---|---|---|---|
 | | **BỎ** | | | | |
@@ -21,8 +26,8 @@ Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các m�
 | 4 | Instance Firebase phụ để tạo tài khoản và đổi mật khẩu bằng đăng nhập ngầm | Bỏ | Phụ thuộc vào mật khẩu lưu trữ; thay bằng Admin SDK chạy ở máy chủ | GVPB | 5 |
 | | **SỬA** | | | | |
 | 5 | Firestore Security Rules | Sửa | Chặn người dùng tự sửa role, subjectIds, expiresAt (V2); giới hạn đọc activities (V4); kiểm tra trường, kiểu dữ liệu khi ghi | GVPB; nhóm rà soát | 4–5 |
-| 6 | Trắc nghiệm | Sửa | Tách đáp án ra collection chỉ giáo viên đọc được; chấm điểm bằng Cloud Function; điểm do máy chủ ghi (V3, V4) | GVHD (tính khả thi); nhóm rà soát | 5–6 |
-| 7 | Cấu trúc dữ liệu sharedData/global | Sửa | Tách thành collection theo môn học để vượt giới hạn 1 MB và phân quyền đọc theo môn | GVPB | 6 |
+| 6 | Trắc nghiệm | Sửa | Tách đáp án ra bảng `quizKeys` chỉ Admin và giáo viên dạy môn nhận lại; máy chủ API Python chấm điểm và ghi `quizResults` (V3, V4). **Đã cài đặt tuần 6**, xem [D05](../thiet-ke/05-trac-nghiem-tach-dap-an-cham-diem-may-chu.md) mục 0 | GVHD (tính khả thi); nhóm rà soát | 5–6 |
+| 7 | Cấu trúc dữ liệu sharedData/global | Sửa | Phân quyền đọc theo môn học: máy chủ chỉ trả cho sinh viên bài tập, tài liệu, lịch học, lịch thi, deadline, đề trắc nghiệm của môn mình học và điểm của chính mình. **Không tách collection** (xem "Cập nhật tuần 6" ở trên). Đã cài đặt tuần 6, kiểm thử `tests/server/test_shared_scope.py` | GVPB | 6 |
 | 8 | Cách tính điểm trung bình môn | Sửa | Cho giáo viên cấu hình trọng số trắc nghiệm / bài tập / chuyên cần theo quy chế | GVPB | 7 |
 | 9 | Nền tảng front-end (React UMD qua CDN, không JSX) | Sửa | Chuyển sang Vite + JSX + ESLint để có bước build tối ưu, cải thiện LCP 2,9 s và Lighthouse 72/100 | GVPB | Sau tuần 5 |
 | 10 | Liên hệ hỗ trợ | Sửa | Chuyển tin nhắn vào collection riêng (supportTickets) để Quản trị viên xem và phản hồi (V5) | Nhóm rà soát | 7 |
@@ -39,3 +44,7 @@ Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các m�
 | 19 | Dashboard, Môn học, Bài tập, Tài liệu, Deadline, Trắc nghiệm, Lịch học – Lịch thi, Thống kê, Bảng điểm, Quản lý lớp, Quản trị, Hồ sơ, Thông báo trong ứng dụng | Giữ | Là nghiệp vụ lõi, cả hai giảng viên ghi nhận "đầy đủ chức năng"; sẽ chỉnh theo các mục Sửa ở trên | GVHD, GVPB (ưu điểm) | – |
 | 20 | Thư viện số, Tin tức, Biểu mẫu, Pomodoro, Quy đổi điểm, Ghi chú nhanh, tùy chỉnh giao diện, chế độ tối | Giữ | Chi phí bảo trì thấp, hỗ trợ trực tiếp việc học; không mở rộng thêm trong đợt này | Nhóm đánh giá | – |
 | 21 | RBAC hai lớp; offline-first với cờ dataReady | Giữ | Được GVPB đánh giá là điểm mạnh kỹ thuật; tiếp tục củng cố bằng rules test | GVPB (ưu điểm) | – |
+
+[PR26]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/26
+[PR34]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/34
+[PR39]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/39
