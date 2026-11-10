@@ -60,6 +60,8 @@ jobs:
         run: python3 tests/server/test_activities.py
       - name: Tạo và đăng nhập tài khoản theo tên đăng nhập
         run: python3 tests/server/test_users.py
+      - name: Admin đặt lại mật khẩu (quyền, thu hồi phiên, không lưu văn bản thường)
+        run: python3 tests/server/test_admin_reset.py
       - name: Link minh chứng của phiếu xét tốt nghiệp
         run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn

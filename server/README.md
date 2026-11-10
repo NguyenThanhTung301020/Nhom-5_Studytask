@@ -10,7 +10,7 @@ python3 server/studytask_api.py create-user admin MatKhau123 admin "Quản trị
 python3 server/studytask_api.py serve           # nghe 127.0.0.1:8787
 ```
 
-API chỉ phục vụ `/api/*`. Để chạy cả giao diện cần một web server chuyển `/api/` tới cổng 8787 và `/uploads/` tới thư mục `uploads` (xem `deploy/nginx-studytask.conf`).
+API chỉ phục vụ `/api/*`. Để chạy cả giao diện cần một web server chuyển `/api/` tới cổng 8787 và `/uploads/` tới thư mục `uploads` (xem `deploy/nginx-studytask.conf`). Riêng `/uploads/submissions/` (bài nộp của sinh viên) không phục vụ trực tiếp: nginx chuyển về `GET /api/files/submissions/<tên tệp>`, API kiểm tra đăng nhập và chỉ cho người nộp hoặc nhân viên (admin/giáo viên/đào tạo) tải; phản hồi `Cache-Control: private, no-store`. Tệp nộp trước khi có bảng `submission_files` không có chủ ghi nhận nên chỉ nhân viên mở được.
 
 ## Lệnh quản trị
 
