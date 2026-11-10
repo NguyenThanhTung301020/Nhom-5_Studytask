@@ -19,6 +19,7 @@ fails = []
 
 MATERIAL = {'type': 'material', 'subjectId': 1, 'refId': 7, 'refTitle': 'Slide 1', 'at': '2026-11-01'}
 QUIZ = {'type': 'quiz', 'subjectId': 1, 'refId': 'q1', 'refTitle': 'Quiz', 'score': 8.5, 'total': 4, 'correct': 3, 'at': '2026-11-02'}
+SCORED = {**QUIZ, 'type': 'homework'}      # sự kiện có điểm nhưng không phải quiz: dùng thử kiểm tra hình thức (điểm, total, correct)
 HOMEWORK = {'type': 'homework', 'subjectId': 1, 'refId': 5, 'refTitle': 'Bài 1', 'url': 'https://x.vn/a.pdf', 'fileName': 'a.pdf', 'note': 'Em nộp', 'at': '2026-11-03'}
 
 
@@ -118,21 +119,22 @@ try:
 
     # ── Ghi: đúng cách ứng dụng ghi ──
     check('Sinh viên ghi sự kiện xem tài liệu: được', sv5.append(sv5.uid, MATERIAL) == 200)
-    check('Sinh viên ghi sự kiện làm quiz: được', sv5.append(sv5.uid, QUIZ) == 200)
+    check('Sinh viên tự ghi sự kiện quiz: bị từ chối (điểm quiz do máy chủ ghi khi chấm, V3)', sv5.append(sv5.uid, QUIZ) == 403)
+    check('Sinh viên tự ghi sự kiện có điểm giả danh quiz kiểu khác vẫn được phép (chỉ loại quiz bị chặn)', sv5.append(sv5.uid, SCORED) == 200)
     check('Sinh viên ghi sự kiện nộp bài: được', sv5.append(sv5.uid, HOMEWORK) == 200)
     check('Ghi lại sự kiện đã có: được và không tạo bản trùng',
-          sv5.append(sv5.uid, MATERIAL) == 200 and ad.req('GET', f'/api/doc/activities/{sv5.uid}')[1]['data']['events'] == [MATERIAL, QUIZ, HOMEWORK])
+          sv5.append(sv5.uid, MATERIAL) == 200 and ad.req('GET', f'/api/doc/activities/{sv5.uid}')[1]['data']['events'] == [MATERIAL, SCORED, HOMEWORK])
     check('Chỉ có các trường bắt buộc: được', sv5.append(sv5.uid, {'type': 'material', 'at': '2026-11-04'}) == 200)
-    for name, ev in (('điểm 0', {**QUIZ, 'refId': 'b0', 'score': 0}), ('điểm 10', {**QUIZ, 'refId': 'b1', 'score': 10}),
-                     ('total = correct = 0', {**QUIZ, 'refId': 'b2', 'total': 0, 'correct': 0}),
-                     ('correct = total', {**QUIZ, 'refId': 'b3', 'total': 3, 'correct': 3}),
+    for name, ev in (('điểm 0', {**SCORED, 'refId': 'b0', 'score': 0}), ('điểm 10', {**SCORED, 'refId': 'b1', 'score': 10}),
+                     ('total = correct = 0', {**SCORED, 'refId': 'b2', 'total': 0, 'correct': 0}),
+                     ('correct = total', {**SCORED, 'refId': 'b3', 'total': 3, 'correct': 3}),
                      ('note đúng 2000 ký tự', {**HOMEWORK, 'refId': 'b4', 'note': 'a' * 2000})):
         check(f'Biên hợp lệ – {name}: được', sv5.append(sv5.uid, ev) == 200)
 
     # ── Ghi: sai người ──
     before = ad.req('GET', f'/api/doc/activities/{sv1.uid}')[1]['data']
     for name, who in (('sinh viên khác', sv2), ('giáo viên', gv1), ('Đào tạo', tr), ('Tài chính', fn), ('người chưa đăng nhập', anon)):
-        check(f'Ghi vào nhật ký người khác – {name}: bị từ chối', who.append(sv1.uid, QUIZ) == 403)
+        check(f'Ghi vào nhật ký người khác – {name}: bị từ chối', who.append(sv1.uid, SCORED) == 403)
 
     # ── Ghi: sự kiện sai hình thức ──
     BAD = (('loại lạ', {**MATERIAL, 'type': 'hacked'}), ('thiếu loại', {'at': '2026-11-01'}), ('loại sai kiểu', {**MATERIAL, 'type': ['quiz']}),
@@ -144,21 +146,21 @@ try:
            ('refTitle sai kiểu', {**MATERIAL, 'refTitle': 5}), ('refTitle 501 ký tự', {**MATERIAL, 'refTitle': 'a' * 501}),
            ('url 2049 ký tự', {**HOMEWORK, 'url': 'a' * 2049}), ('fileName 256 ký tự', {**HOMEWORK, 'fileName': 'a' * 256}),
            ('note 2001 ký tự', {**HOMEWORK, 'note': 'a' * 2001}), ('note sai kiểu', {**HOMEWORK, 'note': ['a']}),
-           ('điểm là chuỗi', {**QUIZ, 'score': '9'}), ('điểm âm', {**QUIZ, 'score': -1}), ('điểm trên 10', {**QUIZ, 'score': 10.5}),
-           ('điểm là true', {**QUIZ, 'score': True}), ('điểm null', {**QUIZ, 'score': None}), ('điểm NaN', {**QUIZ, 'score': float('nan')}),
-           ('điểm Infinity', {**QUIZ, 'score': float('inf')}), ('subjectId NaN', {**MATERIAL, 'subjectId': float('nan')}),
-           ('total là chuỗi', {**QUIZ, 'total': '4'}), ('total âm', {**QUIZ, 'total': -1, 'correct': -2}), ('total lẻ', {**QUIZ, 'total': 4.5}),
-           ('total là true', {**QUIZ, 'total': True, 'correct': 0}), ('correct là chuỗi', {**QUIZ, 'correct': '3'}), ('correct âm', {**QUIZ, 'correct': -1}),
-           ('correct lẻ', {**QUIZ, 'correct': 1.5}), ('correct là true', {**QUIZ, 'correct': True}), ('correct lớn hơn total', {**QUIZ, 'total': 3, 'correct': 4}))
+           ('điểm là chuỗi', {**SCORED, 'score': '9'}), ('điểm âm', {**SCORED, 'score': -1}), ('điểm trên 10', {**SCORED, 'score': 10.5}),
+           ('điểm là true', {**SCORED, 'score': True}), ('điểm null', {**SCORED, 'score': None}), ('điểm NaN', {**SCORED, 'score': float('nan')}),
+           ('điểm Infinity', {**SCORED, 'score': float('inf')}), ('subjectId NaN', {**MATERIAL, 'subjectId': float('nan')}),
+           ('total là chuỗi', {**SCORED, 'total': '4'}), ('total âm', {**SCORED, 'total': -1, 'correct': -2}), ('total lẻ', {**SCORED, 'total': 4.5}),
+           ('total là true', {**SCORED, 'total': True, 'correct': 0}), ('correct là chuỗi', {**SCORED, 'correct': '3'}), ('correct âm', {**SCORED, 'correct': -1}),
+           ('correct lẻ', {**SCORED, 'correct': 1.5}), ('correct là true', {**SCORED, 'correct': True}), ('correct lớn hơn total', {**SCORED, 'total': 3, 'correct': 4}))
     for name, ev in BAD:
         check(f'Sự kiện sai – {name}: bị từ chối', sv1.append(sv1.uid, ev) == 403)
     check('Sau mọi lần ghi sai, nhật ký không đổi', ad.req('GET', f'/api/doc/activities/{sv1.uid}')[1]['data'] == before)
 
     # ── Ghi: sai tài liệu ──
-    check('Thêm trường lạ vào tài liệu: bị từ chối', sv1.append(sv1.uid, QUIZ, {'role': 'admin'}) == 403)
-    check('Đặt uid của người khác: bị từ chối', sv1.append(sv1.uid, QUIZ, {'uid': sv2.uid}) == 403)
-    check('Tên sai kiểu: bị từ chối', sv1.append(sv1.uid, QUIZ, {'name': 5}) == 403)
-    check('Tên 101 ký tự: bị từ chối', sv1.append(sv1.uid, QUIZ, {'name': 'a' * 101}) == 403)
+    check('Thêm trường lạ vào tài liệu: bị từ chối', sv1.append(sv1.uid, SCORED, {'role': 'admin'}) == 403)
+    check('Đặt uid của người khác: bị từ chối', sv1.append(sv1.uid, SCORED, {'uid': sv2.uid}) == 403)
+    check('Tên sai kiểu: bị từ chối', sv1.append(sv1.uid, SCORED, {'name': 5}) == 403)
+    check('Tên 101 ký tự: bị từ chối', sv1.append(sv1.uid, SCORED, {'name': 'a' * 101}) == 403)
     s, _ = sv1.req('POST', f'/api/doc/activities/{sv1.uid}/append', {'field': 'other', 'value': MATERIAL})
     check('Thêm vào trường khác events: bị từ chối', s == 403, s)
 
@@ -166,21 +168,21 @@ try:
     cur = before['events']
     check('Xóa sạch sự kiện cũ: bị từ chối', sv1.put('activities', sv1.uid, {'events': []}) == 403)
     check('Sửa sự kiện cũ: bị từ chối', sv1.put('activities', sv1.uid, {'events': [{**cur[0], 'refId': 12}]}) == 403)
-    check('Thêm 2 sự kiện một lần: bị từ chối', sv1.put('activities', sv1.uid, {'events': cur + [QUIZ, HOMEWORK]}) == 403)
-    check('Sửa sự kiện cũ và thêm sự kiện mới: bị từ chối', sv1.put('activities', sv1.uid, {'events': [{**cur[0], 'refId': 12}, QUIZ]}) == 403)
-    check('Chèn sự kiện lên đầu: bị từ chối', sv1.put('activities', sv1.uid, {'events': [QUIZ] + cur}) == 403)
+    check('Thêm 2 sự kiện một lần: bị từ chối', sv1.put('activities', sv1.uid, {'events': cur + [SCORED, HOMEWORK]}) == 403)
+    check('Sửa sự kiện cũ và thêm sự kiện mới: bị từ chối', sv1.put('activities', sv1.uid, {'events': [{**cur[0], 'refId': 12}, SCORED]}) == 403)
+    check('Chèn sự kiện lên đầu: bị từ chối', sv1.put('activities', sv1.uid, {'events': [SCORED] + cur}) == 403)
     check('events không phải danh sách: bị từ chối', sv1.put('activities', sv1.uid, {'events': 'abc'}) == 403)
     check('events null: bị từ chối', sv1.put('activities', sv1.uid, {'events': None}) == 403)
     check('Ghi đè cả tài liệu bằng trường lạ: bị từ chối', sv1.put('activities', sv1.uid, {'hack': 1}, merge=False) == 403)
-    check('Thêm đúng một sự kiện qua PUT: được', sv1.put('activities', sv1.uid, {'events': cur + [QUIZ]}) == 200)
+    check('Thêm đúng một sự kiện qua PUT: được', sv1.put('activities', sv1.uid, {'events': cur + [SCORED]}) == 200)
     check('Đổi tên hiển thị, giữ nguyên sự kiện: được', sv1.put('activities', sv1.uid, {'name': 'Tên mới'}) == 200)
 
     # ── Dữ liệu cũ, giới hạn số sự kiện ──
     legacy = {'type': 'old-format', 'extra': True}
     ad.put('activities', sv4.uid, {'events': [legacy]})
-    check('Nhật ký có sự kiện kiểu cũ: vẫn thêm được sự kiện mới', sv4.append(sv4.uid, QUIZ) == 200)
+    check('Nhật ký có sự kiện kiểu cũ: vẫn thêm được sự kiện mới', sv4.append(sv4.uid, SCORED) == 200)
     ad.put('activities', sv4.uid, {'events': [{**MATERIAL, 'refId': i} for i in range(1999)]})
-    check('Sự kiện thứ 2000: được', sv4.append(sv4.uid, QUIZ) == 200)
+    check('Sự kiện thứ 2000: được', sv4.append(sv4.uid, SCORED) == 200)
     check('Sự kiện thứ 2001: bị từ chối', sv4.append(sv4.uid, HOMEWORK) == 403)
 
     # ── Admin, xóa ──
@@ -190,8 +192,8 @@ try:
     check('Chủ tài khoản xóa nhật ký: được (còn mở, xem docs/thiet-ke/06 mục 8)', sv1.req('DELETE', f'/api/doc/activities/{sv1.uid}')[0] == 200)
     check('Admin xóa nhật ký: được', ad.req('DELETE', f'/api/doc/activities/{sv2.uid}')[0] == 200)
 
-    # ── V3 còn mở: ghi nhận để không ai hiểu nhầm là đã vá ──
-    check('Sinh viên vẫn tự ghi được điểm đúng định dạng (còn mở đến V3)', sv5.append(sv5.uid, {**QUIZ, 'refId': 'tu-ghi', 'score': 10, 'correct': 4}) == 200)
+    # ── V3/V4: điểm quiz chỉ do máy chủ ghi khi chấm; sinh viên không tự ghi được ──
+    check('Sinh viên không tự ghi được điểm quiz đúng định dạng (V3 đã chặn)', sv5.append(sv5.uid, {**QUIZ, 'refId': 'tu-ghi', 'score': 10, 'correct': 4}) == 403)
 finally:
     srv.terminate()
     try:
