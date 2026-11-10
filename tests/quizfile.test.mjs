@@ -99,9 +99,12 @@ test('xuất rồi nhập lại (CSV và JSON) cho đúng bộ câu hỏi ban đ
 })
 
 test('assignIds: mã mới liên tục, không trùng mã đã dùng', () => {
-  const ids = assignIds([{}, {}, {}], [Date.now() + 50]).map(q => q.id)
+  const used = Date.now() + 50        // cố định một mốc: so với Date.now() lần hai sẽ sai khi đồng hồ nhích 1 ms (CI chập chờn)
+  const ids = assignIds([{}, {}, {}], [used]).map(q => q.id)
   assert.equal(new Set(ids).size, 3)
-  assert.ok(ids[0] > Date.now() + 50)
+  assert.ok(ids[0] > used, 'mã mới lớn hơn mọi mã đã dùng')
+  assert.deepEqual(ids, [ids[0], ids[0] + 1, ids[0] + 2], 'mã liên tục')
+  assert.ok(assignIds([{}], []).every(q => Number.isFinite(q.id)), 'không có mã đã dùng vẫn cấp được mã')
 })
 
 test('normFill giống máy chủ: bỏ khoảng trắng thừa, không phân biệt hoa thường, giữ dấu', () => {
