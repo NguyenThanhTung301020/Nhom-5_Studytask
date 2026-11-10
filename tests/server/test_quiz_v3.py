@@ -199,6 +199,15 @@ try:
     mine3 = req('GET', '/api/quiz/mine', ck=s3)[1]['results']
     chk('RULE-14 /api/quiz/mine chỉ trả kết quả của chính mình', len(mine3) == 1 and mine3[0]['uid'] == uid3)
     chk('sinh viên đọc kết quả của người khác qua /api/doc → 403', req('GET', f'/api/doc/quizResults/1_{uid3}', ck=s1)[0] == 403)
+
+    # ── xóa tài khoản: dọn kết quả trắc nghiệm của chính tài khoản đó, không đụng người khác ──
+    before = {r[0] for r in db_rows("SELECT id FROM docs WHERE col='quizResults'")}
+    chk('trước khi xóa: có kết quả của SV-3 và SV-1', f'1_{uid3}' in before and f'1_{uid1}' in before)
+    chk('Admin xóa tài khoản SV-3 → 200', req('DELETE', f'/api/admin/users/{uid3}', ck=ad)[0] == 200)
+    after = {r[0] for r in db_rows("SELECT id FROM docs WHERE col='quizResults'")}
+    chk('xóa tài khoản dọn quizResults của chính tài khoản đó', f'1_{uid3}' not in after)
+    chk('kết quả của tài khoản khác giữ nguyên', before - {f'1_{uid3}'} == after)
+    chk('khóa đáp án và đề không bị đụng', len(db_rows("SELECT 1 FROM docs WHERE col='quizKeys' AND id='1'")) == 1 and len(shared(ad)[1]['quizzes']) == 3)
 finally:
     srv.terminate(); srv.wait(5)
 

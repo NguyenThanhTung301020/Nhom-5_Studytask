@@ -814,6 +814,12 @@ def drop_avatar_file(url):
             pass
 
 
+def drop_quiz_results(uid):
+    """Xóa kết quả trắc nghiệm (quizResults/{quizId}_{uid}) của một tài khoản bị xóa; khóa đáp án và đề không bị đụng."""
+    db().execute("DELETE FROM docs WHERE col='quizResults' AND id LIKE ? ESCAPE '\\'",
+                 ('%\\_' + uid.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_'),))
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'StudyTaskAPI'
     protocol_version = 'HTTP/1.1'
@@ -1133,6 +1139,7 @@ class Handler(BaseHTTPRequestHandler):
                 db().execute('DELETE FROM chat WHERE thread=?', (p[2],))
                 for col in ('user', 'userData', 'activities'):
                     db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, p[2]))
+                drop_quiz_results(p[2])
                 return self.send(200, {'ok': True})
 
         # ── tài liệu ──
@@ -1340,6 +1347,7 @@ def cli(argv):
             db().execute(f'DELETE FROM {t} WHERE uid=?', (r[0],))
         for col in ('user', 'userData', 'activities'):
             db().execute('DELETE FROM docs WHERE col=? AND id=?', (col, r[0]))
+        drop_quiz_results(r[0])
         print('OK')
     elif argv[1:2] == ['mail-config']:
         import getpass
