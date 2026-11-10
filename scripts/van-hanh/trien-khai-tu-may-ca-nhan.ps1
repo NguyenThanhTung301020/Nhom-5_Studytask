@@ -29,7 +29,7 @@ if ($LASTEXITCODE) { throw 'scp thất bại: kiểm tra mạng LAN và khóa SS
 $remote = @"
 set -e
 rm -rf ~/studytask-deploy && mkdir ~/studytask-deploy && tar -xzf ~/studytask-deploy.tar.gz -C ~/studytask-deploy && rm ~/studytask-deploy.tar.gz
-cd ~/studytask-deploy && sed -i 's/\r$//' deploy/deploy.sh && sudo bash deploy/deploy.sh
+cd ~/studytask-deploy && find . -type f \( -name '*.py' -o -name '*.js' -o -name '*.sh' -o -name '*.conf' -o -name '*.html' -o -name '*.css' -o -name '*.service' -o -name '*.timer' \) -exec sed -i 's/\r$//' {} + && sudo bash deploy/deploy.sh
 echo "`$(date -u '+%Y-%m-%d %H:%M:%S') UTC | commit $commit | nhanh $branch | tu may ca nhan" >> ~/deploy-log.txt
 "@
 $remote = $remote -replace "`r", ''     # bash trên máy chủ không chấp nhận CRLF
@@ -44,11 +44,25 @@ for p in server/studytask_api.py:/opt/studytask/studytask_api.py app.js:/var/www
   a=$(sha256sum "$src" | cut -d' ' -f1); b=$(sha256sum "$dst" 2>/dev/null | cut -d' ' -f1)
   if [ "$a" = "$b" ]; then echo "KHOP  $dst  ${a:0:16}"; else echo "LECH  $dst"; bad=1; fi
 done
-systemctl is-active studytask-api nginx cloudflared | tr '\n' ' '; echo
-tail -1 ~/deploy-log.txt
+# Từng dịch vụ phải `active`; một dịch vụ không chạy là lỗi (trước đây `is-active | tr` luôn trả về 0 nên bị bỏ qua)
+for s in studytask-api nginx cloudflared; do
+  st=$(systemctl is-active "$s" 2>&1); echo "DICH VU  $s: $st"
+  [ "$st" = active ] || bad=1
+done
+# API phải trả lời (đợi tối đa 20 giây sau khi khởi động lại, vì lần đầu có thể di trú dữ liệu)
+ready=0
+for i in $(seq 1 40); do
+  if curl -fsS -m3 -o /dev/null http://127.0.0.1:8787/api/auth/me 2>/dev/null; then ready=1; break; fi
+  sleep 0.5
+done
+if [ "$ready" = 1 ]; then echo "API      san sang (GET /api/auth/me = 200)"; else echo "API      KHONG TRA LOI sau 20 giay"; bad=1; fi
+code=$(curl -s -m5 -o /dev/null -w '%{http_code}' http://127.0.0.1/ || true)
+if [ "$code" = 200 ]; then echo "NGINX    trang chu = 200"; else echo "NGINX    trang chu = ${code:-khong ket noi} (mong doi 200)"; bad=1; fi
+echo "$(date -u '+%Y-%m-%d %H:%M:%S') UTC | commit __COMMIT__ | xac nhan sau trien khai: $([ "$bad" = 0 ] && echo DAT || echo LOI)" >> ~/deploy-log.txt
+tail -2 ~/deploy-log.txt
 exit $bad
 '@
-$check = $check -replace "`r", ''
+$check = $check.Replace('__COMMIT__', $commit) -replace "`r", ''
 ssh $Server $check
-if ($LASTEXITCODE) { throw 'Có tệp lệch hoặc dịch vụ không chạy, xem kết quả ở trên.' }
-Write-Host 'Xong: máy chủ đang chạy đúng commit đã đóng gói.' -ForegroundColor Green
+if ($LASTEXITCODE) { throw 'KHÔNG ĐẠT: có tệp lệch, dịch vụ không chạy hoặc API/nginx không trả lời. Xem kết quả ở trên; đừng coi là đã triển khai thành công.' }
+Write-Host 'Xong: dịch vụ chạy, API sẵn sàng và tệp trên máy chủ khớp commit đã đóng gói.' -ForegroundColor Green

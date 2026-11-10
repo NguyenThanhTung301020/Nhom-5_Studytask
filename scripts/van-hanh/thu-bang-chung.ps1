@@ -24,7 +24,8 @@ if ($LASTEXITCODE) { throw 'scp thất bại: kiểm tra mạng LAN, địa ch�
 
 Write-Host "2/4 Chạy thu bằng chứng (mất khoảng 4-5 phút, có hỏi mật khẩu sudo)..." -ForegroundColor Cyan
 ssh -t $Server "sed -i 's/\r$//' ~/evidence-check.sh ~/health-check.sh && bash ~/evidence-check.sh '$since'"
-if ($LASTEXITCODE) { throw 'Chạy trên máy chủ thất bại, xem thông báo ở trên.' }
+$remoteExit = $LASTEXITCODE     # 1 = có lệnh thu bằng chứng lỗi (gói vẫn được tạo, vẫn kéo về để xem); 255 = không vào được máy chủ
+if ($remoteExit -eq 255) { throw 'Không chạy được trên máy chủ (SSH lỗi), xem thông báo ở trên.' }
 
 Write-Host "3/4 Kéo kết quả về $dest ..." -ForegroundColor Cyan
 scp "${Server}:~/health-logs/bang-chung-$day.tar.gz" "${Server}:~/health-logs/bang-chung-$day.tar.gz.sha256" $dest
@@ -40,9 +41,16 @@ $f16 = Get-Content "$dest\bang-chung-$day\16-api-dang-chay-ban-nao.txt" -Raw
 $rows = foreach ($p in @(@('/opt/studytask/studytask_api.py', 'server\studytask_api.py'), @('/var/www/studytask/app.js', 'app.js'),
                           @('/var/www/studytask/pages/Profile.js', 'pages\Profile.js'), @('/var/www/studytask/pages/Graduation.js', 'pages\Graduation.js'))) {
   $m = [regex]::Match($f16, '([0-9a-f]{64})\s+' + [regex]::Escape($p[0]))
-  $local = (Get-FileHash (Join-Path $repo $p[1]) -Algorithm SHA256).Hash.ToLower()
+  # hash từ commit (LF), không phải tệp trong thư mục làm việc (Windows có thể là CRLF)
+  $blob = Join-Path $env:TEMP 'blob.tmp'
+  cmd /c "git show HEAD:$($p[1] -replace '\\','/') > `"$blob`""
+  $local = (Get-FileHash $blob -Algorithm SHA256).Hash.ToLower()
   [pscustomobject]@{ Tep = $p[0]; KhopRepo = if ($m.Success) { $m.Groups[1].Value -eq $local } else { 'không đọc được' } }
 }
 $rows | Format-Table -AutoSize | Out-String | Tee-Object "$dest\so-hash-voi-repo.txt"
-Write-Host "Xong. Minh chứng nằm ở: $dest" -ForegroundColor Green
+if ($remoteExit) {
+  Write-Host "CHƯA ĐẠT: máy chủ báo có mục lỗi (xem dòng 'KET QUA' ở trên). Bằng chứng vẫn được lưu ở: $dest" -ForegroundColor Red
+  exit 1
+}
+Write-Host "ĐẠT. Minh chứng nằm ở: $dest" -ForegroundColor Green
 Write-Host "Việc còn lại bằng tay: chụp ảnh theo danh sách ở docs/van-hanh/03-huong-dan-kiem-tra-may-chu.md mục 5."
