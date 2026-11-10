@@ -13,7 +13,18 @@ for a in USERS:
     subprocess.run([sys.executable, API, 'create-user', *a], env=ENV, check=True, capture_output=True)
 LOG = open(os.path.join(DATA, 'srv.log'), 'w')
 srv = subprocess.Popen([sys.executable, API, 'serve'], env=ENV, stderr=LOG, stdout=LOG)
-time.sleep(1.5)
+for _ in range(75):      # chờ API trả lời thật thay vì sleep cố định; API chết thì báo lỗi ngay
+    if srv.poll() is not None:
+        print('FAIL API thoát ngay khi khởi động (mã %s), có thể trùng cổng 8794' % srv.returncode); shutil.rmtree(DATA, ignore_errors=True); sys.exit(1)
+    try:
+        _c = http.client.HTTPConnection('127.0.0.1', 8794, timeout=1); _c.request('GET', '/api/auth/me')
+        if _c.getresponse().status == 200:
+            break
+    except OSError:
+        pass
+    time.sleep(0.2)
+else:
+    srv.terminate(); print('FAIL API không sẵn sàng sau 15 giây'); shutil.rmtree(DATA, ignore_errors=True); sys.exit(1)
 fails = []
 
 
@@ -73,6 +84,18 @@ try:
     check('Sinh viên không sửa được GPA/ngành/mã số/họ tên (bị bỏ qua)',
           p.get('gpa') == '3.20' and p.get('major') == 'KTPM' and p.get('studentId') == '24TX810001' and p.get('name') == 'Sinh Vien', p)
     check('Cùng lần đó, số điện thoại hợp lệ vẫn được lưu', p.get('phone') == '0907654321', p)
+
+    # Lỗi PR35 mục 4.1: chỉ cần MỘT yêu cầu ghi userData là cả userData.profile.phone và user.phone cùng đổi
+    # (giao diện báo quá hạn sau khi yêu cầu đầu đã tới máy chủ thì hai nơi không còn lệch nhau)
+    sv.put('userData', sv.uid, {'profile': {'email': 'sv01@gmail.com', 'phone': '0912345678'}})
+    check('Một lần ghi userData cũng cập nhật user.phone (không còn lệch hai nơi)',
+          sv.get('user', sv.uid).get('phone') == '0912345678' and sv.get('userData', sv.uid)['profile'].get('phone') == '0912345678',
+          (sv.get('user', sv.uid).get('phone'), sv.get('userData', sv.uid)['profile'].get('phone')))
+    sv.put('userData', sv.uid, {'profile': {'email': 'moi@gmail.com'}})
+    check('Chỉ đổi email thì số điện thoại ở user giữ nguyên', sv.get('user', sv.uid).get('phone') == '0912345678', sv.get('user', sv.uid))
+    sv.put('userData', sv.uid, {'profile': {'phone': 'abc'}})
+    check('Số điện thoại sai định dạng không làm đổi user.phone', sv.get('user', sv.uid).get('phone') == '0912345678', sv.get('user', sv.uid))
+    check('Đồng bộ không đụng vai trò và họ tên trong user', sv.get('user', sv.uid).get('role') == 'student' and sv.get('user', sv.uid).get('name'), sv.get('user', sv.uid))
 
     # Sửa họ tên qua user/{uid}: bị chặn với SV/GV
     s, _ = sv.put('user', sv.uid, {'name': 'Tên giả'})
