@@ -447,7 +447,7 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
       setSubmissions([...(submissions || []).filter(s => !(s.quizId === result.quizId && s.userId === user?.uid)),
                       { ...result, userId: user?.uid }])
     }
-    if (onActivity && taking) onActivity({ type: 'quiz', subjectId: subject.id, refId: taking.id, refTitle: taking.title, score: result.score, total: result.total, correct: result.correct })
+    // V3: máy chủ tự ghi điểm và sự kiện cho Bảng điểm; trình duyệt không còn ghi điểm trắc nghiệm vào activities
   }
 
   const toggleHw = () => { setExpanded(v => !v); setMatExpanded(false); setQuizExpanded(false) }
@@ -724,7 +724,7 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
         confirmHw && h(ConfirmModal, { message: 'Xóa bài tập này?', onConfirm: () => { setHomeworks(prev => prev.filter((hw) => hw.id !== confirmHw)); setConfirmHw(null) }, onClose: () => setConfirmHw(null) }),
         matModal && h(MaterialModal, { subjectId: subject.id, item: matModal === 'edit' ? editMat : null, user, onSave: handleMatSave, onClose: () => setMatModal(null) }),
         confirmMatId && h(ConfirmModal, { message: 'Xóa tài liệu này?', onConfirm: () => { setMaterials(prev => prev.filter(m => m.id !== confirmMatId)); setConfirmMatId(null) }, onClose: () => setConfirmMatId(null) }),
-        taking && h(QuizTaker, { quiz: taking, subjectName: subject.name, onSubmit: handleSubmitQuiz, onClose: () => setTaking(null) })
+        taking && h(QuizTaker, { quiz: taking, subjectName: subject.name, existing: submittedMap.get(taking.id), onSubmit: handleSubmitQuiz, onClose: () => setTaking(null) })
       )
     )
   )

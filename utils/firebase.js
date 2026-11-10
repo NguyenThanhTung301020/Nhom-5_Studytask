@@ -196,6 +196,10 @@ export const fsList = async (col) => {
 }
 export const fsDelete = (col, id) => _ready ? api('DELETE', docPath(col, id)) : Promise.resolve()
 
+// ── Trắc nghiệm (V3): máy chủ chấm điểm; trình duyệt không có đáp án đúng ──
+export const submitQuiz = (quizId, answers) => api('POST', `/quiz/${enc(String(quizId))}/submit`, { answers })   // → { score, correct, total, submittedAt }
+export const loadMyQuizResults = async () => _ready ? (await api('GET', '/quiz/mine')).results : []
+
 // ── Tải file lên server (giáo viên / admin) → { url, name, size } ──
 export const uploadFile = async (file, hwId) => {
   const res = await fetch('/api/upload?filename=' + enc(file.name) + (hwId != null ? '&hw=' + enc(String(hwId)) : ''), {
