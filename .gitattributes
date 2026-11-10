@@ -1,0 +1,16 @@
+# Chuẩn hóa kết thúc dòng: lưu LF trong repo, trên mọi máy.
+# Lý do: trên Windows `git archive` và checkout đổi sang CRLF làm hash tệp trên máy chủ lệch với repo,
+# và script .sh/.py chạy trên Linux bị lỗi khi có CR.
+* text=auto eol=lf
+
+# Tệp nhị phân: không đụng vào
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary
+*.woff binary
+*.woff2 binary
