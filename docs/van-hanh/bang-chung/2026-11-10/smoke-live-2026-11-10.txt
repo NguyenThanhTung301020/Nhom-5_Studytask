@@ -1,0 +1,18 @@
+# smoke_live https://sutdytask.io.vn lúc 2026-11-10 02:54:05 UTC
+PASS trang chủ trả 200 và là HTML
+PASS giao diện mới có utils/sanitize.js (PR37 đã triển khai)
+PASS /api/auth/me khi chưa đăng nhập: 200, user = null
+PASS chưa đăng nhập không đọc được dữ liệu dùng chung
+PASS bài nộp qua đường /uploads/submissions/ khi chưa đăng nhập → 401
+PASS bài nộp không bị nginx phục vụ trực tiếp (không có cache công khai)
+PASS bài nộp qua API khi chưa đăng nhập → 401
+PASS đường dẫn thoát thư mục không đọc được CSDL
+PASS nộp trắc nghiệm khi chưa đăng nhập → 401
+PASS /api/quiz/mine khi chưa đăng nhập → 401
+PASS đặt lại mật khẩu bằng đường Admin khi chưa đăng nhập → 401
+PASS collection quizKeys không đọc được từ ngoài
+PASS collection quizResults không đọc được từ ngoài
+PASS đăng nhập sai trả 401 (không phải 5xx)
+FAIL không lộ thư mục .git | 200
+PASS không phục vụ mã nguồn máy chủ
+KẾT QUẢ: CÓ LỖI

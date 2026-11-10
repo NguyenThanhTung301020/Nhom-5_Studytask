@@ -431,10 +431,31 @@ def quizzes_for(user, role, stored):
     return out
 
 
+SUBJECT_SCOPED = ('deadlines', 'homeworks', 'materials', 'schedule', 'exams')   # các danh sách có `subjectId`
+
+
 def project_shared(user, doc):
-    if not doc or not user or 'quizzes' not in doc:
+    """Bản của sharedData/global mà người này được đọc (việc 14: phân quyền đọc theo môn).
+    - đề trắc nghiệm: không lộ đáp án, không có đề nháp (quizzes_for);
+    - sinh viên: chỉ nhận bài tập, tài liệu, lịch học, lịch thi, deadline của môn mình học; mục không có `subjectId` (chung) giữ lại;
+      `subjects`, `news`, `forms` là danh mục chung nên giữ nguyên; `grades` (điểm nhập tay) chỉ còn phần của chính mình;
+    - sinh viên hồ sơ cũ chưa có subjectIds được coi là học mọi môn (giống giao diện và /api/upload);
+    - admin, giáo viên, đào tạo, tài chính nhận đầy đủ vì giao diện tải rồi ghi ngược cả danh sách (không lọc để khỏi mất dữ liệu).
+    Dữ liệu lưu trong CSDL không bị lọc; chỉ bản trả về."""
+    if not doc or not user:
         return doc
-    return {**doc, 'quizzes': quizzes_for(user, role_of(user), doc.get('quizzes'))}
+    out, role = dict(doc), role_of(user)
+    if 'quizzes' in out:
+        out['quizzes'] = quizzes_for(user, role, out.get('quizzes'))
+    if role == 'student':
+        ids = (doc_get('user', user['uid']) or {}).get('subjectIds')
+        if ids is not None:
+            for k in SUBJECT_SCOPED:
+                if isinstance(out.get(k), list):
+                    out[k] = [x for x in out[k] if not isinstance(x, dict) or 'subjectId' not in x or x['subjectId'] in ids]
+        if isinstance(out.get('grades'), dict):
+            out['grades'] = {k: v for k, v in out['grades'].items() if k == user['uid']}
+    return out
 
 
 def quiz_shape_ok(q):

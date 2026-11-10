@@ -125,6 +125,8 @@ ID tài liệu ghép đề và UID bảo đảm mỗi sinh viên chỉ có một
 
 ## 4. Bản nháp Firestore Security Rules
 
+> **Đã thay (tuần 6):** hệ thống chạy trên máy chủ riêng nên không dùng Firestore Security Rules. Các quy tắc dưới đây được cài đặt bằng `guard_quizzes()`, `quizzes_for()` và `can()` trong `server/studytask_api.py` (xem mục 0). Bảng và đoạn mã giữ lại làm đặc tả ý tưởng; các ca RULE-01…18 đã chuyển thành kiểm thử trong `tests/server/test_quiz_v3.py`.
+
 Các quy tắc dưới đây là thiết kế, chưa chạy kiểm thử. Có thể dùng lại `signedIn()`, `hasRole()` và `teachesSubject()` đang có trong [firestore.rules](../../firestore.rules). Cần bổ sung helper `belongsToSubject()` để kiểm tra quyền sinh viên đọc đề theo môn; quyền đọc kết quả của sinh viên chỉ cần kiểm tra UID của tài liệu.
 
 | Collection | Đọc | Ghi |
@@ -207,6 +209,8 @@ Khi triển khai cần bảo đảm các truy vấn của ứng dụng tương t
 
 ### 5.1. Lựa chọn hạ tầng
 
+> **Đã chốt (tuần 6):** dùng API Python của máy chủ riêng; không dùng Cloud Function hay Cloudflare Worker (Worker thử đã gỡ ngày 06/11). Phần so sánh bên dưới chỉ còn giá trị lịch sử.
+
 | Tiêu chí | Firebase Cloud Function callable | Cloudflare Worker |
 |---|---|---|
 | Chi phí/hạ tầng | Cần Firebase Blaze; báo cáo tuần 1 ghi nhận việc nâng gói chưa được duyệt. | Có thể dùng gói Free; nhóm đã thử triển khai Worker ở tuần 4. |
@@ -267,6 +271,8 @@ Các ca dưới đây sẽ được viết và chạy trong Emulator/kiểm th�
 | API-13 | Môi trường Emulator | Dùng token Emulator không ký | Chỉ chấp nhận qua nhánh kiểm thử riêng; nhánh này không được bật hoặc triển khai production. |
 
 ## 7. Kế hoạch chuyển dữ liệu và quay lui
+
+> **Đã cài đặt (tuần 6):** `migrate_quizzes()` chạy một lần khi máy chủ khởi động, có sao lưu `studytask.db.bak-pre-quiz-v3`, đánh dấu `meta/quiz_v3`. Không dùng Admin SDK hay Emulator; kiểm thử di trú nằm trong `tests/server/test_quiz_v3.py`. Quay lui: khôi phục từ bản sao lưu trước di trú (lần triển khai 09/11 có thêm `studytask.db.truoc-v3`).
 
 1. Sao lưu dữ liệu theo việc 2 của kế hoạch tuần 5 trước khi chuyển đổi.
 2. Viết script dùng Admin SDK, chạy trước trên bản sao/Emulator: tách `sharedData/global.quizzes` thành `quizzes` (bỏ mọi `correct`) và `quizKeys` (chỉ đáp án đúng). Giữ nguyên ID số của đề/câu hỏi; tạo document ID bằng `String(quiz.id)`, đồng thời giữ `quizId` dạng số trong tài liệu kết quả để các cột `q:${id}` ở `gradingColumns` và điểm sửa tay hiện có tiếp tục khớp.
