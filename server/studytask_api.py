@@ -1169,14 +1169,33 @@ class Handler(BaseHTTPRequestHandler):
                 if not isinstance(new, dict):
                     raise ApiError(400, 'bad-json', 'Thiếu data.')
                 merged = deep_merge(old or {}, new) if b.get('merge', True) else new
+                sync_phone = None
                 if col == 'userData' and u and u['uid'] == id_ and role_of(u) in LOCKED_ROLES:
                     merged = lock_profile(u, old, merged)
+                    # Chỉ đồng bộ khi CHÍNH yêu cầu này gửi profile.phone (người dùng đang đổi số). `merged` còn chứa số cũ đã lưu, nên
+                    # kiểm tra trên merged sẽ ghi đè user.phone mỗi khi sửa email hay dữ liệu khác. Giá trị ghi lấy từ `merged`: bản đã qua kiểm tra.
+                    if isinstance(new.get('profile'), dict) and 'phone' in new['profile'] and 'phone' in (merged.get('profile') or {}):
+                        sync_phone = merged['profile']['phone']
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
                 apply_quiz_ops(quiz_ops)
-                doc_put(col, id_, merged)
+                if sync_phone is None:
+                    doc_put(col, id_, merged)
+                else:
+                    # Số điện thoại nằm ở userData.profile và user/{uid} (Danh bạ, Admin đọc ở đây): ghi cả hai trong MỘT
+                    # giao dịch ở máy chủ, để giao diện báo lỗi/quá hạn giữa chừng cũng không để hai nơi lệch nhau (lỗi PR35 mục 4.1)
+                    db().execute('BEGIN')
+                    try:
+                        doc_put(col, id_, merged)
+                        acct = doc_get('user', id_)
+                        if acct is not None and acct.get('phone', '') != sync_phone:
+                            doc_put('user', id_, {**acct, 'phone': sync_phone})
+                        db().execute('COMMIT')
+                    except Exception:
+                        db().execute('ROLLBACK')
+                        raise
                 return self.send(200, {'ok': True})
             if len(p) == 3 and method == 'DELETE':
                 if col == 'sharedData' and id_ == 'global':

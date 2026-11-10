@@ -84,7 +84,7 @@ Sau khi thử xong: dừng API và xóa thư mục `$STUDYTASK_DATA`.
 
 ## 5. Còn tồn tại
 
-- **Lỗi lưu một nửa dữ liệu khi máy chủ chậm** ([PR35] mục 4.1): giao diện báo "Lưu thất bại" sau 10 giây nhưng yêu cầu đầu vẫn tới máy chủ, nên `userData` có số mới còn `user` giữ số cũ. Cần quyết định có sửa hay không; hướng đề xuất là ghi hai nơi trong một yêu cầu duy nhất ở máy chủ, hoặc để máy chủ tự đồng bộ `phone` từ `userData.profile` khi ghi.
+- **Lỗi lưu một nửa dữ liệu khi máy chủ chậm** ([PR35] mục 4.1): **đã sửa (tuần 6)** theo hướng để máy chủ tự đồng bộ. Khi sinh viên/giáo viên ghi `userData` có `profile.phone`, máy chủ ghi luôn `user/{uid}.phone` trong cùng một giao dịch, nên dù giao diện báo quá hạn sau khi yêu cầu đầu đã tới máy chủ thì hai nơi vẫn khớp. Máy chủ chỉ đồng bộ khi **chính yêu cầu có gửi `profile.phone`** (người dùng đang đổi số) và ghi giá trị đã qua kiểm tra; sửa email hay dữ liệu khác thì `user.phone` giữ nguyên, kể cả khi nơi khác đã đổi số; số điện thoại sai định dạng bị từ chối và không đổi gì. Giao diện vẫn có thể báo "Lưu thất bại – thử lại" trong lúc dữ liệu đã được lưu; bấm Lưu lại không gây hại. Kiểm thử: `tests/server/test_profile_lock.py` (4 ca mới, thất bại trên mã cũ).
 - Dữ liệu mẫu cũ (N5): tài khoản từng nhận dữ liệu mẫu ở thời Firebase đã được chuyển sang máy chủ cùng hồ sơ; người dùng tự xóa trong Hồ sơ, hoặc Admin dọn bằng script khi cần. Từ [PR23] hệ thống không còn tự nạp dữ liệu mẫu.
 - Hai tab cùng trình duyệt đăng nhập hai tài khoản khác nhau dùng chung cookie phiên, nên tab đăng nhập sau thay phiên của tab trước. Chưa xử lý vì ít gặp.
 
