@@ -1193,7 +1193,9 @@ class Handler(BaseHTTPRequestHandler):
                 sync_phone = None
                 if col == 'userData' and u and u['uid'] == id_ and role_of(u) in LOCKED_ROLES:
                     merged = lock_profile(u, old, merged)
-                    if 'phone' in (merged.get('profile') or {}):
+                    # Chỉ đồng bộ khi CHÍNH yêu cầu này gửi profile.phone (người dùng đang đổi số). `merged` còn chứa số cũ đã lưu, nên
+                    # kiểm tra trên merged sẽ ghi đè user.phone mỗi khi sửa email hay dữ liệu khác. Giá trị ghi lấy từ `merged`: bản đã qua kiểm tra.
+                    if isinstance(new.get('profile'), dict) and 'phone' in new['profile'] and 'phone' in (merged.get('profile') or {}):
                         sync_phone = merged['profile']['phone']
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
