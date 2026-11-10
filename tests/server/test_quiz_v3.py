@@ -192,6 +192,12 @@ try:
     # ── điểm vào Bảng điểm / Báo cáo lớp và quyền xem kết quả ──
     ev = req('GET', f'/api/doc/activities/{uid1}', ck=s1)[1]['data']['events']
     chk('máy chủ ghi sự kiện điểm vào activities cho Bảng điểm (nguồn máy chủ)', any(e['type'] == 'quiz' and e['refId'] == 1 and e['score'] == 6.7 for e in ev))
+    forged = {'type': 'quiz', 'at': '2026-11-10', 'subjectId': 1, 'refId': 1, 'refTitle': 'gia', 'score': 10, 'total': 3, 'correct': 3}
+    st_a = req('POST', f'/api/doc/activities/{uid1}/append', {'field': 'events', 'value': forged}, s1)[0]
+    cur_ev = req('GET', f'/api/doc/activities/{uid1}', ck=s1)[1]['data']['events']
+    st_p = req('PUT', f'/api/doc/activities/{uid1}', {'data': {'events': cur_ev + [forged]}}, s1)[0]
+    chk('sinh viên tự ghi sự kiện quiz (điểm giả) vào nhật ký: bị từ chối cả append lẫn PUT', st_a == 403 and st_p == 403)
+    chk('điểm quiz do máy chủ ghi vẫn còn nguyên sau các lần ghi giả', sum(1 for e in req('GET', f'/api/doc/activities/{uid1}', ck=s1)[1]['data']['events'] if e['type'] == 'quiz') == 1)
     chk('giáo viên dạy môn xem kết quả của đề', len(req('GET', '/api/quiz/1/results', ck=gv1)[1].get('results', [])) >= 3)
     chk('RULE-16 giáo viên môn khác xem kết quả của đề → 403', req('GET', '/api/quiz/1/results', ck=gv2)[0] == 403)
     chk('sinh viên xem kết quả của cả đề → 403', req('GET', '/api/quiz/1/results', ck=s1)[0] == 403)
