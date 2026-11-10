@@ -1,8 +1,7 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [master]
+  pull_request:          # mọi PR, kể cả PR xếp chồng có base là nhánh khác (trước đây chỉ PR vào master nên PR xếp chồng không chạy CI)
   push:
     branches: [master]
 

@@ -1,0 +1,94 @@
+name: PR guard
+
+# Kiểm tra quy trình gộp nhánh, không chạy mã của dự án:
+#  - PR xếp chồng (base không phải nhánh mặc định): báo lỗi nếu PR gốc ĐÃ GỘP mà base chưa đổi về master
+#    (gộp vào nhánh đã gộp thì mã không lên master);
+#  - cảnh báo khi nhánh PR tụt sau base (cần "Update branch" trước khi xin Approve, tránh "merge-base changed");
+#  - khi một PR gộp xong: nhắc ngay trên các PR còn mở bị ảnh hưởng.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited, ready_for_review, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr-guard:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const pr = context.payload.pull_request
+            const base = pr.base.ref
+            const def = context.payload.repository.default_branch
+            const lines = []
+            let failed = false
+
+            // 1. PR xếp chồng: base là nhánh khác nhánh mặc định
+            if (base !== def) {
+              const parents = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'all', head: `${owner}:${base}`, per_page: 50 })
+              const merged = parents.filter(p => p.merged_at)
+              const open = parents.filter(p => p.state === 'open')
+              if (merged.length) {
+                failed = true
+                lines.push(`LỖI: base của PR là nhánh \`${base}\`, nhưng PR gốc #${merged.map(p => p.number).join(', #')} ĐÃ GỘP. Hãy đổi base về \`${def}\` (nút ✎ cạnh tiêu đề) trước khi gộp, nếu không mã sẽ không lên \`${def}\`.`)
+              } else if (open.length) {
+                lines.push(`PR xếp chồng: chỉ gộp sau PR #${open.map(p => p.number).join(', #')}. Khi PR gốc gộp xong, đổi base về \`${def}\` trước khi gộp PR này.`)
+              } else {
+                lines.push(`LƯU Ý: base là nhánh \`${base}\` (không phải \`${def}\`) và không tìm thấy PR gốc. Kiểm tra lại base.`)
+              }
+            }
+
+            // 2. Nhánh PR tụt sau base: nên Update branch trước khi xin Approve
+            const cmp = await github.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${base}...${pr.head.sha}` })
+            if (cmp.data.behind_by > 0) {
+              lines.push(`CẢNH BÁO: nhánh PR tụt ${cmp.data.behind_by} commit so với \`${base}\`. Bấm "Update branch" (hoặc gộp \`${base}\` vào nhánh) TRƯỚC khi xin Approve; nếu không Approve có thể bị gỡ với lý do "merge-base changed".`)
+            } else {
+              lines.push(`Nhánh PR đã cập nhật so với \`${base}\`.`)
+            }
+
+            for (const l of lines) {
+              if (l.startsWith('LỖI')) core.error(l)
+              else if (l.startsWith('CẢNH BÁO') || l.startsWith('LƯU Ý')) core.warning(l)
+              else core.notice(l)
+            }
+            await core.summary.addHeading('PR guard').addList(lines).write()
+            if (failed) core.setFailed('PR xếp chồng đã mất PR gốc: đổi base về ' + def + ' rồi chạy lại kiểm tra.')
+
+  thong-bao-sau-khi-gop:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const merged = context.payload.pull_request
+            const def = context.payload.repository.default_branch
+            const say = async (number, body) => {
+              try { await github.rest.issues.createComment({ owner, repo, issue_number: number, body }) }
+              catch (e) { core.warning(`Không ghi được bình luận vào #${number}: ${e.message}`) }
+            }
+            // PR xếp chồng còn mở có base là nhánh vừa gộp: phải đổi base về nhánh mặc định
+            const children = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', base: merged.head.ref, per_page: 50 })
+            for (const c of children) {
+              await say(c.number, `⚠️ PR gốc #${merged.number} vừa gộp vào \`${merged.base.ref}\`. PR này vẫn trỏ vào nhánh \`${merged.head.ref}\`: **đổi base về \`${def}\` (nút ✎ cạnh tiêu đề) trước khi gộp**, rồi bấm "Update branch" nếu có, rồi mới xin Approve.`)
+            }
+            // PR còn mở trỏ vào nhánh mặc định và bị tụt: nhắc Update branch trước khi Approve
+            if (merged.base.ref === def) {
+              const open = await github.paginate(github.rest.pulls.list, { owner, repo, state: 'open', base: def, per_page: 50 })
+              for (const p of open) {
+                if (p.draft) continue
+                const cmp = await github.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${def}...${p.head.sha}` })
+                if (cmp.data.behind_by > 0) {
+                  await say(p.number, `ℹ️ \`${def}\` vừa tiến lên sau khi PR #${merged.number} gộp, nhánh này tụt ${cmp.data.behind_by} commit. Bấm **Update branch** trước khi xin Approve để Approve không bị gỡ ("merge-base changed").`)
+                }
+              }
+            }

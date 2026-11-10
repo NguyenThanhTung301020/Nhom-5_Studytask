@@ -141,6 +141,8 @@ npm run test:rules
 
 - Nhánh: `master` là bản ổn định. Mỗi việc làm trên nhánh riêng: `feature/<ten-viec>`, `fix/<ten-loi>`, `docs/<noi-dung>`.
 - Gộp vào `master` qua Pull Request, có ít nhất một thành viên khác review.
+- Chi tiết quy trình Pull Request, gộp tuần tự và PR xếp chồng: [docs/quy-uoc/01-quy-uoc-pull-request-va-gop-nhanh.md](docs/quy-uoc/01-quy-uoc-pull-request-va-gop-nhanh.md). Mẫu mô tả PR nằm ở `.github/pull_request_template.md`; kiểm tra tự động `PR guard` báo khi base sai hoặc nhánh tụt sau `master`.
+- Gộp bằng **Create a merge commit**, không Squash hay Rebase. PR xếp sau PR khác: **đổi base về `master` trước khi gộp**; bấm **Update branch** trước khi xin Approve.
 - Mỗi thành viên commit bằng tài khoản GitHub của mình (`git config user.name` / `user.email` đúng tên, đúng email).
 - Thông điệp commit: `<loai>: <mo ta ngan>`, loại gồm `feat`, `fix`, `docs`, `test`, `chore`, `refactor`. Ví dụ: `fix: luu ho so khong bao loi khi mat mang`.
 - Mã hoặc tài liệu do AI sinh: thêm nhãn `[AI]` ở đầu thông điệp, ghi lần dùng AI vào `docs/ai-log/tuan-XX.md` kèm mã commit.
