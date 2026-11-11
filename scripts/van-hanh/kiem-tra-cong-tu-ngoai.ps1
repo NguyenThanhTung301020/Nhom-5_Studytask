@@ -1,4 +1,4 @@
-<#
+﻿<#
   Kiểm tra từ NGOÀI mạng nhà: các cổng của máy chủ có bị lộ ra Internet không (việc 6 tuần 6).
   Phải chạy khi máy tính đang dùng mạng khác (phát 4G từ điện thoại), KHÔNG phải mạng LAN của máy chủ.
   Cách dùng (PowerShell, tại thư mục gốc repo):
