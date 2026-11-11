@@ -31,8 +31,10 @@ Gỡ liên kết: `DELETE /api/account/email`.
 | Hạn mức gửi theo địa chỉ IP | 6 thư mỗi giờ |
 | `forgot` | Luôn trả 200 dù tài khoản có tồn tại hay không, để không dò được tên tài khoản |
 | Sau khi đặt lại mật khẩu | Mọi phiên đăng nhập cũ bị hủy |
+| Một email chỉ thuộc một tài khoản | Xác minh mã liên kết khi email đã thuộc tài khoản khác → 409 `email-in-use`; không xóa liên kết của tài khoản kia |
+| Gỡ hoặc đổi email | Mã đặt lại mật khẩu đang chờ bị hủy; khi đặt lại, mã chỉ hợp lệ nếu email nhận mã vẫn là email đang liên kết |
 
-Các điểm này được kiểm thử trong `tests/server/test_account.py`.
+Các điểm này được kiểm thử trong `tests/server/test_account.py` và `tests/server/test_email_codes.py` (xem [sửa lỗi 02](../sua-loi/02-hai-loi-email-ca-nhan.md)).
 
 ## 4. Cấu hình gửi thư (SMTP)
 
@@ -64,6 +66,7 @@ Cách chẩn đoán dùng được lại: từ máy chủ, chạy `openssl s_cli
 | Máy chủ kết nối được `smtp.gmail.com` cổng 587 và 465 (TLS 1.3) | Đã kiểm chứng ngày 04/11/2026 |
 | `mail-test` gửi thư thành công tới hộp thư thật | Đã kiểm chứng, do thành viên nhóm xác nhận |
 | Logic mã, hết hạn, giới hạn lần thử, đặt lại mật khẩu | Đã kiểm thử tự động (`test_account.py`, dùng `STUDYTASK_MAIL_DEBUG=1` nên không gửi thư thật) |
+| Hai tài khoản tranh một email; mã đặt lại sau khi gỡ/đổi email | Đã kiểm thử tự động (`test_email_codes.py`) |
 | Luồng liên kết email và quên mật khẩu **trên giao diện web** với thư thật | **Chưa ghi nhận kết quả**, cần thử tay rồi bổ sung |
 
 ## 6. Hạn chế
