@@ -809,6 +809,43 @@ def check_code(purpose, uid, code):
     return row[0]
 
 
+def link_email(uid, email):
+    """Gắn email đã xác minh cho tài khoản uid.
+
+    Không dùng INSERT OR REPLACE: bảng contact_email có HAI ràng buộc duy nhất (uid và email). Khi email đã thuộc
+    tài khoản khác, REPLACE giải quyết xung đột bằng cách XÓA dòng của tài khoản đó, nên ai xác minh sau sẽ lặng lẽ
+    lấy mất email của người xác minh trước. Ở đây: chỉ cập nhật dòng của chính uid (hoặc chèn mới), email trùng → 409.
+    Đổi sang email khác thì mã đặt lại mật khẩu đã gửi tới email cũ không còn giá trị.
+    """
+    conn = db()
+    in_use = ApiError(409, 'email-in-use', 'Email này đã được dùng cho tài khoản khác.')
+    with _lock:
+        if conn.execute('SELECT 1 FROM contact_email WHERE email=? AND uid<>?', (email, uid)).fetchone():
+            raise in_use
+        conn.execute('BEGIN IMMEDIATE')
+        try:
+            if not conn.execute('UPDATE contact_email SET email=?, verified_at=? WHERE uid=?', (email, time.time(), uid)).rowcount:
+                conn.execute('INSERT INTO contact_email (uid, email, verified_at) VALUES (?,?,?)', (uid, email, time.time()))
+            conn.execute("DELETE FROM codes WHERE purpose='reset' AND uid=?", (uid,))
+            conn.execute('COMMIT')
+        except sqlite3.IntegrityError:
+            conn.execute('ROLLBACK')
+            raise in_use
+        except Exception:
+            conn.execute('ROLLBACK')
+            raise
+
+
+def unlink_email(uid):
+    """Gỡ email cá nhân và hủy luôn mã đặt lại mật khẩu đang chờ: mã đó chỉ có giá trị khi email còn liên kết."""
+    conn = db()
+    with _lock:
+        conn.execute('BEGIN IMMEDIATE')
+        conn.execute('DELETE FROM contact_email WHERE uid=?', (uid,))
+        conn.execute("DELETE FROM codes WHERE purpose='reset' AND uid=?", (uid,))
+        conn.execute('COMMIT')
+
+
 def find_uid(identifier):
     """Tìm tài khoản theo tên đăng nhập HOẶC email cá nhân đã xác minh."""
     raw = str(identifier).strip().lower()
@@ -1100,7 +1137,12 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 if not uid:
                     raise ApiError(400, 'bad-code', 'Mã không đúng hoặc đã hết hạn.')
-                check_code('reset', uid, b.get('code', ''))
+                sent_to = check_code('reset', uid, b.get('code', ''))
+                # Mã chỉ hợp lệ khi email nhận mã VẪN là email đang liên kết (lớp phòng thủ thứ 2, kể cả khi
+                # liên kết bị gỡ/đổi bằng đường khác mà không hủy mã).
+                cur = db().execute('SELECT email FROM contact_email WHERE uid=?', (uid,)).fetchone()
+                if not cur or cur[0].lower() != sent_to.lower():
+                    raise ApiError(400, 'bad-code', 'Mã không đúng hoặc đã hết hạn.')
             except ApiError:
                 _attempts.setdefault(ip, []).append(time.time())
                 raise
@@ -1143,12 +1185,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, {'ok': True})
             if p == ['account', 'email', 'verify'] and method == 'POST':
                 email = check_code('link', u['uid'], self.json_body().get('code', ''))
-                db().execute('INSERT OR REPLACE INTO contact_email VALUES (?,?,?)', (u['uid'], email, time.time()))
+                link_email(u['uid'], email)
                 return self.send(200, {'ok': True, 'recoveryEmail': email})
             if p == ['account', 'email'] and method == 'DELETE':
                 if not check_login(u['username'], str(self.json_body().get('password', ''))):
                     raise ApiError(401, 'auth/wrong-password', 'Mật khẩu hiện tại không đúng.')
-                db().execute('DELETE FROM contact_email WHERE uid=?', (u['uid'],))
+                unlink_email(u['uid'])
                 return self.send(200, {'ok': True})
             if p == ['account', 'avatar'] and method == 'POST':
                 name = (q.get('filename') or ['a.jpg'])[0]
