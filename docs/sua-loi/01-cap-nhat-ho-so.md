@@ -76,11 +76,9 @@ Sau khi thử xong: dừng API và xóa thư mục `$STUDYTASK_DATA`.
 
 **Kết quả đã có.** Ngày 06/11/2026, AI (Claude Code) thao tác trình duyệt thử 8/8 bước trên máy chủ tạm, dữ liệu tạm, máy của Trương Thanh Vui; chưa thử qua nginx và Cloudflare Tunnel ([PR35]). Phần kiểm tra bằng mã (`test_profile_lock.py` 18/18) chạy trong CI.
 
-**Chưa xác nhận.** Chưa có thành viên tự thử tay các bước trên. Người thử ghi kết quả vào bảng dưới đây (ngày, người thử, đạt/không đạt từng bước) trước khi coi là đã xác nhận.
+**Kiểm thử động đã chạy lại (tuần 6, việc 13).** Ngày 11/11/2026 trên `master` tại `3a9a52c` (đã gồm [PR41]), máy Trương Thanh Vui: `python tests/server/test_profile_lock.py` 25/25 đạt, `npm run test:logic` 62/62 đạt. Các bước có phần dữ liệu trên máy chủ (nhập đúng rồi Lưu; số điện thoại sai định dạng; `phone` đổi ở cả `user` và `userData.profile`; `email` chỉ đổi ở `userData.profile`) đã có ca tự động; chi tiết ở [báo cáo bổ sung](../kiem-thu/B%C3%A1o%20c%C3%A1o%20ki%E1%BB%83m%20th%E1%BB%AD%20b%E1%BB%95%20sung%20Thanh%20Vui.md) mục 6. Các bước thuần giao diện (hồ sơ trống, thông báo quá hạn 10 giây, đăng xuất, hồ sơ theo vai trò) vẫn dựa vào lần thử 06/11 do AI thao tác ([PR35]) và chưa được chạy lại bằng ca tự động.
 
-| Ngày | Người thử | Máy / môi trường | Kết quả từng bước | Ghi chú |
-|---|---|---|---|---|
-| | | | | |
+**Quyết định về thử tay (đề xuất của Thanh Vui, chờ nhóm xác nhận).** Ba thành viên đã thử giao diện ở các tuần trước (Trần Đức Tùng thử tay 8/8 bước trên Emulator ngày 01/11), nên tuần 6 dùng kiểm thử động thay cho một lần thử tay nữa. Nếu nhóm muốn có thêm lần thử tay trên máy chủ, người thử ghi kết quả vào báo cáo bổ sung, không ghi vào tài liệu sửa lỗi này.
 
 ## 5. Còn tồn tại
 
@@ -91,3 +89,4 @@ Sau khi thử xong: dừng API và xóa thư mục `$STUDYTASK_DATA`.
 [D06]: ../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md
 [PR29]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/29
 [PR35]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/35
+[PR41]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/41
