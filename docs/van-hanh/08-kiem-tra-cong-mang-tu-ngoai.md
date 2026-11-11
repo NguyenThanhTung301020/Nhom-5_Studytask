@@ -46,12 +46,22 @@ Thử lúc 11/11/2026 03:22 UTC (10:22 giờ Việt Nam) bằng `kiem-tra-cong-t
 
 Kết luận tạm: **máy chủ StudyTask không bị vào thẳng từ ngoài** (22, 8787, 20241 không phản hồi; 80 không trả nginx), nhưng **có một thiết bị Windows trong mạng nhà đang mở cổng 80/443 ra Internet** (do bộ định tuyến chuyển tiếp cổng, UPnP hoặc DMZ). Cần xác định thiết bị đó và đóng cổng.
 
+**Dò thiết bị từ trong mạng nhà (11/11/2026, chỉ đọc, không đăng nhập vào thiết bị nào):**
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Ánh xạ cổng UPnP của bộ định tuyến (`192.168.2.1`) | Chỉ có 3 mục: iVCam (TCP/UDP 5895 → `192.168.2.197`) và một ánh xạ Teredo của Windows (UDP 54623). **Không có ánh xạ cổng 80/443** |
+| Thiết bị trong `192.168.2.0/24` mở cổng 80 hoặc 443 | `.1` bộ định tuyến (`httpd/2.0`), `.187` máy chủ StudyTask (`nginx/1.28.3`), `.197` máy Windows chạy IIS (`Microsoft-IIS/10.0`), `.213` máy in Canon (`CANON HTTP Server`) |
+| So dấu vết với phản hồi từ ngoài (404, `Microsoft-HTTPAPI/2.0`), gửi `Host` là IP công cộng vào từng thiết bị | **Không thiết bị nào trả đúng dấu vết đó** (`.197` trả IIS 200) |
+
+Kết luận: chuyển tiếp 80/443 không đến từ UPnP, nên là quy tắc tĩnh hoặc DMZ trong bộ định tuyến, và chưa xác định được đích. Máy `.197` (Windows, IIS) là ứng viên cần xem trước. Cần đọc bảng chuyển tiếp cổng và DMZ trong trang quản trị bộ định tuyến để biết chắc.
+
 Việc còn lại (điền sau):
 
 | Mục | Kết quả |
 |---|---|
 | Bộ định tuyến: Port Forwarding / Virtual Server, UPnP, DMZ | (điền: bảng chuyển tiếp cổng, cổng 80/443 trỏ tới IP LAN nào) |
-| Thiết bị nhận cổng 80/443 | (điền: tên thiết bị, dịch vụ nào đang mở) |
+| Thiết bị nhận cổng 80/443 | (điền sau khi xem bộ định tuyến; ứng viên: `192.168.2.197`) |
 | Cách xử lý | (điền: xóa chuyển tiếp cổng / tắt UPnP / tắt dịch vụ) |
 | Kết quả chạy lại sau xử lý | (điền: dán dòng KẾT QUẢ) |
 
