@@ -67,6 +67,8 @@ jobs:
         run: python3 tests/server/test_quiz_extra.py
       - name: Phân quyền đọc dữ liệu dùng chung theo môn (việc 14)
         run: python3 tests/server/test_shared_scope.py
+      - name: Giáo viên không làm mất dữ liệu môn khác khi ghi dữ liệu dùng chung (R1)
+        run: python3 tests/server/test_teacher_shared.py
       - name: Link minh chứng của phiếu xét tốt nghiệp
         run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn

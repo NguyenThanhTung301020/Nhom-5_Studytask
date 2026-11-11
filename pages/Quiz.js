@@ -456,8 +456,9 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
   const submittedIds  = new Set(mySubmissions.map(s => s.quizId))
 
   const handleSave = (form) => {
-    if (modal === 'edit') setQuizzes(quizzes.map(q => q.id===editItem.id ? form : q))
-    else                  setQuizzes([...quizzes, form])
+    // `quizzes` ở trang này đã lọc theo môn; cập nhật trên danh sách đầy đủ (prev), nếu không máy chủ từ chối vì thiếu đề môn khác
+    if (modal === 'edit') setQuizzes(prev => prev.map(q => q.id===editItem.id ? form : q))
+    else                  setQuizzes(prev => [...prev, form])
     setModal(null)
   }
 
@@ -470,7 +471,7 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
   }
 
   const handleDelete = (id) => {
-    if (confirm('Xóa đề thi này?')) setQuizzes(quizzes.filter(q => q.id !== id))
+    if (confirm('Xóa đề thi này?')) setQuizzes(prev => prev.filter(q => q.id !== id))
   }
 
   // Điểm do máy chủ ghi (quizResults) và máy chủ tự ghi sự kiện vào Bảng điểm; trình duyệt chỉ cập nhật hiển thị

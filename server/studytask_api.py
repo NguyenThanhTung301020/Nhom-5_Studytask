@@ -306,6 +306,52 @@ def valid_evidence(value):
     return not value or (isinstance(value, str) and re.fullmatch(r'https?://\S+', value.strip(), re.I) is not None)
 
 
+def _kept(old_items, new_items):
+    """Mọi mục trong old_items còn nguyên trong new_items (so theo `id` nếu có, nếu không thì so cả mục)."""
+    by_id = {json.dumps(x['id']): x for x in new_items if isinstance(x, dict) and 'id' in x}
+    for o in old_items:
+        n = by_id.get(json.dumps(o['id'])) if isinstance(o, dict) and 'id' in o else None
+        if n is None and not (isinstance(o, dict) and 'id' in o):
+            if not any(same_json(o, x) for x in new_items):
+                return False
+        elif n is None or not same_json(o, n):
+            return False
+    return True
+
+
+def teacher_shared_ok(user, old, new):
+    """Giáo viên ghi sharedData/global: chỉ được đổi phần thuộc môn mình được phân công.
+    Giao diện tải cả danh sách rồi ghi ngược lại; trang Môn học/Deadline từng ghi bằng danh sách đã lọc theo môn
+    nên một lần sửa xóa sạch môn, deadline của người khác (R1, review PR9 lần 2). Máy chủ chặn thêm ở đây:
+    - `subjects`: môn ngoài subjectIds phải giữ nguyên; thêm môn mới vẫn được (giao diện cho giáo viên thêm môn);
+    - SUBJECT_SCOPED: mục có `subjectId` ngoài subjectIds phải giữ nguyên, không được thêm mục mới cho môn đó;
+    - `quizzes` đã có guard_quizzes kiểm tra riêng.
+    Hồ sơ cũ chưa có subjectIds được giao diện coi là dạy mọi môn (app.js mySubjects) nên không giới hạn."""
+    ids = (doc_get('user', user['uid']) or {}).get('subjectIds')
+    if ids is None:
+        return True
+    mine = {json.dumps(i) for i in ids}
+
+    def lst(d, k):
+        v = d.get(k)
+        return v if isinstance(v, list) else []
+
+    def foreign_subject(s):
+        return not (isinstance(s, dict) and json.dumps(s.get('id')) in mine)
+
+    def foreign_item(x):
+        return isinstance(x, dict) and 'subjectId' in x and json.dumps(x['subjectId']) not in mine
+
+    if not _kept([s for s in lst(old, 'subjects') if foreign_subject(s)], lst(new, 'subjects')):
+        return False
+    for k in SUBJECT_SCOPED:
+        old_f = [x for x in lst(old, k) if foreign_item(x)]
+        new_f = [x for x in lst(new, k) if foreign_item(x)]
+        if not _kept(old_f, new_f) or not _kept(new_f, old_f):
+            return False
+    return True
+
+
 def can(op, col, id_, user, old=None, new=None):
     """Chuyển từ firestore.rules. op: read | create | update | delete."""
     signed = user is not None
@@ -338,7 +384,11 @@ def can(op, col, id_, user, old=None, new=None):
         if op == 'read': return owner or admin or (role == 'teacher' and teaches_student(user['uid'], id_))
         if op == 'delete': return owner or admin
         return admin or (owner and activity_write_ok(id_, old, new))
-    if col == 'sharedData':    return signed if op == 'read' else role in STAFF
+    if col == 'sharedData':
+        if op == 'read': return signed
+        if role == 'teacher' and id_ == 'global' and op in ('create', 'update'):
+            return teacher_shared_ok(user, old or {}, new or {})
+        return role in STAFF
     if col in ('gradingPolicies', 'curriculum', 'theses'):
         return signed if op == 'read' else role in ('admin', 'training')
     if col == 'financeConfig': return signed if op == 'read' else role in ('admin', 'finance')
