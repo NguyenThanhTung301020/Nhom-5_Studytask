@@ -33,8 +33,10 @@ Sau đó so `sha256sum` của từng tệp ở hai phía (lưu ý: `sha256sum` t
 
 Mỗi bản có `config/mail.json` (mật khẩu ứng dụng gửi email) và `studytask.db` (băm mật khẩu, email, bài nộp), nên **bản chép trên ổ ngoài phải được bảo vệ**:
 
-- Cất ổ ở nơi an toàn, không để cắm sẵn vào máy; không đưa vào repo, không gửi qua mạng.
-- Nên mã hóa (BitLocker To Go cho cả ổ, hoặc mã hóa gói lưu trữ bằng mật khẩu riêng). Trạng thái hiện tại: (điền sau khi người thực hiện chọn cách mã hóa, hoặc ghi "chưa mã hóa").
+- **Quyết định của Trương Thanh Vui: không mã hóa ổ.** Đây là ổ di động; sau mỗi lần chép sẽ **rút ra và cất đi**, chỉ cắm vào khi cần chép hoặc khôi phục. Bản chép trên ổ **không được mã hóa**.
+- Điều kiện đi kèm để chấp nhận cách này: cất ổ ở nơi an toàn, không để cắm sẵn vào máy; không đưa nội dung ổ vào repo, không gửi qua mạng, không cho mượn khi ổ còn chứa bản sao lưu.
+- Rủi ro còn lại: nếu ổ bị mất hoặc bị lấy cắp thì người nhặt được đọc được `config/mail.json` (mật khẩu ứng dụng gửi email), băm mật khẩu, email và bài nộp trong `studytask.db`. Nếu ổ bị mất: đổi mật khẩu ứng dụng email (`mail-config`), và đặt lại mật khẩu các tài khoản.
+
 
 ## 4. Giới hạn
 
@@ -46,6 +48,6 @@ Mỗi bản có `config/mail.json` (mật khẩu ứng dụng gửi email) và `
 
 | Việc | Người phụ trách |
 |---|---|
-| Chọn và áp dụng cách mã hóa cho ổ ngoài, điền mục 3 | Trương Thanh Vui |
+| Rút ổ sau mỗi lần chép và cất đi (ghi ngày rút ổ vào biên bản) | Trương Thanh Vui |
 | Đặt lịch chép lại (mỗi tuần), ghi lần chép tiếp theo vào biên bản này | Trương Thanh Vui |
 | Nguyễn Thanh Tùng xác nhận (theo kế hoạch tuần 6 việc 1b) | Nguyễn Thanh Tùng |
