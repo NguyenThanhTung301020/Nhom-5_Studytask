@@ -70,3 +70,15 @@ Việc còn lại (điền sau):
 ## 4. Nếu có cổng mở
 
 Tắt chuyển tiếp cổng, UPnP hoặc DMZ trong bộ định tuyến, chạy lại script, ghi cả hai lần kết quả. Biện pháp thêm (không bắt buộc): chỉ cho nginx lắng nghe ở `127.0.0.1:80` nếu không cần vào bằng mạng LAN; khi đó các lệnh kiểm tra bằng địa chỉ LAN của máy chủ sẽ không còn dùng được.
+
+## 5. Phạm vi và giới hạn
+
+Đây là kiểm tra của một dự án báo cáo sinh viên, không phải đánh giá bảo mật chuyên sâu.
+
+- **Chỉ dùng công cụ miễn phí và sẵn có:** lệnh của Windows và PowerShell, `ssh`, `ss`, trang quản trị bộ định tuyến. Không mua công cụ quét cổng, dịch vụ giám sát trả phí hay thiết bị bảo mật.
+- **Phạm vi thử:** chỉ kết nối TCP tới 5 cổng (22, 80, 443, 8787, 20241) từ một mạng 4G, vào một thời điểm; một yêu cầu `HEAD` để nhận diện dịch vụ ở cổng 80 và 443. Không quét toàn bộ cổng, không thử UDP, không thử IPv6, không dò lỗ hổng, không thử mật khẩu.
+- **Không can thiệp sâu vào bộ định tuyến, modem hay nhà mạng:** chỉ đọc cấu hình trong trang quản trị mà nhóm có quyền truy cập, và chỉ đóng quy tắc chuyển tiếp do nhóm tự đặt. Phần do nhà mạng quản lý (cấu hình từ xa, tường lửa của nhà mạng) không kiểm tra và không sửa. Nếu một cổng mở thuộc phần này thì ghi lại như một hạn chế còn tồn tại, không coi là đã xử lý.
+- **Dò thiết bị trong LAN:** chỉ quét cổng 80/443 trong dải `192.168.2.0/24` và đọc tiêu đề phản hồi; không đăng nhập vào thiết bị nào.
+- **Kết quả "đạt" nghĩa là:** tại thời điểm thử, từ mạng đã dùng, các cổng nêu trên không phản hồi. Không có nghĩa máy chủ an toàn tuyệt đối. IP công cộng của nhà mạng có thể đổi, nên kết quả cần được thử lại khi có thay đổi mạng.
+- **Cách giảm rủi ro chính:** máy chủ đi ra Internet qua Cloudflare Tunnel nên không cần chuyển tiếp cổng nào vào mạng nhà.
+
