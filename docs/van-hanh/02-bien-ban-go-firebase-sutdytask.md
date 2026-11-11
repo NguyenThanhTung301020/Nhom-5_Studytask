@@ -4,7 +4,7 @@
 - Người thực hiện trên Firebase Console: **Nguyễn Thanh Tùng** (24TX810027)
 - Thời điểm gỡ: **06/11/2026 10:23:56 UTC** (17:23:56 giờ Việt Nam)
 - Project: `sutdytask`, Project number `447291046399`, gói Spark
-- Hạn khôi phục: **06/12/2026 10:23:56 UTC** (17:23:56 giờ Việt Nam)
+- Hạn khôi phục lần đầu: **06/12/2026 10:23:56 UTC** (17:23:56 giờ Việt Nam). Project đã được khôi phục rồi gỡ lại ngày 11/11/2026; hạn khôi phục hiện tại là **11/12/2026 02:54:32 UTC** (xem mục 5.2)
 
 ## 1. Kết luận
 
@@ -73,9 +73,9 @@ Hệ quả cho việc đối chiếu: **không thể lập bảng đối chiếu
 | Việc | Người phụ trách | Hạn |
 |---|---|---|
 | ~~Ghi lại phần dữ liệu khác nhau; thống nhất "khớp" hay "hơn 90%"; khôi phục project để lấy lại dữ liệu~~ **Đã thử 11/11/2026, không lấy lại được** (mục 5.1). Việc còn lại: nhóm thống nhất ghi "chưa kiểm chứng được" thay cho "khớp"/"hơn 90%" ở báo cáo tuần 6 | Trương Thanh Vui; nhóm xác nhận | Trước 06/12/2026 |
-| **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Trương Thanh Vui (tài khoản có quyền trên project) | Trước 06/12/2026 10:23:56 UTC |
+| **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Trương Thanh Vui (tài khoản có quyền trên project) | **Đã gỡ lại 11/11/2026 02:54:32 UTC** (mục 5.2) |
 | Thử đăng nhập và lưu dữ liệu trên web thật, ghi kết quả vào mục 4 | Nguyễn Thanh Tùng | Sớm nhất có thể |
-| Kiểm tra lại sau hạn khôi phục, xác nhận project đã bị xóa hẳn | Nguyễn Thanh Tùng | Sau 06/12/2026 |
+| Kiểm tra lại sau hạn khôi phục, xác nhận project đã bị xóa hẳn | Nguyễn Thanh Tùng | Sau 11/12/2026 02:54:32 UTC (hạn mới, thay cho 06/12/2026) |
 | Xem project thử `studytask-test` ([thiết kế 04](../thiet-ke/04-thu-cloudflare-worker-dat-lai-mat-khau.md)) có còn cần không. Project này không nằm trong đợt gỡ này; ngày 06/11 API Firestore của nó báo `SERVICE_DISABLED` | Nguyễn Thanh Tùng | Tuần 6 |
 
 ## 7. Cách khôi phục
@@ -85,14 +85,16 @@ Trước hạn khôi phục, tài khoản có quyền trên project vào trang *
 Sau hạn này không khôi phục được nữa.
 
 
-### 5.2. Gỡ lại project (điền sau khi thực hiện)
+### 5.2. Gỡ lại project (11/11/2026)
 
 | Mục | Ghi nhận |
 |---|---|
 | Người thực hiện | Trương Thanh Vui |
-| Thời điểm gỡ lần hai | (điền, UTC và giờ Việt Nam) |
-| Minh chứng | (điền: email "has been shut down" của Google; ảnh chụp trang Resources pending deletion; ảnh và email do người thực hiện giữ, không đưa vào repo công khai) |
-| Hạn khôi phục mới | (điền theo email của Google) |
-| Kiểm tra sau gỡ | (điền: `GET .../projects/sutdytask/databases/(default)/documents/users?pageSize=1` trả 403 hay 400) |
+| Thời điểm gỡ lần hai | **11/11/2026 02:54:32 UTC** (09:54:32 giờ Việt Nam) |
+| Minh chứng | Email của Google "Your project sutdytask has been shut down" (Project Permanent Deletion Warning) gửi lúc 09:54 giờ Việt Nam. Email do người thực hiện giữ, không đưa vào repo công khai |
+| Hạn khôi phục mới | **11/12/2026 02:54:32 UTC** (09:54:32 giờ Việt Nam). Hạn tính lại từ lần gỡ này, thay cho hạn 06/12/2026 của lần gỡ đầu |
+| Kiểm tra sau gỡ | (điền: `GET .../projects/sutdytask/databases/(default)/documents/users?pageSize=1` trả mã nào) |
+
+Lưu ý: sau 11/12/2026 02:54:32 UTC project bị xóa vĩnh viễn và không khôi phục được. Việc "kiểm tra lại sau hạn" của Nguyễn Thanh Tùng tính từ mốc này.
 
 [D06]: ../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md
