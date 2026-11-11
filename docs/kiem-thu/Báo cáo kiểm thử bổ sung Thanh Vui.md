@@ -71,3 +71,19 @@ Bảng thử tay trong báo cáo tuần 5 ghi "`phone` và `email` đã đổi �
 ## 5. Kết luận
 
 `test:logic` trên máy Trương Thanh Vui đạt 42/42. Các bước [D9] phiên bản máy chủ đều đạt trên máy chủ tạm, gồm cả kịch bản máy chủ chậm 10 giây. Còn lại: Thanh Vui tự thử tay để xác nhận, và quyết định có sửa lỗi 4.1 ở tuần 6 hay không.
+
+## 6. Cập nhật tuần 6 (việc 13)
+
+Ngày 11/11/2026, `master` tại `3a9a52c`, máy Trương Thanh Vui (Windows, Node v26.13.0, Python 3.12.10). Công cụ: Claude Code (AI) chạy lệnh theo yêu cầu của Trương Thanh Vui; cần ghi vào nhật ký sử dụng AI.
+
+| Hạng mục | Kết quả |
+|---|---|
+| `npm run test:logic` | 62/62 đạt (mục 1 ghi 42/42 ở thời điểm 06/11; từ đó thêm ca ở [PR37] và phần Trắc nghiệm) |
+| `python tests/server/test_profile_lock.py` | 25/25 đạt (mục 1 ghi 18/18) |
+
+**Mục 4.1 (lưu một nửa dữ liệu): đã sửa ở [PR41].** Máy chủ tự ghi `user.phone` trong cùng giao dịch khi yêu cầu có `profile.phone`, nên dù giao diện báo quá hạn sau khi yêu cầu đầu đã tới máy chủ thì `user` và `userData.profile` vẫn khớp. Ca kiểm thử: "Một lần ghi userData cũng cập nhật user.phone", "Chỉ đổi email thì số điện thoại ở user giữ nguyên", "Số điện thoại sai định dạng không làm đổi user.phone", cùng các ca liên quan trong `tests/server/test_profile_lock.py`. Giao diện vẫn có thể báo "Lưu thất bại – thử lại" trong lúc dữ liệu đã được lưu; bấm Lưu lại không gây hại. Quyết định: **đã sửa**, không dời tuần 7.
+
+**Mục 4.2 (`email` chỉ nằm ở `userData.profile`):** [D9] mục 4 đã viết lại đúng như vậy (`phone` đổi ở `user` và `userData.profile`, `email` chỉ ở `userData.profile`). Câu ghi sai trong báo cáo tuần 5 là nội dung đã nộp, nhóm cần xem có đính chính ở báo cáo tuần 6 hay không.
+
+**Chưa chạy lại bằng ca tự động:** các bước thuần giao diện ở mục 3 (bước 1, 5, 6, 7, 8). Kết quả của chúng vẫn là lần thử 06/11 do AI thao tác. **Thanh Vui chưa tự thử tay**; đề xuất dùng kiểm thử động thay thế đang chờ nhóm xác nhận (xem [D9] mục 4).
+
