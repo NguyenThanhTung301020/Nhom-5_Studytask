@@ -73,7 +73,7 @@ Hệ quả cho việc đối chiếu: **không thể lập bảng đối chiếu
 | Việc | Người phụ trách | Hạn |
 |---|---|---|
 | ~~Ghi lại phần dữ liệu khác nhau; thống nhất "khớp" hay "hơn 90%"; khôi phục project để lấy lại dữ liệu~~ **Đã thử 11/11/2026, không lấy lại được** (mục 5.1). Việc còn lại: nhóm thống nhất ghi "chưa kiểm chứng được" thay cho "khớp"/"hơn 90%" ở báo cáo tuần 6 | Trương Thanh Vui; nhóm xác nhận | Trước 06/12/2026 |
-| **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Nguyễn Thanh Tùng (hoặc người có quyền trên project) | Trước 06/12/2026 10:23:56 UTC |
+| **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Trương Thanh Vui (tài khoản có quyền trên project) | Trước 06/12/2026 10:23:56 UTC |
 | Thử đăng nhập và lưu dữ liệu trên web thật, ghi kết quả vào mục 4 | Nguyễn Thanh Tùng | Sớm nhất có thể |
 | Kiểm tra lại sau hạn khôi phục, xác nhận project đã bị xóa hẳn | Nguyễn Thanh Tùng | Sau 06/12/2026 |
 | Xem project thử `studytask-test` ([thiết kế 04](../thiet-ke/04-thu-cloudflare-worker-dat-lai-mat-khau.md)) có còn cần không. Project này không nằm trong đợt gỡ này; ngày 06/11 API Firestore của nó báo `SERVICE_DISABLED` | Nguyễn Thanh Tùng | Tuần 6 |
@@ -83,5 +83,16 @@ Hệ quả cho việc đối chiếu: **không thể lập bảng đối chiếu
 Trước hạn khôi phục, tài khoản có quyền trên project vào trang **Resources pending deletion** của Google Cloud, chọn `sutdytask`, bấm **Restore** rồi xác nhận. Nếu không được, dùng lệnh `gcloud projects undelete sutdytask`.
 
 Sau hạn này không khôi phục được nữa.
+
+
+### 5.2. Gỡ lại project (điền sau khi thực hiện)
+
+| Mục | Ghi nhận |
+|---|---|
+| Người thực hiện | Trương Thanh Vui |
+| Thời điểm gỡ lần hai | (điền, UTC và giờ Việt Nam) |
+| Minh chứng | (điền: email "has been shut down" của Google; ảnh chụp trang Resources pending deletion; ảnh và email do người thực hiện giữ, không đưa vào repo công khai) |
+| Hạn khôi phục mới | (điền theo email của Google) |
+| Kiểm tra sau gỡ | (điền: `GET .../projects/sutdytask/databases/(default)/documents/users?pageSize=1` trả 403 hay 400) |
 
 [D06]: ../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md
