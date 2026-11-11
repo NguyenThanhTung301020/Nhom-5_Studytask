@@ -93,7 +93,7 @@ Sau hạn này không khôi phục được nữa.
 | Thời điểm gỡ lần hai | **11/11/2026 02:54:32 UTC** (09:54:32 giờ Việt Nam) |
 | Minh chứng | Email của Google "Your project sutdytask has been shut down" (Project Permanent Deletion Warning) gửi lúc 09:54 giờ Việt Nam. Email do người thực hiện giữ, không đưa vào repo công khai |
 | Hạn khôi phục mới | **11/12/2026 02:54:32 UTC** (09:54:32 giờ Việt Nam). Hạn tính lại từ lần gỡ này, thay cho hạn 06/12/2026 của lần gỡ đầu |
-| Kiểm tra sau gỡ | (điền: `GET .../projects/sutdytask/databases/(default)/documents/users?pageSize=1` trả mã nào) |
+| Kiểm tra sau gỡ | Chạy trong Google Cloud Shell, có đăng nhập (token của `gcloud auth print-access-token`): `GET https://firestore.googleapis.com/v1/projects/sutdytask/databases/(default)/documents/users?pageSize=1` trả **HTTP 403** `PERMISSION_DENIED`, lý do `CONSUMER_INVALID`, "Permission denied on resource project sutdytask." Giống kết quả sau lần gỡ đầu (mục 4). Chưa chạy phép thử không đăng nhập |
 
 Lưu ý: sau 11/12/2026 02:54:32 UTC project bị xóa vĩnh viễn và không khôi phục được. Việc "kiểm tra lại sau hạn" của Nguyễn Thanh Tùng tính từ mốc này.
 
