@@ -27,19 +27,35 @@ Cổng 22 và 80 mở cho cả mạng LAN, nên chúng chỉ an toàn trước I
 Script chỉ thử kết nối TCP tới các cổng 22, 80, 443, 8787, 20241, từ chối chạy nếu máy đang dùng chính mạng của máy chủ, và ghi kết quả vào `docs/van-hanh/bang-chung/<ngày>/kiem-tra-cong-tu-ngoai.txt` với IP đã che octet cuối (repo công khai).
 3. **Xem cấu hình bộ định tuyến** (trang quản trị): mục Port Forwarding / Virtual Server, UPnP, DMZ. Chụp ảnh, giữ trên máy, không đưa vào repo.
 
-## 3. Kết quả (điền sau khi thử)
+## 3. Kết quả
+
+Thử lúc 11/11/2026 03:22 UTC (10:22 giờ Việt Nam) bằng `kiem-tra-cong-tu-ngoai.ps1`, do Trương Thanh Vui yêu cầu, từ máy dùng mạng 4G (khác mạng của máy chủ; IP mạng nhà `113.161.166.x` đã che). Tệp kết quả: [bang-chung/2026-11-11/kiem-tra-cong-tu-ngoai.txt](bang-chung/2026-11-11/kiem-tra-cong-tu-ngoai.txt).
+
+| Cổng | Kết quả từ ngoài | Đánh giá |
+|---|---|---|
+| 22 (SSH) | Không phản hồi | Đạt |
+| 80 | **MỞ** | Cần xử lý (xem dưới) |
+| 443 | **MỞ** | Cần xử lý (xem dưới) |
+| 8787 (API) | Không phản hồi | Đạt |
+| 20241 (`cloudflared`) | Không phản hồi | Đạt |
+| Trang web qua Cloudflare | HTTP 200, 0,77 giây | Đạt |
+
+**Cổng 80 và 443 mở, nhưng không phải máy chủ StudyTask.** Dựa trên hai điểm:
+- Máy chủ **không lắng nghe cổng 443** (mục 1), nên 443 mở từ ngoài chắc chắn không phải nginx của máy chủ.
+- Một yêu cầu `HEAD` tới `http://<IP nhà>/` trả **HTTP 404, `Server: Microsoft-HTTPAPI/2.0`**: đó là dịch vụ HTTP của Windows (HTTP.sys), không phải nginx trên Ubuntu. Cổng 443 chấp nhận kết nối nhưng ngắt khi bắt tay TLS.
+
+Kết luận tạm: **máy chủ StudyTask không bị vào thẳng từ ngoài** (22, 8787, 20241 không phản hồi; 80 không trả nginx), nhưng **có một thiết bị Windows trong mạng nhà đang mở cổng 80/443 ra Internet** (do bộ định tuyến chuyển tiếp cổng, UPnP hoặc DMZ). Cần xác định thiết bị đó và đóng cổng.
+
+Việc còn lại (điền sau):
 
 | Mục | Kết quả |
 |---|---|
-| Ngày giờ, người thực hiện, mạng dùng để thử | (điền) |
-| Cổng 22 từ ngoài | (điền: KHONG PHAN HOI / TU CHOI / MO) |
-| Cổng 80 từ ngoài | (điền) |
-| Cổng 443, 8787, 20241 từ ngoài | (điền) |
-| Trang web qua Cloudflare | (điền: HTTP, thời gian) |
-| Bộ định tuyến: có chuyển tiếp cổng, UPnP, DMZ không | (điền) |
-| Kết luận | (điền) |
+| Bộ định tuyến: Port Forwarding / Virtual Server, UPnP, DMZ | (điền: bảng chuyển tiếp cổng, cổng 80/443 trỏ tới IP LAN nào) |
+| Thiết bị nhận cổng 80/443 | (điền: tên thiết bị, dịch vụ nào đang mở) |
+| Cách xử lý | (điền: xóa chuyển tiếp cổng / tắt UPnP / tắt dịch vụ) |
+| Kết quả chạy lại sau xử lý | (điền: dán dòng KẾT QUẢ) |
 
-Đạt khi không cổng nào ở trạng thái MỞ và trang web vẫn vào được qua Cloudflare. `TU CHOI` và `KHONG PHAN HOI` đều coi là không vào được; `KHONG PHAN HOI` là kết quả tốt hơn vì không để lộ máy chủ đang tồn tại ở địa chỉ đó.
+Đạt hoàn toàn khi chạy lại không cổng nào ở trạng thái MỞ và trang web vẫn vào được qua Cloudflare.
 
 ## 4. Nếu có cổng mở
 
