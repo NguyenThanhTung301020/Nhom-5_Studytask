@@ -52,11 +52,28 @@ Chạy lúc 06/11/2026 10:26 UTC (17:26 giờ Việt Nam).
 - Repo **chưa có bảng đối chiếu** và không có script chuyển dữ liệu từ Firestore sang máy chủ, nên phần dữ liệu khác nhau và cách dữ liệu được đưa sang chưa được ghi lại. Nhóm dựa vào xác nhận của Thanh Vui để gỡ.
 - Biên bản này **chưa ghi nhận** bản sao lưu Firestore hoặc Firebase Auth, cũng như ảnh chụp danh sách collection và số tài khoản trước khi gỡ. Nếu nhóm có các tài liệu này thì bổ sung vào đây.
 
+### 5.1. Thử khôi phục project để lấy dữ liệu (11/11/2026)
+
+Nhóm khôi phục project `sutdytask` trong hạn để xuất Firestore và đối chiếu với máy chủ. Kết quả: **không lấy lại được dữ liệu**.
+
+| Kiểm tra (Google Cloud Shell, tài khoản có quyền trên project) | Kết quả |
+|---|---|
+| Console Firestore | "Error loading collections" |
+| Cloud Firestore API ở trang APIs & Services | Đang bật, 12 yêu cầu, 0% lỗi |
+| `gcloud firestore databases list --project=sutdytask` | Còn bản ghi `(default)` (tạo 13/06/2026, `nam5`); `pointInTimeRecovery` **DISABLED**, `versionRetentionPeriod` 3600s |
+| `POST .../documents:listCollectionIds` (script chỉ đọc) | HTTP 400 `FAILED_PRECONDITION`: "Cannot serve requests because the database was deleted." |
+| `gcloud firestore backups list --project=sutdytask` | `Listed 0 items.` (không có bản sao lưu) |
+
+Kết luận: khi project bị gỡ, Google xóa luôn database Firestore; khôi phục project chỉ đưa lại project, không đưa lại dữ liệu. Không có PITR và không có sao lưu nên **dữ liệu Firestore của project `sutdytask` không còn lấy lại được**. Mật khẩu Firebase Auth vốn không xuất được dạng đọc được ([D06] mục 8).
+
+Hệ quả cho việc đối chiếu: **không thể lập bảng đối chiếu** giữa Firebase và máy chủ. Hai ghi nhận trước đó ("khớp" và "tương đồng hơn 90%") đều không có bản đối chiếu làm căn cứ, nên nên đọc là **chưa kiểm chứng được**. Căn cứ còn lại: [D06] mục 8 ghi máy chủ bắt đầu bằng dữ liệu nạp từ script, nhóm chưa từng xuất Firestore; dữ liệu đang dùng là dữ liệu trên máy chủ (`studytask.db`).
+
 ## 6. Việc còn lại
 
 | Việc | Người phụ trách | Hạn |
 |---|---|---|
-| Ghi lại phần dữ liệu khác nhau và cách dữ liệu được đưa sang máy chủ; thống nhất "khớp" hay "hơn 90%". Nếu thiếu dữ liệu cần giữ thì khôi phục project để lấy lại | Trương Thanh Vui | Trước 06/12/2026 10:23:56 UTC |
+| ~~Ghi lại phần dữ liệu khác nhau; thống nhất "khớp" hay "hơn 90%"; khôi phục project để lấy lại dữ liệu~~ **Đã thử 11/11/2026, không lấy lại được** (mục 5.1). Việc còn lại: nhóm thống nhất ghi "chưa kiểm chứng được" thay cho "khớp"/"hơn 90%" ở báo cáo tuần 6 | Trương Thanh Vui; nhóm xác nhận | Trước 06/12/2026 |
+| **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Nguyễn Thanh Tùng (hoặc người có quyền trên project) | Trước 06/12/2026 10:23:56 UTC |
 | Thử đăng nhập và lưu dữ liệu trên web thật, ghi kết quả vào mục 4 | Nguyễn Thanh Tùng | Sớm nhất có thể |
 | Kiểm tra lại sau hạn khôi phục, xác nhận project đã bị xóa hẳn | Nguyễn Thanh Tùng | Sau 06/12/2026 |
 | Xem project thử `studytask-test` ([thiết kế 04](../thiet-ke/04-thu-cloudflare-worker-dat-lai-mat-khau.md)) có còn cần không. Project này không nằm trong đợt gỡ này; ngày 06/11 API Firestore của nó báo `SERVICE_DISABLED` | Nguyễn Thanh Tùng | Tuần 6 |
@@ -66,3 +83,5 @@ Chạy lúc 06/11/2026 10:26 UTC (17:26 giờ Việt Nam).
 Trước hạn khôi phục, tài khoản có quyền trên project vào trang **Resources pending deletion** của Google Cloud, chọn `sutdytask`, bấm **Restore** rồi xác nhận. Nếu không được, dùng lệnh `gcloud projects undelete sutdytask`.
 
 Sau hạn này không khôi phục được nữa.
+
+[D06]: ../thiet-ke/06-chuyen-firebase-sang-may-chu-rieng.md
