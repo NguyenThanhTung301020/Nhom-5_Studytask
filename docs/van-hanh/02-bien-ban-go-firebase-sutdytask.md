@@ -68,11 +68,21 @@ Kết luận: khi project bị gỡ, Google xóa luôn database Firestore; khôi
 
 Hệ quả cho việc đối chiếu: **không thể lập bảng đối chiếu** giữa Firebase và máy chủ. Hai ghi nhận trước đó ("khớp" và "tương đồng hơn 90%") đều không có bản đối chiếu làm căn cứ, nên nên đọc là **chưa kiểm chứng được**. Căn cứ còn lại: [D06] mục 8 ghi máy chủ bắt đầu bằng dữ liệu nạp từ script, nhóm chưa từng xuất Firestore; dữ liệu đang dùng là dữ liệu trên máy chủ (`studytask.db`).
 
+### 5.3. Kết thúc việc đối chiếu dữ liệu (11/11/2026)
+
+Việc đối chiếu dữ liệu Firebase với máy chủ **được đóng, không thực hiện thêm**, vì không còn cần thiết và cũng không còn thực hiện được:
+
+1. **Hệ thống không còn phụ thuộc Firebase.** Web và API chạy hoàn toàn trên máy chủ riêng; mã trên `master` không còn SDK hay cấu hình Firebase (mục 2). Dữ liệu đang dùng là dữ liệu trên máy chủ, được sao lưu hằng ngày và đã chép ra ổ ngoài ([biên bản sao lưu](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md)).
+2. **Văn bản này thay thế bảng đối chiếu.** Quyết định gỡ project, căn cứ trước khi gỡ (mục 2), kết quả kiểm tra sau khi gỡ (mục 4) và việc thử khôi phục (mục 5.1) đã được ghi lại ở đây; đối chiếu từng bản ghi không thêm thông tin cần cho vận hành.
+3. **Không còn nguồn để đối chiếu.** Máy chủ bắt đầu từ dữ liệu nạp bằng script, không có bản xuất Firestore ([D06] mục 8); database Firestore đã bị xóa cùng project và không có sao lưu (mục 5.1).
+
+Hai ghi nhận cũ ("khớp", "tương đồng hơn 90%") được ghi lại là **chưa kiểm chứng được**; không dùng chúng làm căn cứ cho kết luận nào khác. Đề xuất của Trương Thanh Vui; Nguyễn Thanh Tùng xác nhận khi kiểm tra lại sau hạn xóa vĩnh viễn (mục 6).
+
 ## 6. Việc còn lại
 
 | Việc | Người phụ trách | Hạn |
 |---|---|---|
-| ~~Ghi lại phần dữ liệu khác nhau; thống nhất "khớp" hay "hơn 90%"; khôi phục project để lấy lại dữ liệu~~ **Đã thử 11/11/2026, không lấy lại được** (mục 5.1). Việc còn lại: nhóm thống nhất ghi "chưa kiểm chứng được" thay cho "khớp"/"hơn 90%" ở báo cáo tuần 6 | Trương Thanh Vui; nhóm xác nhận | Trước 06/12/2026 |
+| ~~Đối chiếu dữ liệu Firebase với máy chủ~~ **Đóng, không thực hiện** (mục 5.3): hệ thống không còn phụ thuộc Firebase, biên bản này thay thế bảng đối chiếu, và không còn dữ liệu để đối chiếu (mục 5.1) | Trương Thanh Vui; Nguyễn Thanh Tùng xác nhận | Đã xong 11/11/2026 |
 | **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Trương Thanh Vui (tài khoản có quyền trên project) | **Đã gỡ lại 11/11/2026 02:54:32 UTC** (mục 5.2) |
 | Thử đăng nhập và lưu dữ liệu trên web thật, ghi kết quả vào mục 4 | Nguyễn Thanh Tùng | Sớm nhất có thể |
 | Kiểm tra lại sau hạn khôi phục, xác nhận project đã bị xóa hẳn | Nguyễn Thanh Tùng | Sau 11/12/2026 02:54:32 UTC (hạn mới, thay cho 06/12/2026) |
