@@ -1,0 +1,12 @@
+﻿Kiểm tra cổng từ ngoài - 2026-11-11 03:22:24 UTC
+Mục tiêu: 113.161.166.x | Máy kiểm tra dùng IP: 27.70.242.x (khác mục tiêu)
+
+ Cong KetQua         Danh_gia                
+ ---- ------         --------                
+   22 KHONG PHAN HOI Đạt                     
+   80 MO             LỖI: cổng mở ra Internet
+  443 MO             LỖI: cổng mở ra Internet
+ 8787 KHONG PHAN HOI Đạt                     
+20241 KHONG PHAN HOI Đạt
+Trang web qua Cloudflare (https://sutdytask.io.vn): HTTP 200, 0.77 giây
+KẾT QUẢ: CÓ LỖI
