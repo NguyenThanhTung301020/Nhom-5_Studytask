@@ -84,11 +84,12 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
   }, [JSON.stringify(filterPreset)])
 
   const handleSave = (form) => {
-    if (modal === 'edit') setDeadlines(deadlines.map((d) => d.id === editItem.id ? { ...d, ...form } : d))
-    else setDeadlines([...deadlines, { id: Date.now(), ...form }])
+    // `deadlines` ở trang này đã lọc theo môn; cập nhật trên danh sách đầy đủ (prev) để không mất deadline của môn khác
+    if (modal === 'edit') setDeadlines(prev => prev.map((d) => d.id === editItem.id ? { ...d, ...form } : d))
+    else setDeadlines(prev => [...prev, { id: Date.now(), ...form }])
     setModal(null)
   }
-  const markDone     = (id) => setDeadlines(deadlines.map((d) => d.id === id ? { ...d, status: 'completed' } : d))
+  const markDone     = (id) => setDeadlines(prev => prev.map((d) => d.id === id ? { ...d, status: 'completed' } : d))
   const subjectName  = (id) => (subjects.find((s) => s.id === id) || {}).name  || '—'
   const subjectColor = (id) => (subjects.find((s) => s.id === id) || {}).color || '#ccc'
 
@@ -258,7 +259,7 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
       modal     && h(DeadlineModal, { item: modal === 'edit' ? editItem : null, subjects, onSave: handleSave, onClose: () => setModal(null) }),
       confirmId && h(ConfirmModal, {
         message: 'Bạn có chắc muốn xóa deadline này?',
-        onConfirm: () => { setDeadlines(deadlines.filter((d) => d.id !== confirmId)); setConfirmId(null) },
+        onConfirm: () => { setDeadlines(prev => prev.filter((d) => d.id !== confirmId)); setConfirmId(null) },
         onClose: () => setConfirmId(null),
       })
     )

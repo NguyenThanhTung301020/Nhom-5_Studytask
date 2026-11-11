@@ -741,8 +741,9 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
 
   const handleSave = (form) => {
     const data = { ...form, credits: form.credits ? parseInt(form.credits) : null }
-    if (modal === 'edit') setSubjects(subjects.map((s) => s.id === editItem.id ? { ...s, ...data } : s))
-    else setSubjects([...subjects, { id: Date.now(), ...data }])
+    // `subjects` ở trang này đã lọc theo môn được phân công; cập nhật trên danh sách đầy đủ (prev) để không mất môn của người khác
+    if (modal === 'edit') setSubjects(prev => prev.map((s) => s.id === editItem.id ? { ...s, ...data } : s))
+    else setSubjects(prev => [...prev, { id: Date.now(), ...data }])
     setModal(null)
   }
 
@@ -792,7 +793,7 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
         modal && h(SubjectModal, { item: modal === 'edit' ? editItem : null, onSave: handleSave, onClose: () => setModal(null) }),
         confirmId && h(ConfirmModal, {
           message: 'Xóa môn học này? Toàn bộ bài tập liên quan cũng bị xóa.',
-          onConfirm: () => { setSubjects(subjects.filter((s) => s.id !== confirmId)); setHomeworks(prev => prev.filter((hw) => hw.subjectId !== confirmId)); setConfirmId(null) },
+          onConfirm: () => { setSubjects(prev => prev.filter((s) => s.id !== confirmId)); setHomeworks(prev => prev.filter((hw) => hw.subjectId !== confirmId)); setConfirmId(null) },
           onClose: () => setConfirmId(null),
         })
       )
