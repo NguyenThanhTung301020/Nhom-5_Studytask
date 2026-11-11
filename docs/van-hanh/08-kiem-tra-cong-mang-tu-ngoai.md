@@ -56,16 +56,23 @@ Kết luận tạm: **máy chủ StudyTask không bị vào thẳng từ ngoài*
 
 Kết luận: chuyển tiếp 80/443 không đến từ UPnP, nên là quy tắc tĩnh hoặc DMZ trong bộ định tuyến, và chưa xác định được đích. Máy `.197` (Windows, IIS) là ứng viên cần xem trước. Cần đọc bảng chuyển tiếp cổng và DMZ trong trang quản trị bộ định tuyến để biết chắc.
 
-Việc còn lại (điền sau):
+### Kết luận và kết thúc việc (11/11/2026)
+
+**Trạng thái: đã kiểm tra, ghi nhận hạn chế; không xử lý được phần cấu hình bộ định tuyến.**
 
 | Mục | Kết quả |
 |---|---|
-| Bộ định tuyến: Port Forwarding / Virtual Server, UPnP, DMZ | (điền: bảng chuyển tiếp cổng, cổng 80/443 trỏ tới IP LAN nào) |
-| Thiết bị nhận cổng 80/443 | (điền sau khi xem bộ định tuyến; ứng viên: `192.168.2.197`) |
-| Cách xử lý | (điền: xóa chuyển tiếp cổng / tắt UPnP / tắt dịch vụ) |
-| Kết quả chạy lại sau xử lý | (điền: dán dòng KẾT QUẢ) |
+| Bộ định tuyến: Port Forwarding, DMZ, truy cập từ xa | **Không kiểm tra được.** Nhóm không có quyền vào trang quản trị bộ định tuyến (thiết bị do nhà mạng cấp và quản lý). Chỉ đọc được danh sách ánh xạ UPnP (không có cổng 80/443) |
+| Thiết bị nhận cổng 80/443 từ ngoài | **Chưa xác định.** Phản hồi từ ngoài là dịch vụ HTTP của Windows, không thiết bị nào trong LAN trả đúng dấu vết đó (máy Windows chạy IIS ở `192.168.2.197` chỉ là ứng viên) |
+| Cách xử lý | Không có: không có quyền sửa cấu hình bộ định tuyến, và theo phạm vi ở mục 5 nhóm không can thiệp sâu vào thiết bị của nhà mạng |
+| Kết quả chạy lại sau xử lý | Không chạy, vì không có xử lý nào |
 
-Đạt hoàn toàn khi chạy lại không cổng nào ở trạng thái MỞ và trang web vẫn vào được qua Cloudflare.
+Kết luận về yêu cầu của việc 6 ("xác minh cổng 80 không vào thẳng được từ ngoài"):
+- **Máy chủ StudyTask không bị vào thẳng từ Internet** tại thời điểm thử: cổng 22 (SSH), 8787 (API) và 20241 (`cloudflared`) không phản hồi; cổng 80 phản hồi nhưng không phải nginx của máy chủ (máy chủ không lắng nghe cổng 443, và dấu vết cổng 80 là HTTP.sys của Windows).
+- **Yêu cầu "cổng 80 không vào được từ ngoài" chưa đạt hoàn toàn**: cổng 80 và 443 của mạng nhà vẫn mở ra Internet, đến một thiết bị Windows chưa xác định. Rủi ro này nằm ở thiết bị đó, không ở máy chủ StudyTask, và còn tồn tại.
+- Web vẫn vào được qua Cloudflare Tunnel (HTTP 200), nên việc không sửa bộ định tuyến không ảnh hưởng hoạt động của hệ thống.
+
+**Rủi ro còn lại và đề nghị (cho người có quyền với bộ định tuyến, ví dụ chủ thuê bao):** vào trang quản trị, xem Port Forwarding / DMZ / truy cập từ xa, xóa mục chuyển tiếp cổng 80/443 nếu không dùng. Máy chủ StudyTask không cần chuyển tiếp cổng nào. Sau khi xử lý, chạy lại `kiem-tra-cong-tu-ngoai.ps1` từ mạng khác và ghi kết quả bổ sung vào biên bản này.
 
 ## 4. Nếu có cổng mở
 
