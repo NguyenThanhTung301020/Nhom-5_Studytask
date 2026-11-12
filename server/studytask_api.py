@@ -244,6 +244,7 @@ ACTIVITY_EVENT_KEYS = {'type', 'at', 'subjectId', 'refId', 'refTitle', 'score', 
 ACTIVITY_SCORE_KEYS = {'score', 'total', 'correct'}     # chỉ có trong sự kiện `quiz` do máy chủ ghi khi chấm (V3)
 ACTIVITY_TYPES = ('quiz', 'homework', 'material')
 ACTIVITY_MAX_EVENTS = 2000
+ACTIVITY_REF_MAX = 100          # refId dạng chuỗi tối đa 100 ký tự (mã bài tập, tài liệu, đề)
 ACTIVITY_DATE_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
 
 
@@ -281,7 +282,7 @@ def valid_activity_event(e):
     return (e.get('type') in ACTIVITY_TYPES
             and isinstance(at, str) and ACTIVITY_DATE_RE.fullmatch(at) is not None
             and is_number(e.get('subjectId', 0))
-            and (is_number(ref) or isinstance(ref, str))
+            and (is_number(ref) or (isinstance(ref, str) and len(ref) <= ACTIVITY_REF_MAX))
             and short_str(e, 'refTitle', 500) and short_str(e, 'url', 2048)
             and short_str(e, 'fileName', 255) and short_str(e, 'note', 2000)
             and is_number(score) and 0 <= score <= 10
@@ -290,8 +291,8 @@ def valid_activity_event(e):
 
 
 def activity_write_ok(uid, old, new):
-    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ (loại material hoặc homework, không phải quiz, không mang điểm) vào cuối;
-    phần cũ giữ nguyên, kể cả sự kiện quiz đã có."""
+    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ (loại material hoặc homework, không phải quiz, không mang điểm,
+    thuộc môn đang học) vào cuối; phần cũ giữ nguyên, kể cả sự kiện quiz đã có."""
     if not set(new) <= ACTIVITY_DOC_KEYS or new.get('uid', uid) != uid:
         return False
     if not (short_str(new, 'name', 100) and short_str(new, 'username', 254) and short_str(new, 'email', 254)):
@@ -306,7 +307,36 @@ def activity_write_ok(uid, old, new):
         return True
     last = cur[-1] if len(cur) == len(prev) + 1 and cur[:-1] == prev else None
     return (valid_activity_event(last) and last.get('type') != 'quiz'
-            and not (set(last) & ACTIVITY_SCORE_KEYS))
+            and not (set(last) & ACTIVITY_SCORE_KEYS) and studies_subject(uid, last.get('subjectId')))
+
+
+def studies_subject(uid, subject_id):
+    """Sự kiện sinh viên tự ghi phải thuộc môn sinh viên đang học (subjectIds hiện tại trong hồ sơ).
+    Sự kiện không ghi môn bị từ chối: giao diện luôn gửi subjectId (xem tài liệu, nộp bài), và không gắn được vào lớp nào.
+    Hồ sơ cũ chưa có subjectIds được coi là học mọi môn, giống teaches_student, app.js và /api/upload."""
+    if not is_number(subject_id):
+        return False
+    prof = doc_get('user', uid)
+    if prof is None:
+        return False
+    ids = prof.get('subjectIds')
+    return ids is None or (isinstance(ids, list) and subject_id in ids)
+
+
+def trim_activity_events(events):
+    """Giữ nhật ký trong ACTIVITY_MAX_EVENTS khi máy chủ thêm sự kiện quiz lúc chấm bài.
+    Trước đây cắt `events[-2000:]` nên nhật ký đầy thì mất luôn điểm quiz cũ mà Bảng điểm đọc.
+    Nay chỉ bỏ sự kiện KHÔNG phải quiz, cũ nhất trước; sự kiện quiz luôn được giữ (nếu toàn quiz thì nhật ký có thể vượt giới hạn)."""
+    over = len(events) - ACTIVITY_MAX_EVENTS
+    if over <= 0:
+        return events
+    out = []
+    for e in events:
+        if over > 0 and not (isinstance(e, dict) and e.get('type') == 'quiz'):
+            over -= 1
+            continue
+        out.append(e)
+    return out
 
 
 def project_activities(user, id_, doc):
@@ -1583,7 +1613,7 @@ class Handler(BaseHTTPRequestHandler):
                 events.append({'type': 'quiz', 'at': time.strftime('%Y-%m-%d', time.gmtime(now)), 'subjectId': quiz.get('subjectId'),
                                'refId': quiz['id'], 'refTitle': str(quiz.get('title', ''))[:500], 'score': score, 'total': total, 'correct': correct})
                 doc_put('activities', u['uid'], {**act, 'uid': u['uid'], 'name': prof.get('name', ''), 'username': u['username'],
-                                                 'events': events[-ACTIVITY_MAX_EVENTS:]})
+                                                 'events': trim_activity_events(events)})
                 return self.send(200, {'quizId': quiz['id'], 'score': score, 'correct': correct, 'total': total,
                                        'submittedAt': result['submittedAt']})
             raise ApiError(404, 'not-found', 'Không tìm thấy.')

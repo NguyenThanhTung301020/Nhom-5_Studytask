@@ -105,8 +105,11 @@ try:
     ad.put('user', sv6.uid, {'subjectIds': [1]})
     ad.put('user', sv7.uid, {'subjectIds': [1]})
     ad.put('user', gv5.uid, {'subjectIds': [1, 3]})      # gv5 dạy cả môn 1 và môn 3
-    for sv in (sv1, sv2, sv3, sv4, sv6):
+    ad.put('user', sv5.uid, {'subjectIds': [1]})
+    for sv in (sv1, sv3, sv6):
         sv.append(sv.uid, MATERIAL)
+    sv2.append(sv2.uid, {**MATERIAL, 'subjectId': 2})          # sv2 chỉ học môn 2
+    ad.put('activities', sv4.uid, {'events': [MATERIAL]})       # sv4 chưa học môn nào: không tự ghi được, Admin tạo sẵn
 
     # ── Đọc từng tài liệu ──
     check('Chủ tài khoản đọc nhật ký của mình: được', sv1.read(sv1.uid) == 200)
@@ -145,7 +148,7 @@ try:
     EV_M3 = {**MATERIAL, 'subjectId': 3, 'refId': 31, 'refTitle': 'Slide môn 3'}
     EV_NOSUB = {'type': 'material', 'refId': 'chung', 'at': '2026-11-05'}
     EV_M2 = {**MATERIAL, 'subjectId': 2, 'refId': 21, 'refTitle': 'Slide môn 2'}
-    sv1.append(sv1.uid, EV_M3); sv1.append(sv1.uid, EV_NOSUB); sv3.append(sv3.uid, EV_M2)
+    sv1.append(sv1.uid, EV_M3); ad.append(sv1.uid, EV_NOSUB, {}); sv3.append(sv3.uid, EV_M2)   # sự kiện không ghi môn: dữ liệu cũ, Admin ghi
     full_sv1 = ad.events(sv1.uid)
     check('Chuẩn bị: nhật ký sv1 có đủ sự kiện môn 1, môn 3, không ghi môn', full_sv1 == [MATERIAL, EV_M3, EV_NOSUB], full_sv1)
     check('Giáo viên môn 1 đọc nhật ký sv1: chỉ nhận sự kiện môn 1', gv1.events(sv1.uid) == [MATERIAL], gv1.events(sv1.uid))
@@ -177,11 +180,24 @@ try:
     check('Sinh viên ghi sự kiện nộp bài: được', sv5.append(sv5.uid, HOMEWORK) == 200)
     check('Ghi lại sự kiện đã có: được và không tạo bản trùng',
           sv5.append(sv5.uid, MATERIAL) == 200 and ad.req('GET', f'/api/doc/activities/{sv5.uid}')[1]['data']['events'] == [MATERIAL, HOMEWORK])
-    check('Chỉ có các trường bắt buộc: được', sv5.append(sv5.uid, {'type': 'material', 'at': '2026-11-04'}) == 200)
+    check('Chỉ có các trường bắt buộc (type, at, subjectId): được', sv5.append(sv5.uid, {'type': 'material', 'subjectId': 1, 'at': '2026-11-04'}) == 200)
+
+    # ── Chỉ nhận sự kiện của môn sinh viên đang học ──
+    check('Sự kiện không ghi môn: bị từ chối', sv5.append(sv5.uid, {'type': 'material', 'at': '2026-11-04'}) == 403)
+    check('Sự kiện môn sinh viên không học: bị từ chối', sv5.append(sv5.uid, {**MATERIAL, 'subjectId': 2, 'refId': 'm2'}) == 403)
+    check('Nộp bài môn sinh viên không học: bị từ chối', sv5.append(sv5.uid, {**HOMEWORK, 'subjectId': 9, 'refId': 'h9'}) == 403)
+    check('Sinh viên chưa học môn nào (danh sách rỗng): bị từ chối', sv4.append(sv4.uid, {**MAT2, 'refId': 'r0'}) == 403)
+    check('Sinh viên hồ sơ cũ (học mọi môn): ghi được sự kiện môn bất kỳ', sv3.append(sv3.uid, {**MATERIAL, 'subjectId': 7, 'refId': 'm7'}) == 200)
+    ad.put('user', sv5.uid, {'subjectIds': [1, 2]})
+    check('Sinh viên được thêm môn: ghi được sự kiện môn mới', sv5.append(sv5.uid, {**MATERIAL, 'subjectId': 2, 'refId': 'm2'}) == 200)
+    ad.put('user', sv5.uid, {'subjectIds': [1]})
+    check('Sinh viên thôi học môn: không ghi thêm được sự kiện môn đó', sv5.append(sv5.uid, {**MATERIAL, 'subjectId': 2, 'refId': 'm2b'}) == 403)
     for name, ev in (('note đúng 2000 ký tự', {**HOMEWORK, 'refId': 'b4', 'note': 'a' * 2000}),
                      ('refTitle đúng 500 ký tự', {**MATERIAL, 'refId': 'b5', 'refTitle': 'a' * 500}),
                      ('url đúng 2048 ký tự', {**HOMEWORK, 'refId': 'b6', 'url': 'a' * 2048}),
-                     ('fileName đúng 255 ký tự', {**HOMEWORK, 'refId': 'b7', 'fileName': 'a' * 255})):
+                     ('fileName đúng 255 ký tự', {**HOMEWORK, 'refId': 'b7', 'fileName': 'a' * 255}),
+                     ('refId chuỗi đúng 100 ký tự', {**MATERIAL, 'refId': 'r' * 100}),
+                     ('refId số lớn', {**MATERIAL, 'refId': 10 ** 15})):
         check(f'Biên hợp lệ – {name}: được', sv5.append(sv5.uid, ev) == 200)
 
     # ── Ghi: sai người ──
@@ -197,6 +213,7 @@ try:
            ('sự kiện không phải đối tượng', 'abc'), ('sự kiện rỗng', None),
            ('subjectId là chuỗi', {**MATERIAL, 'subjectId': '1'}), ('subjectId là true', {**MATERIAL, 'refId': 99, 'subjectId': True}),
            ('refId là danh sách', {**MATERIAL, 'refId': [1]}), ('refId là true', {**MATERIAL, 'refId': True}),
+           ('refId chuỗi 101 ký tự', {**MATERIAL, 'refId': 'r' * 101}), ('refId chuỗi 5000 ký tự', {**MATERIAL, 'refId': 'r' * 5000}),
            ('refTitle sai kiểu', {**MATERIAL, 'refTitle': 5}), ('refTitle 501 ký tự', {**MATERIAL, 'refTitle': 'a' * 501}),
            ('url 2049 ký tự', {**HOMEWORK, 'url': 'a' * 2049}), ('fileName 256 ký tự', {**HOMEWORK, 'fileName': 'a' * 256}),
            ('note 2001 ký tự', {**HOMEWORK, 'note': 'a' * 2001}), ('note sai kiểu', {**HOMEWORK, 'note': ['a']}),
@@ -234,6 +251,7 @@ try:
 
     # ── Dữ liệu cũ, giới hạn số sự kiện ──
     legacy = {'type': 'old-format', 'extra': True}
+    ad.put('user', sv4.uid, {'subjectIds': [1]})
     ad.put('activities', sv4.uid, {'events': [legacy]})
     check('Nhật ký có sự kiện kiểu cũ: vẫn thêm được sự kiện mới', sv4.append(sv4.uid, MAT2) == 200)
     ad.put('activities', sv4.uid, {'events': [{**MATERIAL, 'refId': i} for i in range(1999)]})
@@ -297,6 +315,30 @@ try:
           [e['score'] for e in ad.events(sv1.uid) if e.get('type') == 'quiz'] == [10])
     check('Admin vẫn sửa được nhật ký (quyền quản trị giữ nguyên)', ad.put('activities', sv7.uid, {'events': log7 + [MAT2]}) == 200
           and ad.events(sv7.uid) == log7 + [MAT2])
+
+    # ── Nhật ký đầy 2000 sự kiện: máy chủ ghi điểm quiz mới không được làm mất điểm quiz cũ ──
+    gv1.put('sharedData', 'global', {'quizzes': [quiz_def(1, 1, 'active'), quiz_def(2, 1, 'draft')]})
+    s2 = gv1.put('sharedData', 'global', {'quizzes': [quiz_def(1, 1, 'active'), quiz_def(2, 1, 'active')]})
+    check('Chuẩn bị: mở đề thứ hai', s2 == 200, s2)
+    old_quiz = [e for e in log7 if e.get('type') == 'quiz']
+    fill = [{**MATERIAL, 'refId': i} for i in range(1999)]
+    ad.put('activities', sv7.uid, {'events': old_quiz + fill})            # quiz cũ nằm ĐẦU nhật ký, tổng 2000 sự kiện
+    s, j = sv7.req('POST', '/api/quiz/2/submit', {'answers': {'1': 'b', '2': ['b', 'c']}})
+    evs = ad.events(sv7.uid) or []
+    quiz_evs = [e for e in evs if e.get('type') == 'quiz']
+    check('Nhật ký đầy: nộp đề mới vẫn được chấm', s == 200 and j.get('score') == 10, (s, j))
+    check('Nhật ký đầy: điểm quiz cũ (0 điểm, đề 1) vẫn còn', [(e['refId'], e['score']) for e in quiz_evs] == [(1, 0), (2, 10)], quiz_evs)
+    check('Nhật ký đầy: chỉ bỏ sự kiện không phải quiz cũ nhất, tổng vẫn 2000',
+          len(evs) == 2000 and evs[0] == old_quiz[0] and evs[1] == fill[1] and evs[-2] == fill[-1], (len(evs), evs[:2]))
+    check('Nhật ký đầy: giáo viên dạy môn vẫn thấy đủ 2 điểm quiz (Bảng điểm)',
+          [(e['refId'], e['score']) for e in gv1.listed_events(sv7.uid) if e.get('type') == 'quiz'] == [(1, 0), (2, 10)])
+    all_quiz = [{**QUIZ, 'refId': f'q{i}', 'at': '2026-11-01'} for i in range(2000)]
+    ad.put('activities', sv1.uid, {'events': all_quiz})
+    s, j = sv1.req('POST', '/api/quiz/2/submit', {'answers': {'1': 'b', '2': ['b']}})
+    evs = ad.events(sv1.uid) or []
+    check('Nhật ký toàn sự kiện quiz: không bỏ điểm nào, sự kiện mới vẫn được thêm',
+          s == 200 and len(evs) == 2001 and evs[:2000] == all_quiz and evs[-1]['refId'] == 2, (s, len(evs)))
+    check('Nhật ký vượt giới hạn: sinh viên không tự thêm được sự kiện', sv1.append(sv1.uid, {**MAT2, 'refId': 'vuot'}) == 403)
 finally:
     srv.terminate()
     try:
