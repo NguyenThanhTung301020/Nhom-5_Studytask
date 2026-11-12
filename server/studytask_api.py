@@ -241,6 +241,7 @@ def profile_ok(user, old, new):
 # Nhật ký hoạt động activities/{uid} (V4): chỉ kiểm tra được hình thức, KHÔNG chứng minh được điểm là thật (V3).
 ACTIVITY_DOC_KEYS = {'uid', 'name', 'username', 'email', 'events'}
 ACTIVITY_EVENT_KEYS = {'type', 'at', 'subjectId', 'refId', 'refTitle', 'score', 'total', 'correct', 'url', 'fileName', 'note'}
+ACTIVITY_SCORE_KEYS = {'score', 'total', 'correct'}     # chỉ có trong sự kiện `quiz` do máy chủ ghi khi chấm (V3)
 ACTIVITY_TYPES = ('quiz', 'homework', 'material')
 ACTIVITY_MAX_EVENTS = 2000
 ACTIVITY_DATE_RE = re.compile(r'[0-9]{4}-[0-9]{2}-[0-9]{2}')
@@ -289,7 +290,8 @@ def valid_activity_event(e):
 
 
 def activity_write_ok(uid, old, new):
-    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ (loại material hoặc homework, không phải quiz) vào cuối; phần cũ giữ nguyên, kể cả sự kiện quiz đã có."""
+    """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ (loại material hoặc homework, không phải quiz, không mang điểm) vào cuối;
+    phần cũ giữ nguyên, kể cả sự kiện quiz đã có."""
     if not set(new) <= ACTIVITY_DOC_KEYS or new.get('uid', uid) != uid:
         return False
     if not (short_str(new, 'name', 100) and short_str(new, 'username', 254) and short_str(new, 'email', 254)):
@@ -297,8 +299,29 @@ def activity_write_ok(uid, old, new):
     cur, prev = new.get('events', []), old.get('events', [])
     if not isinstance(cur, list) or not isinstance(prev, list) or len(cur) > ACTIVITY_MAX_EVENTS:
         return False
-    # Sự kiện `quiz` do máy chủ ghi khi chấm bài (doc_put, không qua hàm này) nên chủ tài khoản KHÔNG được tự thêm: chặn việc tự ghi điểm (V3, V4)
-    return cur == prev or (len(cur) == len(prev) + 1 and cur[:-1] == prev and valid_activity_event(cur[-1]) and cur[-1].get('type') != 'quiz')
+    # Sự kiện `quiz` do máy chủ ghi khi chấm bài (doc_put, không qua hàm này) nên chủ tài khoản KHÔNG được tự thêm: chặn việc tự ghi điểm (V3, V4).
+    # Lỗi 1 V4: sự kiện sinh viên tự ghi cũng không được mang score/total/correct (giao diện chỉ gửi material/homework không có điểm),
+    # để không còn dữ liệu điểm nào trong nhật ký do sinh viên tự đặt.
+    if cur == prev:
+        return True
+    last = cur[-1] if len(cur) == len(prev) + 1 and cur[:-1] == prev else None
+    return (valid_activity_event(last) and last.get('type') != 'quiz'
+            and not (set(last) & ACTIVITY_SCORE_KEYS))
+
+
+def project_activities(user, id_, doc):
+    """Bản của activities/{id_} mà người này được đọc (lỗi 3 V4). can() chỉ quyết định đọc cả tài liệu hay không;
+    giáo viên dạy chung một môn trước đây nhận cả sự kiện của các môn khác. Giáo viên chỉ còn nhận sự kiện có
+    `subjectId` thuộc môn mình được phân công; sự kiện không ghi môn không xác định được lớp nên không trả về.
+    Chủ tài khoản và Admin nhận đầy đủ. Dữ liệu lưu trong CSDL không bị lọc; chỉ bản trả về.
+    Giáo viên không ghi được activities nên không có luồng tải bản đã lọc rồi ghi ngược làm mất sự kiện."""
+    if not doc or not user or user['uid'] == id_ or role_of(user) != 'teacher':
+        return doc
+    mine = (doc_get('user', user['uid']) or {}).get('subjectIds') or []
+    evs = doc.get('events')
+    keep = [e for e in evs if isinstance(e, dict) and not isinstance(e.get('subjectId'), bool)
+            and e.get('subjectId') is not None and e.get('subjectId') in mine] if isinstance(evs, list) else []
+    return {**doc, 'events': keep}
 
 
 def valid_evidence(value):
@@ -382,7 +405,9 @@ def can(op, col, id_, user, old=None, new=None):
         return True
     if col == 'activities':
         if op == 'read': return owner or admin or (role == 'teacher' and teaches_student(user['uid'], id_))
-        if op == 'delete': return owner or admin
+        # Lỗi 2 V4: chỉ Admin xóa. Sinh viên xóa được nhật ký của mình thì xóa luôn sự kiện quiz máy chủ đã ghi
+        # (bản Bảng điểm và Quản lý lớp học đọc), tức là xóa được điểm kém của chính mình. Giao diện không có chỗ nào cho chủ tài khoản xóa.
+        if op == 'delete': return admin
         return admin or (owner and activity_write_ok(id_, old, new))
     if col == 'sharedData':
         if op == 'read': return signed
@@ -1362,15 +1387,23 @@ class Handler(BaseHTTPRequestHandler):
                 for id_, data in rows:   # lọc theo quyền đọc từng tài liệu
                     if can('read', col, id_, u):
                         d = json.loads(data)
-                        out.append({'id': id_, **(project_shared(u, d) if col == 'sharedData' and id_ == 'global' else d)})
+                        if col == 'sharedData' and id_ == 'global':
+                            d = project_shared(u, d)
+                        elif col == 'activities':
+                            d = project_activities(u, id_, d)
+                        out.append({'id': id_, **d})
                 return self.send(200, {'docs': out})
             id_ = p[2]
             old = doc_get(col, id_)
             if len(p) == 3 and method == 'GET':
                 if not can('read', col, id_, u):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
-                return self.send(200, {'exists': old is not None,
-                                       'data': project_shared(u, old) if col == 'sharedData' and id_ == 'global' else old})
+                data = old
+                if col == 'sharedData' and id_ == 'global':
+                    data = project_shared(u, old)
+                elif col == 'activities':
+                    data = project_activities(u, id_, old)
+                return self.send(200, {'exists': old is not None, 'data': data})
             quiz_ops = []
             if len(p) == 3 and method == 'PUT':
                 b = self.json_body()
@@ -1545,7 +1578,7 @@ class Handler(BaseHTTPRequestHandler):
                     db().execute('INSERT INTO docs VALUES (?,?,?)', ('quizResults', f'{p[1]}_{u["uid"]}', json.dumps(result, ensure_ascii=False)))
                 except sqlite3.IntegrityError:
                     raise ApiError(409, 'already-submitted', 'Bạn đã nộp bài này rồi.')
-                act = doc_get('activities', u['uid']) or {}       # bản sao cho Bảng điểm / Báo cáo lớp (V4 sẽ chặn client tự ghi)
+                act = doc_get('activities', u['uid']) or {}       # bản sao cho Bảng điểm / Báo cáo lớp; client không tự ghi, không xóa được (V4)
                 events = list(act.get('events') or [])
                 events.append({'type': 'quiz', 'at': time.strftime('%Y-%m-%d', time.gmtime(now)), 'subjectId': quiz.get('subjectId'),
                                'refId': quiz['id'], 'refTitle': str(quiz.get('title', ''))[:500], 'score': score, 'total': total, 'correct': correct})
