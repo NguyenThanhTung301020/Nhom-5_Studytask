@@ -26,6 +26,9 @@ firestore.rules                 Security Rules cũ của Firestore (giữ làm �
 firebase.json                   Cấu hình Emulator (chỉ dùng để kiểm thử firestore.rules)
 tests/                          Kiểm thử Security Rules (Node) và tests/server/ (kiểm thử máy chủ, Python)
 scripts/seed-emulator.mjs       Nạp tài khoản demo vào Emulator
+scripts/seed_curriculum.py      Sinh dữ liệu kiểm tải (môn, lịch, tài liệu, trắc nghiệm, GV/SV theo học kỳ) từ khung đào tạo
+scripts/loadtest_studytask.py   Kiểm tải API và báo cáo dung lượng/ghi đĩa của máy chủ
+                                (hướng dẫn: docs/van-hanh/10-du-lieu-kiem-tai-tu-khung-dao-tao.md)
 reset-worker/                   Bản thử Cloudflare Worker (đặt lại mật khẩu)
 _headers                        Header bảo mật và cache cho Cloudflare
 docs/                           Báo cáo tuần, nhật ký AI, phân tích, thiết kế, sửa lỗi

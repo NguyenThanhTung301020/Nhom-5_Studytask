@@ -1,5 +1,6 @@
 // pages/Directory.js – Lưu trữ thông tin Sinh viên & Giáo viên (tách theo phân quyền)
 import { ROLES } from '../utils/constants.js'
+import { studentInScope } from '../utils/scope.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
@@ -13,14 +14,9 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
   const subName = (id) => (subjects.find(s => s.id === id) || {}).name
   const subColor = (id) => (subjects.find(s => s.id === id) || {}).color || '#858796'
   const isAdmin = role === 'admin' || role === 'training' || role === 'finance'   // phòng ban xem toàn bộ
-  const mySubjectIds = new Set(user?.subjectIds || [])
 
-  // Giáo viên chỉ xem SV trong môn mình phụ trách; admin và phòng ban xem tất cả
-  const inScope = (u) => {
-    if (isAdmin) return true
-    if (!Array.isArray(u.subjectIds)) return false
-    return u.subjectIds.some(id => mySubjectIds.has(id))
-  }
+  // Giáo viên chỉ xem SV thuộc lớp học phần mình dạy (cùng môn nhưng lớp khác thì không); admin và phòng ban xem tất cả
+  const inScope = (u) => isAdmin || studentInScope(user, u)
 
   const students = useMemo(() => allUsers.filter(u => u.role === 'student' && inScope(u)), [allUsers, role, user])
   const teachers = useMemo(() => allUsers.filter(u => u.role === 'teacher'), [allUsers])

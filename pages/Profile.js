@@ -64,11 +64,12 @@ function PasswordChangeCard({ uid }) {
 
 // ─── Cấu hình trường theo role ──────────────────────────────────
 const STUDENT_FIELDS = [
-  { key: 'studentId', label: 'Mã số sinh viên', icon: 'person-badge',  type: 'text',  placeholder: 'VD: 2021001234' },
+  { key: 'studentId', label: 'Mã số sinh viên', icon: 'person-badge',  type: 'text',  placeholder: 'VD: 2301001' },
   { key: 'faculty',   label: 'Khoa / Bộ môn',   icon: 'building',      type: 'text',  placeholder: 'VD: Công nghệ thông tin' },
   { key: 'major',     label: 'Ngành học',         icon: 'mortarboard',   type: 'text',  placeholder: 'VD: Kỹ thuật phần mềm' },
-  { key: 'className', label: 'Lớp',               icon: 'people',        type: 'text',  placeholder: 'VD: KTPM2021A' },
-  { key: 'semester',  label: 'Học kỳ hiện tại',  icon: 'calendar3',     type: 'text',  placeholder: 'VD: HK2 2025–2026' },
+  { key: 'className', label: 'Lớp',               icon: 'people',        type: 'text',  placeholder: 'VD: CNTT23-01' },
+  { key: 'cohort',    label: 'Khóa',              icon: 'collection',    type: 'text',  placeholder: 'VD: 2023-2027' },
+  { key: 'semester',  label: 'Học kỳ hiện tại',  icon: 'calendar3',     type: 'text',  placeholder: 'VD: Học kỳ 1 – Năm học 2026-2027' },
   { key: 'gpa',       label: 'GPA tích lũy',      icon: 'graph-up',      type: 'text',  placeholder: 'VD: 3.20' },
   { key: 'email',     label: 'Email',             icon: 'envelope',      type: 'email', placeholder: 'email@example.com' },
   { key: 'phone',     label: 'Số điện thoại',     icon: 'telephone',     type: 'tel',   placeholder: '09xxxxxxxx' },

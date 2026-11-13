@@ -2,6 +2,7 @@
 // Admin xem tất cả môn; Giáo viên xem các môn được phân công (subjects đã được lọc sẵn ở app.js)
 import { formatDate } from '../utils/helpers.js'
 import GradeBook from '../components/GradeBook.js'
+import { studentInScope } from '../utils/scope.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -49,7 +50,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
 
     // Roster: SV được phân công môn + SV có hoạt động trong môn
     const map = new Map()
-    allUsers.filter(u => u.role === 'student' && Array.isArray(u.subjectIds) && u.subjectIds.includes(sid))
+    allUsers.filter(u => u.role === 'student' && Array.isArray(u.subjectIds) && u.subjectIds.includes(sid) && studentInScope(user, u))
       .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.username, username: u.username || '' }))
     activities.forEach(a => {
       if ((a.events || []).some(e => e.subjectId === sid) && !map.has(a.uid))
@@ -117,7 +118,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
     ),
 
     view === 'bangdiem'
-      ? h(GradeBook, { subjects, allUsers, quizzes, homeworks, fetchActivities })
+      ? h(GradeBook, { subjects, allUsers, quizzes, homeworks, fetchActivities, user })
       : null,
 
     view === 'theodoi' && (

@@ -1,0 +1,20 @@
+# API thứ hai chỉ để kiểm tải (cổng 8788, dữ liệu /var/lib/studytask-loadtest). Không đụng tới dịch vụ studytask-api đang chạy thật.
+# Cài:  sudo cp deploy/studytask-api-loadtest.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#       sudo systemctl start studytask-api-loadtest     (dừng: sudo systemctl stop studytask-api-loadtest)
+# Không `enable`: không cho tự chạy lại khi khởi động máy.
+[Unit]
+Description=StudyTask API - ban kiem tai (khong dung cho nguoi that)
+After=network.target
+
+[Service]
+User=studytask
+Group=studytask
+Environment=STUDYTASK_DATA=/var/lib/studytask-loadtest
+Environment=STUDYTASK_PORT=8788
+ExecStart=/usr/bin/python3 /opt/studytask/studytask_api.py serve
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/studytask-loadtest
+PrivateTmp=true

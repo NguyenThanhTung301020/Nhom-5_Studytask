@@ -59,6 +59,8 @@ bash tests/server/test_submit.sh
 
 Mỗi bộ test tự tạo cơ sở dữ liệu tạm và cổng riêng, không đụng dữ liệu thật. Cũng chạy tự động trong job `server-tests` của CI.
 
+Nạp dữ liệu giả lập quy mô lớn để đo chịu tải và lưu trữ: `python3 scripts/seed_curriculum.py --data-dir <thư mục MỚI> --preset medium`, kiểm tải bằng `scripts/loadtest_studytask.py`. Mật khẩu của tài khoản sinh ra là `<vai trò>123` (đoán được), vì vậy **chỉ dùng với bản chạy riêng, không nạp vào dữ liệu thật**: xem [docs/van-hanh/10-du-lieu-kiem-tai-tu-khung-dao-tao.md](../docs/van-hanh/10-du-lieu-kiem-tai-tu-khung-dao-tao.md).
+
 ## Triển khai lên Ubuntu
 
 ```bash

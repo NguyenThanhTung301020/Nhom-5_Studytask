@@ -6,6 +6,7 @@ import { load, save } from '../utils/helpers.js'
 import { listDocuments } from '../utils/store.js'
 import { COMPONENT_LABEL, defaultPolicy, subjectColumns, countedColumns, evaluateStudentSubject, round1 } from '../utils/grading.js'
 import { toCSV } from '../utils/sanitize.js'
+import { studentInScope } from '../utils/scope.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -35,8 +36,9 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
   const subjectIds = useMemo(() => new Set(subjects.map(s => s.id)), [subjects])
   const students = useMemo(() =>
     allUsers.filter(u => u.role === 'student' &&
-      (!Array.isArray(u.subjectIds) || u.subjectIds.length === 0 || u.subjectIds.some(id => subjectIds.has(id)))),
-    [allUsers, subjectIds])
+      (!Array.isArray(u.subjectIds) || u.subjectIds.length === 0 || u.subjectIds.some(id => subjectIds.has(id))) &&
+      studentInScope(user, u)),          // giáo viên: chỉ sinh viên của lớp học phần mình dạy (admin/không truyền user: tất cả)
+    [allUsers, subjectIds, user])
 
   useEffect(() => {
     let alive = true

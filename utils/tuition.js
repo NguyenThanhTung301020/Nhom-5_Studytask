@@ -2,7 +2,7 @@
 // Học phí = Σ (tín chỉ môn × đơn giá); đơn giá do Phòng Tài chính cấu hình (financeConfig/current).
 
 export const DEFAULT_FINANCE_CONFIG = {
-  semester: 'HK1 2026–2027',
+  semester: 'Học kỳ 1 – Năm học 2026-2027',
   pricePerCredit: 0,          // đồng / tín chỉ lý thuyết
   practicePricePerCredit: 0,  // đồng / tín chỉ thực hành (0 = dùng đơn giá lý thuyết)
   dueDate: '',                // hạn nộp (YYYY-MM-DD)

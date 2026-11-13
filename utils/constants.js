@@ -73,11 +73,12 @@ export const SAMPLE_HOMEWORKS = [
 
 export const DEFAULT_PROFILE = {
   name:      DEMO_USER.name,
-  studentId: '2021001234',
+  studentId: '2301001',
   faculty:   'Công nghệ thông tin',
   major:     'Kỹ thuật phần mềm',
-  className: 'KTPM2021A',
-  semester:  'HK2 2025–2026',
+  className: 'CNTT23-01',
+  cohort:    '2023-2027',
+  semester:  'Học kỳ 1 – Năm học 2026-2027',
   gpa:       '3.20',
   email:     DEMO_USER.email,
   phone:     '0901234567',
@@ -85,7 +86,7 @@ export const DEFAULT_PROFILE = {
 
 // Hồ sơ trống cho sinh viên thật (tài khoản Firebase) – DEFAULT_PROFILE ở trên chỉ dùng cho chế độ demo
 export const BLANK_STUDENT_PROFILE = {
-  name: '', studentId: '', faculty: '', major: '', className: '', semester: '', gpa: '', email: '', phone: '',
+  name: '', studentId: '', faculty: '', major: '', className: '', cohort: '', semester: '', gpa: '', email: '', phone: '',
 }
 
 export const DEFAULT_TEACHER_PROFILE = {

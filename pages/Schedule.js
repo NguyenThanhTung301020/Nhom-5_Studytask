@@ -1,21 +1,50 @@
 // pages/Schedule.js – Thời khóa biểu & Lịch thi
 import { DAY_LABELS, DAY_ORDER, weekdayLabel, CLASS_FORMATS, EXAM_FORMATS } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
+import { classOptionsForSubject, classesInItems, semesterLabel, semestersOf, teacherSections, termLabel, FULL_ROLES } from '../utils/scope.js'
 
 const { useState, createElement: h } = window.React
 
 const fmtDate = (d) => new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
+// Chọn lớp học phần cho tiết học / lịch thi: cùng một môn mở ở nhiều lớp nên mỗi mục phải gắn đúng lớp
+function ClassPicker({ opts, value, required, onChange }) {
+  return h('div', { className: 'mb-3' },
+    h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-people me-1' }), 'Lớp ', required && h('span', { className: 'text-danger' }, '*')),
+    h('select', { className: `form-select${required && !value ? ' is-invalid' : ''}`, value: value || '', onChange: e => onChange(e.target.value, opts.find(o => o.id === e.target.value)?.name || '') },
+      h('option', { value: '' }, required ? '— Chọn lớp —' : 'Tất cả lớp (mục chung của môn)'),
+      opts.map(o => h('option', { key: o.id, value: o.id }, o.name))
+    ),
+    h('div', { className: 'form-text' }, opts.length === 0
+      ? (required ? 'Bạn chưa được phân công lớp nào cho môn này.' : 'Môn này chưa có lớp nào; mục sẽ áp dụng cho mọi lớp.')
+      : (required ? 'Chỉ hiện các lớp bạn được phân công dạy môn này.' : 'Chọn lớp để chỉ lớp đó nhìn thấy; để trống nếu áp dụng cho mọi lớp học môn này.'))
+  )
+}
+
+// Giáo viên chỉ dạy đúng một lớp môn này thì chọn sẵn lớp đó
+const defaultClass = (classOptionsFor, requireClass, sid) => {
+  const opts = sid ? classOptionsFor(sid) : []
+  return requireClass && opts.length === 1 ? { classId: opts[0].id, className: opts[0].name } : { classId: '', className: '' }
+}
+
+const subjectLabel = (s) => `${s.name}${s.code ? ` (${s.code}${semesterLabel(s) ? ' · ' + semesterLabel(s) : ''})` : ''}`
+
 // ── Modal thêm/sửa tiết học (TKB) ──
-function ClassModal({ subjects, item, defaultTeacher, onSave, onClose }) {
+function ClassModal({ subjects, item, defaultTeacher, classOptionsFor, requireClass, onSave, onClose }) {
   const [form, setForm] = useState(item
     ? { description: '', link: '', ...item }
-    : { subjectId: subjects[0]?.id || '', day: 2, start: '07:00', end: '09:00', room: '', teacher: '', format: 'offline', description: '', link: '' })
+    : { subjectId: subjects[0]?.id || '', day: 2, start: '07:00', end: '09:00', room: '', teacher: '', format: 'offline', description: '', link: '', ...defaultClass(classOptionsFor, requireClass, subjects[0]?.id) })
   const dateErr = form.startDate && form.endDate && form.endDate < form.startDate
-  const valid = form.subjectId && form.start && form.end && !dateErr
+  const classOpts = classOptionsFor(Number(form.subjectId))
+  const valid = form.subjectId && form.start && form.end && !dateErr && (!requireClass || form.classId)
   const isOnline = form.format === 'online' || form.format === 'hybrid'
 
-  const pickSubject = (sid) => setForm({ ...form, subjectId: Number(sid), teacher: form.teacher || defaultTeacher(Number(sid)) })
+  const pickSubject = (sid) => {
+    const opts = classOptionsFor(Number(sid)), keep = opts.find(o => o.id === form.classId)
+    const only = requireClass && opts.length === 1 ? opts[0] : null                  // giáo viên chỉ dạy một lớp môn này → chọn sẵn
+    setForm({ ...form, subjectId: Number(sid), teacher: form.teacher || defaultTeacher(Number(sid)),
+              classId: keep ? keep.id : only ? only.id : '', className: keep ? keep.name : only ? only.name : '' })
+  }
 
   return h('div', { className: 'modal show d-block', style: { backgroundColor: 'rgba(0,0,0,0.5)' } },
     h('div', { className: 'modal-dialog modal-dialog-centered' },
@@ -29,9 +58,10 @@ function ClassModal({ subjects, item, defaultTeacher, onSave, onClose }) {
             h('label', { className: 'form-label fw-semibold' }, 'Môn học ', h('span', { className: 'text-danger' }, '*')),
             h('select', { className: 'form-select', value: form.subjectId, onChange: e => pickSubject(e.target.value) },
               h('option', { value: '' }, '— Chọn môn —'),
-              subjects.map(s => h('option', { key: s.id, value: s.id }, s.name))
+              subjects.map(s => h('option', { key: s.id, value: s.id }, subjectLabel(s)))
             )
           ),
+          h(ClassPicker, { opts: classOpts, value: form.classId, required: requireClass, onChange: (id, name) => setForm({ ...form, classId: id, className: name }) }),
           h('div', { className: 'row g-3 mb-3' },
             h('div', { className: 'col-12' },
               h('label', { className: 'form-label fw-semibold' }, 'Thứ trong tuần'),
@@ -97,14 +127,20 @@ function ClassModal({ subjects, item, defaultTeacher, onSave, onClose }) {
 }
 
 // ── Modal thêm/sửa lịch thi ──
-function ExamModal({ subjects, item, defaultTeacher, onSave, onClose }) {
+function ExamModal({ subjects, item, defaultTeacher, classOptionsFor, requireClass, onSave, onClose }) {
   const [form, setForm] = useState(item
     ? { description: '', link: '', ...item }
-    : { subjectId: subjects[0]?.id || '', date: '', start: '07:30', end: '09:00', room: '', teacher: '', format: 'tuLuan', description: '', link: '' })
-  const valid = form.subjectId && form.date && form.start
+    : { subjectId: subjects[0]?.id || '', date: '', start: '07:30', end: '09:00', room: '', teacher: '', format: 'tuLuan', description: '', link: '', ...defaultClass(classOptionsFor, requireClass, subjects[0]?.id) })
+  const classOpts = classOptionsFor(Number(form.subjectId))
+  const valid = form.subjectId && form.date && form.start && (!requireClass || form.classId)
   const isOnline = form.format === 'online'
 
-  const pickSubject = (sid) => setForm({ ...form, subjectId: Number(sid), teacher: form.teacher || defaultTeacher(Number(sid)) })
+  const pickSubject = (sid) => {
+    const opts = classOptionsFor(Number(sid)), keep = opts.find(o => o.id === form.classId)
+    const only = requireClass && opts.length === 1 ? opts[0] : null
+    setForm({ ...form, subjectId: Number(sid), teacher: form.teacher || defaultTeacher(Number(sid)),
+              classId: keep ? keep.id : only ? only.id : '', className: keep ? keep.name : only ? only.name : '' })
+  }
 
   return h('div', { className: 'modal show d-block', style: { backgroundColor: 'rgba(0,0,0,0.5)' } },
     h('div', { className: 'modal-dialog modal-dialog-centered' },
@@ -118,9 +154,10 @@ function ExamModal({ subjects, item, defaultTeacher, onSave, onClose }) {
             h('label', { className: 'form-label fw-semibold' }, 'Môn thi ', h('span', { className: 'text-danger' }, '*')),
             h('select', { className: 'form-select', value: form.subjectId, onChange: e => pickSubject(e.target.value) },
               h('option', { value: '' }, '— Chọn môn —'),
-              subjects.map(s => h('option', { key: s.id, value: s.id }, s.name))
+              subjects.map(s => h('option', { key: s.id, value: s.id }, subjectLabel(s)))
             )
           ),
+          h(ClassPicker, { opts: classOpts, value: form.classId, required: requireClass, onChange: (id, name) => setForm({ ...form, classId: id, className: name }) }),
           h('div', { className: 'mb-3' },
             h('label', { className: 'form-label fw-semibold' }, h('i', { className: 'bi bi-calendar-event me-1' }), 'Ngày thi ', h('span', { className: 'text-danger' }, '*')),
             h('input', { type: 'date', className: 'form-control', value: form.date, onChange: e => setForm({ ...form, date: e.target.value }) }),
@@ -170,17 +207,23 @@ function ExamModal({ subjects, item, defaultTeacher, onSave, onClose }) {
   )
 }
 
-export default function Schedule({ schedule = [], setSchedule, exams = [], setExams, subjects = [], subjectTeacherMap = {}, role = 'student' }) {
+export default function Schedule({ schedule = [], setSchedule, exams = [], setExams, subjects = [], subjectTeacherMap = {}, role = 'student', user = null, allUsers = [] }) {
   const [tab,      setTab]      = useState('tkb')   // 'tkb' | 'thi'
   const [clsModal, setClsModal] = useState(null)    // null | 'add' | 'edit'
   const [editCls,  setEditCls]  = useState(null)
   const [examModal,setExamModal]= useState(null)
   const [editExam, setEditExam] = useState(null)
   const [confirm,  setConfirm]  = useState(null)    // { kind:'cls'|'exam', id }
+  const [fClass,   setFClass]   = useState('')      // bộ lọc lớp ('' = tất cả lớp trong phạm vi của tôi)
+  const [fSem,     setFSem]     = useState('')      // bộ lọc học kỳ (Admin / Đào tạo)
 
   const isTeacher = role === 'admin' || role === 'teacher' || role === 'training'   // Phòng Đào tạo xếp lịch
   const subjectOf = (id) => subjects.find(s => s.id === id) || {}
   const defaultTeacher = (sid) => (subjectTeacherMap[sid]?.[0]?.name) || subjectOf(sid).teacher || ''
+  // Giáo viên đã phân theo lớp: bắt buộc chọn lớp mình dạy khi thêm lịch (tránh tạo mục "chung" làm mọi lớp thấy)
+  const requireClass = role === 'teacher' && teacherSections(user) !== null
+  const classOptionsFor = (sid) => classOptionsForSubject(user, allUsers, sid)
+  const fullView = FULL_ROLES.includes(role)
 
   // ── Lưu (functional update để không mất dữ liệu môn khác) ──
   const saveCls = (form) => {
@@ -200,9 +243,16 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
   }
 
   // ── Dữ liệu hiển thị ──
-  const byDay = DAY_ORDER.map(d => ({ day: d, items: schedule.filter(c => c.day === d).sort((a, b) => a.start.localeCompare(b.start)) }))
+  const classChoices = classesInItems([...schedule, ...exams])
+  const semChoices = fullView ? semestersOf(subjects.filter(s => [...schedule, ...exams].some(x => x.subjectId === s.id))) : []
+  const visible = (x) => (!fClass || x.classId === fClass) && (!fSem || subjectOf(x.subjectId).hocKy === Number(fSem))
+  const shownSchedule = schedule.filter(visible), shownExams = exams.filter(visible)
+  const showFilters = role !== 'student' && (classChoices.length > 1 || semChoices.length > 1)
+  const classBadge = (c) => c.classId && h('span', { className: 'badge bg-light text-dark border ms-2', style: { fontSize: '0.7rem' } }, h('i', { className: 'bi bi-people me-1' }), c.className || c.classId)
+  const semBadge = (sub) => semesterLabel(sub) && h('span', { className: 'badge bg-primary-subtle text-primary ms-1', style: { fontSize: '0.7rem' } }, semesterLabel(sub))
+  const byDay = DAY_ORDER.map(d => ({ day: d, items: shownSchedule.filter(c => c.day === d).sort((a, b) => a.start.localeCompare(b.start)) }))
                          .filter(g => g.items.length > 0)
-  const sortedExams = exams.slice().sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start))
+  const sortedExams = shownExams.slice().sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start))
   const now = new Date(); now.setHours(0, 0, 0, 0)
 
   // ── Card 1 tiết học ──
@@ -211,7 +261,7 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
     const cf  = CLASS_FORMATS[c.format] || CLASS_FORMATS.offline
     return h('div', { key: c.id, className: 'sched-item', style: { borderLeftColor: sub.color || '#4e73df' } },
       h('div', { className: 'flex-grow-1 min-w-0' },
-        h('div', { className: 'fw-semibold' }, sub.name || 'Môn học'),
+        h('div', { className: 'fw-semibold' }, sub.name || 'Môn học', classBadge(c), semBadge(sub)),
         h('div', { className: 'd-flex flex-wrap gap-3 mt-1 small text-muted' },
           h('span', null, h('i', { className: 'bi bi-clock me-1' }), `${c.start} – ${c.end}`),
           c.room && h('span', null, h('i', { className: 'bi bi-geo-alt me-1' }), c.room),
@@ -237,7 +287,9 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
     h('div', { className: 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-4' },
       h('div', null,
         h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-calendar-week me-2', style: { color: 'var(--primary)' } }), 'Lịch học & Lịch thi'),
-        h('small', { className: 'text-muted' }, isTeacher ? 'Tạo và quản lý thời khóa biểu, lịch thi cho sinh viên' : 'Thời khóa biểu và lịch thi của bạn')
+        h('small', { className: 'text-muted' }, isTeacher
+          ? (role === 'teacher' ? 'Thời khóa biểu và lịch thi của các lớp bạn được phân công' : 'Tạo và quản lý thời khóa biểu, lịch thi cho sinh viên')
+          : `Thời khóa biểu và lịch thi của bạn${user?.className ? ` · lớp ${user.className}` : ''}`)
       ),
       isTeacher && h('button', { className: 'btn btn-primary btn-sm',
         onClick: () => tab === 'tkb' ? (setEditCls(null), setClsModal('add')) : (setEditExam(null), setExamModal('add')) },
@@ -250,7 +302,22 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
       h('button', { className: `btn btn-sm ${tab === 'tkb' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => setTab('tkb') },
         h('i', { className: 'bi bi-calendar-week me-1' }), 'Thời khóa biểu'),
       h('button', { className: `btn btn-sm ${tab === 'thi' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => setTab('thi') },
-        h('i', { className: 'bi bi-clipboard-check me-1' }), `Lịch thi${exams.length ? ` (${exams.length})` : ''}`)
+        h('i', { className: 'bi bi-clipboard-check me-1' }), `Lịch thi${shownExams.length ? ` (${shownExams.length})` : ''}`)
+    ),
+
+    // Bộ lọc: học kỳ (Admin/Đào tạo) và lớp
+    showFilters && h('div', { className: 'd-flex flex-wrap align-items-center gap-2 mb-4' },
+      h('i', { className: 'bi bi-funnel text-muted' }),
+      semChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fSem, onChange: e => setFSem(e.target.value), 'aria-label': 'Lọc theo học kỳ' },
+        h('option', { value: '' }, 'Tất cả học kỳ'),
+        semChoices.map(n => h('option', { key: n, value: n }, termLabel(n)))
+      ),
+      classChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fClass, onChange: e => setFClass(e.target.value), 'aria-label': 'Lọc theo lớp' },
+        h('option', { value: '' }, `Tất cả lớp (${classChoices.length})`),
+        classChoices.map(c => h('option', { key: c.id, value: c.id }, c.name))
+      ),
+      (fClass || fSem) && h('button', { className: 'btn btn-sm btn-link', onClick: () => { setFClass(''); setFSem('') } }, 'Bỏ lọc'),
+      h('small', { className: 'text-muted ms-1' }, `${shownSchedule.length} tiết học · ${shownExams.length} lịch thi`)
     ),
 
     // ── TAB: Thời khóa biểu ──
@@ -292,7 +359,7 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
                   h('div', { className: 'card-body' },
                     h('div', { className: 'd-flex justify-content-between align-items-start mb-2' },
                       h('div', null,
-                        h('div', { className: 'fw-bold' }, sub.name || 'Môn thi'),
+                        h('div', { className: 'fw-bold' }, sub.name || 'Môn thi', classBadge(e), semBadge(sub)),
                         h('span', { className: 'badge', style: { backgroundColor: ef.color + '22', color: ef.color, fontSize: '0.7rem' } },
                           h('i', { className: `bi bi-${ef.icon} me-1` }), ef.label)
                       ),
@@ -321,8 +388,8 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
           )
     ),
 
-    clsModal  && h(ClassModal, { subjects, item: clsModal === 'edit' ? editCls : null, defaultTeacher, onSave: saveCls, onClose: () => setClsModal(null) }),
-    examModal && h(ExamModal,  { subjects, item: examModal === 'edit' ? editExam : null, defaultTeacher, onSave: saveExam, onClose: () => setExamModal(null) }),
+    clsModal  && h(ClassModal, { subjects, item: clsModal === 'edit' ? editCls : null, defaultTeacher, classOptionsFor, requireClass, onSave: saveCls, onClose: () => setClsModal(null) }),
+    examModal && h(ExamModal,  { subjects, item: examModal === 'edit' ? editExam : null, defaultTeacher, classOptionsFor, requireClass, onSave: saveExam, onClose: () => setExamModal(null) }),
     confirm   && h(ConfirmModal, { message: confirm.kind === 'cls' ? 'Xóa tiết học này?' : 'Xóa lịch thi này?', onConfirm: doConfirm, onClose: () => setConfirm(null) })
   )
 }
