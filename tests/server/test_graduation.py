@@ -69,6 +69,14 @@ try:
     check('Đào tạo vẫn duyệt được phiếu cũ có link sai', tr.put(sv.uid, {'status': 'needsFix', 'review': 'Sửa link'}) == 200)
     check('Sinh viên nộp lại mà giữ link sai: bị từ chối', sv.put(sv.uid, {'status': 'submitted'}) == 403)
     check('Sinh viên sửa link rồi nộp lại: được', sv.put(sv.uid, {'status': 'submitted', 'evidence': 'https://x.vn/moi.pdf'}) == 200)
+
+    # R5 (review PR9 lần 2, ca E15): Đào tạo/Admin trước đây ghi được link javascript: vào phiếu của sinh viên
+    for bad in ('javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'data:text/html,x', '//x.vn/a', 123):
+        check(f'Đào tạo đổi evidence thành {bad!r}: bị từ chối', tr.put(sv.uid, {'evidence': bad}) == 403)
+    check('…và link trên phiếu vẫn là link cũ', tr.req('GET', f'/api/doc/graduationApps/{sv.uid}')[1]['data'].get('evidence') == 'https://x.vn/moi.pdf')
+    check('Đào tạo sửa link sang https khác: được', tr.put(sv.uid, {'evidence': 'https://x.vn/khac.pdf'}) == 200)
+    check('Đào tạo xóa link: được', tr.put(sv.uid, {'evidence': ''}) == 200)
+    check('Đào tạo duyệt mà không đổi link: được', tr.put(sv.uid, {'status': 'approved', 'review': 'ok'}) == 200)
 finally:
     srv.terminate()
     try:

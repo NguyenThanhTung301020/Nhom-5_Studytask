@@ -1,7 +1,7 @@
 // Kiểm thử nhập/xuất bộ câu hỏi từ tệp (utils/quizFile.js): chạy bằng `npm run test:logic`
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseDelimited, detectDelimiter, questionsFromText, questionsToCsv, questionsToJson, CSV_TEMPLATE, assignIds, judgeAnswer, normFill, stripAccents } from '../utils/quizFile.js'
+import { parseDelimited, detectDelimiter, questionsFromText, questionsToCsv, questionsToJson, CSV_TEMPLATE, assignIds, judgeAnswer, normFill, stripAccents, unFormula } from '../utils/quizFile.js'
 
 test('parseDelimited: ngoặc kép, dấu ngăn và xuống dòng trong ô, BOM', () => {
   const rows = parseDelimited('﻿a,"b,c","d ""x""\nrow2"\r\ne,f,g\r\n\r\n', ',')
@@ -126,4 +126,31 @@ test('judgeAnswer: đối chiếu bài làm của sinh viên khi giáo viên xem
   assert.equal(judgeAnswer(fill, [' ha  noi ', '2']), true)
   assert.equal(judgeAnswer(fill, ['ha noi']), false, 'thiếu chỗ trống')
   assert.equal(judgeAnswer({ type: 'single', answers: [{ id: 'a' }, { id: 'b' }] }, 'a'), null, 'không có khóa đáp án')
+})
+
+test('R6 review PR9: xuất CSV không để ô bắt đầu bằng = + - @ thành công thức; nhập lại giữ nguyên nội dung', () => {
+  const original = [
+    { text: '=1+1', type: 'single', answers: [{ id: 'a', text: '-2+3', correct: true }, { id: 'b', text: '@SUM(1,1)', correct: false }] },
+    { text: '+84 là mã nước nào?', type: 'single', answers: [{ id: 'a', text: '-5', correct: false }, { id: 'b', text: '=HYPERLINK("http://x")', correct: true }] },
+    { text: 'Điền ____', type: 'fill', blanks: 1, answers: [], accepted: [['=x', '-y']] },
+  ]
+  const csv = questionsToCsv(original)
+  const rows = parseDelimited(csv.replace(/^﻿/, ''), ',')
+  const cells = rows.slice(1).flat().filter(c => c !== '')
+  for (const c of cells) {
+    const formula = /^\s*[=+\-@]/.test(c) && !/^[+-]?\d+([.,]\d+)?$/.test(c.trim())
+    assert.ok(!formula, `ô ${JSON.stringify(c)} vẫn bắt đầu như công thức`)
+  }
+  assert.ok(cells.includes("'=1+1") && cells.includes("'-2+3") && cells.includes('-5'), "thêm dấu ' trước công thức, giữ nguyên số âm")
+  const back = questionsFromText(csv)
+  assert.deepEqual(back.errors, [])
+  assert.deepEqual(back.questions, original)
+})
+
+test("unFormula chỉ bỏ dấu ' do bản xuất thêm trước công thức", () => {
+  assert.equal(unFormula("'=1+1"), '=1+1')
+  assert.equal(unFormula("' @A1"), ' @A1')
+  assert.equal(unFormula("'-5"), "'-5")
+  assert.equal(unFormula("'abc"), "'abc")
+  assert.equal(unFormula('=1+1'), '=1+1')
 })

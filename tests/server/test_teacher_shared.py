@@ -91,8 +91,10 @@ try:
           gv.put({'subjects': [S1, {**S2, 'name': 'Đổi tên'}, S3]}) == 403)
     check('GV thêm môn mới: được (giữ hành vi cũ)',
           gv.put({'subjects': [S1, S2, S3, {'id': 9, 'code': 'X9', 'name': 'Môn 9'}]}) == 200)
-    check('GV xóa môn của mình, giữ môn khác: được',
-          gv.put({'subjects': [S2, S3, {'id': 9, 'code': 'X9', 'name': 'Môn 9'}]}) == 200)
+    # Xóa môn của mình qua được kiểm tra R1, nhưng môn 1 còn dữ liệu và còn chính giáo viên được phân môn nên bị chặn hẳn
+    # (409, R2/R4 review PR9; xem test_subject_removal.py). Trước đây ca này trả 200.
+    check('GV xóa môn của mình (còn dữ liệu): không bị R1 chặn (không phải 403) mà bị 409 vì môn còn dữ liệu',
+          gv.put({'subjects': [S2, S3, {'id': 9, 'code': 'X9', 'name': 'Môn 9'}]}) == 409)
     reset()
     dl = SEED['deadlines']
     check('GV thêm deadline cho môn mình: được',
@@ -119,8 +121,11 @@ try:
 
     # ── Vai trò khác không đổi ──
     reset()
-    check('Đào tạo bớt môn: vẫn được', tr.put({'subjects': [S1, S2]}) == 200)
-    check('Admin ghi subjects rỗng: vẫn được', ad.put({'subjects': []}) == 200)
+    # R1 không giới hạn Đào tạo/Admin; bớt môn còn dữ liệu thì bị chặn hẳn (409, test_subject_removal.py)
+    check('Đào tạo bớt môn 3 còn tài liệu: 409 (không phải 403)', tr.put({'subjects': [S1, S2]}) == 409)
+    check('Admin ghi subjects rỗng khi các môn còn dữ liệu: 409 (không phải 403)', ad.put({'subjects': []}) == 409)
+    check('Đào tạo thêm môn 9 rồi bớt môn 9 (không có dữ liệu): được',
+          tr.put({'subjects': [S1, S2, S3, {'id': 9, 'code': 'X9', 'name': 'Môn 9'}]}) == 200 and tr.put({'subjects': [S1, S2, S3]}) == 200)
 
     # Giáo viên hồ sơ cũ chưa có subjectIds: giao diện coi là dạy mọi môn nên không giới hạn
     reset()

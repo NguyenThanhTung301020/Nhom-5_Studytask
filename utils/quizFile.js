@@ -140,7 +140,7 @@ export function questionsFromText(text) {
     if (!cols) { cols = DEFAULT_COLS; start = 0 }
     for (let r = start; r < rows.length; r++) {
       const row = rows[r]
-      const get = (i) => (i >= 0 && i < row.length ? row[i] : '')
+      const get = (i) => (i >= 0 && i < row.length ? unFormula(row[i]) : '')   // bỏ dấu ' do questionsToCsv thêm trước công thức
       const res = buildQuestion({
         type: get(cols.type), text: get(cols.text), options: cols.opts.map(get), answer: get(cols.answer),
       })
@@ -161,7 +161,19 @@ export function assignIds(questions, usedIds = []) {
 }
 
 // ── Xuất ────────────────────────────────────────────────────────
-const csvCell = (v) => { const s = String(v ?? ''); return /[",\n\r;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s }
+// Ô bắt đầu bằng = + - @ (kể cả sau khoảng trắng) bị Excel, LibreOffice coi là công thức (R6 review PR9 lần 2: câu hỏi
+// `=1+1` hiện thành 2). Thêm dấu ' như utils/sanitize.js; số thật như -5 giữ nguyên. Khi nhập lại, unFormula bỏ dấu này.
+const NUMBER = /^[+-]?\d+([.,]\d+)?$/
+const FORMULA = /^\s*[=+\-@]/
+const csvCell = (v) => {
+  let s = String(v ?? '')
+  if (FORMULA.test(s) && !NUMBER.test(s.trim())) s = `'${s}`
+  return /[",\n\r;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
+}
+export const unFormula = (s) => {
+  const t = String(s ?? '')
+  return t[0] === "'" && FORMULA.test(t.slice(1)) && !NUMBER.test(t.slice(1).trim()) ? t.slice(1) : t
+}
 const TYPE_WORD = { single: 'một', multiple: 'nhiều', fill: 'điền khuyết' }
 
 export function questionsToCsv(questions) {
