@@ -1,5 +1,10 @@
 rules_version = '2';
 
+// GHI CHÚ (R7 review PR9 lần 2, 13/11/2026): project Firebase đã gỡ (docs/van-hanh/02-bien-ban-go-firebase-sutdytask.md).
+// Tệp này không còn bảo vệ dữ liệu nào; nó chỉ còn là đặc tả cho can() trong server/studytask_api.py và cho test:rules.
+// Khi hai nơi khác nhau, can() và tests/server/ là chuẩn. Đã biết: rules chỉ kiểm tra `evidence` là chuỗi <= 2000 ký tự,
+// còn máy chủ chỉ nhận link http(s) (valid_evidence), kể cả khi Đào tạo/Admin sửa link (R5).
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -103,6 +108,7 @@ service cloud.firestore {
     }
 
     // Phiếu xét tốt nghiệp sau khi sinh viên ghi (kết quả duyệt đã được chặn riêng ở create/update)
+    // `evidence`: máy chủ còn kiểm tra là link http(s) (valid_evidence); rules không kiểm tra scheme (xem ghi chú đầu tệp)
     function validGraduationApp(uid) {
       let d = request.resource.data;
       return d.keys().hasOnly(['uid', 'status', 'name', 'studentId', 'className', 'major', 'faculty', 'email', 'phone', 'gpa',

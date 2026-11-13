@@ -7,6 +7,7 @@ import Portal from '../components/Portal.js'
 import { QuizTaker } from './Quiz.js'
 import { uploadFile, isFirebaseReady } from '../utils/firebase.js'
 import { semesterLabel, semestersOf, sortBySemester, teacherSections, termLabel, visibleTeachers } from '../utils/scope.js'
+import { subjectUsageDetail } from '../utils/curriculum.js'
 
 // Nhóm định dạng file nộp bài mà giáo viên có thể chọn
 const SUBMIT_FORMATS = [
@@ -735,8 +736,9 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
 }
 
 // ── Main Subjects Page ──
-export default function Subjects({ subjects, setSubjects, deadlines, homeworks, setHomeworks, materials = [], setMaterials, role = 'student', subjectTeacherMap = {}, user, quizzes = [], submissions = [], setSubmissions, onNavigate, onActivity, onSubmitHomework, onUndoHomework }) {
+export default function Subjects({ subjects, setSubjects, deadlines, homeworks, setHomeworks, materials = [], setMaterials, role = 'student', subjectTeacherMap = {}, user, quizzes = [], submissions = [], setSubmissions, onNavigate, onActivity, onSubmitHomework, onUndoHomework, usageData = {} }) {
   const [modal,     setModal]     = useState(null)
+  const [notice,    setNotice]    = useState(null)   // lý do chưa xóa được môn
   const [editItem,  setEditItem]  = useState(null)
   const [confirmId, setConfirmId] = useState(null)
   const [search,    setSearch]    = useState('')
@@ -761,6 +763,21 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
     setModal(null)
   }
 
+  // Xóa môn: chặn hẳn khi môn còn dữ liệu, giống trang Chương trình ĐT (R3 review PR9 lần 2). Trước đây trang này
+  // chỉ xóa kèm bài tập, để lại lịch học, lịch thi, deadline, tài liệu, đề mồ côi. usageData là danh sách đầy đủ (chưa lọc
+  // theo môn/lớp) để giáo viên không bỏ sót lịch của lớp khác cùng môn; máy chủ kiểm tra lại và trả 409 nếu còn dữ liệu.
+  const askDelete = (s) => {
+    const u = subjectUsageDetail(s.id, usageData)
+    if (u.total) {
+      setConfirmId(null)
+      setNotice(`Chưa xóa được môn ${s.name}: còn ${u.text}. Hãy xử lý các mục đó trước.`)
+      window.scrollTo?.({ top: 0, behavior: 'smooth' })
+      return
+    }
+    setNotice(null)
+    setConfirmId(s.id)
+  }
+
   const totalCredits  = subjects.reduce((sum, s) => sum + (s.credits || 0), 0)
   const totalHws      = homeworks.length
   const doneHws       = homeworks.filter((hw) => hw.status === 'completed').length
@@ -769,6 +786,8 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
   return (
     h('div', { className: 'container-fluid py-4' },
       // ── Header ──
+      notice && h('div', { className: 'alert alert-danger alert-dismissible small py-2', role: 'alert' }, notice,
+        h('button', { className: 'btn-close', 'aria-label': 'Đóng', onClick: () => setNotice(null) })),
       h('div', { className: 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-4' },
         h('div', null,
           h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-book me-2', style: { color: 'var(--primary)' } }), 'Quản lý Môn học'),
@@ -802,7 +821,7 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
         : (() => {
             const card = (s) =>
               h('div', { key: s.id, className: 'col-12 col-md-6 col-xl-4' },
-                h(SubjectCard, { subject: s, deadlines, homeworks, setHomeworks, materials, setMaterials, role, user, quizzes, submissions, setSubmissions, onActivity, onSubmitHomework, onUndoHomework, onNavigateQuiz: onNavigate ? () => onNavigate('quiz') : null, assignedTeachers: visibleTeachers(user, s.id, subjectTeacherMap[s.id] || []), myClassIds: classIdsFor(s), onEdit: () => { setEditItem(s); setModal('edit') }, onDelete: () => setConfirmId(s.id) })
+                h(SubjectCard, { subject: s, deadlines, homeworks, setHomeworks, materials, setMaterials, role, user, quizzes, submissions, setSubmissions, onActivity, onSubmitHomework, onUndoHomework, onNavigateQuiz: onNavigate ? () => onNavigate('quiz') : null, assignedTeachers: visibleTeachers(user, s.id, subjectTeacherMap[s.id] || []), myClassIds: classIdsFor(s), onEdit: () => { setEditItem(s); setModal('edit') }, onDelete: () => askDelete(s) })
               )
             const groups = []
             filtered.forEach((s) => {
@@ -821,8 +840,8 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
       (modal || confirmId) && h(Portal, null,
         modal && h(SubjectModal, { item: modal === 'edit' ? editItem : null, onSave: handleSave, onClose: () => setModal(null) }),
         confirmId && h(ConfirmModal, {
-          message: 'Xóa môn học này? Toàn bộ bài tập liên quan cũng bị xóa.',
-          onConfirm: () => { setSubjects(prev => prev.filter((s) => s.id !== confirmId)); setHomeworks(prev => prev.filter((hw) => hw.subjectId !== confirmId)); setConfirmId(null) },
+          message: 'Xóa môn học này? Môn không còn dữ liệu liên quan.',
+          onConfirm: () => { setSubjects(prev => prev.filter((s) => s.id !== confirmId)); setConfirmId(null) },
           onClose: () => setConfirmId(null),
         })
       )

@@ -9,7 +9,7 @@ import {
   subjectColumns, countedColumns, evaluateStudentSubject,
 } from '../utils/grading.js'
 import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.js'
-import { checkCurriculum, missingCourses, subjectUsage } from '../utils/curriculum.js'
+import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition } from '../utils/scope.js'
@@ -280,6 +280,25 @@ describe('Mở và bớt môn theo CTĐT', () => {
     assert.equal(subjectUsage(2, data), 1)
     assert.equal(subjectUsage(3, data), 0)
     assert.equal(subjectUsage(1), 0)
+  })
+  test('subjectUsageDetail (R2, R3 review PR9): đếm cả bài tập, tài liệu, đề và tài khoản được phân môn', () => {
+    const data = {
+      schedule: [{ subjectId: 1 }], exams: [], deadlines: [{ subjectId: 1 }, { subjectId: 2 }],
+      homeworks: [{ subjectId: 2 }, { subjectId: 2 }], materials: [{ subjectId: 2 }], quizzes: [{ subjectId: 3 }],
+      users: [{ subjectIds: [2, 4] }, { subjectIds: [4] }, { role: 'admin' }, { subjectIds: 'x' }],
+    }
+    const u2 = subjectUsageDetail(2, data)
+    assert.equal(u2.total, 5)
+    assert.equal(u2.text, '1 deadline, 2 bài tập, 1 tài liệu, 1 tài khoản được phân môn')
+    assert.deepEqual(subjectUsageDetail(1, data).parts.map(p => p.key), ['schedule', 'deadlines'])
+    assert.equal(subjectUsageDetail(3, data).text, '1 đề trắc nghiệm')
+    assert.equal(subjectUsageDetail(4, data).text, '2 tài khoản được phân môn')
+    assert.deepEqual(subjectUsageDetail(5, data), { total: 0, parts: [], text: '' })
+    assert.equal(subjectUsage(2, data), 5)
+    // môn chỉ còn bài tập, tài liệu: trước đây subjectUsage trả 0 nên trang Chương trình ĐT cho bớt
+    assert.equal(subjectUsage(2, { homeworks: data.homeworks, materials: data.materials }), 3)
+    // so khớp đúng kiểu như máy chủ: '2' khác 2
+    assert.equal(subjectUsage('2', data), 0)
   })
 })
 

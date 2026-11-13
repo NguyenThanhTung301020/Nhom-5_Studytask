@@ -1,7 +1,7 @@
 // pages/Curriculum.js – Phòng Đào tạo: kiểm tra các module môn học có đáp ứng chương trình đào tạo (CTĐT)
 // rồi thêm môn còn thiếu / bớt môn ngoài chương trình. CTĐT lưu ở curriculum/{programId}.
 import { setDocument, listDocuments, deleteDocument, errorText } from '../utils/store.js'
-import { checkCurriculum, missingCourses, subjectUsage } from '../utils/curriculum.js'
+import { checkCurriculum, missingCourses, subjectUsageDetail } from '../utils/curriculum.js'
 import { SAMPLE_CURRICULUM, SUBJECT_COLORS } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 
@@ -52,7 +52,7 @@ function ModuleModal({ item, onSave, onClose }) {
   )
 }
 
-export default function Curriculum({ subjects = [], setSubjects, schedule = [], exams = [], deadlines = [] }) {
+export default function Curriculum({ subjects = [], setSubjects, schedule = [], exams = [], deadlines = [], homeworks = [], materials = [], quizzes = [], allUsers = [] }) {
   const [programs, setPrograms] = useState(null)
   const [pid, setPid]           = useState(null)
   const [prog, setProg]         = useState(null)
@@ -127,10 +127,15 @@ export default function Curriculum({ subjects = [], setSubjects, schedule = [], 
     setSubjects(prev => prev.map(s => s.id === course.subject.id ? { ...s, credits: course.credits } : s))
     setMsg({ type: 'success', text: `Đã cập nhật ${course.code} thành ${course.credits} tín chỉ theo CTĐT.` })
   }
-  const usage = (sid) => subjectUsage(sid, { schedule, exams, deadlines })
+  const usage = (sid) => subjectUsageDetail(sid, { schedule, exams, deadlines, homeworks, materials, quizzes, users: allUsers })
   const removeSubject = (s) => {
-    // Môn còn dữ liệu liên quan thì chưa cho bớt, tránh để lại lịch và deadline không thuộc môn nào
-    if (usage(s.id)) return setMsg({ type: 'danger', text: `Chưa bớt được môn ${s.name}: còn ${usage(s.id)} lịch học/lịch thi/deadline liên quan. Hãy xử lý các mục đó trước.` })
+    // Môn còn dữ liệu liên quan thì chặn hẳn, không cho bớt (R2 review PR9 lần 2: trước đây chỉ đếm lịch học, lịch thi,
+    // deadline nên bớt môn còn bài tập, tài liệu, đề vẫn để lại dữ liệu mồ côi). Máy chủ kiểm tra lại và trả 409.
+    const u = usage(s.id)
+    if (u.total) {
+      window.scrollTo?.({ top: 0, behavior: 'smooth' })   // thông báo nằm ở đầu trang, nút Bớt môn ở cuối trang
+      return setMsg({ type: 'danger', text: `Chưa bớt được môn ${s.name}: còn ${u.text}. Hãy xử lý các mục đó trước.` })
+    }
     setConfirm({
       message: `Bớt môn ${s.code || ''} – ${s.name} khỏi danh sách môn đang mở?`,
       run: () => { setSubjects(prev => prev.filter(x => x.id !== s.id)); setMsg({ type: 'success', text: `Đã bớt môn ${s.name}.` }) },
@@ -214,7 +219,7 @@ export default function Curriculum({ subjects = [], setSubjects, schedule = [], 
         r.extra.map(s => h('div', { key: s.id, className: 'd-flex flex-wrap align-items-center gap-2 py-2 border-bottom small' },
           h('span', { className: 'mcal-dot', style: { background: s.color } }),
           h('span', { className: 'fw-semibold', style: { width: 70 } }, s.code || '—'),
-          h('span', { className: 'flex-grow-1' }, s.name, ` · ${s.credits || 0} TC`, usage(s.id) > 0 && h('span', { className: 'text-muted' }, ` · ${usage(s.id)} lịch/deadline`)),
+          h('span', { className: 'flex-grow-1' }, s.name, ` · ${s.credits || 0} TC`, usage(s.id).total > 0 && h('span', { className: 'text-muted' }, ` · còn ${usage(s.id).text}`)),
           s.code && prog.modules.length > 0 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: '', onChange: e => e.target.value && putInModule(s, e.target.value) },
             h('option', { value: '' }, 'Đưa vào module…'), prog.modules.map(m => h('option', { key: m.id, value: m.id }, m.name))),
           h('button', { className: 'btn btn-sm btn-outline-danger py-0', onClick: () => removeSubject(s) }, h('i', { className: 'bi bi-dash-circle me-1' }), 'Bớt môn')))

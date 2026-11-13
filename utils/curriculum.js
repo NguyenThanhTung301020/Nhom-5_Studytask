@@ -19,9 +19,28 @@ export function missingCourses(report) {
   })
 }
 
-// Số lịch học, lịch thi, deadline còn gắn với một môn
-export const subjectUsage = (subjectId, { schedule = [], exams = [], deadlines = [] } = {}) =>
-  [schedule, exams, deadlines].reduce((n, list) => n + list.filter(x => x.subjectId === subjectId).length, 0)
+// Dữ liệu còn gắn với một môn. Bớt/xóa môn khi còn dữ liệu thì bị chặn hẳn (R2, R3 review PR9 lần 2):
+// trước đây chỉ đếm lịch học, lịch thi, deadline nên bớt môn còn bài tập, tài liệu, đề thì để lại dữ liệu mồ côi.
+// Máy chủ kiểm tra lại đúng các mục này (subject_usage trong server/studytask_api.py). Cột điểm (gradingColumns) là các bài tập
+// được tính điểm nên đã được chặn qua bài tập.
+const USAGE_PARTS = [
+  ['schedule', 'lịch học'], ['exams', 'lịch thi'], ['deadlines', 'deadline'],
+  ['homeworks', 'bài tập'], ['materials', 'tài liệu'], ['quizzes', 'đề trắc nghiệm'],
+]
+
+// { total, parts: [{ key, label, count }] (chỉ mục có count > 0), text: '2 bài tập, 1 tài liệu' }
+// data.users: danh sách tài khoản; tài khoản có subjectId trong subjectIds được tính là đang được phân môn.
+export function subjectUsageDetail(subjectId, data = {}) {
+  const count = (list) => (Array.isArray(list) ? list : []).filter(x => x && x.subjectId === subjectId).length
+  const parts = USAGE_PARTS.map(([key, label]) => ({ key, label, count: count(data[key]) }))
+  const users = (Array.isArray(data.users) ? data.users : []).filter(u => Array.isArray(u?.subjectIds) && u.subjectIds.includes(subjectId)).length
+  parts.push({ key: 'users', label: 'tài khoản được phân môn', count: users })
+  const used = parts.filter(p => p.count > 0)
+  return { total: used.reduce((n, p) => n + p.count, 0), parts: used, text: used.map(p => `${p.count} ${p.label}`).join(', ') }
+}
+
+// Tổng số mục còn gắn với một môn
+export const subjectUsage = (subjectId, data) => subjectUsageDetail(subjectId, data).total
 
 export function checkCurriculum(curriculum, subjects) {
   const byCode = new Map(subjects.filter(s => s.code).map(s => [norm(s.code), s]))

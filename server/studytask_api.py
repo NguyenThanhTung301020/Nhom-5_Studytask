@@ -429,6 +429,49 @@ def teacher_shared_ok(user, old, new):
     return True
 
 
+USAGE_LABELS = (('schedule', 'lịch học'), ('exams', 'lịch thi'), ('deadlines', 'deadline'),
+                ('homeworks', 'bài tập'), ('materials', 'tài liệu'), ('quizzes', 'đề trắc nghiệm'))
+
+
+def subject_usage(shared, sid):
+    """Dữ liệu còn gắn với môn `sid`: [(nhãn, số lượng)] chỉ gồm mục có số lượng > 0. Cùng các mục với
+    subjectUsageDetail ở utils/curriculum.js: lịch học, lịch thi, deadline, bài tập, tài liệu, đề, tài khoản được phân môn."""
+    key = json.dumps(sid)
+    out = []
+    for k, label in USAGE_LABELS:
+        v = shared.get(k)
+        n = sum(1 for x in v if isinstance(x, dict) and 'subjectId' in x and json.dumps(x['subjectId']) == key) if isinstance(v, list) else 0
+        if n:
+            out.append((label, n))
+    n = 0
+    for (data,) in db().execute("SELECT data FROM docs WHERE col='user'"):
+        ids = json.loads(data).get('subjectIds')
+        if isinstance(ids, list) and any(json.dumps(i) == key for i in ids):
+            n += 1
+    if n:
+        out.append(('tài khoản được phân môn', n))
+    return out
+
+
+def check_subject_removal(old, merged):
+    """Bớt/xóa môn khi môn còn dữ liệu thì chặn hẳn (R2, R4 review PR9 lần 2; nhóm chọn chặn hẳn thay vì xóa mềm).
+    Giao diện đã chặn (Chương trình ĐT, Môn học), nhưng gọi thẳng API vẫn bớt được và để lại dữ liệu mồ côi.
+    Chỉ xét các môn bị bỏ ở CHÍNH lần ghi này, so theo `id`; dữ liệu đi kèm cũng xét trên bản sau khi ghi (`merged`),
+    nên một lần ghi bỏ cả môn lẫn mọi dữ liệu của môn vẫn được."""
+    def ids(d):
+        v = d.get('subjects')
+        return {json.dumps(s['id']): s for s in v if isinstance(s, dict) and 'id' in s} if isinstance(v, list) else {}
+    before, after = ids(old or {}), ids(merged)
+    for key, subj in before.items():
+        if key in after:
+            continue
+        used = subject_usage(merged, subj['id'])
+        if used:
+            name = subj.get('name') or subj.get('code') or key
+            raise ApiError(409, 'subject-in-use', f'Chưa bớt được môn {name}: còn ' + ', '.join(f'{n} {label}' for label, n in used)
+                           + '. Hãy xử lý các mục đó trước.')
+
+
 def can(op, col, id_, user, old=None, new=None):
     """Chuyển từ firestore.rules. op: read | create | update | delete."""
     signed = user is not None
@@ -486,7 +529,9 @@ def can(op, col, id_, user, old=None, new=None):
         if op == 'create':
             return role == 'student' and owner and new.get('status') == 'submitted' and not (set(new) & rev) and valid_evidence(new.get('evidence'))
         if op == 'update':
-            if mgr: return True
+            # R5 review PR9 lần 2: Đào tạo/Admin trước đây ghi được evidence = 'javascript:…' vì nhánh này trả True trước
+            # khi kiểm tra link. Chỉ kiểm tra khi link đổi, để phiếu cũ có link sai vẫn duyệt được (duyệt không đụng tới link).
+            if mgr: return old.get('evidence') == new.get('evidence') or valid_evidence(new.get('evidence'))
             changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
             return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev) and valid_evidence(new.get('evidence'))
         return mgr or (owner and old and old.get('status') == 'submitted')
@@ -1482,6 +1527,8 @@ class Handler(BaseHTTPRequestHandler):
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                if col == 'sharedData' and id_ == 'global':
+                    check_subject_removal(old, merged)
                 apply_quiz_ops(quiz_ops, u)
                 if sync_phone is None:
                     doc_put(col, id_, merged)
@@ -1522,6 +1569,8 @@ class Handler(BaseHTTPRequestHandler):
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
+                if col == 'sharedData' and id_ == 'global':
+                    check_subject_removal(old, merged)
                 apply_quiz_ops(quiz_ops, u)
                 doc_put(col, id_, merged)
                 return self.send(200, {'ok': True})
