@@ -11,6 +11,8 @@ import {
 import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.js'
 import { checkCurriculum, missingCourses, subjectUsage } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
+import { summarizeSystem } from '../utils/systemStats.js'
+import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition } from '../utils/scope.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
@@ -278,5 +280,184 @@ describe('Mở và bớt môn theo CTĐT', () => {
     assert.equal(subjectUsage(2, data), 1)
     assert.equal(subjectUsage(3, data), 0)
     assert.equal(subjectUsage(1), 0)
+  })
+})
+
+describe('Thống kê hệ thống (trang Quản trị)', () => {
+  const users = [
+    { role: 'admin' }, { role: 'training' }, { role: 'finance' },
+    { role: 'teacher', subjectIds: [1, 2] }, { role: 'teacher', subjectIds: [] }, { role: 'teacher' },
+    { role: 'student', subjectIds: [1] }, { role: 'student', subjectIds: [] }, { role: 'student', subjectIds: [1], expiresAt: '2026-01-01' },
+    { role: 'khac' },
+  ]
+  const s = summarizeSystem({ users, today: '2026-11-12' })
+  test('đếm tài khoản theo vai trò từ danh sách thật, không dùng số tài khoản demo', () => {
+    assert.equal(s.accounts.total, 10)
+    assert.deepEqual(s.accounts.byRole, { admin: 1, training: 1, finance: 1, teacher: 3, student: 3 })
+    assert.equal(s.accounts.staff, 3)
+  })
+  test('giáo viên/sinh viên chưa phân công môn (thiếu hoặc rỗng subjectIds) và tài khoản hết hạn', () => {
+    assert.equal(s.accounts.teachersWithoutSubjects, 2)
+    assert.equal(s.accounts.studentsWithoutSubjects, 1)
+    assert.equal(s.accounts.expired, 1)
+  })
+  test('danh mục: môn, lịch học, lịch thi, tài liệu, bài tập', () => {
+    const c = summarizeSystem({ subjects: [1, 2, 3], schedule: [1, 2], exams: [1], materials: [1, 2, 3, 4], homeworks: [1] }).catalog
+    assert.deepEqual([c.subjects, c.schedule, c.exams, c.materials, c.homeworks], [3, 2, 1, 4, 1])
+  })
+  test('đề trắc nghiệm theo trạng thái; đề cũ chưa có trạng thái coi là đang mở', () => {
+    const q = summarizeSystem({ quizzes: [{ status: 'active' }, {}, { status: 'closed' }, { status: 'draft' }, { status: 'draft' }] }).catalog.quizzes
+    assert.deepEqual(q, { total: 5, active: 2, closed: 1, draft: 2 })
+  })
+  test('deadline xong / quá hạn so với ngày hôm nay', () => {
+    const d = summarizeSystem({ today: '2026-11-12', deadlines: [
+      { status: 'completed', dueDate: '2026-01-01' }, { status: 'pending', dueDate: '2026-11-11' },
+      { status: 'pending', dueDate: '2026-11-12' }, { status: 'in_progress', dueDate: '2026-12-01' }, { status: 'pending' },
+    ] }).catalog.deadlines
+    assert.deepEqual(d, { total: 5, done: 1, overdue: 1 })
+  })
+  test('lượt làm và điểm TB trắc nghiệm lấy từ nhật ký hoạt động; bỏ qua sự kiện khác', () => {
+    const q = summarizeSystem({ activities: [
+      { events: [{ type: 'quiz', score: 8 }, { type: 'material' }, { type: 'quiz', score: 7 }] },
+      { events: [{ type: 'quiz', score: 6.5 }, { type: 'homework', score: 10 }] }, {},
+    ] }).quiz
+    assert.equal(q.attempts, 3)
+    assert.equal(q.avgScore, 7.2)
+  })
+  test('không có dữ liệu → 0 và điểm TB là null (không phải NaN)', () => {
+    const e = summarizeSystem()
+    assert.equal(e.accounts.total, 0)
+    assert.equal(e.quiz.avgScore, null)
+    assert.equal(e.catalog.deadlines.overdue, 0)
+  })
+})
+
+describe('Phạm vi theo lớp học phần (cùng môn, nhiều lớp, nhiều giáo viên)', () => {
+  // Môn 1 mở ở 3 lớp; GV A dạy lớp a1 và b1 (môn 1) + môn 2 ở lớp a1; GV B dạy lớp c1 (môn 1)
+  const sched = [
+    { id: 1, subjectId: 1, classId: 'a1' }, { id: 2, subjectId: 1, classId: 'b1' }, { id: 3, subjectId: 1, classId: 'c1' },
+    { id: 4, subjectId: 2, classId: 'a1' }, { id: 5, subjectId: 2, classId: 'b1' }, { id: 6, subjectId: 3, classId: 'a1' },
+    { id: 7, subjectId: 1 },                                   // mục chung của môn, không thuộc lớp nào
+  ]
+  const gvA = { role: 'teacher', subjectIds: [1, 2], sections: [{ classId: 'a1', subjectId: 1 }, { classId: 'b1', subjectId: 1 }, { classId: 'a1', subjectId: 2 }] }
+  const ids = (xs) => xs.map(x => x.id)
+
+  test('giáo viên chỉ thấy lịch của lớp học phần mình dạy, không thấy lớp khác cùng môn', () => {
+    assert.deepEqual(ids(scopeByClass(gvA, sched)), [1, 2, 4, 7])        // không có 3 (lớp c1), 5 (môn 2 lớp b1), 6 (môn 3)
+  })
+  test('hai giáo viên cùng môn thấy hai tập lịch khác nhau', () => {
+    const gvB = { role: 'teacher', subjectIds: [1], sections: [{ classId: 'c1', subjectId: 1 }] }
+    assert.deepEqual(ids(scopeByClass(gvB, sched)), [3, 7])
+  })
+  test('giáo viên chưa được phân công môn trong kỳ thì không thấy gì (trừ mục chung của môn khác không có)', () => {
+    const gvC = { role: 'teacher', subjectIds: [], sections: [] }
+    assert.deepEqual(scopeByClass(gvC, sched), [])
+  })
+  test('Admin bỏ một môn khỏi hồ sơ thì các lớp của môn đó cũng biến mất', () => {
+    const t = { ...gvA, subjectIds: [2] }
+    assert.deepEqual(teacherSections(t).map(s => s.subjectId), [2])
+    assert.deepEqual(ids(scopeByClass(t, sched)), [4])
+  })
+  test('hồ sơ giáo viên cũ (không có sections) vẫn lọc theo môn như trước', () => {
+    const old = { role: 'teacher', subjectIds: [1] }
+    assert.equal(teacherSections(old), null)
+    assert.deepEqual(ids(scopeByClass(old, sched)), [1, 2, 3, 7])
+  })
+  test('sinh viên chỉ thấy lịch lớp mình (và mục chung của môn)', () => {
+    const sv = { role: 'student', subjectIds: [1, 2], classId: 'b1' }
+    assert.deepEqual(ids(scopeByClass(sv, sched)), [2, 5, 7])
+  })
+  test('sinh viên hồ sơ cũ (không có classId) thấy theo môn', () => {
+    assert.deepEqual(ids(scopeByClass({ role: 'student', subjectIds: [1] }, sched)), [1, 2, 3, 7])
+  })
+  test('admin, đào tạo, tài chính thấy tất cả; subjectIds null = tất cả', () => {
+    for (const role of ['admin', 'training', 'finance']) assert.equal(scopeByClass({ role, subjectIds: [9] }, sched).length, 7)
+    assert.equal(scopeBySubject({ role: 'teacher', subjectIds: null }, sched).length, 7)
+    assert.equal(scopeBySubject(null, sched).length, 7)
+  })
+  test('studentInScope: giáo viên chỉ có sinh viên của lớp học phần mình dạy', () => {
+    const svA = { role: 'student', classId: 'a1', subjectIds: [1, 2] }
+    const svC = { role: 'student', classId: 'c1', subjectIds: [1] }     // cùng môn 1 nhưng lớp khác
+    const svA3 = { role: 'student', classId: 'a1', subjectIds: [3] }    // cùng lớp nhưng môn GV không dạy
+    assert.equal(studentInScope(gvA, svA), true)
+    assert.equal(studentInScope(gvA, svC), false)
+    assert.equal(studentInScope(gvA, svA3), false)
+    assert.equal(studentInScope({ role: 'admin' }, svC), true)
+    assert.equal(studentInScope(gvA, { role: 'teacher' }), false)
+  })
+  test('studentInScope: hồ sơ cũ dùng giao môn như trước', () => {
+    assert.equal(studentInScope({ role: 'teacher', subjectIds: [1] }, { role: 'student', subjectIds: [1, 5] }), true)
+    assert.equal(studentInScope({ role: 'teacher', subjectIds: [1] }, { role: 'student', subjectIds: [5] }), false)
+    assert.equal(studentInScope({ role: 'teacher', subjectIds: [1] }, { role: 'student' }), false)
+  })
+  test('danh mục lớp và các lớp được chọn khi xếp lịch', () => {
+    const users = [
+      { role: 'student', classId: 'a1', className: 'A1', semesterNo: 1, subjectIds: [1, 2] },
+      { role: 'student', classId: 'a1', className: 'A1', semesterNo: 1, subjectIds: [1, 2] },
+      { role: 'student', classId: 'c1', className: 'C1', semesterNo: 2, subjectIds: [1] },
+      { role: 'teacher' },
+    ]
+    assert.equal(classCatalog(users).size, 2)
+    assert.deepEqual(classOptionsForSubject(gvA, users, 1).map(c => c.id), ['a1', 'b1'])        // lớp GV dạy môn 1
+    assert.deepEqual(classOptionsForSubject({ role: 'admin' }, users, 1).map(c => c.id), ['a1', 'c1'])
+    assert.deepEqual(classOptionsForSubject({ role: 'admin' }, users, 2).map(c => c.id), ['a1'])
+  })
+  test('các lớp trong danh sách lịch và các học kỳ của môn', () => {
+    assert.deepEqual(classesInItems(sched).map(c => c.id), ['a1', 'b1', 'c1'])
+    assert.deepEqual(semestersOf([{ hocKy: 3 }, { hocKy: 1 }, { hocKy: 3 }, {}]), [1, 3])
+  })
+  test('thẻ môn học: sinh viên chỉ thấy giáo viên dạy lớp mình; giáo viên thấy mình và người dạy chung lớp; Admin thấy tất cả', () => {
+    const entries = [{ uid: 'A', name: 'A', classIds: ['a1', 'b1'] }, { uid: 'B', name: 'B', classIds: ['c1'] }, { uid: 'O', name: 'Cũ', classIds: [] }]
+    const names = (xs) => xs.map(t => t.uid).sort().join('')
+    assert.equal(names(visibleTeachers({ role: 'student', classId: 'c1' }, 1, entries)), 'BO')
+    assert.equal(names(visibleTeachers({ role: 'student', classId: 'a1' }, 1, entries)), 'AO')
+    assert.equal(names(visibleTeachers({ role: 'student' }, 1, entries)), 'ABO')                  // hồ sơ cũ: không biết lớp
+    assert.equal(names(visibleTeachers({ ...gvA, uid: 'A' }, 1, entries)), 'AO')                  // B dạy lớp khác nên không hiện
+    assert.equal(names(visibleTeachers({ role: 'admin' }, 1, entries)), 'ABO')
+  })
+  test('sắp xếp môn theo học kỳ, rồi mã môn; môn chưa có học kỳ xếp cuối', () => {
+    const out = sortBySemester([{ code: 'B', hocKy: 2 }, { code: 'X' }, { code: 'A', hocKy: 2 }, { code: 'Z', hocKy: 1 }])
+    assert.deepEqual(out.map(s => s.code), ['Z', 'A', 'B', 'X'])
+  })
+  test('học kỳ theo năm học: vị trí 1..8 của khung → "Năm N – Học kỳ 1/2"', () => {
+    assert.deepEqual([1, 2, 3, 4, 7, 8].map(termLabel), ['Năm 1 – Học kỳ 1', 'Năm 1 – Học kỳ 2', 'Năm 2 – Học kỳ 1', 'Năm 2 – Học kỳ 2', 'Năm 4 – Học kỳ 1', 'Năm 4 – Học kỳ 2'])
+    assert.equal(termLabel(0), '')
+    assert.equal(termLabel(undefined), '')
+    assert.deepEqual([1, 2, 5, 8].map(yearOfStudy), [1, 1, 3, 4])
+    assert.deepEqual([1, 2, 5, 8].map(termOfYear), [1, 2, 1, 2])
+    assert.equal(semesterLabel({ hocKy: 3 }), 'Năm 2 · HK1')
+    assert.equal(semesterLabel({}), '')
+  })
+  test('sinh viên lưu theo khóa + năm học: năm thứ và vị trí trong khung suy ra, không lưu "kỳ số mấy"', () => {
+    assert.equal(studyYear('2023-2027', '2026-2027'), 4)
+    assert.equal(studyYear('2026-2030', '2026-2027'), 1)
+    assert.equal(studyYear('2024–2028', '2026–2027'), 3)         // chấp nhận gạch ngang dài
+    assert.equal(studyYear('2023-2027', '2022-2023'), 0)         // năm học trước khi nhập học
+    assert.equal(studyYear('2023-2027', '2031-2032'), 0)         // quá 8 năm
+    assert.equal(studyYear(undefined, '2026-2027'), 0)
+    assert.equal(studyYear('2023-2027', null), 0)
+    assert.equal(khungPosition(4, 1), 7)                         // năm 4, học kỳ 1 → HK7 của khung
+    assert.equal(khungPosition(1, 1), 1)
+    assert.equal(khungPosition(2, 2), 4)
+    assert.equal(khungPosition(0, 1), 0)
+    assert.equal(khungPosition(3, 3), 0)
+  })
+  test('danh mục lớp: lớp theo khóa, năm thứ suy ra từ khóa và năm học', () => {
+    const cat = classCatalog([
+      { role: 'student', classId: 'CNTT23-01', className: 'CNTT23-01', cohort: '2023-2027', namHoc: '2026-2027', hocKy: 1, subjectIds: [1] },
+      { role: 'student', classId: 'CNTT26-01', className: 'CNTT26-01', cohort: '2026-2030', namHoc: '2026-2027', hocKy: 1, subjectIds: [2] },
+    ])
+    assert.equal(cat.get('CNTT23-01').cohort, '2023-2027')
+    assert.equal(cat.get('CNTT23-01').namThu, 4)
+    assert.equal(cat.get('CNTT26-01').namThu, 1)
+    assert.equal(classOptionsForSubject({ role: 'admin' }, [{ role: 'student', classId: 'x', cohort: '2024-2028', subjectIds: [9] }], 9)[0].cohort, '2024-2028')
+  })
+  test('danh sách môn học lọc theo `id` (không phải `subjectId`): giáo viên thấy đúng các môn được phân công', () => {
+    const subjects = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }]
+    assert.deepEqual(scopeSubjects({ role: 'teacher', subjectIds: [1, 3] }, subjects).map(s => s.id), [1, 3])
+    assert.deepEqual(scopeSubjects({ role: 'teacher', subjectIds: [] }, subjects), [])
+    assert.equal(scopeSubjects({ role: 'teacher', subjectIds: null }, subjects).length, 3)
+    assert.equal(scopeSubjects({ role: 'admin', subjectIds: [1] }, subjects).length, 3)
+    assert.equal(scopeSubjects(null, subjects).length, 3)
   })
 })

@@ -4,6 +4,7 @@ import { SAMPLE_SUBJECTS, SAMPLE_DEADLINES, SAMPLE_HOMEWORKS, SAMPLE_QUIZZES, SA
          DEFAULT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, BLANK_STUDENT_PROFILE,
          DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY, STAFF_ROLES } from './utils/constants.js'
 import { load, save, applySettings, getDaysUntil } from './utils/helpers.js'
+import { scopeSubjects, scopeBySubject, scopeByClass } from './utils/scope.js'
 import { getDocument } from './utils/store.js'
 import { DEFAULT_FINANCE_CONFIG, tuitionSummary, tuitionReminder } from './utils/tuition.js'
 import { initFirebase, isFirebaseReady, onAuth, fbLogout,
@@ -193,6 +194,9 @@ function App() {
           name:       userDoc?.name  || fbUser.username,
           role:       userDoc?.role  || 'student',
           subjectIds: userDoc?.subjectIds !== undefined ? userDoc.subjectIds : null,
+          sections:   userDoc?.sections,                 // giáo viên: lớp học phần đang dạy [{ classId, subjectId }]
+          classId:    userDoc?.classId,                  // sinh viên: lớp
+          className:  userDoc?.className,
           avatar:     userDoc?.avatar || '',
         }
         setUser(u)
@@ -254,17 +258,10 @@ function App() {
   const uid = user?.uid || null
   const seesAll = !!user && (user.role === 'admin' || STAFF_ROLES.includes(user.role))
 
-  const mySubjects = useMemo(() => {
-    if (!user || seesAll || user.subjectIds === null || user.subjectIds === undefined)
-      return subjects
-    return subjects.filter(s => (user.subjectIds || []).includes(s.id))
-  }, [subjects, user, seesAll])
-
-  const myDeadlines = useMemo(() => {
-    if (!user || seesAll || !user.subjectIds) return deadlines
-    const ids = new Set(user.subjectIds)
-    return deadlines.filter(d => ids.has(d.subjectId))
-  }, [deadlines, user, seesAll])
+  // Phạm vi dữ liệu (utils/scope.js): môn được phân công; lịch học/lịch thi còn lọc theo LỚP HỌC PHẦN (lớp + môn)
+  // để cùng một môn mở ở nhiều lớp, nhiều giáo viên thì mỗi người chỉ thấy lớp của mình.
+  const mySubjects  = useMemo(() => scopeSubjects(user, subjects),   [subjects, user])
+  const myDeadlines = useMemo(() => scopeBySubject(user, deadlines), [deadlines, user])
 
   // Ghép định nghĩa bài tập (chung) với trạng thái nộp bài của user hiện tại
   const homeworksView = useMemo(() =>
@@ -274,35 +271,11 @@ function App() {
       submission: homeworkSubs[hw.id] || null,
     })), [homeworks, homeworkSubs])
 
-  const myHomeworks = useMemo(() => {
-    if (!user || seesAll || !user.subjectIds) return homeworksView
-    const ids = new Set(user.subjectIds)
-    return homeworksView.filter(h => ids.has(h.subjectId))
-  }, [homeworksView, user, seesAll])
-
-  const myQuizzes = useMemo(() => {
-    if (!user || seesAll || !user.subjectIds) return quizzes
-    const ids = new Set(user.subjectIds)
-    return quizzes.filter(q => ids.has(q.subjectId))
-  }, [quizzes, user, seesAll])
-
-  const myMaterials = useMemo(() => {
-    if (!user || seesAll || !user.subjectIds) return materials
-    const ids = new Set(user.subjectIds)
-    return materials.filter(m => ids.has(m.subjectId))
-  }, [materials, user, seesAll])
-
-  const mySchedule = useMemo(() => {
-    if (!user || seesAll || !user.subjectIds) return schedule
-    const ids = new Set(user.subjectIds)
-    return schedule.filter(c => ids.has(c.subjectId))
-  }, [schedule, user, seesAll])
-
-  const myExams = useMemo(() => {
-    if (!user || seesAll || !user.subjectIds) return exams
-    const ids = new Set(user.subjectIds)
-    return exams.filter(e => ids.has(e.subjectId))
-  }, [exams, user, seesAll])
+  const myHomeworks = useMemo(() => scopeBySubject(user, homeworksView), [homeworksView, user])
+  const myQuizzes   = useMemo(() => scopeBySubject(user, quizzes),   [quizzes, user])
+  const myMaterials = useMemo(() => scopeBySubject(user, materials), [materials, user])
+  const mySchedule  = useMemo(() => scopeByClass(user, schedule),    [schedule, user])
+  const myExams     = useMemo(() => scopeByClass(user, exams),       [exams, user])
 
   // ── Học phí của sinh viên (để nhắc công nợ đến hạn trên chuông thông báo) ──
   const [tuitionInfo, setTuitionInfo] = useState(null)   // { cfg, acc }
@@ -379,7 +352,9 @@ function App() {
       .forEach(u => {
         ;(u.subjectIds || []).forEach(sid => {
           if (!map[sid]) map[sid] = []
-          if (!map[sid].find(t => t.uid === u.uid)) map[sid].push({ uid: u.uid, name: u.name || u.username })
+          // classIds: các lớp giáo viên này dạy môn đó (rỗng = hồ sơ cũ chưa phân theo lớp)
+          if (!map[sid].find(t => t.uid === u.uid)) map[sid].push({ uid: u.uid, name: u.name || u.username,
+            classIds: (u.sections || []).filter(s => s.subjectId === sid).map(s => s.classId) })
         })
       })
     return map
@@ -626,7 +601,7 @@ function App() {
         page === 'library'    && h(Library,    { libraryLinks: library, setLibraryLinks: setLibrary, role: user.role }),
         page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
         page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity }),
-        page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role }),
+        page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers }),
         page === 'tools'      && h(Tools,      {}),
         page === 'news'       && h(News,       { news, setNews, role: user.role }),
         page === 'forms'      && h(Forms,      { forms, setForms, role: user.role }),
@@ -638,7 +613,7 @@ function App() {
         page === 'theses'     && h(Theses, { user }),
         page === 'directory'  && ['admin', 'teacher', 'training', 'finance'].includes(user.role) && h(Directory, { allUsers, subjects, role: user.role, user }),
         page === 'reports'    && (user.role === 'admin' || user.role === 'teacher') && h(Reports, { subjects: mySubjects, quizzes: myQuizzes, materials: myMaterials, homeworks, allUsers, user, fetchActivities }),
-        page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities }),
+        page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities, schedule, exams, materials }),
       )
     ),
     h(ChatNotifier, { toasts: chatToasts, onClose: closeToast, onOpen: (t) => { closeToast(t.id); navigate('contact') } }),

@@ -6,6 +6,7 @@ import ActionMenu from '../components/ActionMenu.js'
 import Portal from '../components/Portal.js'
 import { QuizTaker } from './Quiz.js'
 import { uploadFile, isFirebaseReady } from '../utils/firebase.js'
+import { semesterLabel, semestersOf, sortBySemester, teacherSections, termLabel, visibleTeachers } from '../utils/scope.js'
 
 // Nhóm định dạng file nộp bài mà giáo viên có thể chọn
 const SUBMIT_FORMATS = [
@@ -420,7 +421,7 @@ function MaterialModal({ subjectId, item, user, onSave, onClose }) {
 }
 
 // ── Subject Card (bao gồm bài tập 3 tab) ──
-function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDelete, role, assignedTeachers, materials, setMaterials, user, quizzes, submissions, setSubmissions, onNavigateQuiz, onActivity, onSubmitHomework, onUndoHomework }) {
+function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDelete, role, assignedTeachers, myClassIds, materials, setMaterials, user, quizzes, submissions, setSubmissions, onNavigateQuiz, onActivity, onSubmitHomework, onUndoHomework }) {
   const [expanded,        setExpanded]        = useState(false)   // bài tập
   const [matExpanded,     setMatExpanded]     = useState(false)   // tài liệu
   const [quizExpanded,    setQuizExpanded]    = useState(false)   // trắc nghiệm
@@ -488,8 +489,11 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
               h('div', { className: 'fw-bold fs-6 mb-1' }, subject.name),
               h('div', { className: 'd-flex flex-wrap gap-1' },
                 subject.code && h('span', { className: 'badge bg-light text-dark border' }, subject.code),
+                semesterLabel(subject) && h('span', { className: 'badge bg-primary-subtle text-primary' }, semesterLabel(subject)),
                 subject.credits && h('span', { className: 'badge', style: { backgroundColor: 'rgba(78,115,223,.1)', color: 'var(--primary)' } }, `${subject.credits} TC`)
-              )
+              ),
+              myClassIds?.length > 0 && h('div', { className: 'small text-muted mt-1' }, h('i', { className: 'bi bi-people me-1' }),
+                role === 'teacher' ? 'Bạn dạy lớp: ' : 'Lớp: ', myClassIds.join(', '))
             )
           ),
           role !== 'student' && h(ActionMenu, { items: [
@@ -736,8 +740,18 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
   const [editItem,  setEditItem]  = useState(null)
   const [confirmId, setConfirmId] = useState(null)
   const [search,    setSearch]    = useState('')
+  const [fSem,      setFSem]      = useState('')   // lọc theo học kỳ
 
-  const filtered = subjects.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()) || (s.code || '').toLowerCase().includes(search.toLowerCase()))
+  // Môn xếp theo học kỳ; cùng một môn có thể mở ở nhiều lớp/giáo viên nên chỉ hiện môn và lớp thuộc phạm vi của người đang xem
+  const semChoices = semestersOf(subjects)
+  const filtered = sortBySemester(subjects.filter((s) =>
+    (!fSem || s.hocKy === Number(fSem)) &&
+    (s.name.toLowerCase().includes(search.toLowerCase()) || (s.code || '').toLowerCase().includes(search.toLowerCase()))))
+  const classIdsFor = (s) => {
+    const secs = role === 'teacher' ? teacherSections(user) : null
+    if (secs) return [...new Set(secs.filter(x => x.subjectId === s.id).map(x => x.classId))].sort()
+    return role === 'student' && user?.className ? [user.className] : []
+  }
 
   const handleSave = (form) => {
     const data = { ...form, credits: form.credits ? parseInt(form.credits) : null }
@@ -766,6 +780,10 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
           )
         ),
         h('div', { className: 'd-flex gap-2' },
+          semChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fSem, onChange: (e) => setFSem(e.target.value), 'aria-label': 'Lọc theo học kỳ' },
+            h('option', { value: '' }, 'Tất cả học kỳ'),
+            semChoices.map((n) => h('option', { key: n, value: n }, termLabel(n)))
+          ),
           h('div', { className: 'input-group input-group-sm', style: { width: 200 } },
             h('span', { className: 'input-group-text bg-light border-end-0 text-muted' }, h('i', { className: 'bi bi-search' })),
             h('input', { className: 'form-control border-start-0', placeholder: 'Tìm môn học...', value: search, onChange: (e) => setSearch(e.target.value) })
@@ -781,13 +799,24 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
             h('i', { className: 'bi bi-book fs-1 d-block mb-3 opacity-25' }),
             h('p', null, search ? 'Không tìm thấy môn học nào.' : h(window.React.Fragment, null, 'Chưa có môn học nào. Nhấn ', h('strong', null, 'Thêm môn học'), ' để bắt đầu!'))
           )
-        : h('div', { className: 'row g-3' },
-            filtered.map((s) =>
+        : (() => {
+            const card = (s) =>
               h('div', { key: s.id, className: 'col-12 col-md-6 col-xl-4' },
-                h(SubjectCard, { subject: s, deadlines, homeworks, setHomeworks, materials, setMaterials, role, user, quizzes, submissions, setSubmissions, onActivity, onSubmitHomework, onUndoHomework, onNavigateQuiz: onNavigate ? () => onNavigate('quiz') : null, assignedTeachers: subjectTeacherMap[s.id] || [], onEdit: () => { setEditItem(s); setModal('edit') }, onDelete: () => setConfirmId(s.id) })
+                h(SubjectCard, { subject: s, deadlines, homeworks, setHomeworks, materials, setMaterials, role, user, quizzes, submissions, setSubmissions, onActivity, onSubmitHomework, onUndoHomework, onNavigateQuiz: onNavigate ? () => onNavigate('quiz') : null, assignedTeachers: visibleTeachers(user, s.id, subjectTeacherMap[s.id] || []), myClassIds: classIdsFor(s), onEdit: () => { setEditItem(s); setModal('edit') }, onDelete: () => setConfirmId(s.id) })
               )
-            )
-          ),
+            const groups = []
+            filtered.forEach((s) => {
+              const k = s.hocKy || 0
+              let g = groups.find((x) => x.k === k)
+              if (!g) { g = { k, items: [] }; groups.push(g) }
+              g.items.push(s)
+            })
+            return groups.length > 1
+              ? groups.map((g) => h('div', { key: g.k, className: 'mb-4' },
+                  h('h6', { className: 'fw-bold text-muted small text-uppercase mb-2' }, g.k ? termLabel(g.k) : 'Chưa gắn học kỳ', ` · ${g.items.length} môn`),
+                  h('div', { className: 'row g-3' }, g.items.map(card))))
+              : h('div', { className: 'row g-3' }, filtered.map(card))
+          })(),
 
       (modal || confirmId) && h(Portal, null,
         modal && h(SubjectModal, { item: modal === 'edit' ? editItem : null, onSave: handleSave, onClose: () => setModal(null) }),

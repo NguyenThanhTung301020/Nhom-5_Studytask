@@ -3,8 +3,11 @@ import { DEMO_ACCOUNTS, ROLES, PERMS, SAMPLE_SUBJECTS } from '../utils/constants
 import { isFirebaseReady, getAllUsers, adminUpdateUser } from '../utils/firebase.js'
 import AccountManager from '../components/AccountManager.js'
 import GradeBook      from '../components/GradeBook.js'
+import { summarizeSystem } from '../utils/systemStats.js'
+import { todayISO } from '../utils/tuition.js'
+import { classCatalog, semesterLabel, sortBySemester, termLabel } from '../utils/scope.js'
 
-const { useState, useEffect, createElement: h } = window.React
+const { useState, useEffect, useMemo, createElement: h } = window.React
 
 const PERM_ROWS = [
   { key: 'canEdit',          label: 'Thêm / Sửa nội dung',    icon: 'pencil-square'   },
@@ -28,42 +31,84 @@ function PermIcon({ value }) {
 }
 
 // ── Panel gán môn học cho một user ──────────────────────────────
-function SubjectAssignPanel({ user, subjects, onSave, saving }) {
+// Môn nhóm theo học kỳ. Với giáo viên, mỗi môn đã chọn còn gán được LỚP HỌC PHẦN (lớp + môn) đảm nhận:
+// cùng một môn mở ở nhiều lớp, giáo viên chỉ thấy lịch/báo cáo của các lớp được gán (utils/scope.js).
+function SubjectAssignPanel({ user, subjects, classes = [], onSave, saving }) {
+  const isTeacher = user.role === 'teacher'
   const [ids, setIds] = useState(user.subjectIds || [])
-  const toggle = (id) => setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-  const changed = JSON.stringify(ids.sort()) !== JSON.stringify((user.subjectIds || []).slice().sort())
+  const [secs, setSecs] = useState(Array.isArray(user.sections) ? user.sections : null)   // null = hồ sơ chưa phân theo lớp
+  const toggle = (id) => {
+    setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+    if (ids.includes(id)) setSecs(prev => prev && prev.filter(s => s.subjectId !== id))          // bỏ môn thì bỏ luôn các lớp của môn
+  }
+  const hasSec = (classId, subjectId) => (secs || []).some(s => s.classId === classId && s.subjectId === subjectId)
+  const toggleSec = (classId, subjectId) => setSecs(prev => {
+    const cur = prev || []
+    return cur.some(s => s.classId === classId && s.subjectId === subjectId)
+      ? cur.filter(s => !(s.classId === classId && s.subjectId === subjectId)) : [...cur, { classId, subjectId }]
+  })
+  const sameSecs = JSON.stringify((secs || []).map(s => s.classId + '|' + s.subjectId).sort()) === JSON.stringify((user.sections || []).map(s => s.classId + '|' + s.subjectId).sort())
+  const changed = JSON.stringify(ids.slice().sort()) !== JSON.stringify((user.subjectIds || []).slice().sort()) || (isTeacher && !sameSecs)
+  const groups = []
+  sortBySemester(subjects).forEach(s => {
+    let g = groups.find(x => x.k === (s.hocKy || 0))
+    if (!g) { g = { k: s.hocKy || 0, items: [] }; groups.push(g) }
+    g.items.push(s)
+  })
+  const classesOf = (subjectId) => classes.filter(c => c.subjectIds.has(subjectId)).sort((a, b) => a.name.localeCompare(b.name))
+  const reset = () => { setIds(user.subjectIds || []); setSecs(Array.isArray(user.sections) ? user.sections : null) }
 
   return h('div', { className: 'mt-3 p-3 rounded-3', style: { background: 'rgba(0,0,0,.02)' } },
     h('div', { className: 'fw-semibold small mb-2', style: { color: 'var(--primary)' } },
       h('i', { className: 'bi bi-journal-check me-1' }),
-      user.role === 'teacher' ? 'Môn đảm nhiệm giảng dạy:' : 'Môn học đăng ký:'
+      isTeacher ? 'Môn đảm nhiệm giảng dạy (theo học kỳ):' : 'Môn học đăng ký (theo học kỳ):'
     ),
-    h('div', { className: 'd-flex flex-wrap gap-2 mb-3' },
-      subjects.map(s =>
-        h('label', {
-          key: s.id,
-          className: `subject-assign-chip${ids.includes(s.id) ? ' active' : ''}`,
-          style: ids.includes(s.id) ? { borderColor: s.color, backgroundColor: s.color + '18', color: s.color } : {},
-          onClick: () => toggle(s.id),
-        },
-          h('div', { style: { width: 8, height: 8, borderRadius: '50%', backgroundColor: s.color, flexShrink: 0 } }),
-          s.name
+    groups.map(g => h('div', { key: g.k, className: 'mb-2' },
+      groups.length > 1 && h('div', { className: 'small text-muted fw-semibold mb-1' }, g.k ? termLabel(g.k) : 'Chưa gắn học kỳ'),
+      h('div', { className: 'd-flex flex-wrap gap-2' },
+        g.items.map(s =>
+          h('label', {
+            key: s.id,
+            className: `subject-assign-chip${ids.includes(s.id) ? ' active' : ''}`,
+            style: ids.includes(s.id) ? { borderColor: s.color, backgroundColor: s.color + '18', color: s.color } : {},
+            onClick: () => toggle(s.id),
+          },
+            h('div', { style: { width: 8, height: 8, borderRadius: '50%', backgroundColor: s.color, flexShrink: 0 } }),
+            s.code ? `${s.name} (${s.code})` : s.name
+          )
         )
       )
+    )),
+    // Giáo viên: chọn lớp học phần cho từng môn đã gán
+    isTeacher && ids.length > 0 && h('div', { className: 'mt-3 pt-3 border-top' },
+      h('div', { className: 'fw-semibold small mb-1', style: { color: 'var(--primary)' } }, h('i', { className: 'bi bi-people me-1' }), 'Lớp học phần đảm nhiệm:'),
+      secs === null && h('div', { className: 'small text-muted mb-2' }, 'Chưa phân theo lớp: giáo viên thấy lịch của mọi lớp học các môn trên. Chọn lớp bên dưới để giới hạn.'),
+      sortBySemester(subjects.filter(s => ids.includes(s.id))).map(s => {
+        const cl = classesOf(s.id)
+        return h('div', { key: s.id, className: 'mb-2' },
+          h('div', { className: 'small fw-semibold' }, s.name, s.hocKy ? h('span', { className: 'text-muted fw-normal' }, ` · ${semesterLabel(s)}`) : null,
+            h('span', { className: 'text-muted fw-normal' }, cl.length ? ` · ${(secs || []).filter(x => x.subjectId === s.id).length}/${cl.length} lớp` : ' · chưa có lớp nào học môn này')),
+          cl.length > 0 && h('div', { className: 'd-flex flex-wrap gap-1 mt-1' },
+            cl.map(c => h('button', { key: c.id, type: 'button',
+              className: `btn btn-sm ${hasSec(c.id, s.id) ? 'btn-primary' : 'btn-outline-secondary'}`, style: { fontSize: '0.75rem', padding: '1px 8px' },
+              onClick: () => toggleSec(c.id, s.id) }, c.name)))
+        )
+      })
     ),
-    changed && h('div', { className: 'd-flex gap-2' },
+    changed && h('div', { className: 'd-flex gap-2 mt-3' },
       h('button', { className: 'btn btn-sm btn-primary', disabled: saving,
-          onClick: () => onSave(user.uid, ids) },
+          onClick: () => onSave(user.uid, ids, isTeacher && secs !== null ? { sections: secs } : {}) },
         saving
           ? h(window.React.Fragment, null, h('span', { className: 'spinner-border spinner-border-sm me-1' }), 'Đang lưu…')
           : h(window.React.Fragment, null, h('i', { className: 'bi bi-cloud-upload me-1' }), 'Lưu phân công')
       ),
-      h('button', { className: 'btn btn-sm btn-outline-secondary', onClick: () => setIds(user.subjectIds || []) }, 'Hủy')
+      h('button', { className: 'btn btn-sm btn-outline-secondary', onClick: reset }, 'Hủy')
     ),
     !changed && h('small', { className: 'text-muted' },
       ids.length === 0
         ? h(window.React.Fragment, null, h('i', { className: 'bi bi-exclamation-circle me-1 text-warning' }), 'Chưa được phân công môn nào')
-        : h(window.React.Fragment, null, h('i', { className: 'bi bi-check-circle me-1 text-success' }), `${ids.length} môn đã phân công`)
+        : h(window.React.Fragment, null, h('i', { className: 'bi bi-check-circle me-1 text-success' }),
+            `${ids.length} môn đã phân công` + (isTeacher && secs ? `, ${secs.length} lớp học phần` : ''))
     )
   )
 }
@@ -74,6 +119,10 @@ function UserList({ subjects, onUpdateSubjects }) {
   const [loading,  setLoading]  = useState(true)
   const [expanded, setExpanded] = useState(null)
   const [saving,   setSaving]   = useState(null)
+  // Hàng nghìn tài khoản: lọc theo vai trò (mặc định giáo viên vì đây là nơi phân công), tìm kiếm và phân trang
+  const [roleF,    setRoleF]    = useState('teacher')
+  const [q,        setQ]        = useState('')
+  const [limit,    setLimit]    = useState(30)
 
   useEffect(() => {
     const load = async () => {
@@ -90,13 +139,18 @@ function UserList({ subjects, onUpdateSubjects }) {
     load()
   }, [])
 
-  const handleSave = async (targetUid, newSubjectIds) => {
+  const classList = useMemo(() => [...classCatalog(users).values()], [users])
+  const roleMatch = (k) => (u) => k === 'all' || (k === 'staff' ? ['training', 'finance'].includes(u.role) : u.role === k)
+  const needle = q.trim().toLowerCase()
+  const shown = users.filter(roleMatch(roleF)).filter(u => !needle || (u.name || '').toLowerCase().includes(needle) || (u.username || '').toLowerCase().includes(needle))
+
+  const handleSave = async (targetUid, newSubjectIds, extra = {}) => {
     setSaving(targetUid)
     try {
       if (isFirebaseReady()) {
-        await adminUpdateUser(targetUid, { subjectIds: newSubjectIds })
+        await adminUpdateUser(targetUid, { subjectIds: newSubjectIds, ...extra })     // extra: { sections } với giáo viên phân theo lớp
       }
-      setUsers(prev => prev.map(u => u.uid === targetUid ? { ...u, subjectIds: newSubjectIds } : u))
+      setUsers(prev => prev.map(u => u.uid === targetUid ? { ...u, subjectIds: newSubjectIds, ...extra } : u))
     } catch (e) {
       alert('Lưu thất bại: ' + e.message)
     }
@@ -121,7 +175,15 @@ function UserList({ subjects, onUpdateSubjects }) {
       h('i', { className: 'bi bi-info-circle me-1' }),
       'Đang xem tài khoản demo. Kết nối máy chủ để quản lý người dùng thực.'
     ),
-    users.map(user => {
+    h('div', { className: 'd-flex flex-wrap align-items-center gap-2' },
+      [['teacher', 'Giáo viên'], ['student', 'Sinh viên'], ['staff', 'Phòng ban'], ['all', 'Tất cả']].map(([k, label]) =>
+        h('button', { key: k, className: `btn btn-sm ${roleF === k ? 'btn-primary' : 'btn-outline-secondary'}`, onClick: () => { setRoleF(k); setLimit(30) } },
+          `${label} (${users.filter(roleMatch(k)).length.toLocaleString('vi-VN')})`)),
+      h('input', { className: 'form-control form-control-sm', style: { maxWidth: 240 }, placeholder: 'Tìm theo tên hoặc tên đăng nhập…', value: q,
+        onChange: e => { setQ(e.target.value); setLimit(30) } })
+    ),
+    shown.length === 0 && h('div', { className: 'text-center text-muted py-3 small' }, 'Không có tài khoản phù hợp.'),
+    shown.slice(0, limit).map(user => {
       const role    = ROLES[user.role]
       const isOpen  = expanded === user.uid
       const isSaving = saving === user.uid
@@ -147,32 +209,64 @@ function UserList({ subjects, onUpdateSubjects }) {
           h('i', { className: `bi bi-chevron-${isOpen ? 'up' : 'down'} text-muted flex-shrink-0` })
         ),
         isOpen && h('div', { className: 'border-top px-3 pb-3' },
-          h(SubjectAssignPanel, { user, subjects, onSave: handleSave, saving: isSaving })
+          h(SubjectAssignPanel, { user, subjects, classes: classList, onSave: handleSave, saving: isSaving })
         )
       )
-    })
+    }),
+    shown.length > limit && h('button', { className: 'btn btn-outline-primary btn-sm align-self-center', onClick: () => setLimit(l => l + 50) },
+      `Hiện thêm (còn ${(shown.length - limit).toLocaleString('vi-VN')} tài khoản)`)
   )
 }
 
 // ── Main Admin page ──────────────────────────────────────────────
-export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubjects, allUsers = [], quizzes = [], fetchActivities }) {
+export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubjects, allUsers = [], quizzes = [], fetchActivities,
+                                schedule = [], exams = [], materials = [] }) {
   const [activeTab, setActiveTab] = useState('accounts')
 
-  const totalDone    = deadlines.filter(d => d.status === 'completed').length
-  const totalOverdue = deadlines.filter(d => d.status !== 'completed' && new Date(d.dueDate) < new Date()).length
-  const totalHwDone  = homeworks.filter(hw => hw.status === 'completed').length
-  const quizScores   = homeworks.filter(hw => hw.type === 'quiz' && hw.score != null).map(hw => hw.score)
-  const avgQuiz      = quizScores.length ? (quizScores.reduce((a, b) => a + b, 0) / quizScores.length).toFixed(1) : '—'
+  // Thống kê hệ thống: tải lại danh sách người dùng và nhật ký hoạt động từ máy chủ mỗi lần mở tab (không dùng bản nhớ tạm 5 phút của app)
+  const [live, setLive] = useState({ users: null, activities: null, at: null, loading: false })
+  const [reloadKey, setReloadKey] = useState(0)
+  useEffect(() => {
+    if (activeTab !== 'stats') return
+    let off = false
+    setLive(p => ({ ...p, loading: true }))
+    ;(async () => {
+      let users = null, activities = []
+      try { users = isFirebaseReady() ? await getAllUsers() : allUsers } catch (e) { console.warn('[Admin] getAllUsers:', e.message) }
+      try { activities = (await fetchActivities?.()) || [] } catch (e) { console.warn('[Admin] fetchActivities:', e.message) }
+      if (!off) setLive({ users: users && users.length ? users : null, activities, at: new Date(), loading: false })
+    })()
+    return () => { off = true }
+  }, [activeTab, reloadKey])
 
-  const SYSTEM_STATS = [
-    { label: 'Môn học',          value: subjects.length,   icon: 'book',              color: 'primary' },
-    { label: 'Tổng deadline',    value: deadlines.length,  icon: 'clock',             color: 'info'    },
-    { label: 'Deadline xong',    value: totalDone,         icon: 'check-circle',      color: 'success' },
-    { label: 'Deadline quá hạn', value: totalOverdue,      icon: 'exclamation-circle',color: 'danger'  },
-    { label: 'Bài tập',          value: homeworks.length,  icon: 'journal-text',      color: 'primary' },
-    { label: 'Bài tập xong',     value: totalHwDone,       icon: 'journal-check',     color: 'success' },
-    { label: 'Tài khoản',        value: DEMO_ACCOUNTS.length, icon: 'people',         color: 'warning' },
-    { label: 'Điểm quiz TB',     value: avgQuiz === '—' ? avgQuiz : `${avgQuiz}/10`, icon: 'star-fill', color: 'warning' },
+  const stats = summarizeSystem({
+    users: live.users || allUsers, subjects, schedule, exams, materials, quizzes, deadlines, homeworks,
+    activities: live.activities || [], today: todayISO(),
+  })
+  const { accounts: acc, catalog: cat, quiz: qz } = stats
+  const STAT_GROUPS = [
+    { title: 'Tài khoản', items: [
+      { label: 'Tổng tài khoản',        value: acc.total,             icon: 'people',          color: 'primary' },
+      { label: 'Sinh viên',             value: acc.byRole.student,    icon: 'person-circle',   color: 'success' },
+      { label: 'Giáo viên',             value: acc.byRole.teacher,    icon: 'person-workspace',color: 'primary' },
+      { label: 'Quản trị & phòng ban',  value: acc.staff,             icon: 'shield-fill-check', color: 'danger' },
+      { label: 'Giáo viên chưa phân công môn', value: acc.teachersWithoutSubjects, icon: 'exclamation-circle', color: acc.teachersWithoutSubjects ? 'warning' : 'success' },
+      { label: 'Sinh viên chưa có môn', value: acc.studentsWithoutSubjects, icon: 'exclamation-circle', color: acc.studentsWithoutSubjects ? 'warning' : 'success' },
+      { label: 'Tài khoản hết hạn',     value: acc.expired,           icon: 'clock-history',   color: acc.expired ? 'danger' : 'success' },
+    ] },
+    { title: 'Học vụ', items: [
+      { label: 'Môn học',      value: cat.subjects,  icon: 'book',            color: 'primary' },
+      { label: 'Buổi học (thời khóa biểu)', value: cat.schedule, icon: 'calendar-week', color: 'info' },
+      { label: 'Lịch thi',     value: cat.exams,     icon: 'calendar-check',  color: 'info' },
+      { label: 'Tài liệu',     value: cat.materials, icon: 'journal-bookmark',color: 'primary' },
+      { label: 'Đề trắc nghiệm', value: `${cat.quizzes.active} mở / ${cat.quizzes.total}`, icon: 'patch-question', color: 'warning' },
+      { label: 'Bài tập',      value: cat.homeworks, icon: 'journal-text',    color: 'primary' },
+      { label: 'Deadline (xong / quá hạn)', value: `${cat.deadlines.done} / ${cat.deadlines.overdue} trên ${cat.deadlines.total}`, icon: 'clock', color: cat.deadlines.overdue ? 'danger' : 'success' },
+    ] },
+    { title: 'Trắc nghiệm toàn hệ thống', items: [
+      { label: 'Lượt làm bài', value: qz.attempts, icon: 'check2-square', color: 'success' },
+      { label: 'Điểm trung bình', value: qz.avgScore == null ? '—' : `${qz.avgScore}/10`, icon: 'star-fill', color: 'warning' },
+    ] },
   ]
 
   const TABS = [
@@ -297,17 +391,28 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
 
     // ── Tab: Thống kê ──
     activeTab === 'stats' && h('div', null,
-      h('div', { className: 'row g-3 mb-4' },
-        SYSTEM_STATS.map(s =>
-          h('div', { key: s.label, className: 'col-6 col-md-3' },
-            h('div', { className: 'card border-0 shadow-sm p-3 d-flex flex-row align-items-center gap-3' },
-              h('div', { className: `admin-stat-icon text-${s.color}`,
-                  style: { backgroundColor: `rgba(0,0,0,.04)` } },
-                h('i', { className: `bi bi-${s.icon}` })
-              ),
-              h('div', null,
-                h('div', { className: 'fw-bold fs-5 lh-1' }, s.value),
-                h('div', { className: 'text-muted small' }, s.label)
+      h('div', { className: 'd-flex align-items-center gap-2 mb-3 flex-wrap' },
+        h('button', { className: 'btn btn-sm btn-outline-primary', disabled: live.loading, onClick: () => setReloadKey(k => k + 1) },
+          h('i', { className: 'bi bi-arrow-clockwise me-1' }), live.loading ? 'Đang tải…' : 'Làm mới'),
+        h('small', { className: 'text-muted' },
+          live.at ? `Số liệu từ máy chủ, cập nhật lúc ${live.at.toLocaleTimeString('vi-VN')}` : 'Đang tải số liệu từ máy chủ…')
+      ),
+      STAT_GROUPS.map(g =>
+        h('div', { key: g.title, className: 'mb-4' },
+          h('h6', { className: 'fw-bold text-muted small text-uppercase mb-2' }, g.title),
+          h('div', { className: 'row g-3' },
+            g.items.map(s =>
+              h('div', { key: s.label, className: 'col-6 col-md-3' },
+                h('div', { className: 'card border-0 shadow-sm p-3 d-flex flex-row align-items-center gap-3 h-100' },
+                  h('div', { className: `admin-stat-icon text-${s.color}`,
+                      style: { backgroundColor: `rgba(0,0,0,.04)` } },
+                    h('i', { className: `bi bi-${s.icon}` })
+                  ),
+                  h('div', null,
+                    h('div', { className: 'fw-bold fs-5 lh-1' }, typeof s.value === 'number' ? s.value.toLocaleString('vi-VN') : s.value),
+                    h('div', { className: 'text-muted small' }, s.label)
+                  )
+                )
               )
             )
           )
@@ -320,10 +425,10 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
           h('div', { className: 'd-flex align-items-center gap-3' },
             h('i', { className: 'bi bi-fire fs-2', style: { color: '#f6a623' } }),
             h('div', null,
-              h('div', { className: 'fw-bold mb-1' }, 'Firestore Rules được quản lý trong mã nguồn'),
+              h('div', { className: 'fw-bold mb-1' }, 'Phân quyền do máy chủ kiểm soát'),
               h('p', { className: 'text-muted small mb-0' },
-                'Rules nằm ở tệp firestore.rules trong repo và có kiểm thử tự động (npm run test:rules). ',
-                'Người dùng chỉ tự sửa được tên và số điện thoại; vai trò, môn học, hạn tài khoản chỉ admin sửa.'
+                'Quyền đọc/ghi được kiểm tra ở máy chủ (hàm can() trong server/studytask_api.py, theo đặc tả firestore.rules) và có kiểm thử tự động. ',
+                'Sinh viên và giáo viên chỉ tự sửa được email và số điện thoại; họ tên, vai trò, môn học, hạn tài khoản do Admin cấp.'
               )
             )
           )

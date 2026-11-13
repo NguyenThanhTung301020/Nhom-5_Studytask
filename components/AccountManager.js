@@ -64,8 +64,8 @@ function PasswordModal({ user, onApply, onResetEmail, onClose, working }) {
 
 // Hồ sơ học vụ: chỉ Admin sửa; sinh viên/giáo viên chỉ tự sửa email và số điện thoại
 const ACADEMIC_FIELDS = {
-  student: [['studentId', 'Mã số sinh viên'], ['faculty', 'Khoa / Bộ môn'], ['major', 'Ngành học'], ['className', 'Lớp'],
-            ['semester', 'Học kỳ hiện tại'], ['gpa', 'GPA tích lũy (0–4)']],
+  student: [['studentId', 'Mã số sinh viên'], ['faculty', 'Khoa / Bộ môn'], ['major', 'Ngành học'], ['className', 'Lớp'], ['cohort', 'Khóa (VD: 2023-2027)'],
+            ['semester', 'Học kỳ hiện tại (VD: Học kỳ 1 – Năm học 2026-2027)'], ['gpa', 'GPA tích lũy (0–4)']],
   teacher: [['teacherId', 'Mã giáo viên'], ['faculty', 'Khoa / Trường'], ['department', 'Bộ môn'], ['position', 'Học hàm / Chức vụ']],
   other:   [['department', 'Phòng / Ban']],
 }
