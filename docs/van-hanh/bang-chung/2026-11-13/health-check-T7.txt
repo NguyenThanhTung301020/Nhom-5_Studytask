@@ -1,0 +1,117 @@
+=== STUDYTASK HEALTH CHECK ===
+thoi_diem_do_utc: 2026-11-13 01:19:04
+cua_so_theo_doi: -7 days (journalctl --since)
+
+--- He thong
+uptime: up 1 week, 1 day, 18 hours, 59 minutes
+load_1_5_15: 0.10 0.03 0.01
+ram_da_dung_MiB: 705 / 7368 (kha_dung 6663)
+swap_da_dung_MiB: 0 / 4095
+dia_goc_dung: 3% (8564020 KB / 309047680 KB)
+inode_dung: 1%
+nhiet_do_C (acpitz): 16.8
+nhiet_do_C (acpitz): 27.8
+nhiet_do_C (acpitz): 29.8
+nhiet_do_C (x86_pkg_temp): 42.0
+goi_cho_cap_nhat: 18
+can_reboot: CO
+dong_bo_gio: yes
+
+--- Khoi dong lai (journalctl --list-boots)
+IDX BOOT ID                          FIRST ENTRY                 LAST ENTRY
+ -2 738f9d7e11694c68ad630de52d8f4b2c Tue 2026-11-03 07:19:59 UTC Tue 2026-11-03 08:28:29 UTC
+ -1 83f1d19d4caf40e1b0f3a63061ba3651 Tue 2026-11-03 08:31:16 UTC Wed 2026-11-04 06:18:16 UTC
+  0 ecefd3112acb486e973fb42caaf004dd Wed 2026-11-04 06:19:51 UTC Fri 2026-11-13 01:19:04 UTC
+
+--- Dich vu
+studytask-api: active | tu_khoi_dong_lai=0 | chay_tu=Thu 2026-11-12 07:58:23 UTC
+nginx: active | tu_khoi_dong_lai=0 | chay_tu=Wed 2026-11-04 07:15:46 UTC
+cloudflared: active | tu_khoi_dong_lai=0 | chay_tu=Wed 2026-11-04 06:20:18 UTC
+don_vi_loi: 0
+RSS_MB api/cloudflared/nginx: 67 / 41 / 33
+
+--- Loi he thong (lan chay hien tai)
+journal_err_so_dong: 1695
+journal_err_nhom_theo_noi_dung (so cac con so thanh N):
+      1651 error: connect_to N.N.N.N port N: failed.
+        15 NTS-KE session with N.N.N.N:N (N.ntp.ubuntu.com) timed out
+         7 TLS handshake with N.N.N.N:N (N.ntp.ubuntu.com) failed : The TLS connection was non-properly terminated.
+         6 TLS handshake with N.N.N.N:N (N.ntp.ubuntu.com) failed : Error in the pull function.
+         2 ACPI Error: Aborting method \_SB.PCIN.SATN.PRTN._GTF due to previous error (AE_NOT_FOUND) (N/psparse-N)
+         2 ACPI BIOS Error (bug): Could not resolve symbol [\_SB.PCIN.SATN.PRTN._GTF.DSSP], AE_NOT_FOUND (N/psargs-N)
+         1 xN/cpu: SGX disabled or unsupported by BIOS.
+         1 nouveau N:N:N.N: bus: MMIO read of N FAULT at NeN [ PRIVRING ]
+journal_err_moi_nhat:
+   Nov 11 20:16:15 studytask chronyd[1210]: TLS handshake with 185.125.190.122:4460 (1.ntp.ubuntu.com) failed : The TLS connection was non-properly terminated.
+   Nov 11 20:18:30 studytask chronyd[1210]: TLS handshake with 185.125.190.123:4460 (2.ntp.ubuntu.com) failed : The TLS connection was non-properly terminated.
+   Nov 11 22:13:02 studytask chronyd[1210]: TLS handshake with 91.189.91.113:4460 (4.ntp.ubuntu.com) failed : The TLS connection was non-properly terminated.
+oom_io_fs_loi: 0
+
+--- API (-7 days)
+tong_yeu_cau: 2184
+ma_http:
+      2094 HTTP/1.1" 200
+        39 HTTP/1.1" 404
+        34 HTTP/1.1" 401
+        17 HTTP/1.1" 403
+loi_5xx_tong: 0  (trong do 501 do HEAD /api/auth/me da biet: 0; can dieu tra neu so khac)
+traceback_hoac_MAIL_ERROR: 0
+bi_gioi_han_429: 0
+403_theo_duong_dan:
+        11 "PUT /api/doc/userData/<id>
+         6 "GET /api/doc/sharedData/global
+yeu_cau_theo_ngay:
+       328 2026-11-06
+         4 2026-11-08
+       495 2026-11-09
+       450 2026-11-10
+         1 2026-11-11
+       959 2026-11-12
+         5 2026-11-13
+
+--- Cloudflare Tunnel (-7 days)
+ket_noi_lai: 19
+dang_ky_lai_thanh_cong: 17
+lan_gan_nhat: Nov 12 23:57:12
+
+--- nginx
+access_log_ma_http:
+         7 200
+         2 304
+error_log_so_dong: 0
+
+--- Bao mat
+ssh_dang_nhap_sai (Failed password): 5
+ssh_dang_nhap_sai_theo_nguon:       5 from 192.168.2.187;
+ssh_dang_nhap_thanh_cong_theo_nguon:     150 from 192.168.2.175;      1 from 192.168.2.187;
+cong_dang_nghe: 0.0.0.0:22 0.0.0.0:80 127.0.0.1:20241 127.0.0.1:8787 127.0.0.53%lo:53 127.0.0.54:53 [::]:22 
+
+--- Mang
+   5 packets transmitted, 5 received, 0% packet loss, time 4007ms
+   rtt min/avg/max/mdev = 33.647/35.401/38.366/1.717 ms
+luu_luong_tu_khoi_dong_MB (enp5s0) nhan/gui: 609.6 / 366.2
+     2026-11-07    33.01 MiB |   32.18 MiB |   65.19 MiB |    6.33 kbit/s
+     2026-11-08    29.93 MiB |   31.76 MiB |   61.69 MiB |    5.99 kbit/s
+     2026-11-09    41.36 MiB |   36.04 MiB |   77.40 MiB |    7.51 kbit/s
+     2026-11-10    38.33 MiB |   34.62 MiB |   72.95 MiB |    7.08 kbit/s
+     2026-11-11    32.30 MiB |   36.77 MiB |   69.07 MiB |    6.71 kbit/s
+     2026-11-12    80.99 MiB |   84.86 MiB |  165.85 MiB |   16.10 kbit/s
+     2026-11-13    14.72 MiB |    1.81 MiB |   16.53 MiB |   30.82 kbit/s
+     ------------------------+-------------+-------------+---------------
+      estimated   282.62 MiB |   34.77 MiB |  317.40 MiB |
+site: HTTP 200 trong 0.235690s
+
+--- Du lieu
+integrity_check: ok
+  accounts: 2051
+  sessions: 8
+  docs: 4306
+  chat: 6
+  contact_email: 2
+  codes: 0
+dung_luong_du_lieu: 126M ; db+wal: 9975 KB
+
+--- Sao luu
+ban_sao_luu_moi_nhat: /mnt/backup/studytask/2026-11-12_200346 (5 gio truoc)
+bao_cao_xong: 01:19:09
+(đã lưu: /home/studytask/health-logs/2026-11-13.txt)

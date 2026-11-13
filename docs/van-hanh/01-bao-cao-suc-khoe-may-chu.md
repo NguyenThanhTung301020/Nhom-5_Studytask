@@ -297,44 +297,60 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 
 | Chỉ số | T0 (06/11) | T+7 | T+15 | Ngưỡng bình thường |
 |---|---|---|---|---|
-| Thời gian chạy liên tục / số lần khởi động lại ngoài kế hoạch | 1 ngày 20 giờ / 0 | | | Không có lần khởi động ngoài kế hoạch |
-| Load trung bình 15 phút | 0,00 | | | < 1,0 (4 luồng) |
-| RAM đã dùng (MiB) | 576 | | | Không tăng liên tục; < 2.000 |
-| Swap đã dùng (MiB) | 0 | | | ≈ 0 |
-| RSS `studytask-api` / `cloudflared` / `nginx` (MB) | 30 / 41 / 29 | | | Không tăng đều theo thời gian (rò rỉ); ≤ 2 lần T0 |
-| Ổ đĩa gốc đã dùng | 3% (7,3 GB) | | | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
-| Inode đã dùng | 1% | | | < 50% |
-| Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | | | < 60 °C khi nhàn rỗi |
-| SMART: tình trạng tự đánh giá | `PASSED` | | | `PASSED` |
-| SMART `Reallocated_Sector_Ct` (5) | 2 | | | Không tăng so với T0 |
-| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | | | 0 / 0 |
-| SMART `Reported_Uncorrect` (187) | 1.650 | | | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
-| SMART `Command_Timeout` (188) | 1.624 | | | **Không tăng** so với T0 |
-| SMART `G-Sense_Error_Rate` (191) | 3.682 | | | Không tăng (máy đặt cố định, không bị rung) |
-| SMART `UDMA_CRC_Error_Count` (199) | 0 | | | 0 |
-| SMART nhiệt độ ổ (194) | 33 °C | | | < 45 °C |
-| SMART `Power_On_Hours` (9) | 4.699 | | | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
-| `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | | | 0 |
-| Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | | | 0 |
-| Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | | | 0 |
-| Lỗi mức `err` mới (không tính các dòng đã biết ở 5.3, 5.6) | 0 | | | 0 |
-| Yêu cầu API trong cửa sổ | 2.178 (03–06/11) | | | Tham khảo để thấy xu hướng sử dụng |
-| Mã 5xx (ngoài 501 do `HEAD`) | 0 | | | 0 |
-| Mã 403 mới | 0 từ 05/11 | | | Gần 0; điều tra nếu tăng |
-| Mã 429 (bị giới hạn tần suất) | 0 | | | 0 (có nghĩa là có người dò mật khẩu) |
-| `Traceback` / `MAIL-ERROR` trong nhật ký API | 0 | | | 0 |
-| `cloudflared` kết nối lại (72 giờ / cửa sổ) | 23 / 72 giờ | | | Tương đương; mỗi lần < vài giây, không có đợt kéo dài |
-| Site từ ngoài (HTTP / thời gian) | 200 / 0,20 giây | | | 200 và < 1 giây |
-| Ping 1.1.1.1 mất gói / trễ trung bình | 0% / ≈ 32–34 ms | | | < 1% / < 100 ms |
-| Lưu lượng card mạng (MB nhận/gửi từ lần khởi động) | 72,6 / 72,0 | | | Tham khảo; `vnstat` cho số theo ngày |
-| SSH đăng nhập sai / nguồn lạ | 22 / 0 | | | Không có nguồn ngoài `192.168.2.175` |
-| Cổng đang lắng nghe | 22, 80, 8787 (nội bộ), 20241 (nội bộ) | | | Không thêm cổng lạ |
-| Toàn vẹn cơ sở dữ liệu | ok | | | `ok` |
-| Số bảng ghi `accounts` / `docs` / `chat` | 5 / 13 / 6 | | | Tăng hợp lý theo việc sử dụng |
-| Bản sao lưu tự động mới nhất / số bản | 06/11 06:34 UTC / 1 | | | < 24 giờ / tăng dần đến 14 |
-| Thử khôi phục (`studytask-restore-test.sh`) | Đạt (06/11) | | | Đạt: checksum khớp, `integrity_check: ok` |
-| Ổ sao lưu `/mnt/backup` còn trống | 97 GB / 98 GB | | | > 20 GB |
-| Gói chờ cập nhật / cần khởi động lại | 10 / không | | | < 20; áp dụng bản vá bảo mật trong vòng 1 tuần |
+| Thời gian chạy liên tục / số lần khởi động lại ngoài kế hoạch | 1 ngày 20 giờ / 0 | 8 ngày 18 giờ / 0 |  | Không có lần khởi động ngoài kế hoạch |
+| Load trung bình 15 phút | 0,00 | 0,01 |  | < 1,0 (4 luồng) |
+| RAM đã dùng (MiB) | 576 | 705 |  | Không tăng liên tục; < 2.000 |
+| Swap đã dùng (MiB) | 0 | 0 |  | ≈ 0 |
+| RSS `studytask-api` / `cloudflared` / `nginx` (MB) | 30 / 41 / 29 | 67 / 41 / 33 (API khởi động lại 12/11 07:58 UTC, CSDL đã lớn hơn; API vượt mức 2 lần T0 = 60 MB) |  | Không tăng đều theo thời gian (rò rỉ); ≤ 2 lần T0 |
+| Ổ đĩa gốc đã dùng | 3% (7,3 GB) | 3% (8,2 GB) |  | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
+| Inode đã dùng | 1% | 1% |  | < 50% |
+| Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | 42 °C |  | < 60 °C khi nhàn rỗi |
+| SMART: tình trạng tự đánh giá | `PASSED` | (chờ đọc SMART, cần `sudo`) |  | `PASSED` |
+| SMART `Reallocated_Sector_Ct` (5) | 2 | (chờ đọc SMART, cần `sudo`) |  | Không tăng so với T0 |
+| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | (chờ đọc SMART, cần `sudo`) |  | 0 / 0 |
+| SMART `Reported_Uncorrect` (187) | 1.650 | (chờ đọc SMART, cần `sudo`) |  | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
+| SMART `Command_Timeout` (188) | 1.624 | (chờ đọc SMART, cần `sudo`) |  | **Không tăng** so với T0 |
+| SMART `G-Sense_Error_Rate` (191) | 3.682 | (chờ đọc SMART, cần `sudo`) |  | Không tăng (máy đặt cố định, không bị rung) |
+| SMART `UDMA_CRC_Error_Count` (199) | 0 | (chờ đọc SMART, cần `sudo`) |  | 0 |
+| SMART nhiệt độ ổ (194) | 33 °C | (chờ đọc SMART, cần `sudo`) |  | < 45 °C |
+| SMART `Power_On_Hours` (9) | 4.699 | (chờ đọc SMART, cần `sudo`) |  | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
+| `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | 0 / 0 / 0 |  | 0 |
+| Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | 0 |  | 0 |
+| Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | 0 |  | 0 |
+| Lỗi mức `err` mới (không tính các dòng đã biết ở 5.3, 5.6) | 0 | 1.651 dòng `connect_to … failed` (5.6 ghi 1.647 dòng ngày 04/11, chênh 4 dòng chưa đối chiếu); 28 dòng TLS/NTS của `chronyd` (đồng bộ giờ vẫn `yes`); vài dòng ACPI/SGX/nouveau của phần cứng |  | 0 |
+| Yêu cầu API trong cửa sổ | 2.178 (03–06/11) | 2.184 (06–13/11) |  | Tham khảo để thấy xu hướng sử dụng |
+| Mã 5xx (ngoài 501 do `HEAD`) | 0 | 0 |  | 0 |
+| Mã 403 mới | 0 từ 05/11 | 17 trong API (11 `PUT userData`, 6 `GET sharedData/global`); nginx có thêm 403 ở `/uploads/` ngày 12/11, trong đó `/uploads/.env`. Chưa điều tra |  | Gần 0; điều tra nếu tăng |
+| Mã 429 (bị giới hạn tần suất) | 0 | 0 |  | 0 (có nghĩa là có người dò mật khẩu) |
+| `Traceback` / `MAIL-ERROR` trong nhật ký API | 0 | 0 |  | 0 |
+| `cloudflared` kết nối lại (72 giờ / cửa sổ) | 23 / 72 giờ | 19 / 7 ngày (17 lần đăng ký lại thành công; cửa sổ dài hơn T0) |  | Tương đương; mỗi lần < vài giây, không có đợt kéo dài |
+| Site từ ngoài (HTTP / thời gian) | 200 / 0,20 giây | 200 / 0,24 giây (script đo từ máy chủ); đo từ 4G ngày 11/11: 200 / 0,77 giây |  | 200 và < 1 giây |
+| Ping 1.1.1.1 mất gói / trễ trung bình | 0% / ≈ 32–34 ms | 0% / 35,4 ms |  | < 1% / < 100 ms |
+| Lưu lượng card mạng (MB nhận/gửi từ lần khởi động) | 72,6 / 72,0 | 609,6 / 366,2 |  | Tham khảo; `vnstat` cho số theo ngày |
+| SSH đăng nhập sai / nguồn lạ | 22 / 0 | 5 / 0 (5 lần sai đều từ chính máy chủ) |  | Không có nguồn ngoài `192.168.2.175` |
+| Cổng đang lắng nghe | 22, 80, 8787 (nội bộ), 20241 (nội bộ) | 22, 80, 8787 (nội bộ), 20241 (nội bộ), 53 (nội bộ); không có cổng lạ |  | Không thêm cổng lạ |
+| Toàn vẹn cơ sở dữ liệu | ok | ok |  | `ok` |
+| Số bảng ghi `accounts` / `docs` / `chat` | 5 / 13 / 6 | 2.051 / 4.306 / 6 (tăng mạnh, xem 8.4a) |  | Tăng hợp lý theo việc sử dụng |
+| Bản sao lưu tự động mới nhất / số bản | 06/11 06:34 UTC / 1 | 12/11 20:03 UTC / 8 bản |  | < 24 giờ / tăng dần đến 14 |
+| Thử khôi phục (`studytask-restore-test.sh`) | Đạt (06/11) | Đạt (13/11): `accounts` 2.051, `docs` 4.306, `chat` 6, `contact_email` 2 khớp; 390 tệp tải lên |  | Đạt: checksum khớp, `integrity_check: ok` |
+| Ổ sao lưu `/mnt/backup` còn trống | 97 GB / 98 GB | 97 GB / 98 GB |  | > 20 GB |
+| Gói chờ cập nhật / cần khởi động lại | 10 / không | 18 / có (cần khởi động lại) |  | < 20; áp dụng bản vá bảo mật trong vòng 1 tuần |
+
+### 8.4a. Ghi nhận mốc T+7 (13/11/2026)
+
+Đo lúc 13/11/2026 01:19 UTC (08:19 giờ Việt Nam) bằng `deploy/health-check.sh "-7 days" --save` qua SSH; minh chứng ở [bang-chung/2026-11-13/health-check-T7.txt](bang-chung/2026-11-13/health-check-T7.txt). Thử khôi phục bằng `studytask-restore-test.sh`: **thành công**. Claude Code (AI) chạy lệnh theo yêu cầu của Trương Thanh Vui.
+
+**Chưa làm ở mốc này:** các dòng SMART (5, 187, 188, 191, 194, 197, 198, 199, `Power_On_Hours`, tình trạng tự đánh giá) và tự kiểm tra ổ cần `sudo` (mật khẩu do Thanh Vui nhập). Cột T+7 của các dòng đó để chờ; đây vẫn là điều kiện đóng việc 9.
+
+**Kết luận sơ bộ (chưa tính SMART):** dịch vụ ổn định: không khởi động lại ngoài kế hoạch, không dịch vụ lỗi, không OOM, 5xx = 0, 429 = 0, cổng lắng nghe không đổi, `integrity_check` ok, sao lưu và thử khôi phục đạt. Hash `studytask_api.py` trên máy chủ trùng với `master` (`d26d2f72…`).
+
+**Điểm cần theo dõi:**
+- **Dữ liệu tăng mạnh:** `accounts` từ 5 lên 2.051, `docs` từ 13 lên 4.306, CSDL 126 MB, bản sao lưu 120 MB (T0 khoảng 3 MB). Có 1.976 tài khoản tên dạng `sv<số>`, khoảng 75 tài khoản giáo viên dạng `gv…<số>`, 80 lớp và 114 khóa đáp án: đây là dữ liệu mô phỏng nạp ngày 11–12/11. **Cần nhóm ghi lại ai nạp, vì sao, và mật khẩu của các tài khoản này**; nếu là mật khẩu dễ đoán trên trang công khai thì cần đổi hoặc xóa trước khi dùng thật.
+- **RSS của API 67 MB**, vượt mức 2 lần T0 (60 MB), gắn với việc API khởi động lại 12/11 và CSDL lớn hơn. Theo dõi ở T+15.
+- **403 mới:** 17 ở API; nginx có 403 ở `/uploads/` ngày 12/11, trong đó `/uploads/.env` trông như dò quét từ bên ngoài, đã bị từ chối. Chưa điều tra nguyên nhân.
+- **Gói chờ cập nhật 18** (T0 10), gần ngưỡng 20, và máy cần khởi động lại. Áp dụng bản vá trong tuần theo 8.5.
+- **Ổ gốc tăng khoảng 0,9 GB so với T0**, sát mức "không quá ~1 GB/tuần".
+
 
 ### 8.5. Cần làm gì khi vượt ngưỡng
 
