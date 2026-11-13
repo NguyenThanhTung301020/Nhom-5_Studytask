@@ -305,15 +305,15 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 | Ổ đĩa gốc đã dùng | 3% (7,3 GB) | 3% (8,2 GB) |  | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
 | Inode đã dùng | 1% | 1% |  | < 50% |
 | Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | 42 °C |  | < 60 °C khi nhàn rỗi |
-| SMART: tình trạng tự đánh giá | `PASSED` | (chờ đọc SMART, cần `sudo`) |  | `PASSED` |
-| SMART `Reallocated_Sector_Ct` (5) | 2 | (chờ đọc SMART, cần `sudo`) |  | Không tăng so với T0 |
-| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | (chờ đọc SMART, cần `sudo`) |  | 0 / 0 |
-| SMART `Reported_Uncorrect` (187) | 1.650 | (chờ đọc SMART, cần `sudo`) |  | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
-| SMART `Command_Timeout` (188) | 1.624 | (chờ đọc SMART, cần `sudo`) |  | **Không tăng** so với T0 |
-| SMART `G-Sense_Error_Rate` (191) | 3.682 | (chờ đọc SMART, cần `sudo`) |  | Không tăng (máy đặt cố định, không bị rung) |
-| SMART `UDMA_CRC_Error_Count` (199) | 0 | (chờ đọc SMART, cần `sudo`) |  | 0 |
-| SMART nhiệt độ ổ (194) | 33 °C | (chờ đọc SMART, cần `sudo`) |  | < 45 °C |
-| SMART `Power_On_Hours` (9) | 4.699 | (chờ đọc SMART, cần `sudo`) |  | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
+| SMART: tình trạng tự đánh giá | `PASSED` | `PASSED` |  | `PASSED` |
+| SMART `Reallocated_Sector_Ct` (5) | 2 | 2 (không đổi) |  | Không tăng so với T0 |
+| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | 0 / 0 |  | 0 / 0 |
+| SMART `Reported_Uncorrect` (187) | 1.650 | **1.651 (+1 so với T0, vượt ngưỡng)** |  | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
+| SMART `Command_Timeout` (188) | 1.624 | 1.624 (không đổi) |  | **Không tăng** so với T0 |
+| SMART `G-Sense_Error_Rate` (191) | 3.682 | **3.692 (+10 so với T0, vượt ngưỡng)** |  | Không tăng (máy đặt cố định, không bị rung) |
+| SMART `UDMA_CRC_Error_Count` (199) | 0 | 0 |  | 0 |
+| SMART nhiệt độ ổ (194) | 33 °C | 32 °C |  | < 45 °C |
+| SMART `Power_On_Hours` (9) | 4.699 | 4.862 (+163 so với T0) |  | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
 | `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | 0 / 0 / 0 |  | 0 |
 | Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | 0 |  | 0 |
 | Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | 0 |  | 0 |
@@ -340,9 +340,18 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 
 Đo lúc 13/11/2026 01:19 UTC (08:19 giờ Việt Nam) bằng `deploy/health-check.sh "-7 days" --save` qua SSH; minh chứng ở [bang-chung/2026-11-13/health-check-T7.txt](bang-chung/2026-11-13/health-check-T7.txt). Thử khôi phục bằng `studytask-restore-test.sh`: **thành công**. Claude Code (AI) chạy lệnh theo yêu cầu của Trương Thanh Vui.
 
-**Chưa làm ở mốc này:** các dòng SMART (5, 187, 188, 191, 194, 197, 198, 199, `Power_On_Hours`, tình trạng tự đánh giá) và tự kiểm tra ổ cần `sudo` (mật khẩu do Thanh Vui nhập). Cột T+7 của các dòng đó để chờ; đây vẫn là điều kiện đóng việc 9.
+**Ổ đĩa (đọc lúc 01:2x UTC ngày 13/11, `sudo smartctl`, do Trương Thanh Vui chạy):**
 
-**Kết luận sơ bộ (chưa tính SMART):** dịch vụ ổn định: không khởi động lại ngoài kế hoạch, không dịch vụ lỗi, không OOM, 5xx = 0, 429 = 0, cổng lắng nghe không đổi, `integrity_check` ok, sao lưu và thử khôi phục đạt. Hash `studytask_api.py` trên máy chủ trùng với `master` (`d26d2f72…`).
+- Tự đánh giá tổng thể vẫn là `PASSED`; nhật ký lỗi ATA ghi "No Errors Logged".
+- **Tự kiểm tra ngắn (`smartctl -t short`) KHÔNG đạt:** `Completed: read failure`, còn 50%, `LBA_of_first_error` **705216**, tại 4.862 giờ chạy.
+- So với T0: `Reported_Uncorrect` (187) tăng từ 1.650 lên **1.651**, `G-Sense_Error_Rate` (191) từ 3.682 lên **3.692**; cả hai vượt ngưỡng "không tăng". `Reallocated_Sector_Ct` (5) vẫn 2, `Current_Pending_Sector` (197) và `Offline_Uncorrectable` (198) vẫn 0, `Command_Timeout` (188) không đổi, `UDMA_CRC_Error_Count` (199) 0, nhiệt độ 32 °C.
+- Chỉ số khác cần ghi: `Load_Cycle_Count` (193) **337.945** (ổ laptop thường được nhà sản xuất định mức khoảng 300.000 lần; chưa có mốc T0 để so), `Start_Stop_Count` 4.780, `Power_Cycle_Count` 4.355.
+
+**Kết luận ở mốc T+7 cho ổ đĩa: CHƯA ĐẠT.** Có một lỗi đọc thật ở đầu ổ (LBA 705216) và 187 đã nhích tăng, kích hoạt dòng "SMART không `PASSED`... hoặc 187/188 tăng so với T0" ở mục 8.5: **chép bản sao lưu ra thiết bị khác ngay, chuẩn bị thay ổ**. Mức độ cần được hiểu thận trọng: chỉ số 5, 197, 198 chưa xấu đi và tổng thể vẫn `PASSED`, nên ổ chưa hỏng hẳn, nhưng đã có bằng chứng lỗi đọc.
+
+**Hai việc cần nhóm quyết:**
+1. Chép lại bản sao lưu ra ổ ngoài (lần chép 11/11 có 6 bản từ 06–10/11 và **không có** dữ liệu mô phỏng mới nạp ngày 11–12/11). Ổ sao lưu `/mnt/backup` của máy chủ nằm trên **cùng ổ vật lý**, nên nếu ổ hỏng thì mất cả bản sao đó.
+2. Thay ổ hoặc không: dự án sinh viên không mua thiết bị mới, nên cần nhóm cân nhắc phương án (chuyển sang ổ có sẵn, hoặc chấp nhận rủi ro và ghi rõ). Chạy thêm tự kiểm tra dài (`sudo smartctl -t long /dev/sda`, nhiều giờ, nên chạy lúc ít người dùng) để biết phạm vi lỗi.
 
 **Điểm cần theo dõi:**
 - **Dữ liệu tăng mạnh:** `accounts` từ 5 lên 2.051, `docs` từ 13 lên 4.306, CSDL 126 MB, bản sao lưu 120 MB (T0 khoảng 3 MB). Có 1.976 tài khoản tên dạng `sv<số>`, khoảng 75 tài khoản giáo viên dạng `gv…<số>`, 80 lớp và 114 khóa đáp án: đây là dữ liệu mô phỏng nạp ngày 11–12/11. **Cần nhóm ghi lại ai nạp, vì sao, và mật khẩu của các tài khoản này**; nếu là mật khẩu dễ đoán trên trang công khai thì cần đổi hoặc xóa trước khi dùng thật.
