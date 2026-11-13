@@ -262,14 +262,30 @@ def is_count(d, key):
     return isinstance(v, int) and not isinstance(v, bool) and v >= 0
 
 
+def teacher_sections(profile):
+    """Các lớp học phần (lớp, môn) giáo viên đang dạy: `sections` ∩ `subjectIds`; None nếu hồ sơ chưa phân theo lớp.
+    Cùng một môn có thể mở ở nhiều lớp và do nhiều giáo viên đảm nhận, nên chỉ lọc theo môn sẽ lộ dữ liệu của lớp khác."""
+    secs = (profile or {}).get('sections')
+    if not isinstance(secs, list):
+        return None
+    ids = profile.get('subjectIds')
+    return {(s.get('classId'), s.get('subjectId')) for s in secs
+            if isinstance(s, dict) and (not isinstance(ids, list) or s.get('subjectId') in ids)}
+
+
 def teaches_student(teacher_uid, student_uid):
     """Giáo viên dạy ít nhất một môn của sinh viên.
+    Giáo viên đã phân theo lớp (`sections`) và sinh viên có `classId`: phải dạy môn đó đúng ở lớp của sinh viên.
     Hồ sơ cũ chưa có subjectIds được coi là học mọi môn, giống app.js và nhánh nộp bài ở /api/upload."""
-    mine = (doc_get('user', teacher_uid) or {}).get('subjectIds') or []
+    teacher = doc_get('user', teacher_uid) or {}
+    mine = teacher.get('subjectIds') or []
     student = doc_get('user', student_uid)
     if not mine or student is None:
         return False
     theirs = student.get('subjectIds')
+    secs = teacher_sections(teacher)
+    if secs is not None and student.get('classId'):
+        return any(c == student['classId'] and (theirs is None or s in theirs) for c, s in secs)
     return theirs is None or any(s in theirs for s in mine)
 
 
@@ -325,9 +341,11 @@ def teacher_shared_ok(user, old, new):
     nên một lần sửa xóa sạch môn, deadline của người khác (R1, review PR9 lần 2). Máy chủ chặn thêm ở đây:
     - `subjects`: môn ngoài subjectIds phải giữ nguyên; thêm môn mới vẫn được (giao diện cho giáo viên thêm môn);
     - SUBJECT_SCOPED: mục có `subjectId` ngoài subjectIds phải giữ nguyên, không được thêm mục mới cho môn đó;
+    - CLASS_SCOPED (lịch học, lịch thi): giáo viên đã phân theo lớp chỉ sửa được mục của lớp học phần mình dạy; mục lớp khác (kể cả cùng môn) giữ nguyên;
     - `quizzes` đã có guard_quizzes kiểm tra riêng.
     Hồ sơ cũ chưa có subjectIds được giao diện coi là dạy mọi môn (app.js mySubjects) nên không giới hạn."""
-    ids = (doc_get('user', user['uid']) or {}).get('subjectIds')
+    prof = doc_get('user', user['uid']) or {}
+    ids = prof.get('subjectIds')
     if ids is None:
         return True
     mine = {json.dumps(i) for i in ids}
@@ -339,14 +357,20 @@ def teacher_shared_ok(user, old, new):
     def foreign_subject(s):
         return not (isinstance(s, dict) and json.dumps(s.get('id')) in mine)
 
-    def foreign_item(x):
-        return isinstance(x, dict) and 'subjectId' in x and json.dumps(x['subjectId']) not in mine
+    secs = teacher_sections(prof)
+
+    def foreign_item(x, k):
+        if not (isinstance(x, dict) and 'subjectId' in x):
+            return False
+        if json.dumps(x['subjectId']) not in mine:
+            return True
+        return bool(secs is not None and k in CLASS_SCOPED and x.get('classId') and (x['classId'], x['subjectId']) not in secs)
 
     if not _kept([s for s in lst(old, 'subjects') if foreign_subject(s)], lst(new, 'subjects')):
         return False
     for k in SUBJECT_SCOPED:
-        old_f = [x for x in lst(old, k) if foreign_item(x)]
-        new_f = [x for x in lst(new, k) if foreign_item(x)]
+        old_f = [x for x in lst(old, k) if foreign_item(x, k)]
+        new_f = [x for x in lst(new, k) if foreign_item(x, k)]
         if not _kept(old_f, new_f) or not _kept(new_f, old_f):
             return False
     return True
@@ -507,6 +531,7 @@ def quizzes_for(user, role, stored):
 
 
 SUBJECT_SCOPED = ('deadlines', 'homeworks', 'materials', 'schedule', 'exams')   # các danh sách có `subjectId`
+CLASS_SCOPED = ('schedule', 'exams')                                            # trong đó, các danh sách còn có `classId` (lớp học phần)
 
 
 def project_shared(user, doc):
@@ -523,11 +548,16 @@ def project_shared(user, doc):
     if 'quizzes' in out:
         out['quizzes'] = quizzes_for(user, role, out.get('quizzes'))
     if role == 'student':
-        ids = (doc_get('user', user['uid']) or {}).get('subjectIds')
+        prof = doc_get('user', user['uid']) or {}
+        ids, cid = prof.get('subjectIds'), prof.get('classId')
         if ids is not None:
             for k in SUBJECT_SCOPED:
                 if isinstance(out.get(k), list):
                     out[k] = [x for x in out[k] if not isinstance(x, dict) or 'subjectId' not in x or x['subjectId'] in ids]
+        if cid:      # cùng một môn mở ở nhiều lớp: sinh viên chỉ thấy lịch học/lịch thi của lớp mình (mục không gắn lớp là mục chung)
+            for k in CLASS_SCOPED:
+                if isinstance(out.get(k), list):
+                    out[k] = [x for x in out[k] if not isinstance(x, dict) or not x.get('classId') or x['classId'] == cid]
         if isinstance(out.get('grades'), dict):
             out['grades'] = {k: v for k, v in out['grades'].items() if k == user['uid']}
     return out
@@ -1502,10 +1532,16 @@ class Handler(BaseHTTPRequestHandler):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền xem kết quả của đề này.')
                 rows = db().execute("SELECT data FROM docs WHERE col='quizResults'").fetchall()
                 res = [d for d in (json.loads(r[0]) for r in rows) if str(d.get('quizId')) == p[1]]
+                secs = teacher_sections(doc_get('user', u['uid'])) if role == 'teacher' else None
+                out = []
                 for d in res:      # tên sinh viên để giáo viên đối chiếu khi có khiếu nại
                     pu = doc_get('user', d.get('uid')) or {}
+                    # giáo viên đã phân theo lớp chỉ xem kết quả của sinh viên thuộc lớp học phần mình dạy (cùng môn nhưng lớp khác thì không)
+                    if secs is not None and pu.get('classId') and (pu['classId'], quiz.get('subjectId')) not in secs:
+                        continue
                     d['name'], d['username'] = pu.get('name', ''), pu.get('username', '')
-                return self.send(200, {'results': res})
+                    out.append(d)
+                return self.send(200, {'results': out})
             if len(p) == 3 and p[2] == 'archive' and method == 'GET':    # bản lưu của đề đúng như đã giao cho sinh viên
                 shared = doc_get('sharedData', 'global') or {}
                 quiz = next((x for x in shared.get('quizzes') or [] if isinstance(x, dict) and str(x.get('id')) == p[1]), None)
