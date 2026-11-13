@@ -71,6 +71,10 @@ jobs:
         run: python3 tests/server/test_shared_scope.py
       - name: Giáo viên không làm mất dữ liệu môn khác khi ghi dữ liệu dùng chung (R1)
         run: python3 tests/server/test_teacher_shared.py
+      - name: Dữ liệu kiểm tải từ khung đào tạo (lớp 20–30 SV, mật khẩu mặc định, purge)
+        run: python3 tests/server/test_seed_curriculum.py
+      - name: Lọc theo lớp học phần – sinh viên chỉ thấy lịch lớp mình, giáo viên chỉ thấy và sửa lớp mình dạy
+        run: python3 tests/server/test_class_scope.py
       - name: Link minh chứng của phiếu xét tốt nghiệp
         run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn

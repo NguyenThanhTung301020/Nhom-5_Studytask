@@ -15,3 +15,10 @@ ui-debug.log
 
 # File tạm do scripts/mutate.mjs tạo khi chạy
 tests/.tmp-orig-mut.test.mjs
+
+# Dữ liệu kiểm tải sinh cục bộ bằng scripts/seed_curriculum.py (chứa danh sách tài khoản, tệp PDF lớn)
+du-lieu-thu/
+
+# Python
+__pycache__/
+*.pyc

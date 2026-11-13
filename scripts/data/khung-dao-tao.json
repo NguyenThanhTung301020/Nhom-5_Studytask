@@ -1,0 +1,264 @@
+{
+ "nguon": "Khung đào tạo mẫu.docx",
+ "courses": [
+  {
+   "sem": 1,
+   "code": "GEN101",
+   "name": "Triết học Mác - Lênin",
+   "credits": 3,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 1,
+   "code": "MTH101",
+   "name": "Giải tích 1",
+   "credits": 3,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 1,
+   "code": "MTH102",
+   "name": "Đại số tuyến tính",
+   "credits": 3,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 1,
+   "code": "IT101",
+   "name": "Nhập môn Công nghệ thông tin",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 1,
+   "code": "IT102",
+   "name": "Cơ sở lập trình (C/C++)",
+   "credits": 4,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 2,
+   "code": "GEN102",
+   "name": "Kinh tế chính trị Mác - Lênin",
+   "credits": 2,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 2,
+   "code": "GEN103",
+   "name": "Pháp luật đại cương",
+   "credits": 2,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 2,
+   "code": "MTH103",
+   "name": "Toán rời rạc",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 2,
+   "code": "IT103",
+   "name": "Kỹ thuật lập trình",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 2,
+   "code": "IT104",
+   "name": "Kiến trúc máy tính",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 3,
+   "code": "GEN104",
+   "name": "Chủ nghĩa xã hội khoa học",
+   "credits": 2,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 3,
+   "code": "MTH104",
+   "name": "Xác suất thống kê",
+   "credits": 3,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 3,
+   "code": "IT201",
+   "name": "Cấu trúc dữ liệu và Giải thuật",
+   "credits": 4,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 3,
+   "code": "IT202",
+   "name": "Lập trình hướng đối tượng (OOP)",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 3,
+   "code": "IT203",
+   "name": "Hệ điều hành",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 4,
+   "code": "GEN105",
+   "name": "Lịch sử Đảng Cộng sản Việt Nam",
+   "credits": 2,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 4,
+   "code": "IT204",
+   "name": "Cơ sở dữ liệu",
+   "credits": 4,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 4,
+   "code": "IT205",
+   "name": "Mạng máy tính",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 4,
+   "code": "IT206",
+   "name": "Công nghệ phần mềm",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 4,
+   "code": "ENG201",
+   "name": "Tiếng Anh chuyên ngành CNTT",
+   "credits": 3,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 5,
+   "code": "GEN106",
+   "name": "Tư tưởng Hồ Chí Minh",
+   "credits": 2,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 5,
+   "code": "IT301",
+   "name": "Phân tích và thiết kế hệ thống thông tin",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 5,
+   "code": "IT302",
+   "name": "Nhập môn Trí tuệ nhân tạo",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 5,
+   "code": "IT303",
+   "name": "An toàn và bảo mật thông tin",
+   "credits": 3,
+   "block": "Cơ sở ngành"
+  },
+  {
+   "sem": 5,
+   "code": "IT304",
+   "name": "Phát triển ứng dụng Web",
+   "credits": 4,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 6,
+   "code": "IT305",
+   "name": "Phát triển ứng dụng di động",
+   "credits": 4,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 6,
+   "code": "IT306",
+   "name": "Kiểm thử và đảm bảo chất lượng phần mềm",
+   "credits": 3,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 6,
+   "code": "IT307",
+   "name": "Học máy cơ bản (Machine Learning)",
+   "credits": 3,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 6,
+   "code": "IT308",
+   "name": "Điện toán đám mây (Cloud Computing)",
+   "credits": 3,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 6,
+   "code": "SKL301",
+   "name": "Kỹ năng làm việc nhóm và quản lý thời gian",
+   "credits": 2,
+   "block": "Đại cương"
+  },
+  {
+   "sem": 7,
+   "code": "IT401",
+   "name": "Quản lý dự án Công nghệ thông tin",
+   "credits": 3,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 7,
+   "code": "IT402",
+   "name": "Kiến trúc phần mềm và Thiết kế mẫu",
+   "credits": 3,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 7,
+   "code": "IT403",
+   "name": "Khai phá dữ liệu và Dữ liệu lớn (Big Data)",
+   "credits": 3,
+   "block": "Tự chọn"
+  },
+  {
+   "sem": 7,
+   "code": "IT404",
+   "name": "Lập trình mạng và Hệ thống phân tán",
+   "credits": 3,
+   "block": "Tự chọn"
+  },
+  {
+   "sem": 7,
+   "code": "IT405",
+   "name": "Đồ án chuyên ngành",
+   "credits": 3,
+   "block": "Chuyên ngành"
+  },
+  {
+   "sem": 8,
+   "code": "IT498",
+   "name": "Thực tập doanh nghiệp",
+   "credits": 4,
+   "block": "Tốt nghiệp"
+  },
+  {
+   "sem": 8,
+   "code": "IT499",
+   "name": "Khóa luận tốt nghiệp / Đồ án tốt nghiệp",
+   "credits": 8,
+   "block": "Tốt nghiệp"
+  }
+ ]
+}

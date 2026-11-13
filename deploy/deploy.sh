@@ -16,6 +16,7 @@ echo "== 1. Sao lưu =="
 echo "== 2. Thư mục dữ liệu (không nằm trong web root) =="
 install -d -o "$OWNER" -g "$OWNER" -m 750 /var/lib/studytask /var/lib/studytask/uploads
 chmod 755 /var/lib/studytask          # nginx cần đi qua để phục vụ /uploads
+chmod 755 /var/lib/studytask/uploads  # nginx (www-data) phải đọc được thư mục này, nếu để 750 thì mọi tệp /uploads/ trả 403 (12/11/2026); bài nộp vẫn do API kiểm soát
 
 echo "== 3. API =="
 install -d -m 755 /opt/studytask
