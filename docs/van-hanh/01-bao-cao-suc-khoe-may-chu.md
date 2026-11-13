@@ -353,6 +353,10 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 1. Chép lại bản sao lưu ra ổ ngoài (lần chép 11/11 có 6 bản từ 06–10/11 và **không có** dữ liệu mô phỏng mới nạp ngày 11–12/11). Ổ sao lưu `/mnt/backup` của máy chủ nằm trên **cùng ổ vật lý**, nên nếu ổ hỏng thì mất cả bản sao đó.
 2. Thay ổ hoặc không: dự án sinh viên không mua thiết bị mới, nên cần nhóm cân nhắc phương án (chuyển sang ổ có sẵn, hoặc chấp nhận rủi ro và ghi rõ). Chạy thêm tự kiểm tra dài (`sudo smartctl -t long /dev/sda`, nhiều giờ, nên chạy lúc ít người dùng) để biết phạm vi lỗi.
 
+**Kết luận cho phần dịch vụ:** ổn định: không khởi động lại ngoài kế hoạch, không dịch vụ lỗi, không OOM, 5xx = 0, 429 = 0, cổng lắng nghe không đổi, `integrity_check` ok, sao lưu và thử khôi phục đạt.
+
+**Máy chủ không chạy đúng `master`:** hash `studytask_api.py` trên máy chủ là `d26d2f72…`, còn `master` (đã gộp PR #51) là `35216086…`; 9 tệp giao diện (`app.js`, `index.html`, `GradeBook.js`, `Login.js`, `Admin.js`, `Directory.js`, `Reports.js`, `Schedule.js`, `Subjects.js`) cũng khác `master`. Máy chủ đang chạy mã triển khai ngày 12/11 (07:50–07:58 UTC) chưa có trên GitHub: Trương Thanh Vui cập nhật CSDL và sửa lỗi logic phát hiện được trên máy chủ, ngoài phạm vi báo cáo. Cần đưa các thay đổi đó lên GitHub qua PR để máy chủ và `master` giống nhau trở lại.
+
 **Điểm cần theo dõi:**
 - **Dữ liệu tăng mạnh:** `accounts` từ 5 lên 2.051, `docs` từ 13 lên 4.306, CSDL 126 MB, bản sao lưu 120 MB (T0 khoảng 3 MB). Có 1.976 tài khoản tên dạng `sv<số>`, khoảng 75 tài khoản giáo viên dạng `gv…<số>`, 80 lớp và 114 khóa đáp án: đây là dữ liệu mô phỏng nạp ngày 11–12/11. **Cần nhóm ghi lại ai nạp, vì sao, và mật khẩu của các tài khoản này**; nếu là mật khẩu dễ đoán trên trang công khai thì cần đổi hoặc xóa trước khi dùng thật.
 - **RSS của API 67 MB**, vượt mức 2 lần T0 (60 MB), gắn với việc API khởi động lại 12/11 và CSDL lớn hơn. Theo dõi ở T+15.
