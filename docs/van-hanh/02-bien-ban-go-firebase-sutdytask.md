@@ -41,9 +41,10 @@ Chạy lúc 06/11/2026 10:26 UTC (17:26 giờ Việt Nam).
 | `https://sutdytask.io.vn/` và `/utils/firebase.js` | HTTP 200 | Web vẫn phản hồi |
 | `https://sutdytask.web.app/`, `https://sutdytask.firebaseapp.com/` | HTTP 404 | **Không dùng làm bằng chứng**, vì trước khi gỡ cũng đã trả 404 |
 
+**Đăng nhập và lưu trên web thật (13/11/2026 13:13 UTC):** đạt. Đăng nhập bằng tài khoản Quản trị viên, sửa số điện thoại ở trang Hồ sơ, máy chủ ghi đúng cả `user` và `userData`. Xóa bộ nhớ trình duyệt rồi tải lại trang vẫn đọc được giá trị đã lưu. Sau đó đã trả về như cũ. Chi tiết: [biên bản kiểm chứng web thật 13/11](11-kiem-chung-web-that-2026-11-13.md) mục 1. Chưa thử bằng tài khoản sinh viên, giáo viên.
+
 **Chưa kiểm chứng:**
 
-- Chưa thử đăng nhập và lưu dữ liệu trên giao diện sau khi gỡ.
 - Firestore trả 403 chứ không phải 404, và phép thử này không đăng nhập. Trạng thái của project trên trang "Resources pending deletion" chưa được đối chiếu ngoài email.
 
 ## 5. Dữ liệu trước khi gỡ
@@ -84,7 +85,7 @@ Hai ghi nhận cũ ("khớp", "tương đồng hơn 90%") được ghi lại là
 |---|---|---|
 | ~~Đối chiếu dữ liệu Firebase với máy chủ~~ **Đóng, không thực hiện** (mục 5.3): hệ thống không còn phụ thuộc Firebase, biên bản này thay thế bảng đối chiếu, và không còn dữ liệu để đối chiếu (mục 5.1) | Trương Thanh Vui; Nguyễn Thanh Tùng xác nhận | Đã xong 11/11/2026 |
 | **Gỡ lại project `sutdytask`** (đang ở trạng thái đã khôi phục từ 11/11/2026; không còn dữ liệu cần giữ). Ghi thời điểm gỡ lần hai vào biên bản này | Trương Thanh Vui (tài khoản có quyền trên project) | **Đã gỡ lại 11/11/2026 02:54:32 UTC** (mục 5.2) |
-| Thử đăng nhập và lưu dữ liệu trên web thật, ghi kết quả vào mục 4 | Nguyễn Thanh Tùng | Sớm nhất có thể |
+| ~~Thử đăng nhập và lưu dữ liệu trên web thật, ghi kết quả vào mục 4~~ | Nguyễn Thanh Tùng | **Đã xong 13/11/2026** (mục 4) |
 | Kiểm tra lại sau hạn khôi phục, xác nhận project đã bị xóa hẳn | Nguyễn Thanh Tùng | Sau 11/12/2026 02:54:32 UTC (hạn mới, thay cho 06/12/2026) |
 | Xem project thử `studytask-test` ([thiết kế 04](../thiet-ke/04-thu-cloudflare-worker-dat-lai-mat-khau.md)) có còn cần không. Project này không nằm trong đợt gỡ này; ngày 06/11 API Firestore của nó báo `SERVICE_DISABLED` | Nguyễn Thanh Tùng | Tuần 6 |
 
