@@ -100,6 +100,13 @@ try:
     chk('GV B chỉ thấy kết quả lớp c1', names('gvb') == ['svc'])
     chk('GV hồ sơ cũ và Admin thấy cả ba lớp', names('gvold') == ['sva', 'svb', 'svc'] and names('ad01') == ['sva', 'svb', 'svc'])
 
+    # ── điểm chính thức cho Bảng điểm (GET /api/quiz/results) cùng phạm vi lớp học phần ──
+    allres = lambda who: sorted(d['username'] for d in req('GET', '/api/quiz/results', ck=ck[who])[1].get('results', []))
+    chk('Bảng điểm: GV A chỉ thấy điểm lớp a1 và b1', allres('gva') == ['sva', 'svb'])
+    chk('Bảng điểm: GV B chỉ thấy điểm lớp c1 (cùng môn 1 nhưng lớp khác không lộ)', allres('gvb') == ['svc'])
+    chk('Bảng điểm: GV hồ sơ cũ và Admin thấy cả ba lớp', allres('gvold') == ['sva', 'svb', 'svc'] and allres('ad01') == ['sva', 'svb', 'svc'])
+    chk('Bảng điểm: sinh viên không xem được điểm cả lớp', req('GET', '/api/quiz/results', ck=ck['sva'])[0] == 403)
+
     # ── giáo viên: ghi lịch chỉ ở lớp mình dạy ──
     def put(who, schedule):
         return req('PUT', '/api/doc/sharedData/global', {'data': {'schedule': schedule}}, ck=ck[who])[0]

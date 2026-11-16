@@ -206,6 +206,22 @@ try:
     chk('RULE-14 /api/quiz/mine chỉ trả kết quả của chính mình', len(mine3) == 1 and mine3[0]['uid'] == uid3)
     chk('sinh viên đọc kết quả của người khác qua /api/doc → 403', req('GET', f'/api/doc/quizResults/1_{uid3}', ck=s1)[0] == 403)
 
+    # ── điểm chính thức cho Bảng điểm / Báo cáo lớp: GET /api/quiz/results (việc 7 tuần 7) ──
+    st, js, raw, _ = req('GET', '/api/quiz/results', ck=ad)
+    allr = js.get('results') or []
+    by_uid = {r['uid']: r for r in allr}
+    chk('Admin lấy được điểm chính thức của mọi sinh viên (6 bài đã nộp)', st == 200 and len(allr) == 6)
+    chk('mỗi dòng có tên, điểm, số câu đúng/tổng, môn, đề; không kèm câu trả lời chi tiết',
+        by_uid.get(uid1, {}).get('name') == 'sv01' and by_uid[uid1]['score'] == 6.7 and by_uid[uid1]['correct'] == 2
+        and by_uid[uid1]['total'] == 3 and by_uid[uid1]['subjectId'] == 1 and by_uid[uid1]['quizId'] == 1
+        and all('answers' not in r for r in allr) and '"answers"' not in raw)
+    chk('giáo viên dạy môn thấy điểm của môn mình', req('GET', '/api/quiz/results', ck=gv1)[1].get('results') and
+        len(req('GET', '/api/quiz/results', ck=gv1)[1]['results']) == 6)
+    st, js, _, _ = req('GET', '/api/quiz/results', ck=gv2)
+    chk('giáo viên môn khác không thấy điểm của môn không dạy (200, danh sách rỗng)', st == 200 and js.get('results') == [])
+    chk('sinh viên xem điểm cả lớp → 403', req('GET', '/api/quiz/results', ck=s1)[0] == 403)
+    chk('chưa đăng nhập → 401', req('GET', '/api/quiz/results')[0] == 401)
+
     # ── xóa tài khoản: dọn kết quả trắc nghiệm của chính tài khoản đó, không đụng người khác ──
     before = {r[0] for r in db_rows("SELECT id FROM docs WHERE col='quizResults'")}
     chk('trước khi xóa: có kết quả của SV-3 và SV-1', f'1_{uid3}' in before and f'1_{uid1}' in before)

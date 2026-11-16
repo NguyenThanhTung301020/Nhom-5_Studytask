@@ -199,5 +199,37 @@ finally:
     srv.terminate(); srv.wait(5)
     LOG.close()
     shutil.rmtree(DATA, ignore_errors=True)
+
+# ── Gỡ email phải là một giao dịch: lỗi giữa chừng thì hoàn tác (việc 12 tuần 7) ──
+# Chạy trực tiếp hàm unlink_email trên CSDL tạm; dùng trigger làm câu DELETE thứ hai thất bại.
+D3 = tempfile.mkdtemp()
+os.environ['STUDYTASK_DATA'] = D3
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'server'))
+try:
+    import studytask_api as a
+    c = a.db()
+    c.execute("INSERT INTO contact_email (uid, email, verified_at) VALUES ('u1', 'u1@gmail.com', 1)")
+    c.execute("INSERT INTO codes (purpose, uid, email, code_hash, expires, created) VALUES ('reset', 'u1', 'u1@gmail.com', 'h', ?, 1)",
+              (time.time() + 600,))
+    c.execute("CREATE TRIGGER boom BEFORE DELETE ON codes BEGIN SELECT RAISE(ABORT, 'boom'); END")
+    try:
+        a.unlink_email('u1'); raised = False
+    except Exception:
+        raised = True
+    check('Gỡ email: lỗi ở câu thứ hai thì ném lỗi lên trên', raised)
+    check('Gỡ email: lỗi giữa chừng thì hoàn tác, email vẫn còn liên kết',
+          c.execute("SELECT COUNT(*) FROM contact_email WHERE uid='u1'").fetchone()[0] == 1)
+    check('Gỡ email: lỗi giữa chừng thì mã đặt lại vẫn còn (không mất một nửa)',
+          c.execute("SELECT COUNT(*) FROM codes WHERE uid='u1'").fetchone()[0] == 1)
+    check('Gỡ email: sau lỗi không còn giao dịch treo trên kết nối dùng chung', not c.in_transaction)
+    c.execute('DROP TRIGGER boom')
+    a.unlink_email('u1')
+    check('Gỡ email: sau khi hết lỗi thì gỡ được cả email lẫn mã đặt lại',
+          c.execute("SELECT COUNT(*) FROM contact_email WHERE uid='u1'").fetchone()[0] == 0
+          and c.execute("SELECT COUNT(*) FROM codes WHERE uid='u1'").fetchone()[0] == 0)
+except Exception as e:
+    import traceback; traceback.print_exc(); check('Gỡ email (giao dịch) chạy không lỗi: %r' % e, False)
+finally:
+    shutil.rmtree(D3, ignore_errors=True)
 print('\nKẾT QUẢ:', 'TẤT CẢ ĐẠT' if not fails else f'{len(fails)} LỖI: {fails}')
 sys.exit(1 if fails else 0)

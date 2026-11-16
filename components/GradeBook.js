@@ -22,7 +22,7 @@ function downloadCSV(filename, rows) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
 
-export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], homeworks = [], fetchActivities }) {
+export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], homeworks = [], fetchActivities, user }) {
   const [activities, setActivities] = useState(null)
   const [grades,     setGrades]     = useState({})   // { uid: { sid: { quiz:{qid:s}, hw:{hwId:s}, att:n } } }
   const [studentUid, setStudentUid] = useState(null)

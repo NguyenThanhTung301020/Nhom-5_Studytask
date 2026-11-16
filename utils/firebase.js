@@ -199,6 +199,8 @@ export const fsDelete = (col, id) => _ready ? api('DELETE', docPath(col, id)) : 
 // ── Trắc nghiệm (V3): máy chủ chấm điểm; trình duyệt không có đáp án đúng ──
 export const submitQuiz = (quizId, answers) => api('POST', `/quiz/${enc(String(quizId))}/submit`, { answers })   // → { score, correct, total, submittedAt }
 export const loadMyQuizResults = async () => _ready ? (await api('GET', '/quiz/mine')).results : []
+// Điểm chính thức của cả lớp (Admin: tất cả; giáo viên: môn/lớp mình dạy) cho Bảng điểm và Báo cáo lớp
+export const loadAllQuizResults = async () => _ready ? (await api('GET', '/quiz/results')).results : []
 
 // ── Tải file lên server (giáo viên / admin) → { url, name, size } ──
 export const uploadFile = async (file, hwId) => {
