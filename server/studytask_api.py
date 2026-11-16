@@ -1021,9 +1021,16 @@ def unlink_email(uid):
     conn = db()
     with _lock:
         conn.execute('BEGIN IMMEDIATE')
-        conn.execute('DELETE FROM contact_email WHERE uid=?', (uid,))
-        conn.execute("DELETE FROM codes WHERE purpose='reset' AND uid=?", (uid,))
-        conn.execute('COMMIT')
+        try:
+            conn.execute('DELETE FROM contact_email WHERE uid=?', (uid,))
+            conn.execute("DELETE FROM codes WHERE purpose='reset' AND uid=?", (uid,))
+            conn.execute('COMMIT')
+        except Exception:
+            # Lỗi giữa chừng phải hoàn tác: nếu không, email đã bị xóa nhưng mã đặt lại còn đó, và giao dịch treo trên kết nối dùng chung
+            # làm mọi lệnh BEGIN sau đó báo "cannot start a transaction within a transaction".
+            if conn.in_transaction:
+                conn.execute('ROLLBACK')
+            raise
 
 
 def find_uid(identifier):
@@ -1637,6 +1644,27 @@ class Handler(BaseHTTPRequestHandler):
                 rows = db().execute("SELECT data FROM docs WHERE col='quizResults'").fetchall()
                 mine = [d for d in (json.loads(r[0]) for r in rows) if d.get('uid') == u['uid']]
                 return self.send(200, {'results': mine})
+            if p == ['quiz', 'results'] and method == 'GET':    # điểm chính thức của mọi đề trong phạm vi quyền, cho Bảng điểm và Báo cáo lớp
+                if role not in ('admin', 'teacher'):
+                    raise ApiError(403, 'permission-denied', 'Chỉ Admin và giáo viên xem điểm trắc nghiệm của lớp.')
+                tprof = doc_get('user', u['uid']) or {}
+                tsubs = set(tprof.get('subjectIds') or []) if role == 'teacher' else None
+                secs = teacher_sections(tprof) if role == 'teacher' else None
+                rows = db().execute("SELECT data FROM docs WHERE col='quizResults'").fetchall()
+                people, out = {}, []
+                for d in (json.loads(r[0]) for r in rows):
+                    if tsubs is not None and d.get('subjectId') not in tsubs:     # cùng quy tắc với quiz_authorized
+                        continue
+                    pu = people.get(d.get('uid'))
+                    if pu is None:
+                        pu = people[d.get('uid')] = doc_get('user', d.get('uid')) or {}
+                    if secs is not None and pu.get('classId') and (pu['classId'], d.get('subjectId')) not in secs:
+                        continue      # cùng môn nhưng lớp học phần khác: không thuộc phạm vi giáo viên này
+                    out.append({'uid': d.get('uid'), 'name': pu.get('name', ''), 'username': pu.get('username', ''),
+                                'quizId': d.get('quizId'), 'subjectId': d.get('subjectId'), 'score': d.get('score'),
+                                'correct': d.get('correct'), 'total': d.get('total'), 'submittedAt': d.get('submittedAt'),
+                                'migrated': bool(d.get('migrated'))})      # không kèm `answers`: Bảng điểm chỉ cần điểm
+                return self.send(200, {'results': out})
             if len(p) == 3 and p[2] == 'results' and method == 'GET':   # giáo viên dạy môn / Admin xem kết quả của đề
                 shared = doc_get('sharedData', 'global') or {}
                 quiz = next((x for x in shared.get('quizzes') or [] if isinstance(x, dict) and str(x.get('id')) == p[1]), None)

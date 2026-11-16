@@ -12,6 +12,7 @@ import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.
 import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
+import { applyQuizResults, resultToEvent } from '../utils/quizScores.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition } from '../utils/scope.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
@@ -478,5 +479,47 @@ describe('Phạm vi theo lớp học phần (cùng môn, nhiều lớp, nhiều 
     assert.equal(scopeSubjects({ role: 'teacher', subjectIds: null }, subjects).length, 3)
     assert.equal(scopeSubjects({ role: 'admin', subjectIds: [1] }, subjects).length, 3)
     assert.equal(scopeSubjects(null, subjects).length, 3)
+  })
+})
+
+describe('Điểm trắc nghiệm chính thức cho Bảng điểm và Báo cáo lớp (quizResults)', () => {
+  const res = (uid, quizId, score, extra = {}) => ({ uid, name: 'Tên ' + uid, username: uid, quizId, subjectId: 1, score, correct: 2, total: 3, submittedAt: '2026-11-12T08:30:00Z', ...extra })
+
+  test('resultToEvent: chuyển một kết quả thành sự kiện quiz, ngày lấy từ submittedAt', () => {
+    assert.deepEqual(resultToEvent(res('u1', 7, 6.7)),
+      { type: 'quiz', at: '2026-11-12', subjectId: 1, refId: 7, refTitle: '', score: 6.7, total: 3, correct: 2, official: true })
+  })
+  test('sự kiện quiz trong nhật ký bị thay bằng kết quả chính thức, không cộng dồn', () => {
+    const acts = [{ uid: 'u1', events: [{ type: 'quiz', subjectId: 1, refId: 7, score: 10 }, { type: 'homework', subjectId: 1, refId: 3 }] }]
+    const out = applyQuizResults(acts, [res('u1', 7, 6.7)])
+    const quiz = out[0].events.filter(e => e.type === 'quiz')
+    assert.equal(quiz.length, 1)
+    assert.equal(quiz[0].score, 6.7)          // không còn điểm 10 do nhật ký (có thể bị sửa/cắt)
+  })
+  test('sự kiện loại khác (homework, material) được giữ nguyên', () => {
+    const acts = [{ uid: 'u1', events: [{ type: 'homework', refId: 3 }, { type: 'material', refId: 4 }] }]
+    const out = applyQuizResults(acts, [res('u1', 7, 8)])
+    assert.deepEqual(out[0].events.map(e => e.type).sort(), ['homework', 'material', 'quiz'])
+  })
+  test('không có kết quả: sự kiện quiz trong nhật ký không còn được tính là điểm', () => {
+    const acts = [{ uid: 'u1', events: [{ type: 'quiz', refId: 7, score: 10 }, { type: 'material' }] }]
+    assert.deepEqual(applyQuizResults(acts, [])[0].events, [{ type: 'material' }])
+  })
+  test('sinh viên có kết quả nhưng chưa có bản ghi nhật ký vẫn xuất hiện, kèm tên', () => {
+    const out = applyQuizResults([], [res('u9', 7, 9)])
+    assert.equal(out.length, 1)
+    assert.equal(out[0].uid, 'u9'); assert.equal(out[0].name, 'Tên u9')
+    assert.equal(out[0].events[0].score, 9)
+  })
+  test('nhiều đề của cùng một sinh viên; không sửa dữ liệu đầu vào', () => {
+    const acts = [{ uid: 'u1', events: [{ type: 'quiz', refId: 1, score: 1 }] }]
+    const copy = JSON.stringify(acts)
+    const out = applyQuizResults(acts, [res('u1', 1, 5), res('u1', 2, 7)])
+    assert.deepEqual(out[0].events.map(e => [e.refId, e.score]), [[1, 5], [2, 7]])
+    assert.equal(JSON.stringify(acts), copy)
+  })
+  test('đầu vào lạ (null, thiếu uid) không làm hỏng kết quả', () => {
+    assert.deepEqual(applyQuizResults(null, null), [])
+    assert.deepEqual(applyQuizResults([{ uid: 'u1' }], [null, { quizId: 1 }]), [{ uid: 'u1', events: [] }])
   })
 })
