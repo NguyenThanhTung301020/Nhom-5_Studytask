@@ -1,6 +1,8 @@
-# Biên bản đối chiếu máy chủ ngày 17/11/2026 (bổ sung minh chứng tuần 6, 7)
+# Biên bản đối chiếu máy chủ ngày 17/11/2026 (việc của tuần 7)
 
-- Mục đích: ghi lại hiện trạng thật của máy chủ để bổ sung minh chứng cho các việc đã làm trước báo cáo tuần 6 nhưng chưa được ghi (việc 1 triển khai lại, việc cập nhật gói hệ điều hành, việc 14 điều tra mã 403) và để xác định việc còn lại.
+Thuộc kế hoạch **tuần 7** (16/11 – 21/11/2026) nêu ở Phần 6 của [báo cáo tuần 6](../bao-cao-tuan/tuan-06.md): các việc 1, 3, 5, 14 của nhóm A/B, liên quan đến máy chủ.
+
+- Mục đích: ghi lại hiện trạng thật của máy chủ để bổ sung minh chứng cho các việc của kế hoạch tuần 7 đã làm nhưng chưa được ghi (việc 1 triển khai lại từ `master`, việc 5 cập nhật gói hệ điều hành, việc 14 điều tra mã 403, việc 3 chép sao lưu ra ổ ngoài) và để xác định việc còn lại.
 - Thời điểm đo: 17/11/2026 04:11 UTC (11:11 giờ Việt Nam).
 - Cách đo: Claude Code (AI) chạy các lệnh **chỉ đọc** qua SSH (`studytask@192.168.2.187`) theo yêu cầu và với địa chỉ do Trương Thanh Vui cung cấp. Không dùng `sudo`, không sửa tệp hay dịch vụ nào. Hash so với `master` bằng `git show <commit>:<tệp> | sha256sum`.
 - **Cần Trương Thanh Vui xác nhận:** ai đã triển khai, bằng cách nào, vào lúc nào (mục 2). Biên bản chỉ ghi những gì đọc được từ máy chủ, không suy đoán thao tác.
@@ -14,7 +16,7 @@
 | Script cài đặt cũ `~/migration/install-api.sh` | **Không còn** |
 | Cơ sở dữ liệu (chỉ đọc) | `accounts` 2.051, `docs` 4.314, `sessions` 16; `studytask.db` 4,1 MB + WAL 5,2 MB |
 
-## 2. Phiên bản đang chạy so với GitHub (việc 1)
+## 2. Phiên bản đang chạy so với GitHub (việc 1 tuần 7)
 
 | Tệp trên máy chủ | Hash (16 ký tự đầu) | Trùng với |
 |---|---|---|
@@ -28,13 +30,13 @@
 Thời điểm cài, đọc từ máy chủ: API khởi động lúc **14/11/2026 02:51:03 UTC** (tệp `studytask_api.py` ghi 02:51); `app.js` ghi 14/11 01:44 UTC, `pages/Reports.js` ghi 14/11 02:38 UTC.
 
 **Kết luận:**
-- Việc 1 của kế hoạch tuần 6 ("triển khai lại bản `master` mới") **đã làm** vào khoảng 14/11, sau [PR56]: API và các tệp giao diện chính khớp `b9e2663`. Báo cáo tuần 6 (số liệu đến 13/11) và mục 8.4a của báo cáo vận hành còn ghi "máy chủ không chạy đúng `master`"; mục đó đúng ở thời điểm đo 13/11, không còn đúng từ 14/11.
+- Việc 1 của kế hoạch tuần 7 ("triển khai lại từ `master`, gồm [PR50], [PR51], [PR52], [PR54], [PR56]"; kế hoạch ghi Nguyễn Thanh Tùng phụ trách) **đã được thực hiện** vào khoảng 14/11: API và các tệp giao diện chính khớp `b9e2663`. Báo cáo tuần 6 (số liệu đến 13/11) và mục 8.4a của báo cáo vận hành còn ghi "máy chủ không chạy đúng `master`"; mục đó đúng ở thời điểm đo 13/11, không còn đúng từ 14/11. Người thực hiện cần Trương Thanh Vui xác nhận (đầu biên bản).
 - **Vẫn chưa khớp hoàn toàn với `master` hiện tại (`cd2ab09`)** vì hai lý do:
   1. Thiếu [PR58] (gộp 16/11): endpoint `GET /api/quiz/results`, giao diện Bảng điểm đọc điểm từ `quizResults` và sửa `GradeBook.js` thiếu tham số `user`. Máy chủ vẫn chạy bản `GradeBook.js` cũ; bản này gây `ReferenceError: user is not defined` khi dựng (đã tái hiện: chạy hàm component với bản `b9e2663` báo lỗi, với bản của [PR58] không lỗi). **Nên triển khai lại để sửa lỗi này.**
   2. Bốn tệp giao diện về ảnh đại diện đang chạy trên máy chủ nhưng **chưa có trên GitHub**. Cần đưa lên bằng PR (kèm `scripts/assign_avatars.py`, `scripts/prepare_avatars.ps1`, `tests/server/test_assign_avatars.py`) để bản đang chạy có thể dựng lại từ repo.
 - `~/deploy-log.txt` chỉ có 5 dòng, dòng cuối ngày 10/11 05:32 UTC; các lần triển khai 12/11 và 14/11 **không được ghi vào đây**. Cần Thanh Vui bổ sung một dòng cho mỗi lần (commit, nhánh, thời điểm).
 
-## 3. Cập nhật gói hệ điều hành và khởi động lại
+## 3. Cập nhật gói hệ điều hành và khởi động lại (việc 5 tuần 7)
 
 | Mục | Kết quả |
 |---|---|
@@ -49,7 +51,7 @@ Kết luận: việc "cập nhật 18 gói và khởi động lại" **đã làm
 
 - 12 bản (06/11 06:34 UTC đến **16/11 20:05 UTC**); `backup.log` đều `OK` ngày 14, 15, 16/11.
 - Bản mới nhất: `csdl_bytes: 4268032`, 2.366 tệp tải lên, 157 MB. Ổ `/mnt/backup`: 177 MB / 98 GB.
-- Bản sao lưu nằm cùng ổ vật lý với máy chủ. **Chưa chép bản mới ra ổ ngoài** (ổ ngoài không nối vào máy cá nhân lúc đo).
+- Bản sao lưu nằm cùng ổ vật lý với máy chủ. Lúc đo (04:11 UTC) chưa chép ra ổ ngoài; **đã chép ra ổ G lúc 06:12 UTC cùng ngày**, 12 bản, trùng SHA256 8.362/8.362 tệp (xem [biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6).
 
 ## 5. Điều tra mã 403 (việc 14 tuần 7)
 
@@ -91,5 +93,12 @@ Mục 8.4a của báo cáo vận hành ghi "CSDL 126 MB, bản sao lưu 120 MB".
 | Đưa phần ảnh đại diện lên GitHub qua PR | Trương Thanh Vui | Mục 2 |
 | Triển khai lại từ `master` mới (có [PR58]) và so hash | Trương Thanh Vui | Sửa lỗi `GradeBook.js` trên web thật |
 | Chạy `sudo smartctl -t long /dev/sda`, ghi kết quả | Trương Thanh Vui | Cần `sudo`, chưa làm được từ biên bản này |
-| Chép bản sao lưu mới nhất ra ổ ngoài, ghi biên bản (mục 4, 5 của [biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md)) | Trương Thanh Vui | Cần ổ ngoài |
+| ~~Chép bản sao lưu mới nhất ra ổ ngoài~~ **Đã chép 17/11 06:12 UTC**; còn rút ổ, đặt lịch chép tiếp, Thanh Tùng xác nhận ([biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6) | Trương Thanh Vui | Ngày rút ổ và lịch chép còn để trống trong biên bản 09 |
 | Mốc T+15 (21/11): `scripts/van-hanh/thu-bang-chung.ps1 -Moc T15` | Trương Thanh Vui | [Hướng dẫn](03-huong-dan-kiem-tra-may-chu.md) |
+
+[PR50]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/50
+[PR51]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/51
+[PR52]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/52
+[PR54]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/54
+[PR56]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/56
+[PR58]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/58
