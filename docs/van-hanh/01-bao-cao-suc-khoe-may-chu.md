@@ -368,7 +368,7 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 
 Số liệu ở mục 8.4 và 8.4a giữ nguyên làm bản ghi của ngày 13/11. Đo lại ngày 17/11 qua SSH chỉ đọc, chi tiết ở [biên bản 12](12-doi-chieu-may-chu-2026-11-17.md), cho thấy các điểm sau thay đổi:
 
-- **Máy chủ chạy đúng `master` từ 14/11** (API khởi động 14/11 02:51 UTC; hash `studytask_api.py` và các tệp chính trùng `b9e2663`), nên dòng "Máy chủ không chạy đúng `master`" không còn đúng từ ngày đó. Còn thiếu [PR58] và bốn tệp giao diện ảnh đại diện chưa có trên GitHub.
+- **Máy chủ chạy đúng `master` từ 14/11** (API khởi động 14/11 02:51 UTC; hash `studytask_api.py` và các tệp chính trùng `b9e2663`), nên dòng "Máy chủ không chạy đúng `master`" không còn đúng từ ngày đó. Lúc đo còn thiếu [PR58] và bốn tệp giao diện ảnh đại diện chưa có trên GitHub. **Cập nhật cuối ngày 17/11:** máy chủ được cài lại từ nhánh của [PR61] (có [PR58] và ảnh đại diện), hash các tệp chính trùng `68e0d47`; từ lúc đó máy chủ **không trùng `master`** cho đến khi gộp [PR61] ([biên bản 12](12-doi-chieu-may-chu-2026-11-17.md) mục 2b).
 - **Đã cập nhật gói và khởi động lại** ngày 13/11 01:43–01:49 UTC (sau khi đo T+7): còn 5 gói chờ, không cần khởi động lại.
 - **17 mã 403 đã điều tra:** 14 do một tab trình duyệt mất phiên ngày 09/11, 3 do script kiểm thử `smoke_live.py`; 403 ở `/uploads/` là lỗi quyền thư mục 750 (đã sửa 12/11) và các yêu cầu dò `/uploads/.env` từ bên ngoài. Không phải sự cố.
 - **Đính chính:** "CSDL 126 MB" ở mục 8.4a là dung lượng cả thư mục dữ liệu (chủ yếu `uploads`). Cơ sở dữ liệu cùng WAL khoảng 10 MB (`db+wal: 9975 KB` trong tệp bằng chứng T+7), nay `studytask.db` 4,1 MB.
@@ -500,3 +500,6 @@ ss -tlnp
 # Cơ sở dữ liệu (chỉ đọc)
 python3 -c "import sqlite3;c=sqlite3.connect('file:/var/lib/studytask/studytask.db?mode=ro',uri=True);print(c.execute('pragma integrity_check').fetchone())"
 ```
+
+[PR58]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/58
+[PR61]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/61
