@@ -45,6 +45,31 @@ Thời điểm cài, đọc từ máy chủ: API khởi động lúc **14/11/202
 | Gói còn chờ | 5 (`distro-info`, `python3-distro-info`, `python3-software-properties`, `snapd`, `software-properties-common`), trước đó 18 |
 | Cần khởi động lại | Không (`/var/run/reboot-required` không tồn tại) |
 
+**Kiểm tra lại ngày 17/11 06:29 UTC (chỉ đọc, SSH):**
+
+| Mục | Kết quả |
+|---|---|
+| Hệ điều hành / nhân | Ubuntu 26.04.1 LTS; nhân đang chạy `7.0.0-43-generic`, trùng nhân mới nhất đã cài (`/boot/vmlinuz-7.0.0-43-generic`) |
+| Danh sách gói làm mới lần cuối | 16/11/2026 06:55 UTC (`update-success-stamp`) |
+| 5 gói còn chờ | Đều thuộc kênh `resolute-updates` (không phải `resolute-security`): `distro-info` 1.15 → 1.15ubuntu0.1, `python3-distro-info` (cùng bản), `python3-software-properties` và `software-properties-common` 0.120.1 → 0.120.2, `snapd` 2.77.1 → 2.78 |
+| Cập nhật bảo mật tự động | `unattended-upgrades` bật và đang chạy; lần chạy 17/11 06:01 UTC ghi "No packages found that can be upgraded unattended": **không còn gói bảo mật chờ** |
+| Mô phỏng `apt-get -s upgrade` | `0 upgraded … 5 not upgraded`: lệnh `apt upgrade` thông thường chưa nâng cấp 5 gói này. **Lý do đã xác nhận (xem bên dưới): Ubuntu đang phát hành các bản này theo đợt (phased updates)** |
+| Cần khởi động lại | Không |
+| Phiên bản thành phần | Python 3.14.4, nginx 1.28.3, cloudflared 2026.11.0 (bản dựng 12/11/2026) |
+
+Kết luận về bảo mật: **không còn bản vá bảo mật nào chưa cài**; 5 gói còn lại là cập nhật thường, không ảnh hưởng ba dịch vụ của StudyTask.
+
+**Chạy `sudo apt upgrade` ngày 17/11/2026 (Trương Thanh Vui chạy trên máy chủ; ghi lại từ `/var/log/apt/history.log`, kiểm tra lại lúc 06:32 UTC):**
+
+| Mục | Kết quả |
+|---|---|
+| Lần chạy | 17/11/2026 06:31:13–06:31:23 UTC, lệnh `apt upgrade` |
+| Gói đã nâng | 1: `sos` 4.11.2-0ubuntu0.1 → 4.11.2-0ubuntu0.2 (xuất hiện sau khi làm mới danh sách lúc 06:30:53 UTC) |
+| Gói còn chờ | 5, vẫn như trên |
+| Nguyên nhân 5 gói chưa nâng | `apt-cache policy` ghi **"phased 30%"** cho `snapd` 2.78 và **"phased 40%"** cho `distro-info` 1.15ubuntu0.1 và `software-properties-common` 0.120.2 (`python3-distro-info`, `python3-software-properties` đi cùng bản). Ubuntu chỉ đưa các bản này tới một phần máy mỗi đợt; máy này chưa nằm trong phần đó, nên `apt upgrade` bỏ qua. Không phải lỗi, sẽ tự được nâng khi tỷ lệ tăng |
+| Cần khởi động lại | Không (`/var/run/reboot-required` không tồn tại); nhân đang chạy `7.0.0-43` |
+| Dịch vụ sau khi nâng cấp | `studytask-api`, `nginx`, `cloudflared` đều `active`; API vẫn chạy từ 14/11 02:51:03 UTC (không bị khởi động lại); `https://sutdytask.io.vn/` trả HTTP 200 trong 0,22 giây; `/api/auth/me` nội bộ trả `{"user": null}`; không có lỗi mức `err` của nhân trong 1 giờ qua |
+
 Kết luận: việc "cập nhật 18 gói và khởi động lại" **đã làm** ngày 13/11, sau khi đo T+7 (01:19 UTC) không lâu. Ghi chú: lần khởi động lại này xảy ra sau mốc đo T+7 nên không nằm trong số liệu T+7.
 
 ## 4. Sao lưu tự động
