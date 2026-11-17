@@ -75,6 +75,8 @@ Bổ sung vì lần chép 11/11 không có dữ liệu mô phỏng nạp ngày 1
 
 Bảo vệ bản sao: giữ nguyên quyết định ở mục 3 (ổ **không mã hóa**, rút ổ và cất sau khi chép). Các bản chép lần này cũng có `config/mail.json` và băm mật khẩu của 2.051 tài khoản, nên điều kiện ở mục 3 vẫn áp dụng; riêng lần này ổ chứa thêm bản 12–16/11.
 
+Cùng ngày 17/11, Trương Thanh Vui chạy `sudo smartctl -t long /dev/sda` trên máy chủ: kiểm tra dừng sớm với `Completed: read failure` tại LBA 705216 (cùng sector với lần kiểm tra ngắn 13/11); chi tiết ở [báo cáo vận hành](01-bao-cao-suc-khoe-may-chu.md) mục 8.4c. Vì ổ máy chủ có lỗi đọc lặp lại, bản sao trên ổ G là bản sao ngoài duy nhất và nên được chép lại đều đặn.
+
 Còn lại sau lần chép này (cần người thật):
 
 | Việc | Người phụ trách | Ghi chú |

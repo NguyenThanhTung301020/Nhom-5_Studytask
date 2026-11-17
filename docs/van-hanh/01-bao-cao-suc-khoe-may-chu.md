@@ -373,7 +373,42 @@ Số liệu ở mục 8.4 và 8.4a giữ nguyên làm bản ghi của ngày 13/1
 - **17 mã 403 đã điều tra:** 14 do một tab trình duyệt mất phiên ngày 09/11, 3 do script kiểm thử `smoke_live.py`; 403 ở `/uploads/` là lỗi quyền thư mục 750 (đã sửa 12/11) và các yêu cầu dò `/uploads/.env` từ bên ngoài. Không phải sự cố.
 - **Đính chính:** "CSDL 126 MB" ở mục 8.4a là dung lượng cả thư mục dữ liệu (chủ yếu `uploads`). Cơ sở dữ liệu cùng WAL khoảng 10 MB (`db+wal: 9975 KB` trong tệp bằng chứng T+7), nay `studytask.db` 4,1 MB.
 - **Bản sao lưu đã chép ra ổ ngoài G** ngày 17/11 06:12 UTC (12 bản, 8.362 tệp trùng SHA256, `integrity_check` ok; [biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6), gồm cả dữ liệu nạp 12/11.
-- **Chưa đổi:** ổ đĩa vẫn chưa đạt (chưa chạy `smartctl -t long`), mốc T+15 (21/11) chưa đo.
+- **Ổ đĩa vẫn chưa đạt:** đã chạy `smartctl -t long` ngày 17/11, kết quả ở mục 8.4c dưới đây. Mốc T+15 (21/11) chưa đo.
+
+### 8.4c Tự kiểm tra dài và đọc lại SMART ngày 17/11/2026 (việc 3 tuần 7)
+
+Do Trương Thanh Vui chạy trên máy chủ bằng `sudo smartctl` (smartctl 7.5); ảnh chụp ở [bang-chung/2026-11-17](bang-chung/2026-11-17/). Nhóm đã quyết định chưa thay ổ vì kinh phí, chỉ thay khi SMART xấu thêm (sector chờ, 187/188 tiếp tục tăng, tự kiểm tra báo lỗi thêm).
+
+**Chỉ số SMART (đọc 17/11, [ảnh](bang-chung/2026-11-17/smart-attributes.png)):** tự đánh giá tổng thể vẫn `PASSED`; ổ đã chạy 4.963 giờ.
+
+| Chỉ số | T0 (06/11) | T+7 (13/11) | 17/11 | Nhận xét |
+|---|---|---|---|---|
+| 5 `Reallocated_Sector_Ct` | 2 | 2 | 2 | Không đổi |
+| 187 `Reported_Uncorrect` | 1.650 | 1.651 | **1.651** | Không tăng thêm so với T+7 (vẫn +1 so với T0) |
+| 188 `Command_Timeout` | 1.624 | 1.624 | 1.624 | Không đổi |
+| 191 `G-Sense_Error_Rate` | 3.682 | 3.692 | 3.692 | Không tăng thêm so với T+7 |
+| 193 `Load_Cycle_Count` | không có | 337.945 | **348.379** | +10.434 trong khoảng 4 ngày; đã vượt mức định mức thường gặp của ổ laptop (khoảng 300.000) |
+| 196 `Reallocated_Event_Count` | | | 2 | |
+| 197 `Current_Pending_Sector` | 0 | 0 | **0** | Chưa có sector chờ |
+| 198 `Offline_Uncorrectable` | 0 | 0 | **0** | |
+| 199 `UDMA_CRC_Error_Count` | 0 | 0 | 0 | Cáp ổn |
+| 194 Nhiệt độ | | 32 °C | 32 °C | Tốt |
+
+**Tự kiểm tra dài (`smartctl -t long`, [bắt đầu](bang-chung/2026-11-17/smart-long-bat-dau.png)):** ổ dự kiến cần 115 phút (xong sau 08:35:47 UTC). Nhật ký tự kiểm tra ([ảnh](bang-chung/2026-11-17/smart-selftest-log.png)) ghi:
+
+| # | Loại | Kết quả | Còn lại | Giờ chạy của ổ | `LBA_of_first_error` |
+|---|---|---|---|---|---|
+| 1 | Extended offline (dài) | **`Completed: read failure`** | 90% | 4.963 | **705216** |
+| 2 | Short offline (ngắn, 13/11) | `Completed: read failure` | 50% | 4.862 | **705216** |
+
+Nhật ký lỗi ATA vẫn ghi "No Errors Logged".
+
+**Nhận xét:**
+- Lần kiểm tra dài **không chạy hết**: ổ dừng ngay ở lần đầu gặp lỗi và còn 90% chưa quét. Giờ chạy ghi nhận (4.963) trùng với số giờ ở bảng chỉ số, nghĩa là bài kiểm tra dừng ngay trong giờ vận hành đó. Vì vậy **chưa biết phạm vi lỗi**: phần ổ phía sau LBA 705216 chưa được kiểm tra, nên không thể kết luận "không có lỗi khác".
+- Lỗi lặp lại **đúng cùng vị trí** (LBA 705216) như lần kiểm tra ngắn 13/11, nên đây là một sector đọc không được ổn định, không phải lỗi ngẫu nhiên ở chỗ mới. Tuy vậy 5, 197 và 198 vẫn không xấu đi (sector chưa bị ổ đánh dấu chờ hay dời).
+- Theo ngưỡng nhóm đã chọn: sector chờ **chưa có** (197 = 0, 198 = 0); 187 và 188 **không tăng thêm** từ 13/11; còn "tự kiểm tra báo lỗi thêm" thì có **một lần báo lỗi nữa** (lần kiểm tra dài) nhưng cùng một sector với lần trước. Việc coi đây là "xấu thêm" hay không do nhóm quyết; báo cáo này không tự kết luận thay.
+
+**Kết luận mục 8.4c: CHƯA ĐẠT, chưa thể kết luận ổ ổn.** Chưa có dấu hiệu lan rộng (các chỉ số không tăng), nhưng có lỗi đọc lặp lại tại một sector và phần lớn ổ chưa được quét. Bản sao lưu ngoài đã chép ngày 17/11 ([biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6) là điểm an toàn hiện có. Việc nên làm: nhóm ghi quyết định tiếp tục dùng ổ có điều kiện (theo dõi 187/188/197/198 hằng tuần, chép sao lưu ngoài hằng tuần) hoặc thay ổ; nếu muốn biết phạm vi lỗi, quét phần còn lại bằng `sudo smartctl -t select,705217-max /dev/sda`.
 
 
 ### 8.5. Cần làm gì khi vượt ngưỡng
@@ -405,7 +440,7 @@ Nếu có điều kiện không đạt, ghi rõ trong báo cáo cùng nguyên nh
 ## 9. Hạn chế của báo cáo
 
 - Chỉ phản ánh **2 ngày 19 giờ** và **tải rất thấp** (chưa có người dùng thật đáng kể). Kết quả không chứng minh khả năng chịu tải; cần thêm phép thử tải riêng nếu muốn kết luận.
-- SMART chỉ có **một lần đọc**, nên chưa phân biệt được lỗi quá khứ với lỗi đang diễn ra; chưa đọc nhật ký lỗi ATA và kết quả tự kiểm tra. Chưa có băng thông theo ngày (`vnstat` mới cài) và nhiệt độ từng lõi CPU.
+- SMART ở bản đầu chỉ có **một lần đọc**; đã bổ sung các lần đọc 13/11 và 17/11 (mục 8.4a, 8.4c). Tự kiểm tra dài 17/11 dừng sớm tại LBA 705216 nên chưa biết phạm vi lỗi. Chưa có băng thông theo ngày (`vnstat` mới cài) và nhiệt độ từng lõi CPU.
 - Nhật ký nginx đọc được chỉ gồm tệp hiện hành (không đọc được các tệp đã nén nếu thiếu quyền), nên số liệu nginx không phủ toàn bộ khoảng theo dõi.
 - Không có số liệu của Firebase trước đây để so sánh tốc độ hoặc độ ổn định.
 - Nguyên nhân các lỗi 403 ngày 03–04/11 chưa được xác minh.
