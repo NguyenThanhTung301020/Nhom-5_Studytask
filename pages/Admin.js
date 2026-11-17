@@ -5,7 +5,8 @@ import AccountManager from '../components/AccountManager.js'
 import GradeBook      from '../components/GradeBook.js'
 import { summarizeSystem } from '../utils/systemStats.js'
 import { todayISO } from '../utils/tuition.js'
-import { classCatalog, semesterLabel, sortBySemester, termLabel } from '../utils/scope.js'
+import { classCatalog, semesterLabel, termChoices, defaultTermSel, groupOfferings, groupTitle, inTerm } from '../utils/scope.js'
+import UserAvatar from '../components/UserAvatar.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -30,86 +31,97 @@ function PermIcon({ value }) {
     : h('i', { className: 'bi bi-x-circle-fill text-danger fs-5', style: { opacity: 0.35 } })
 }
 
-// ── Panel gán môn học cho một user ──────────────────────────────
-// Môn nhóm theo học kỳ. Với giáo viên, mỗi môn đã chọn còn gán được LỚP HỌC PHẦN (lớp + môn) đảm nhận:
-// cùng một môn mở ở nhiều lớp, giáo viên chỉ thấy lịch/báo cáo của các lớp được gán (utils/scope.js).
-function SubjectAssignPanel({ user, subjects, classes = [], onSave, saving }) {
+// ── Panel gán học phần cho một user ─────────────────────────────
+// Mỗi học phần là một lần MỞ của môn trong một năm học/học kỳ của một khóa (cùng môn mở lại ở năm khác là học phần khác).
+// Mỗi học phần chỉ nên có từ 1 đến MAX_TEACHERS giáo viên: học phần đủ người thì không gán thêm được (máy chủ cũng chặn, 409).
+// Với giáo viên, mỗi học phần đã chọn còn gán được LỚP HỌC PHẦN (lớp của khóa + học phần) đảm nhiệm (utils/scope.js).
+const MAX_TEACHERS = 3
+
+function SubjectAssignPanel({ user, subjects, classes = [], countOf = () => 0, onSave, saving }) {
   const isTeacher = user.role === 'teacher'
   const [ids, setIds] = useState(user.subjectIds || [])
   const [secs, setSecs] = useState(Array.isArray(user.sections) ? user.sections : null)   // null = hồ sơ chưa phân theo lớp
-  const toggle = (id) => {
-    setIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
-    if (ids.includes(id)) setSecs(prev => prev && prev.filter(s => s.subjectId !== id))          // bỏ môn thì bỏ luôn các lớp của môn
+  const [term, setTerm] = useState(() => defaultTermSel(subjects))                          // học kỳ đang xem để thêm học phần
+  const termOpts = useMemo(() => termChoices(subjects), [subjects])
+  const add = (id) => setIds(prev => (prev.includes(id) ? prev : [...prev, id]))
+  const remove = (id) => {
+    setIds(prev => prev.filter(x => x !== id))
+    setSecs(prev => prev && prev.filter(x => x.subjectId !== id))                            // bỏ học phần thì bỏ luôn các lớp của nó
   }
-  const hasSec = (classId, subjectId) => (secs || []).some(s => s.classId === classId && s.subjectId === subjectId)
+  const hasSec = (classId, subjectId) => (secs || []).some(x => x.classId === classId && x.subjectId === subjectId)
   const toggleSec = (classId, subjectId) => setSecs(prev => {
     const cur = prev || []
-    return cur.some(s => s.classId === classId && s.subjectId === subjectId)
-      ? cur.filter(s => !(s.classId === classId && s.subjectId === subjectId)) : [...cur, { classId, subjectId }]
+    return cur.some(x => x.classId === classId && x.subjectId === subjectId)
+      ? cur.filter(x => !(x.classId === classId && x.subjectId === subjectId)) : [...cur, { classId, subjectId }]
   })
-  const sameSecs = JSON.stringify((secs || []).map(s => s.classId + '|' + s.subjectId).sort()) === JSON.stringify((user.sections || []).map(s => s.classId + '|' + s.subjectId).sort())
+  const sameSecs = JSON.stringify((secs || []).map(x => x.classId + '|' + x.subjectId).sort()) === JSON.stringify((user.sections || []).map(x => x.classId + '|' + x.subjectId).sort())
   const changed = JSON.stringify(ids.slice().sort()) !== JSON.stringify((user.subjectIds || []).slice().sort()) || (isTeacher && !sameSecs)
-  const groups = []
-  sortBySemester(subjects).forEach(s => {
-    let g = groups.find(x => x.k === (s.hocKy || 0))
-    if (!g) { g = { k: s.hocKy || 0, items: [] }; groups.push(g) }
-    g.items.push(s)
-  })
-  const classesOf = (subjectId) => classes.filter(c => c.subjectIds.has(subjectId)).sort((a, b) => a.name.localeCompare(b.name))
   const reset = () => { setIds(user.subjectIds || []); setSecs(Array.isArray(user.sections) ? user.sections : null) }
+  const classesOf = (sb) => classes.filter(c => (sb.khoa ? c.cohort === sb.khoa : c.subjectIds.has(sb.id))).sort((x, y) => x.name.localeCompare(y.name))
+  const label = (sb) => (sb.code ? `${sb.name} (${sb.code})` : sb.name)
+
+  const assigned = subjects.filter(sb => ids.includes(sb.id))
+  const pool = subjects.filter(sb => !ids.includes(sb.id) && inTerm(sb, term))
+  const shownAssigned = assigned.filter(sb => inTerm(sb, term))                            // lớp học phần chỉ hiện cho học kỳ đang xem
+  const full = (sb) => isTeacher && countOf(sb.id) >= MAX_TEACHERS
 
   return h('div', { className: 'mt-3 p-3 rounded-3', style: { background: 'rgba(0,0,0,.02)' } },
-    h('div', { className: 'fw-semibold small mb-2', style: { color: 'var(--primary)' } },
-      h('i', { className: 'bi bi-journal-check me-1' }),
-      isTeacher ? 'Môn đảm nhiệm giảng dạy (theo học kỳ):' : 'Môn học đăng ký (theo học kỳ):'
-    ),
-    groups.map(g => h('div', { key: g.k, className: 'mb-2' },
-      groups.length > 1 && h('div', { className: 'small text-muted fw-semibold mb-1' }, g.k ? termLabel(g.k) : 'Chưa gắn học kỳ'),
-      h('div', { className: 'd-flex flex-wrap gap-2' },
-        g.items.map(s =>
-          h('label', {
-            key: s.id,
-            className: `subject-assign-chip${ids.includes(s.id) ? ' active' : ''}`,
-            style: ids.includes(s.id) ? { borderColor: s.color, backgroundColor: s.color + '18', color: s.color } : {},
-            onClick: () => toggle(s.id),
-          },
-            h('div', { style: { width: 8, height: 8, borderRadius: '50%', backgroundColor: s.color, flexShrink: 0 } }),
-            s.code ? `${s.name} (${s.code})` : s.name
-          )
-        )
-      )
-    )),
-    // Giáo viên: chọn lớp học phần cho từng môn đã gán
-    isTeacher && ids.length > 0 && h('div', { className: 'mt-3 pt-3 border-top' },
+    // 1. Đã phân công
+    h('div', { className: 'fw-semibold small mb-2', style: { color: 'var(--primary)' } }, h('i', { className: 'bi bi-journal-check me-1' }),
+      isTeacher ? `Học phần đảm nhiệm giảng dạy (${assigned.length})` : `Học phần đăng ký (${assigned.length})`),
+    assigned.length === 0
+      ? h('div', { className: 'small text-muted mb-2' }, 'Chưa được phân công học phần nào')
+      : groupOfferings(assigned).map(g => g.terms.map(t => h('div', { key: (g.khoa || '-') + t.key, className: 'mb-2' },
+          h('div', { className: 'small text-muted fw-semibold mb-1' }, groupTitle(g.khoa, t), t.current && h('span', { className: 'badge bg-success ms-2' }, 'Đang học')),
+          h('div', { className: 'd-flex flex-wrap gap-2' }, t.items.map(sb =>
+            h('span', { key: sb.id, className: 'subject-assign-chip active', style: { borderColor: sb.color, backgroundColor: sb.color + '18', color: sb.color } },
+              h('div', { style: { width: 8, height: 8, borderRadius: '50%', backgroundColor: sb.color, flexShrink: 0 } }),
+              label(sb),
+              h('button', { type: 'button', className: 'btn-close ms-1', style: { fontSize: '0.55rem' }, title: 'Gỡ học phần này', 'aria-label': 'Gỡ', onClick: () => remove(sb.id) }))))))),
+
+    // 2. Thêm học phần theo học kỳ
+    h('div', { className: 'mt-3 pt-3 border-top' },
+      h('div', { className: 'd-flex flex-wrap align-items-center gap-2 mb-2' },
+        h('span', { className: 'fw-semibold small', style: { color: 'var(--primary)' } }, h('i', { className: 'bi bi-plus-circle me-1' }), 'Thêm học phần của'),
+        termOpts.length > 0 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: term, onChange: e => setTerm(e.target.value), 'aria-label': 'Học kỳ' },
+          h('option', { value: '' }, 'Tất cả học kỳ'),
+          termOpts.map(t => h('option', { key: t.key, value: t.key }, t.label)))),
+      pool.length === 0
+        ? h('div', { className: 'small text-muted' }, 'Không còn học phần nào để thêm ở học kỳ này.')
+        : groupOfferings(pool).map(g => g.terms.map(t => h('div', { key: (g.khoa || '-') + t.key, className: 'mb-2' },
+            h('div', { className: 'small text-muted fw-semibold mb-1' }, groupTitle(g.khoa, t)),
+            h('div', { className: 'd-flex flex-wrap gap-2' }, t.items.map(sb => {
+              const n = countOf(sb.id), blocked = full(sb)
+              return h('label', { key: sb.id, className: 'subject-assign-chip', title: blocked ? `Đã đủ ${MAX_TEACHERS} giáo viên` : 'Thêm học phần này',
+                style: blocked ? { opacity: 0.45, cursor: 'not-allowed' } : {}, onClick: () => !blocked && add(sb.id) },
+                h('div', { style: { width: 8, height: 8, borderRadius: '50%', backgroundColor: sb.color, flexShrink: 0 } }),
+                label(sb),
+                isTeacher && h('span', { className: `badge ms-1 ${n >= MAX_TEACHERS ? 'bg-danger' : n === 0 ? 'bg-warning text-dark' : 'bg-secondary'}` }, `${n}/${MAX_TEACHERS} GV`))
+            })))))),
+
+    // 3. Giáo viên: chọn lớp học phần cho từng học phần đã gán (của học kỳ đang xem)
+    isTeacher && shownAssigned.length > 0 && h('div', { className: 'mt-3 pt-3 border-top' },
       h('div', { className: 'fw-semibold small mb-1', style: { color: 'var(--primary)' } }, h('i', { className: 'bi bi-people me-1' }), 'Lớp học phần đảm nhiệm:'),
-      secs === null && h('div', { className: 'small text-muted mb-2' }, 'Chưa phân theo lớp: giáo viên thấy lịch của mọi lớp học các môn trên. Chọn lớp bên dưới để giới hạn.'),
-      sortBySemester(subjects.filter(s => ids.includes(s.id))).map(s => {
-        const cl = classesOf(s.id)
-        return h('div', { key: s.id, className: 'mb-2' },
-          h('div', { className: 'small fw-semibold' }, s.name, s.hocKy ? h('span', { className: 'text-muted fw-normal' }, ` · ${semesterLabel(s)}`) : null,
-            h('span', { className: 'text-muted fw-normal' }, cl.length ? ` · ${(secs || []).filter(x => x.subjectId === s.id).length}/${cl.length} lớp` : ' · chưa có lớp nào học môn này')),
+      secs === null && h('div', { className: 'small text-muted mb-2' }, 'Chưa phân theo lớp: giáo viên thấy lịch của mọi lớp học các học phần trên. Chọn lớp bên dưới để giới hạn.'),
+      shownAssigned.map(sb => {
+        const cl = classesOf(sb)
+        return h('div', { key: sb.id, className: 'mb-2' },
+          h('div', { className: 'small fw-semibold' }, sb.name, h('span', { className: 'text-muted fw-normal' }, ` · ${semesterLabel(sb)}`),
+            h('span', { className: 'text-muted fw-normal' }, cl.length ? ` · ${(secs || []).filter(x => x.subjectId === sb.id).length}/${cl.length} lớp` : ' · chưa có lớp nào của khóa này')),
           cl.length > 0 && h('div', { className: 'd-flex flex-wrap gap-1 mt-1' },
             cl.map(c => h('button', { key: c.id, type: 'button',
-              className: `btn btn-sm ${hasSec(c.id, s.id) ? 'btn-primary' : 'btn-outline-secondary'}`, style: { fontSize: '0.75rem', padding: '1px 8px' },
-              onClick: () => toggleSec(c.id, s.id) }, c.name)))
-        )
-      })
-    ),
+              className: `btn btn-sm ${hasSec(c.id, sb.id) ? 'btn-primary' : 'btn-outline-secondary'}`, style: { fontSize: '0.75rem', padding: '1px 8px' },
+              onClick: () => toggleSec(c.id, sb.id) }, c.name))))
+      })),
+
     changed && h('div', { className: 'd-flex gap-2 mt-3' },
-      h('button', { className: 'btn btn-sm btn-primary', disabled: saving,
-          onClick: () => onSave(user.uid, ids, isTeacher && secs !== null ? { sections: secs } : {}) },
+      h('button', { className: 'btn btn-sm btn-primary', disabled: saving, onClick: () => onSave(user.uid, ids, isTeacher && secs !== null ? { sections: secs } : {}) },
         saving
           ? h(window.React.Fragment, null, h('span', { className: 'spinner-border spinner-border-sm me-1' }), 'Đang lưu…')
-          : h(window.React.Fragment, null, h('i', { className: 'bi bi-cloud-upload me-1' }), 'Lưu phân công')
-      ),
-      h('button', { className: 'btn btn-sm btn-outline-secondary', onClick: reset }, 'Hủy')
-    ),
-    !changed && h('small', { className: 'text-muted' },
-      ids.length === 0
-        ? h(window.React.Fragment, null, h('i', { className: 'bi bi-exclamation-circle me-1 text-warning' }), 'Chưa được phân công môn nào')
-        : h(window.React.Fragment, null, h('i', { className: 'bi bi-check-circle me-1 text-success' }),
-            `${ids.length} môn đã phân công` + (isTeacher && secs ? `, ${secs.length} lớp học phần` : ''))
-    )
+          : h(window.React.Fragment, null, h('i', { className: 'bi bi-cloud-upload me-1' }), 'Lưu phân công')),
+      h('button', { className: 'btn btn-sm btn-outline-secondary', onClick: reset }, 'Hủy')),
+    !changed && assigned.length > 0 && h('small', { className: 'text-muted d-block mt-2' }, h('i', { className: 'bi bi-check-circle me-1 text-success' }),
+      `${assigned.length} học phần đã phân công` + (isTeacher && secs ? `, ${secs.length} lớp học phần` : ''))
   )
 }
 
@@ -140,6 +152,11 @@ function UserList({ subjects, onUpdateSubjects }) {
   }, [])
 
   const classList = useMemo(() => [...classCatalog(users).values()], [users])
+  const teacherCount = useMemo(() => {                                   // học phần → số giáo viên đang được phân công
+    const m = new Map()
+    users.filter(u => u.role === 'teacher').forEach(u => (u.subjectIds || []).forEach(id => m.set(id, (m.get(id) || 0) + 1)))
+    return m
+  }, [users])
   const roleMatch = (k) => (u) => k === 'all' || (k === 'staff' ? ['training', 'finance'].includes(u.role) : u.role === k)
   const needle = q.trim().toLowerCase()
   const shown = users.filter(roleMatch(roleF)).filter(u => !needle || (u.name || '').toLowerCase().includes(needle) || (u.username || '').toLowerCase().includes(needle))
@@ -191,9 +208,7 @@ function UserList({ subjects, onUpdateSubjects }) {
       return h('div', { key: user.uid, className: 'card border-0 shadow-sm overflow-hidden' },
         h('div', { className: 'admin-user-row d-flex align-items-center gap-3 p-3 cursor-pointer',
             onClick: () => setExpanded(isOpen ? null : user.uid) },
-          h('div', { className: 'admin-user-avatar flex-shrink-0', style: { backgroundColor: (role?.color || '#aaa') + '22', color: role?.color || '#aaa' } },
-            h('i', { className: `bi bi-${role?.icon || 'person'} fs-5` })
-          ),
+          h(UserAvatar, { name: user.name || user.username, src: user.avatar, size: 42, color: role?.color || '#aaaaaa' }),
           h('div', { className: 'flex-grow-1 min-w-0' },
             h('div', { className: 'fw-semibold' }, user.name || '(Chưa đặt tên)'),
             h('div', { className: 'small text-muted text-truncate' }, user.username),
@@ -209,7 +224,7 @@ function UserList({ subjects, onUpdateSubjects }) {
           h('i', { className: `bi bi-chevron-${isOpen ? 'up' : 'down'} text-muted flex-shrink-0` })
         ),
         isOpen && h('div', { className: 'border-top px-3 pb-3' },
-          h(SubjectAssignPanel, { user, subjects, classes: classList, onSave: handleSave, saving: isSaving })
+          h(SubjectAssignPanel, { user, subjects, classes: classList, countOf: (id) => (teacherCount.get(id) || 0) - ((user.subjectIds || []).includes(id) ? 1 : 0), onSave: handleSave, saving: isSaving })
         )
       )
     }),
@@ -262,6 +277,14 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
       { label: 'Đề trắc nghiệm', value: `${cat.quizzes.active} mở / ${cat.quizzes.total}`, icon: 'patch-question', color: 'warning' },
       { label: 'Bài tập',      value: cat.homeworks, icon: 'journal-text',    color: 'primary' },
       { label: 'Deadline (xong / quá hạn)', value: `${cat.deadlines.done} / ${cat.deadlines.overdue} trên ${cat.deadlines.total}`, icon: 'clock', color: cat.deadlines.overdue ? 'danger' : 'success' },
+    ] },
+    { title: 'Học phần mở theo năm', items: [
+      { label: 'Tổng học phần mở (mọi khóa, mọi năm)', value: stats.offerings.total, icon: 'collection', color: 'primary' },
+      { label: 'Đang học (học kỳ hiện tại)', value: stats.offerings.now, icon: 'play-circle', color: 'success' },
+      { label: 'Đã kết thúc', value: stats.offerings.ended, icon: 'check2-circle', color: 'secondary' },
+      { label: 'Kế hoạch (chưa học)', value: stats.offerings.planned, icon: 'calendar-plus', color: 'info' },
+      { label: 'Đang học nhưng chưa có giáo viên', value: stats.offerings.nowWithoutTeacher, icon: 'exclamation-circle', color: stats.offerings.nowWithoutTeacher ? 'warning' : 'success' },
+      { label: 'Học phần vượt 3 giáo viên', value: stats.offerings.overLimit, icon: 'exclamation-triangle', color: stats.offerings.overLimit ? 'danger' : 'success' },
     ] },
     { title: 'Trắc nghiệm toàn hệ thống', items: [
       { label: 'Lượt làm bài', value: qz.attempts, icon: 'check2-square', color: 'success' },
@@ -416,6 +439,16 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
               )
             )
           )
+        )
+      ),
+      stats.cohorts.length > 0 && h('div', { className: 'card border-0 shadow-sm mb-4' },
+        h('div', { className: 'card-body' },
+          h('h6', { className: 'fw-bold text-muted small text-uppercase mb-3' }, 'Theo khóa (đang học)'),
+          h('div', { className: 'table-responsive' }, h('table', { className: 'table table-sm align-middle mb-0' },
+            h('thead', null, h('tr', null, ['Khóa', 'Năm thứ', 'Số lớp', 'Sinh viên', 'Học phần đang học'].map(t => h('th', { key: t, className: 'small text-muted' }, t)))),
+            h('tbody', null, stats.cohorts.map(c => h('tr', { key: c.khoa },
+              h('td', { className: 'fw-semibold' }, `Khóa ${c.khoa}`), h('td', null, c.namThu ? `Năm ${c.namThu}` : '—'),
+              h('td', null, c.classes), h('td', null, c.students.toLocaleString('vi-VN')), h('td', null, c.offeringsNow))))))
         )
       ),
       h('div', { className: 'card border-0 shadow-sm', style: {

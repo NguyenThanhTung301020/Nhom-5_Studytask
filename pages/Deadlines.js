@@ -1,5 +1,6 @@
 // pages/Deadlines.js – Quản lý Deadline
 import { PRIORITY_LABEL, STATUS_LABEL, PRIORITY_CLASS, STATUS_CLASS } from '../utils/constants.js'
+import { offeringTitle } from '../utils/scope.js'
 import { isOverdue, getDaysUntil } from '../utils/helpers.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 
@@ -28,7 +29,7 @@ function DeadlineModal({ item, subjects, onSave, onClose }) {
               h('label', { className: 'form-label fw-semibold' }, 'Môn học ', h('span', { className: 'text-danger' }, '*')),
               h('select', { className: 'form-select', value: form.subjectId, onChange: (e) => setForm({ ...form, subjectId: e.target.value }) },
                 h('option', { value: '' }, '— Chọn môn học —'),
-                subjects.map((s) => h('option', { key: s.id, value: String(s.id) }, s.name))
+                subjects.map((s) => h('option', { key: s.id, value: String(s.id) }, offeringTitle(s)))
               )
             ),
             h('div', { className: 'mb-3' },
@@ -168,7 +169,7 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
             h('div', { className: 'col-6 col-md-2' },
               h('select', { className: 'form-select', value: fSubject, onChange: (e) => setFSubject(e.target.value) },
                 h('option', { value: '' }, 'Tất cả môn'),
-                subjects.map((s) => h('option', { key: s.id, value: s.id }, s.name))
+                subjects.map((s) => h('option', { key: s.id, value: s.id }, offeringTitle(s)))
               )
             ),
             h('div', { className: 'col-6 col-md-2' },

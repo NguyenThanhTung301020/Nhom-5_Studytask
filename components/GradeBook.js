@@ -4,7 +4,7 @@
 import { isFirebaseReady, loadSharedData, saveSharedKey } from '../utils/firebase.js'
 import { load, save } from '../utils/helpers.js'
 import { listDocuments } from '../utils/store.js'
-import { COMPONENT_LABEL, defaultPolicy, subjectColumns, countedColumns, evaluateStudentSubject, round1 } from '../utils/grading.js'
+import { COMPONENT_LABEL, defaultPolicy, subjectColumns, countedColumns, evaluateStudentSubject, round1, isGuidedSubject } from '../utils/grading.js'
 import { toCSV } from '../utils/sanitize.js'
 import { studentInScope } from '../utils/scope.js'
 
@@ -212,6 +212,14 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
       const useBadge = (key) => counted[key] != null
         ? h('span', { className: 'badge bg-primary-subtle text-primary ms-2', style: { fontSize: '0.6rem' } }, `Điểm BT${counted[key] > 1 ? ' ×' + counted[key] : ''}`)
         : h('span', { className: 'badge bg-info-subtle text-info ms-2', style: { fontSize: '0.6rem' } }, 'Chuyên cần')
+      const guided = isGuidedSubject(sub)
+      const guidedBody = h('div', { className: 'card-body pt-2 px-4 pb-3' },
+        h('div', { className: 'd-flex flex-wrap gap-3 align-items-end p-2 rounded-3', style: { background: 'rgba(78,115,223,.05)' } },
+          h('div', null, h('div', { className: 'small text-muted' }, 'Điểm tổng kết do giáo viên hướng dẫn đánh giá (thang 10)'),
+            scoreInput(cell(student.uid, sub.id).ck, e => setGrade(student.uid, sub.id, 'ck', null, e.target.value))),
+          h('div', { className: 'small text-muted flex-grow-1' }, h('i', { className: 'bi bi-person-check me-1' }),
+            'Môn hướng dẫn: không có thời khóa biểu cố định và không tính theo tỷ trọng chuyên cần – bài tập – giữa kỳ – cuối kỳ. ',
+            'Kết quả phụ thuộc việc sinh viên có đáp ứng yêu cầu của giáo viên hướng dẫn hay không.')))
       const comp = (k, label) => h('div', { className: 'col-6 col-md-3' },
         h('div', { className: 'small text-muted' }, label || COMPONENT_LABEL[k], ` (${w[k]}%)`),
         h('div', { className: 'fw-bold', style: { color: scoreColor(ev.scores[k]) } }, ev.scores[k] == null ? '—' : round1(ev.scores[k])))
@@ -222,7 +230,7 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
           avg != null && h('span', { className: 'badge', style: { backgroundColor: scoreColor(avg) + '22', color: scoreColor(avg) } },
             ev.result.final != null ? `Điểm môn: ${avg.toFixed(1)}` : `Tạm tính: ${avg.toFixed(1)}`)
         ),
-        h('div', { className: 'card-body pt-2 px-4 pb-3' },
+        guided ? guidedBody : h('div', { className: 'card-body pt-2 px-4 pb-3' },
 
           // Trắc nghiệm
           h('div', { className: 'gradebook-section-title' }, h('i', { className: 'bi bi-patch-question me-1 text-warning' }), 'Trắc nghiệm'),

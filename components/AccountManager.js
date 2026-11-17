@@ -1,5 +1,6 @@
 // components/AccountManager.js – Quản lý tài khoản người dùng (Admin)
 import { ROLES, DEMO_ACCOUNTS } from '../utils/constants.js'
+import UserAvatar from './UserAvatar.js'
 import { isFirebaseReady, getAllUsers, createAccountSecondary,
          adminUpdateUser, adminGetProfile, adminSetProfile, deleteUserData, sendResetEmail, adminSetPassword } from '../utils/firebase.js'
 import ConfirmModal from './ConfirmModal.js'
@@ -306,9 +307,7 @@ export default function AccountManager({ subjects = [] }) {
             return h('tr', { key: u.uid, className: exp ? 'table-danger-subtle' : '' },
               h('td', null,
                 h('div', { className: 'd-flex align-items-center gap-2' },
-                  h('div', { className: 'report-avatar', style: { background: role.color + '22', color: role.color } },
-                    h('i', { className: `bi bi-${role.icon}` })
-                  ),
+                  h(UserAvatar, { name: u.name || u.username, src: u.avatar, size: 34, color: role.color }),
                   h('div', { className: 'min-w-0' },
                     h('div', { className: 'fw-semibold text-truncate' }, u.name || '(Chưa đặt tên)'),
                     h('div', { className: 'small text-muted text-truncate' }, u.username)

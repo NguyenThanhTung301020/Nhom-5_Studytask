@@ -1,5 +1,6 @@
 // pages/MonthCalendar.js – Thời khóa biểu theo tháng: lịch học (lặp hằng tuần) + lịch thi trong tháng
 import { CLASS_FORMATS, EXAM_FORMATS } from '../utils/constants.js'
+import { offeringTitle } from '../utils/scope.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
@@ -121,7 +122,7 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
           h('span', { className: 'form-check-label' }, h('span', { className: 'mcal-dot', style: { background: '#e67e22' } }), 'Lịch thi')),
         h('select', { className: 'form-select form-select-sm ms-md-auto', style: { width: 'auto', minWidth: 180 }, value: subjectId, onChange: e => setSub(e.target.value) },
           h('option', { value: '' }, 'Tất cả môn'),
-          subjects.map(s => h('option', { key: s.id, value: s.id }, s.name)))
+          subjects.map(s => h('option', { key: s.id, value: s.id }, offeringTitle(s))))
       )
     ),
 

@@ -1,6 +1,8 @@
 // pages/Directory.js – Lưu trữ thông tin Sinh viên & Giáo viên (tách theo phân quyền)
 import { ROLES } from '../utils/constants.js'
+
 import { studentInScope } from '../utils/scope.js'
+import UserAvatar from '../components/UserAvatar.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
@@ -10,6 +12,7 @@ const today = () => new Date().toISOString().split('T')[0]
 export default function Directory({ allUsers = [], subjects = [], role = 'admin', user }) {
   const [tab,    setTab]    = useState('student')
   const [search, setSearch] = useState('')
+  const [limit,  setLimit]  = useState(60)     // hàng nghìn tài khoản: hiện từng đợt, ảnh tải lười (lazy)
 
   const subName = (id) => (subjects.find(s => s.id === id) || {}).name
   const subColor = (id) => (subjects.find(s => s.id === id) || {}).color || '#858796'
@@ -33,11 +36,12 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
       h('div', { className: 'card border-0 shadow-sm h-100' },
         h('div', { className: 'card-body' },
           h('div', { className: 'd-flex align-items-center gap-3 mb-3' },
-            h('div', { className: 'dir-avatar', style: { background: `linear-gradient(135deg, ${r.color}dd, ${r.color}88)` } }, initials(u.name || u.username)),
+            h(UserAvatar, { name: u.name || u.username, src: u.avatar, size: 52, color: r.color }),
             h('div', { className: 'min-w-0 flex-grow-1' },
               h('div', { className: 'fw-bold text-truncate' }, u.name || '(Chưa đặt tên)'),
               h('div', { className: 'small text-muted text-truncate' }, u.username),
-              h('span', { className: `role-badge role-badge-${u.role} mt-1` }, h('i', { className: `bi bi-${r.icon} me-1` }), r.label)
+              h('span', { className: `role-badge role-badge-${u.role} mt-1` }, h('i', { className: `bi bi-${r.icon} me-1` }), r.label),
+              u.role === 'student' && u.cohort && h('div', { className: 'small text-muted mt-1' }, h('i', { className: 'bi bi-mortarboard me-1' }), `Khóa ${u.cohort}`, u.className ? ` · lớp ${u.className}` : '')
             )
           ),
           h('div', { className: 'dir-info small' },
@@ -65,15 +69,15 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
       ),
       h('div', { className: 'input-group input-group-sm', style: { width: 220 } },
         h('span', { className: 'input-group-text bg-light border-end-0 text-muted' }, h('i', { className: 'bi bi-search' })),
-        h('input', { className: 'form-control border-start-0', placeholder: 'Tìm tên, tên đăng nhập...', value: search, onChange: e => setSearch(e.target.value) })
+        h('input', { className: 'form-control border-start-0', placeholder: 'Tìm tên, tên đăng nhập...', value: search, onChange: e => { setSearch(e.target.value); setLimit(60) } })
       )
     ),
 
     // Tabs SV / GV
     h('div', { className: 'd-flex gap-2 mb-4' },
-      h('button', { className: `btn btn-sm ${tab === 'student' ? 'btn-success' : 'btn-outline-success'}`, onClick: () => setTab('student') },
+      h('button', { className: `btn btn-sm ${tab === 'student' ? 'btn-success' : 'btn-outline-success'}`, onClick: () => { setTab('student'); setLimit(60) } },
         h('i', { className: 'bi bi-mortarboard me-1' }), `Sinh viên (${students.length})`),
-      isAdmin && h('button', { className: `btn btn-sm ${tab === 'teacher' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => setTab('teacher') },
+      isAdmin && h('button', { className: `btn btn-sm ${tab === 'teacher' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => { setTab('teacher'); setLimit(60) } },
         h('i', { className: 'bi bi-person-workspace me-1' }), `Giáo viên (${teachers.length})`)
     ),
 
@@ -81,6 +85,10 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
       ? h('div', { className: 'text-center text-muted py-5' },
           h('i', { className: 'bi bi-people fs-1 d-block mb-2 opacity-25' }),
           h('p', null, search ? 'Không tìm thấy.' : 'Chưa có dữ liệu.'))
-      : h('div', { className: 'row g-3' }, list.map(card))
+      : h(window.React.Fragment, null,
+          h('div', { className: 'row g-3' }, list.slice(0, limit).map(card)),
+          list.length > limit && h('div', { className: 'text-center mt-3' },
+            h('button', { className: 'btn btn-outline-primary btn-sm', onClick: () => setLimit(l => l + 60) },
+              `Hiện thêm (còn ${(list.length - limit).toLocaleString('vi-VN')})`)))
   )
 }

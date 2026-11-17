@@ -117,8 +117,9 @@ export function studyYear(cohort, namHoc) {
 // Vị trí trong khung (1..8) mà sinh viên đang học: năm thứ và học kỳ 1/2 → 2(năm-1)+học kỳ
 export const khungPosition = (namThu, hocKy) => (namThu >= 1 && (hocKy === 1 || hocKy === 2) ? (namThu - 1) * 2 + hocKy : 0)
 
-// Nhãn học kỳ của môn ("Năm 2 · HK1") hoặc rỗng nếu môn chưa gắn học kỳ
-export const semesterLabel = (subject) => (subject?.hocKy ? `Năm ${yearOfStudy(subject.hocKy)} · HK${termOfYear(subject.hocKy)}` : '')
+// Nhãn học kỳ của học phần: có năm học → "HK1 · 2025-2026" (học phần mở theo năm); dữ liệu cũ → "Năm 2 · HK1"; chưa gắn → rỗng
+export const semesterLabel = (subject) => (subject?.namHoc && subject?.ky ? `HK${subject.ky} · ${subject.namHoc}`
+  : subject?.hocKy ? `Năm ${yearOfStudy(subject.hocKy)} · HK${termOfYear(subject.hocKy)}` : '')
 
 // Các học kỳ có trong danh sách môn, tăng dần
 export const semestersOf = (subjects = []) => [...new Set(subjects.map(s => s.hocKy).filter(Boolean))].sort((a, b) => a - b)
@@ -143,3 +144,92 @@ export function visibleTeachers(user, subjectId, entries = []) {
 // Sắp xếp môn theo học kỳ rồi theo mã môn; môn chưa gắn học kỳ xếp cuối
 export const sortBySemester = (subjects = []) =>
   subjects.slice().sort((a, b) => (a.hocKy || 99) - (b.hocKy || 99) || String(a.code || '').localeCompare(String(b.code || '')) || String(a.name || '').localeCompare(String(b.name || '')))
+
+// ── Học phần mở theo NĂM HỌC của từng KHÓA ─────────────────────────────────────────────────────
+// Cùng một môn mở lại ở năm khác là một bản ghi mới (thư mục tài liệu, đề, giáo viên riêng). Mỗi học phần/lịch học/lịch thi có
+//   khoa ("2024-2028"), namHoc ("2025-2026"), ky (1|2) và (học phần) trangThai: da-ket-thuc | dang-hoc | ke-hoach.
+// Hiển thị nhóm theo khóa rồi theo học kỳ của năm học đó (vd. khóa 2024-2028: Năm 2 · Học kỳ 1 năm học 2025-2026), mặc định chỉ học kỳ hiện tại.
+
+// Học kỳ hiện tại theo ngày: học kỳ 1 từ tháng 8 đến hết tháng 1, học kỳ 2 từ tháng 2 đến tháng 7 (giống scripts/seed_curriculum.py term_of)
+export function currentTerm(date = new Date()) {
+  const y = date.getFullYear(), m = date.getMonth() + 1
+  const start = m >= 8 ? y : y - 1
+  return { start, ky: (m >= 8 || m === 1) ? 1 : 2, namHoc: `${start}-${start + 1}` }
+}
+
+export const termKey = (x) => (x && x.namHoc && x.ky ? `${x.namHoc}|${x.ky}` : '')
+export const termName = (namHoc, ky) => `Học kỳ ${ky} · Năm học ${namHoc}`
+export const termKeyName = (key) => { const [nh, ky] = String(key).split('|'); return nh && ky ? termName(nh, ky) : '' }
+
+// Tên hiển thị của học phần: thêm nhãn năm học để phân biệt các lần mở của cùng một môn ("Cơ sở dữ liệu · HK1 2025-2026")
+export const offeringTitle = (s) => (s ? `${s.name || ''}${s.namHoc && s.ky ? ` · HK${s.ky} ${s.namHoc}` : ''}` : '')
+
+// Học kỳ của một mục lịch học/lịch thi: ưu tiên chính mục, sau đó học phần của nó; null với dữ liệu cũ chưa gắn năm học
+export function termInfoOf(item, subjectOf) {
+  if (termKey(item)) return item
+  const s = subjectOf ? subjectOf(item?.subjectId) : null
+  return termKey(s) ? s : null
+}
+
+// Mục có thuộc học kỳ đã chọn không (sel = termKey, '' = tất cả). Mục chưa gắn năm học (dữ liệu cũ) luôn hiện để không bị mất
+export const inTerm = (item, sel, subjectOf) => {
+  if (!sel) return true
+  const t = termInfoOf(item, subjectOf)
+  return !t || termKey(t) === sel
+}
+
+// Mục có thuộc khóa đã chọn không ('' = tất cả khóa). Mục không rõ khóa luôn hiện
+export const inKhoa = (item, khoa, subjectOf) => {
+  if (!khoa) return true
+  const k = item?.khoa || subjectOf?.(item?.subjectId)?.khoa
+  return !k || k === khoa
+}
+
+const termSortValue = (namHoc, ky) => startYear(namHoc) * 10 + Number(ky)
+
+// Các khóa có trong danh sách học phần/lịch, mới nhất trước
+export const khoaChoices = (items = []) => [...new Set(items.map(x => x.khoa).filter(Boolean))].sort((a, b) => startYear(b) - startYear(a))
+
+// Các học kỳ (năm học + kỳ) có trong danh sách, mới nhất trước; đánh dấu học kỳ hiện tại
+export function termChoices(items = [], cur = currentTerm()) {
+  const curKey = termKey(cur)
+  const map = new Map()
+  for (const x of items) if (termKey(x) && !map.has(termKey(x))) map.set(termKey(x), { key: termKey(x), namHoc: x.namHoc, ky: x.ky })
+  return [...map.values()].sort((a, b) => termSortValue(b.namHoc, b.ky) - termSortValue(a.namHoc, a.ky))
+    .map(t => ({ ...t, current: t.key === curKey, label: termName(t.namHoc, t.ky) + (t.key === curKey ? ' (hiện tại)' : '') }))
+}
+
+// Mặc định lọc theo học kỳ hiện tại nếu có dữ liệu của học kỳ đó, ngược lại hiện tất cả ('')
+export const defaultTermSel = (items = [], cur = currentTerm()) => (items.some(x => termKey(x) === termKey(cur)) ? termKey(cur) : '')
+
+// Nhóm học phần theo KHÓA rồi theo học kỳ: [{ khoa, terms: [{ key, namHoc, ky, namThu, current, items }] }]
+// Khóa mới nhất trước; trong khóa, học kỳ theo thứ tự thời gian; học phần chưa gắn khóa/năm học nằm ở nhóm cuối (khoa '').
+export function groupOfferings(subjects = [], cur = currentTerm()) {
+  const curKey = termKey(cur)
+  const byKhoa = new Map()
+  for (const s of subjects) {
+    const khoa = s.khoa || ''
+    if (!byKhoa.has(khoa)) byKhoa.set(khoa, new Map())
+    const tk = termKey(s) || ''
+    const terms = byKhoa.get(khoa)
+    if (!terms.has(tk)) terms.set(tk, { key: tk, namHoc: s.namHoc || '', ky: s.ky || 0, namThu: studyYear(khoa, s.namHoc) || (s.namThu ?? 0), current: !!tk && tk === curKey, items: [] })
+    terms.get(tk).items.push(s)
+  }
+  return [...byKhoa.entries()]
+    .sort(([a], [b]) => (a === '' ? 1 : b === '' ? -1 : startYear(b) - startYear(a)))
+    .map(([khoa, terms]) => ({
+      khoa,
+      terms: [...terms.values()].sort((a, b) => (a.key === '' ? 1 : b.key === '' ? -1 : termSortValue(a.namHoc, a.ky) - termSortValue(b.namHoc, b.ky)))
+        .map(t => ({ ...t, items: t.items.slice().sort((a, b) => String(a.code || '').localeCompare(String(b.code || '')) || String(a.name || '').localeCompare(String(b.name || ''))) })),
+    }))
+}
+
+// Tiêu đề nhóm: "Khóa 2024-2028 · Năm 2 · Học kỳ 1 (2025-2026)"; dữ liệu cũ → "Chưa gắn khóa / học kỳ"
+export function groupTitle(khoa, term) {
+  if (!khoa && !term?.key) return 'Chưa gắn khóa / học kỳ'
+  const parts = []
+  if (khoa) parts.push(`Khóa ${khoa}`)
+  if (term?.namThu) parts.push(`Năm ${term.namThu}`)
+  if (term?.key) parts.push(`Học kỳ ${term.ky} (${term.namHoc})`)
+  return parts.join(' · ')
+}

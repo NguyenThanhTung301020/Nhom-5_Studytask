@@ -4,7 +4,7 @@
 //   Sinh viên:             xem công thức tính điểm của các môn mình học
 import { getDocument, setDocument, listDocuments, errorText } from '../utils/store.js'
 import { PRESETS, LIMITS, COMPONENTS, COMPONENT_LABEL, defaultPolicy, effectivePolicy, validatePolicy,
-         subjectColumns, countedColumns, processFinalSplit, suggestBtWeight } from '../utils/grading.js'
+         subjectColumns, countedColumns, processFinalSplit, suggestBtWeight, isGuidedSubject } from '../utils/grading.js'
 
 const { useState, useEffect, createElement: h } = window.React
 const Frag = window.React.Fragment
@@ -17,6 +17,17 @@ function WeightBar({ w }) {
     h('div', { className: 'd-flex flex-wrap gap-3 mt-2 small' }, COMPONENTS.map(k =>
       h('span', { key: k }, h('span', { className: 'mcal-dot', style: { background: COLORS[k] } }), `${COMPONENT_LABEL[k]}: `, h('strong', null, `${w[k] || 0}%`))))
   )
+}
+
+// Môn hướng dẫn (thực tập, đồ án, khóa luận): không có bộ trọng số, kết quả theo yêu cầu của giáo viên hướng dẫn
+function GuidedNote({ subject }) {
+  return h('div', { className: 'card border-0 shadow-sm' },
+    h('div', { className: 'card-body' },
+      h('div', { className: 'd-flex align-items-center gap-3 mb-3' },
+        h('i', { className: 'bi bi-person-check fs-2', style: { color: 'var(--primary)' } }),
+        h('div', null, h('div', { className: 'fw-bold' }, subject.name), h('span', { className: 'badge bg-info-subtle text-info' }, 'Môn hướng dẫn'))),
+      h('p', { className: 'mb-2' }, 'Thực tập, đồ án và khóa luận không có thời khóa biểu cụ thể và không tính điểm theo tỷ trọng chuyên cần – bài tập – giữa kỳ – cuối kỳ.'),
+      h('p', { className: 'mb-0 text-muted small' }, 'Kết quả phụ thuộc việc người học có đáp ứng yêu cầu của giáo viên hướng dẫn hay không: giáo viên hướng dẫn đánh giá và nhập điểm tổng kết (thang 10) ở Bảng điểm; điểm này là điểm môn.')))
 }
 
 export default function GradingPolicy({ user, subjects = [], quizzes = [], homeworks = [] }) {
@@ -101,7 +112,7 @@ export default function GradingPolicy({ user, subjects = [], quizzes = [], homew
     const cols = subjectColumns(s.id, quizzes, homeworks)
     const cnt = savedCounted(s.id)
     const e = validatePolicy(savedPolicy(s.id), { nCounted: Object.keys(cnt).length, nOnlineCounted: cols.filter(c => cnt[c.key] != null && c.online).length, credits: s.credits })
-    return { ok: e.length === 0, configured: !!policies[String(s.id)] }
+    return { ok: e.length === 0, configured: !!policies[String(s.id)] || isGuidedSubject(s) }
   }
 
   const numInput = (value, onChange, disabled, extra = {}) => h('input', { type: 'number', className: 'form-control form-control-sm', value, onChange: e => onChange(e.target.value), disabled, ...extra })
@@ -130,6 +141,8 @@ export default function GradingPolicy({ user, subjects = [], quizzes = [], homew
 
       h('div', { className: 'col-12 col-lg-9 d-flex flex-column gap-3' },
         msg && h('div', { className: `alert alert-${msg.type} small py-2 mb-0` }, msg.text),
+        isGuidedSubject(subject) && h(GuidedNote, { subject }),
+        !isGuidedSubject(subject) && h(Frag, null,
 
         // Tổng quan tỉ lệ đang áp dụng
         h('div', { className: 'card border-0 shadow-sm' },
@@ -239,6 +252,7 @@ export default function GradingPolicy({ user, subjects = [], quizzes = [], homew
             h('span', { className: 'small text-muted' }, !columnsDocs[String(subject.id)] && 'Chưa chọn: hiện đang tính tất cả các cột. ', 'Tỉ lệ tự chuyển ngay khi đổi số cột.'),
             h('button', { className: 'btn btn-success btn-sm', disabled: busy || !colsChanged && !!columnsDocs[String(subject.id)] || errs.length > 0, onClick: saveColumns,
               title: errs.length ? 'Lựa chọn này làm cấu hình vi phạm quy chế' : '' }, h('i', { className: 'bi bi-save me-1' }), 'Lưu cột tính điểm'))
+        )
         )
       )
     )

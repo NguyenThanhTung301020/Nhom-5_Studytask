@@ -6,14 +6,15 @@ import assert from 'node:assert/strict'
 import {
   PRESETS, LIMITS, round1, homeworkScore, attendanceByRatio, attendanceByPenalty, attendanceCombined,
   subjectScore, autoWeights, suggestDropLowest, validatePolicy, defaultPolicy, effectivePolicy, attendanceFromData,
-  subjectColumns, countedColumns, evaluateStudentSubject,
+  subjectColumns, countedColumns, evaluateStudentSubject, isGuidedSubject,
 } from '../utils/grading.js'
 import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.js'
 import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
 import { applyQuizResults, resultToEvent } from '../utils/quizScores.js'
-import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition } from '../utils/scope.js'
+import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
+import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition, currentTerm, termKey, offeringTitle, inTerm, inKhoa, khoaChoices, termChoices, defaultTermSel, groupOfferings, groupTitle, semesterLabel as semLabel2 } from '../utils/scope.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
@@ -521,5 +522,162 @@ describe('Điểm trắc nghiệm chính thức cho Bảng điểm và Báo cáo
   test('đầu vào lạ (null, thiếu uid) không làm hỏng kết quả', () => {
     assert.deepEqual(applyQuizResults(null, null), [])
     assert.deepEqual(applyQuizResults([{ uid: 'u1' }], [null, { quizId: 1 }]), [{ uid: 'u1', events: [] }])
+  })
+})
+
+describe('Học phần mở theo năm học của từng khóa', () => {
+  const mk = (id, code, khoa, namHoc, ky, extra = {}) => ({ id, code, name: 'Môn ' + code, khoa, namHoc, ky, ...extra })
+  const subjects = [
+    mk(1, 'IT101', '2026-2030', '2026-2027', 1), mk(2, 'IT101', '2025-2029', '2025-2026', 1), mk(3, 'IT101', '2024-2028', '2024-2025', 1),
+    mk(4, 'IT103', '2025-2029', '2025-2026', 2), mk(5, 'IT201', '2025-2029', '2026-2027', 1), { id: 6, code: 'OLD1', name: 'Môn cũ' },
+  ]
+  test('học kỳ hiện tại theo ngày: HK1 từ tháng 8 đến tháng 1, HK2 từ tháng 2 đến tháng 7', () => {
+    const t = (y, m, d) => currentTerm(new Date(y, m - 1, d))
+    assert.deepEqual(t(2026, 11, 14), { start: 2026, ky: 1, namHoc: '2026-2027' })
+    assert.deepEqual(t(2026, 8, 1), { start: 2026, ky: 1, namHoc: '2026-2027' })
+    assert.deepEqual(t(2027, 1, 20), { start: 2026, ky: 1, namHoc: '2026-2027' })
+    assert.deepEqual(t(2027, 2, 1), { start: 2026, ky: 2, namHoc: '2026-2027' })
+    assert.deepEqual(t(2027, 7, 31), { start: 2026, ky: 2, namHoc: '2026-2027' })
+  })
+  test('cùng mã môn mở ở nhiều năm được phân biệt bằng nhãn năm học', () => {
+    assert.equal(offeringTitle(subjects[0]), 'Môn IT101 · HK1 2026-2027')
+    assert.equal(offeringTitle(subjects[2]), 'Môn IT101 · HK1 2024-2025')
+    assert.equal(offeringTitle({ name: 'Môn cũ' }), 'Môn cũ')
+    assert.equal(semLabel2(subjects[1]), 'HK1 · 2025-2026')
+    assert.equal(semLabel2({ hocKy: 3 }), 'Năm 2 · HK1')
+  })
+  test('lọc lịch theo học kỳ: lấy từ chính mục, hoặc từ học phần; dữ liệu cũ chưa gắn năm học luôn hiện', () => {
+    const byId = new Map(subjects.map(s => [s.id, s]))
+    const of = (id) => byId.get(id)
+    const items = [{ id: 'a', subjectId: 1, namHoc: '2026-2027', ky: 1 }, { id: 'b', subjectId: 2 }, { id: 'c', subjectId: 3, namHoc: '2024-2025', ky: 1 }, { id: 'd', subjectId: 6 }]
+    const cur = termKey({ namHoc: '2026-2027', ky: 1 })
+    assert.deepEqual(items.filter(x => inTerm(x, cur, of)).map(x => x.id), ['a', 'd'])           // b thuộc 2025-2026 theo học phần
+    assert.deepEqual(items.filter(x => inTerm(x, '', of)).length, 4)                               // '' = tất cả học kỳ
+    assert.deepEqual(items.filter(x => inKhoa(x, '2025-2029', of)).map(x => x.id), ['b', 'd'])     // c (khóa 2024) và a (2026) bị loại; d không rõ khóa
+  })
+  test('danh sách khóa và học kỳ: mới nhất trước, đánh dấu học kỳ hiện tại, mặc định chỉ học kỳ hiện tại', () => {
+    const cur = { start: 2026, ky: 1, namHoc: '2026-2027' }
+    assert.deepEqual(khoaChoices(subjects), ['2026-2030', '2025-2029', '2024-2028'])
+    const tc = termChoices(subjects, cur)
+    assert.deepEqual(tc.map(t => t.key), ['2026-2027|1', '2025-2026|2', '2025-2026|1', '2024-2025|1'])
+    assert.deepEqual(tc.filter(t => t.current).map(t => t.label), ['Học kỳ 1 · Năm học 2026-2027 (hiện tại)'])
+    assert.equal(defaultTermSel(subjects, cur), '2026-2027|1')
+    assert.equal(defaultTermSel([mk(9, 'X', '2020-2024', '2020-2021', 1)], cur), '')            // không có dữ liệu học kỳ hiện tại → hiện tất cả
+  })
+  test('nhóm học phần theo khóa rồi theo học kỳ; khóa mới trước, học kỳ theo thời gian, dữ liệu cũ ở cuối', () => {
+    const g = groupOfferings(subjects, { start: 2026, ky: 1, namHoc: '2026-2027' })
+    assert.deepEqual(g.map(x => x.khoa), ['2026-2030', '2025-2029', '2024-2028', ''])
+    const k25 = g.find(x => x.khoa === '2025-2029')
+    assert.deepEqual(k25.terms.map(t => t.key), ['2025-2026|1', '2025-2026|2', '2026-2027|1'])
+    assert.deepEqual(k25.terms.map(t => t.namThu), [1, 1, 2])                                     // khóa 2025: năm học 2025-2026 là năm 1, 2026-2027 là năm 2
+    assert.deepEqual(k25.terms.map(t => t.current), [false, false, true])
+    assert.equal(groupTitle('2025-2029', k25.terms[2]), 'Khóa 2025-2029 · Năm 2 · Học kỳ 1 (2026-2027)')
+    assert.equal(groupTitle('', g[3].terms[0]), 'Chưa gắn khóa / học kỳ')
+  })
+  test('chương trình đào tạo: nhiều lần mở cùng mã môn đều thuộc CTĐT, không bị tính là môn ngoài chương trình', () => {
+    const prog = { totalCredits: 6, modules: [{ id: 1, name: 'Cơ sở', kind: 'required', courses: [{ code: 'IT101', name: 'A', credits: 3 }, { code: 'IT103', name: 'B', credits: 3 }] }] }
+    const subs = [{ id: 1, code: 'IT101', credits: 3, namHoc: '2024-2025', ky: 1 }, { id: 2, code: 'IT101', credits: 3, namHoc: '2026-2027', ky: 1 },
+                  { id: 3, code: 'it103', credits: 3, namHoc: '2025-2026', ky: 2 }, { id: 4, code: 'ZZZ', credits: 2 }]
+    const r = checkCurriculum(prog, subs)
+    assert.deepEqual(r.extra.map(s => s.id), [4])                          // chỉ ZZZ là ngoài chương trình
+    assert.equal(r.modules[0].courses[0].subject.id, 2)                    // đại diện = lần mở mới nhất
+    assert.equal(r.ok, true)
+  })
+  test('thống kê học phần mở theo năm và theo khóa; cảnh báo học phần chưa có giáo viên hoặc quá 3 giáo viên', () => {
+    const subs = [
+      { id: 1, khoa: '2026-2030', namHoc: '2026-2027', ky: 1, trangThai: 'dang-hoc' }, { id: 2, khoa: '2026-2030', namHoc: '2026-2027', ky: 1, trangThai: 'dang-hoc' },
+      { id: 3, khoa: '2025-2029', namHoc: '2026-2027', ky: 1, trangThai: 'dang-hoc' }, { id: 4, khoa: '2025-2029', namHoc: '2025-2026', ky: 2, trangThai: 'da-ket-thuc' },
+      { id: 5, khoa: '2025-2029', namHoc: '2027-2028', ky: 1, trangThai: 'ke-hoach' }, { id: 9 },
+    ]
+    const users = [
+      ...[1, 2, 3, 4].map(i => ({ role: 'teacher', subjectIds: [1] })),                       // học phần 1 có 4 giáo viên (vượt trần)
+      { role: 'teacher', subjectIds: [3] },
+      { role: 'student', cohort: '2026-2030', classId: 'A', namHoc: '2026-2027' }, { role: 'student', cohort: '2026-2030', classId: 'A', namHoc: '2026-2027' },
+      { role: 'student', cohort: '2026-2030', classId: 'B', namHoc: '2026-2027' }, { role: 'student', cohort: '2025-2029', classId: 'C', namHoc: '2026-2027' },
+    ]
+    const r = summarizeSystem({ subjects: subs, users, today: '2026-11-14' })
+    assert.deepEqual(r.offerings, { total: 5, now: 3, ended: 1, planned: 1, nowWithoutTeacher: 1, overLimit: 1 })   // học phần 2 đang học nhưng chưa có giáo viên
+    assert.deepEqual(r.cohorts.map(c => [c.khoa, c.students, c.classes, c.namThu, c.offeringsNow]), [['2026-2030', 3, 2, 1, 2], ['2025-2029', 1, 1, 2, 1]])
+  })
+})
+
+describe('Bảng 16 tiết và tuần thật', () => {
+  test('16 tiết đúng mốc giờ nhà trường công bố (tiết 45 phút; nghỉ giữa tiết 3–4, 6–7, 9–10, 12–13)', () => {
+    assert.equal(Object.keys(TIET).length, 16)
+    assert.deepEqual(TIET[1], ['07:30', '08:15']); assert.deepEqual(TIET[6], ['11:30', '12:15']); assert.deepEqual(TIET[7], ['12:45', '13:30'])
+    assert.deepEqual(TIET[12], ['16:45', '17:30']); assert.deepEqual(TIET[13], ['18:00', '18:45']); assert.deepEqual(TIET[16], ['20:15', '21:00'])
+    const mins = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+    for (let n = 1; n <= 16; n++) assert.equal(mins(TIET[n][1]) - mins(TIET[n][0]), 45, `tiết ${n}`)
+    assert.deepEqual(SESSIONS, { sang: [1, 6], chieu: [7, 12], toi: [13, 16] })
+    assert.deepEqual([1, 6, 7, 12, 13, 16].map(sessionOfTiet), ['sang', 'sang', 'chieu', 'chieu', 'toi', 'toi'])
+  })
+  test('khối tiết phải nằm gọn trong một buổi (không bắc qua nghỉ trưa, nghỉ chiều)', () => {
+    assert.equal(blockFits(4, 3), true); assert.equal(blockFits(5, 3), false)        // tiết 5–7 bắc qua giờ nghỉ trưa
+    assert.equal(blockFits(13, 4), true); assert.equal(blockFits(15, 3), false)      // tiết 15–17 vượt tiết 16
+    assert.equal(blockFits(11, 3), false); assert.equal(blockFits(0, 2), false)
+    assert.deepEqual(blockTime(4, 3), { start: '10:00', end: '12:15' })
+    assert.deepEqual(blockTime(13, 4), { start: '18:00', end: '21:00' })
+    assert.equal(blockTime(5, 3), null)
+    assert.deepEqual(blockStarts(3), [1, 2, 3, 4, 7, 8, 9, 10, 13, 14])               // khối 3 tiết: sáng 1–4, chiều 7–10, tối 13–14
+    assert.deepEqual(blockStarts(4), [1, 2, 3, 7, 8, 9, 13])                          // khối 4 tiết: sáng 1–3, chiều 7–9, tối 13
+  })
+  test('suy khối tiết từ giờ (dữ liệu cũ) và ghi nhãn "Tiết a–b"', () => {
+    assert.deepEqual(tietRangeOf('10:00', '12:15'), { from: 4, to: 6 })
+    assert.equal(tietRangeOf('07:00', '09:30'), null)                                  // giờ cũ không khớp bảng
+    assert.equal(tietLabel({ start: '07:30', end: '09:45' }), 'Tiết 1–3')
+    assert.equal(tietLabel({ tietStart: 13, tietEnd: 16, start: '18:00', end: '21:00' }), 'Tiết 13–16')
+    assert.equal(tietLabel({ start: '07:30', end: '08:15' }), 'Tiết 1')
+    assert.equal(tietLabel({ start: '07:00', end: '09:30' }), '')
+  })
+  test('tuần bắt đầu từ Thứ Hai: 17/11/2026 là Thứ Ba → tuần 16/11 – 22/11', () => {
+    assert.equal(tkbDay('2026-11-17'), 3); assert.equal(tkbDay('2026-11-22'), 8); assert.equal(tkbDay('2026-11-16'), 2)
+    assert.equal(mondayOf('2026-11-17'), '2026-11-16'); assert.equal(mondayOf('2026-11-16'), '2026-11-16'); assert.equal(mondayOf('2026-11-22'), '2026-11-16')
+    assert.deepEqual(weekDates('2026-11-16').map(d => d.iso), ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22'])
+    assert.deepEqual(weekDates('2026-11-16').map(d => d.day), [2, 3, 4, 5, 6, 7, 8])
+    assert.equal(addDays('2026-12-30', 3), '2027-01-02'); assert.equal(addDays('2027-03-01', -1), '2027-02-28')   // qua năm, qua tháng
+    assert.equal(weekRangeLabel('2026-11-16'), '16/11 – 22/11/2026'); assert.equal(weekRangeLabel('2026-12-28'), '28/12 – 03/01/2027')
+  })
+  test('buổi học chỉ diễn ra trong khoảng ngày của học kỳ và đúng thứ', () => {
+    const c = { day: 3, startDate: '2026-09-07', endDate: '2026-12-20' }
+    assert.equal(classOnDate(c, '2026-11-17'), true)         // Thứ Ba trong học kỳ
+    assert.equal(classOnDate(c, '2026-11-18'), false)        // Thứ Tư
+    assert.equal(classOnDate(c, '2026-12-22'), false)        // Thứ Ba nhưng đã hết học kỳ
+    assert.equal(classOnDate(c, '2026-09-01'), false)        // Thứ Ba nhưng chưa bắt đầu
+    assert.equal(classOnDate({ day: 3 }, '2027-05-04'), true) // dữ liệu cũ không có ngày: lặp mọi tuần
+  })
+  test('tuần thứ mấy của học kỳ (tuần chứa ngày bắt đầu là tuần 1)', () => {
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-09-07'), 1)
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-09-13'), 1)
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-09-14'), 2)
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-11-17'), 11)
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-12-20'), 15)
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-12-28'), null)   // đã sang kỳ thi/nghỉ
+    assert.equal(termWeekNumber('2026-09-07', '2026-12-20', '2026-08-31'), null)
+    assert.equal(termWeekNumber(undefined, undefined, '2026-11-17'), null)
+  })
+})
+
+describe('Môn hướng dẫn: thực tập, đồ án, khóa luận', () => {
+  test('nhận ra theo dấu kieuHoc, hoặc theo tên với dữ liệu cũ chưa có dấu', () => {
+    assert.equal(isGuidedSubject({ kieuHoc: 'huong-dan', name: 'Môn gì đó' }), true)
+    for (const name of ['Thực tập doanh nghiệp', 'Khóa luận tốt nghiệp / Đồ án tốt nghiệp', 'Đồ án chuyên ngành']) assert.equal(isGuidedSubject({ name }), true, name)
+    for (const name of ['Cơ sở dữ liệu', 'Phát triển ứng dụng Web', 'Kỹ năng làm việc nhóm']) assert.equal(isGuidedSubject({ name }), false, name)
+    assert.equal(isGuidedSubject({ kieuHoc: 'lop-hoc', name: 'Đồ án nhỏ' }), false)       // dấu rõ ràng thắng tên
+    assert.equal(isGuidedSubject(null), false)
+  })
+  test('quy chế điểm: không có bộ trọng số, điểm môn = điểm do giáo viên hướng dẫn nhập (không phụ thuộc chuyên cần, bài tập, giữa kỳ)', () => {
+    const pol = defaultPolicy({ kieuHoc: 'huong-dan', credits: 8 })
+    assert.equal(pol.guided, true)
+    assert.deepEqual(pol.weights, { cc: 0, bt: 0, gk: 0, ck: 100 })
+    assert.deepEqual(validatePolicy(pol, { nCounted: 0 }), [])
+    assert.equal(subjectScore(effectivePolicy(pol, 0), { cc: null, bt: null, gk: null, ck: 8.5 }).final, 8.5)
+    assert.deepEqual(subjectScore(effectivePolicy(pol, 0), { cc: 10, bt: 10, gk: 10, ck: null }).missing, ['ck'])   // chưa nhập điểm hướng dẫn thì chưa có điểm môn
+    assert.equal(subjectScore(effectivePolicy(pol, 0), { cc: 0, bt: 0, gk: 0, ck: 7 }).final, 7)
+  })
+  test('môn thường không bị ảnh hưởng: vẫn tính theo bộ trọng số L1', () => {
+    const pol = defaultPolicy({ name: 'Cơ sở dữ liệu', credits: 4 })
+    assert.equal(pol.guided, undefined)
+    assert.equal(pol.preset, 'L1')
+    assert.deepEqual(validatePolicy(pol, { nCounted: 5 }).filter(e => e.includes('Tổng trọng số')), [])
   })
 })
