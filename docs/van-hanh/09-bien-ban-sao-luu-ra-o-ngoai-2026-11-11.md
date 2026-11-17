@@ -51,3 +51,36 @@ Mỗi bản có `config/mail.json` (mật khẩu ứng dụng gửi email) và `
 | Rút ổ sau mỗi lần chép và cất đi (ghi ngày rút ổ vào biên bản) | Trương Thanh Vui |
 | Đặt lịch chép lại (mỗi tuần), ghi lần chép tiếp theo vào biên bản này | Trương Thanh Vui |
 | Nguyễn Thanh Tùng xác nhận (theo kế hoạch tuần 6 việc 1b) | Nguyễn Thanh Tùng |
+
+## 6. Lần chép lại ngày 17/11/2026 (việc 3 tuần 7)
+
+Bổ sung vì lần chép 11/11 không có dữ liệu mô phỏng nạp ngày 11–12/11 (xem [báo cáo vận hành](01-bao-cao-suc-khoe-may-chu.md) mục 8.4a).
+
+- Người thực hiện: Trương Thanh Vui chuẩn bị ổ G; Claude Code (AI) chạy các lệnh theo yêu cầu, cần ghi vào nhật ký sử dụng AI.
+- Thời điểm: 17/11/2026 06:11:59–06:12:34 UTC (13:11–13:12 giờ Việt Nam).
+- Nguồn: `/mnt/backup/studytask` trên máy chủ (ổ cùng ổ vật lý với hệ thống), chỉ đọc.
+- Đích: ổ ngoài G, NTFS, 232 GB, thư mục `StudyTask-backup\studytask-tu-may-chu-2026-11-17`. Thư mục lần 11/11 (`studytask-tu-may-chu-2026-11-11`) **giữ nguyên**, không bị ghi đè.
+- Cách làm: giống mục 2 (`ssh … tar -cf - . | tar -xf -`, bỏ liên kết `LATEST`).
+
+| Hạng mục | Kết quả |
+|---|---|
+| Số bản đã chép | 12 bản ngày, từ 06/11 06:34 đến **16/11 20:05 UTC**, và `backup.log` |
+| Số tệp / dung lượng | 8.362 tệp, 176 MB |
+| So SHA256 từng tệp (đường dẫn và hash), máy chủ với ổ G | **Trùng 8.362/8.362** |
+| `sha256sum -c SHA256SUMS` trong từng bản (trên ổ G) | 12/12 `OK` |
+| `pragma integrity_check` của `studytask.db` từng bản | 12/12 `ok` |
+| Dữ liệu trong bản 16/11 | `accounts` 2.051, `docs` 4.307, `chat` 6; `studytask.db` 4.268.032 byte |
+| Dữ liệu mô phỏng nạp 12/11 | Có từ bản **12/11 20:03 UTC** (`accounts` 5 → 2.051, `docs` 20 → 4.306) |
+| Thử khôi phục | Chép `studytask.db` bản 16/11 sang thư mục tạm trên máy cá nhân, chạy API tạm (cổng 8797): `GET /api/auth/me` trả 200; không có `Traceback` trong nhật ký. Chưa đăng nhập bằng tài khoản thật |
+
+Bảo vệ bản sao: giữ nguyên quyết định ở mục 3 (ổ **không mã hóa**, rút ổ và cất sau khi chép). Các bản chép lần này cũng có `config/mail.json` và băm mật khẩu của 2.051 tài khoản, nên điều kiện ở mục 3 vẫn áp dụng; riêng lần này ổ chứa thêm bản 12–16/11.
+
+Cùng ngày 17/11, Trương Thanh Vui chạy `sudo smartctl -t long /dev/sda` trên máy chủ: kiểm tra dừng sớm với `Completed: read failure` tại LBA 705216 (cùng sector với lần kiểm tra ngắn 13/11); chi tiết ở [báo cáo vận hành](01-bao-cao-suc-khoe-may-chu.md) mục 8.4c. Vì ổ máy chủ có lỗi đọc lặp lại, bản sao trên ổ G là bản sao ngoài duy nhất và nên được chép lại đều đặn.
+
+Còn lại sau lần chép này (cần người thật):
+
+| Việc | Người phụ trách | Ghi chú |
+|---|---|---|
+| Rút ổ G và cất; ghi ngày rút vào đây | Trương Thanh Vui | Ngày rút: ______ |
+| Đặt lịch chép tiếp theo (đề xuất 24/11, và trước mỗi lần triển khai lớn); ghi vào đây | Trương Thanh Vui | Lần tiếp theo: ______ |
+| Xác nhận việc 1b (và chấp nhận rủi ro không mã hóa) | Nguyễn Thanh Tùng | |
