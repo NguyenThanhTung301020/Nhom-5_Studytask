@@ -364,6 +364,16 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 - **Gói chờ cập nhật 18** (T0 10), gần ngưỡng 20, và máy cần khởi động lại. Áp dụng bản vá trong tuần theo 8.5.
 - **Ổ gốc tăng khoảng 0,9 GB so với T0**, sát mức "không quá ~1 GB/tuần".
 
+### 8.4b Cập nhật ngày 17/11/2026 (đối chiếu sau mốc T+7)
+
+Số liệu ở mục 8.4 và 8.4a giữ nguyên làm bản ghi của ngày 13/11. Đo lại ngày 17/11 qua SSH chỉ đọc, chi tiết ở [biên bản 12](12-doi-chieu-may-chu-2026-11-17.md), cho thấy các điểm sau thay đổi:
+
+- **Máy chủ chạy đúng `master` từ 14/11** (API khởi động 14/11 02:51 UTC; hash `studytask_api.py` và các tệp chính trùng `b9e2663`), nên dòng "Máy chủ không chạy đúng `master`" không còn đúng từ ngày đó. Còn thiếu [PR58] và bốn tệp giao diện ảnh đại diện chưa có trên GitHub.
+- **Đã cập nhật gói và khởi động lại** ngày 13/11 01:43–01:49 UTC (sau khi đo T+7): còn 5 gói chờ, không cần khởi động lại.
+- **17 mã 403 đã điều tra:** 14 do một tab trình duyệt mất phiên ngày 09/11, 3 do script kiểm thử `smoke_live.py`; 403 ở `/uploads/` là lỗi quyền thư mục 750 (đã sửa 12/11) và các yêu cầu dò `/uploads/.env` từ bên ngoài. Không phải sự cố.
+- **Đính chính:** "CSDL 126 MB" ở mục 8.4a là dung lượng cả thư mục dữ liệu (chủ yếu `uploads`). Cơ sở dữ liệu cùng WAL khoảng 10 MB (`db+wal: 9975 KB` trong tệp bằng chứng T+7), nay `studytask.db` 4,1 MB.
+- **Chưa đổi:** ổ đĩa vẫn chưa đạt (chưa chạy `smartctl -t long`), bản sao lưu ngoài ổ vật lý chưa được chép lại, mốc T+15 (21/11) chưa đo.
+
 
 ### 8.5. Cần làm gì khi vượt ngưỡng
 
