@@ -3,7 +3,7 @@
 Thuộc kế hoạch **tuần 7** (16/11 – 21/11/2026) nêu ở Phần 6 của [báo cáo tuần 6](../bao-cao-tuan/tuan-06.md): các việc 1, 3, 5, 14 của nhóm A/B, liên quan đến máy chủ.
 
 - Mục đích: ghi lại hiện trạng thật của máy chủ để bổ sung minh chứng cho các việc của kế hoạch tuần 7 đã làm nhưng chưa được ghi (việc 1 triển khai lại từ `master`, việc 5 cập nhật gói hệ điều hành, việc 14 điều tra mã 403, việc 3 chép sao lưu ra ổ ngoài) và để xác định việc còn lại.
-- Thời điểm đo: 17/11/2026 04:11 UTC (11:11 giờ Việt Nam).
+- Thời điểm đo: 17/11/2026 04:11 UTC (11:11 giờ Việt Nam). **Mục 2 phản ánh máy chủ lúc 04:11 UTC, trước lần triển khai cuối ngày 17/11**; mục 2b đo lại sau triển khai (09:17 UTC) và thay cho các kết luận "chưa có PR58" và "ảnh đại diện chưa có trên GitHub" của mục 2.
 - Cách đo: Claude Code (AI) chạy các lệnh **chỉ đọc** qua SSH (`studytask@192.168.2.187`) theo yêu cầu và với địa chỉ do Trương Thanh Vui cung cấp. Không dùng `sudo`, không sửa tệp hay dịch vụ nào. Hash so với `master` bằng `git show <commit>:<tệp> | sha256sum`.
 - **Cần Trương Thanh Vui xác nhận:** ai đã triển khai, bằng cách nào, vào lúc nào (mục 2). Biên bản chỉ ghi những gì đọc được từ máy chủ, không suy đoán thao tác.
 
@@ -35,6 +35,27 @@ Thời điểm cài, đọc từ máy chủ: API khởi động lúc **14/11/202
   1. Thiếu [PR58] (gộp 16/11): endpoint `GET /api/quiz/results`, giao diện Bảng điểm đọc điểm từ `quizResults` và sửa `GradeBook.js` thiếu tham số `user`. Máy chủ vẫn chạy bản `GradeBook.js` cũ; bản này gây `ReferenceError: user is not defined` khi dựng (đã tái hiện: chạy hàm component với bản `b9e2663` báo lỗi, với bản của [PR58] không lỗi). **Nên triển khai lại để sửa lỗi này.**
   2. Bốn tệp giao diện về ảnh đại diện đang chạy trên máy chủ nhưng **chưa có trên GitHub**. Cần đưa lên bằng PR (kèm `scripts/assign_avatars.py`, `scripts/prepare_avatars.ps1`, `tests/server/test_assign_avatars.py`) để bản đang chạy có thể dựng lại từ repo.
 - `~/deploy-log.txt` chỉ có 5 dòng, dòng cuối ngày 10/11 05:32 UTC; các lần triển khai 12/11 và 14/11 **không được ghi vào đây**. Cần Thanh Vui bổ sung một dòng cho mỗi lần (commit, nhánh, thời điểm).
+
+### 2b. Đo lại sau triển khai ngày 17/11 (09:17 UTC)
+
+Trong ngày 17/11, sau khi chạy `smartctl -t long` và quét chọn lọc, Trương Thanh Vui đã nạp lại dữ liệu và cài lại API, giao diện từ nhánh `feat/ngoai-ke-hoach-hoc-phan-mo-tkb-tuan` (commit `68e0d47`, [PR61], **đang mở, chưa gộp vào `master`**). Chi tiết thao tác ở [biên bản 08 của phần ngoài kế hoạch](../ngoai-ke-hoach/du-lieu-lop-hoc/08-bien-ban-trien-khai-14-11-va-17-11.md). Đo lại bằng SSH chỉ đọc, so hash với `git show 68e0d47:<tệp>`:
+
+| Tệp trên máy chủ | Hash (16 ký tự đầu) | Trùng với `68e0d47` |
+|---|---|---|
+| `/opt/studytask/studytask_api.py` | `e347e9426b5395ba` | Trùng |
+| `components/GradeBook.js` | `a538e9e311a46167` | Trùng |
+| `app.js` | `5661161ce94f85df` | Trùng |
+| `pages/Reports.js` | `c6e712927565d85f` | Trùng |
+| `pages/Admin.js` | `03909cab34853150` | Trùng |
+| `pages/Directory.js` | `d184682f86629e33` | Trùng |
+| `components/AccountManager.js` | `9bb5c3ecce7a7388` | Trùng |
+
+Kết luận sau triển khai:
+- **Lỗi `GradeBook.js` thiếu tham số `user` đã được sửa trên web thật:** nhánh `68e0d47` chứa commit `25bc2bc` của [PR58] (kiểm tra bằng `git merge-base --is-ancestor`), và hash `GradeBook.js` trên máy chủ trùng nhánh này. Chưa thử tay Bảng điểm trên web thật.
+- **Bốn tệp ảnh đại diện đã có trên GitHub, nhưng chỉ ở nhánh của [PR61]**, chưa có trên `master`. Máy chủ chạy bản chưa gộp: nếu triển khai lại từ `master` trước khi gộp [PR61] thì mất các thay đổi này (biên bản 08 mục 5 cũng nêu).
+- Dữ liệu trên máy chủ đã đổi so với đo ban đầu của biên bản này (mục 1 ghi 2.051 tài khoản): theo biên bản 08, sau khi nạp lại còn 982 sinh viên, 44 giáo viên, 148 học phần mở. Chưa đo lại bằng script sức khỏe ở mốc này.
+- **`~/deploy-log.txt` vẫn dừng ở 10/11 05:32 UTC**, nghĩa là cả các lần 12/11, 14/11 và 17/11 đều chưa được ghi vào đây.
+- Bản sao lưu trên ổ G (chép 17/11 06:12 UTC, [biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6) là **trước lần nạp lại dữ liệu**. Bản trước khi nạp còn ở `~/loadtest/backup-truoc-nap-tiet-tuan-2026-11-17.db` trên chính ổ máy chủ.
 
 ## 3. Cập nhật gói hệ điều hành và khởi động lại (việc 5 tuần 7)
 
@@ -114,10 +135,10 @@ Mục 8.4a của báo cáo vận hành ghi "CSDL 126 MB, bản sao lưu 120 MB".
 
 | Việc | Người | Ghi chú |
 |---|---|---|
-| Xác nhận ai, lúc nào, cách nào đã triển khai ngày 14/11; bổ sung vào `~/deploy-log.txt` | Trương Thanh Vui | Mục 2 |
-| Đưa phần ảnh đại diện lên GitHub qua PR | Trương Thanh Vui | Mục 2 |
-| Triển khai lại từ `master` mới (có [PR58]) và so hash | Trương Thanh Vui | Sửa lỗi `GradeBook.js` trên web thật |
-| Chạy `sudo smartctl -t long /dev/sda`, ghi kết quả | Trương Thanh Vui | Cần `sudo`, chưa làm được từ biên bản này |
+| Bổ sung `~/deploy-log.txt` cho các lần triển khai 12/11, 14/11 và 17/11 (commit, nhánh, thời điểm) | Trương Thanh Vui | Mục 2b |
+| ~~Đưa phần ảnh đại diện lên GitHub qua PR~~ **Đã có ở [PR61]** (mở, chưa Approve, chưa gộp); cần review rồi gộp | Trương Thanh Vui, người review | Mục 2b |
+| ~~Triển khai lại để sửa `GradeBook.js`~~ **Đã triển khai 17/11 từ nhánh [PR61]** (có [PR58]); cần thử tay Bảng điểm trên web thật | Trương Thanh Vui | Mục 2b |
+| ~~Chạy `sudo smartctl -t long /dev/sda`~~ **Đã chạy 17/11**: dừng sớm, `read failure` tại LBA 705216; quét chọn lọc lỗi tại 705217 ([báo cáo 01](01-bao-cao-suc-khoe-may-chu.md) mục 8.4c) | Trương Thanh Vui | Nhóm cần ghi quyết định về ổ |
 | ~~Chép bản sao lưu mới nhất ra ổ ngoài~~ **Đã chép 17/11 06:12 UTC**; còn rút ổ, đặt lịch chép tiếp, Thanh Tùng xác nhận ([biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6) | Trương Thanh Vui | Ngày rút ổ và lịch chép còn để trống trong biên bản 09 |
 | Mốc T+15 (21/11): `scripts/van-hanh/thu-bang-chung.ps1 -Moc T15` | Trương Thanh Vui | [Hướng dẫn](03-huong-dan-kiem-tra-may-chu.md) |
 
@@ -127,3 +148,4 @@ Mục 8.4a của báo cáo vận hành ghi "CSDL 126 MB, bản sao lưu 120 MB".
 [PR54]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/54
 [PR56]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/56
 [PR58]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/58
+[PR61]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/61
