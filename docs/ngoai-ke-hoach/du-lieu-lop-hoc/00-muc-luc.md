@@ -1,7 +1,7 @@
 # Bộ báo cáo: dữ liệu lớp học theo khung đào tạo (một chuyên ngành)
 > **NGOÀI KẾ HOẠCH CỦA NHÓM.** Phần việc này do Trương Thanh Vui làm riêng trong 3 tuần, không thuộc kế hoạch tuần 5, tuần 6 và không tính vào khối lượng các việc theo kế hoạch của nhóm. Đọc để hiểu một phần việc riêng, không dùng để đánh giá tiến độ kế hoạch.
 
-Cập nhật ngày 13/11/2026. Người thực hiện: Trương Thanh Vui (cùng Claude Code, model Claude Sonnet 5.5). **Đang chờ ý kiến giảng viên hướng dẫn** (xem 01, phần 8).
+Cập nhật ngày 17/11/2026 (thêm 07 và 08). Người thực hiện: Trương Thanh Vui (cùng Claude Code, model Claude Sonnet 5.5). **Đang chờ ý kiến giảng viên hướng dẫn** (xem 01, phần 8).
 
 | Tệp | Nội dung | Đọc khi cần |
 |---|---|---|
@@ -11,6 +11,8 @@ Cập nhật ngày 13/11/2026. Người thực hiện: Trương Thanh Vui (cùng
 | [04-kiem-thu-va-do-tai.md](04-kiem-thu-va-do-tai.md) | Kết quả kiểm thử tự động, đo tải, đo lưu trữ | Minh chứng số liệu |
 | [05-bien-ban-trien-khai-12-11.md](05-bien-ban-trien-khai-12-11.md) | Biên bản nạp dữ liệu lên máy chủ thật, sao lưu, cách quay lại | Minh chứng vận hành |
 | [06-doan-dan-vao-bao-cao-tuan.md](06-doan-dan-vao-bao-cao-tuan.md) | Đoạn viết sẵn để dán vào báo cáo tuần | Hoàn thiện báo cáo tuần |
+| [07-hoc-phan-mo-khoa-tiet-tuan-avatar.md](07-hoc-phan-mo-khoa-tiet-tuan-avatar.md) | Đợt 14–17/11: học phần mở theo khóa, 1–3 giáo viên, thời khóa biểu theo tiết và theo tuần, môn hướng dẫn, ảnh đại diện | Giải thích thay đổi và minh chứng hình ảnh (thư mục `bang-chung/`) |
+| [08-bien-ban-trien-khai-14-11-va-17-11.md](08-bien-ban-trien-khai-14-11-va-17-11.md) | Biên bản triển khai 14/11 và 17/11, số liệu máy chủ, sao lưu, cách quay lại | Minh chứng vận hành |
 
 Cách đọc các chỗ `[…]`: là chỗ cần Thanh Vui xác nhận hoặc điền (ngày cụ thể, ý kiến nhóm). Mọi con số còn lại đều lấy từ lần đo hoặc từ mã trong kho, có ghi nguồn.
 

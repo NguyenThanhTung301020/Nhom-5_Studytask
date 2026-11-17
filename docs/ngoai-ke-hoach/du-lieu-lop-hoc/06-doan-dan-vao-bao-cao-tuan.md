@@ -42,3 +42,8 @@ Các đoạn dưới đây đã viết theo văn phong của báo cáo tuần. T
 ## F. Dán vào báo cáo tuần: xin ý kiến giảng viên
 
 > **Xin ý kiến giảng viên hướng dẫn.** Phần dữ liệu lớp học quy mô thật (ngoài kế hoạch nhóm, làm riêng trong 3 tuần) đã cập nhật lên repo ở nhánh `feat/ngoai-ke-hoach-du-lieu-lop-hoc`. Nhóm xin ý kiến thầy về: (1) việc làm riêng này có phù hợp hay nên dồn sức cho các việc theo kế hoạch; (2) giữ phạm vi cố định một chuyên ngành, không mở rộng; (3) cách đo tải và ngưỡng p95 ≤ 2 giây; (4) mức ưu tiên giữa sửa lỗi logic và xử lý điểm nghẽn ở tuần 2 và tuần 3; (5) quy trình triển khai khi mã chưa qua review. Chi tiết câu hỏi ở `docs/ngoai-ke-hoach/du-lieu-lop-hoc/01-tong-quan-pham-vi.md`, mục 8. Trạng thái: `[đã gửi ngày …, chờ phản hồi]`.
+
+
+## G. Dán vào báo cáo tuần 7: phần ngoài kế hoạch (14/11–17/11)
+
+> **Ngoài kế hoạch của nhóm (Trương Thanh Vui làm riêng, không tính vào khối lượng kế hoạch tuần 7).** Hoàn thiện dữ liệu lớp học trên web thật: tách học phần mở theo khóa/năm học/học kỳ, mỗi học phần 1–3 giáo viên (máy chủ chặn người thứ 4), thời khóa biểu theo bảng 16 tiết và xem theo tuần có ngày thật, 3 môn hướng dẫn (thực tập, đồ án, khóa luận) không có thời khóa biểu và quy chế điểm theo tỷ trọng, ảnh đại diện riêng cho 982 sinh viên. Triển khai 14/11 và 17/11, có sao lưu trước. Kiểm thử: `npm run test:logic` 113 đạt; 18 bộ kiểm thử Python đạt. Minh chứng: `docs/ngoai-ke-hoach/du-lieu-lop-hoc/07-…` và `08-…`, ảnh ở `bang-chung/`. Rủi ro: mã đã triển khai trước khi PR được Approve; cần review và gộp để kho khớp máy chủ.
