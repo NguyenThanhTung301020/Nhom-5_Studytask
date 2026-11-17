@@ -37,6 +37,16 @@ Mỗi bản có `config/mail.json` (mật khẩu ứng dụng gửi email) và `
 - Điều kiện đi kèm để chấp nhận cách này: cất ổ ở nơi an toàn, không để cắm sẵn vào máy; không đưa nội dung ổ vào repo, không gửi qua mạng, không cho mượn khi ổ còn chứa bản sao lưu.
 - Rủi ro còn lại: nếu ổ bị mất hoặc bị lấy cắp thì người nhặt được đọc được `config/mail.json` (mật khẩu ứng dụng gửi email), băm mật khẩu, email và bài nộp trong `studytask.db`. Nếu ổ bị mất: đổi mật khẩu ứng dụng email (`mail-config`), và đặt lại mật khẩu các tài khoản.
 
+### Quyết định của Nguyễn Thanh Tùng về bản sao lưu 17/11/2026 (máy Nguyễn Thanh Tùng)
+
+- **Quyết định: mã hóa bằng 7-Zip AES-256** (không chọn cách ghi chấp nhận rủi ro). Xác nhận ngày 17/11/2026.
+- Đối tượng: thư mục `studytask-tu-may-chu-2026-11-17` (12 bản ngày từ 06/11 đến 16/11 và `backup.log`; 49 thư mục, 8386 tệp, 707 MiB) tải từ máy chủ về máy Nguyễn Thanh Tùng.
+- Kết quả: tệp `studytask-tu-may-chu-2026-11-17.7z` (636 MiB), phương pháp LZMA2 + 7zAES, **có mã hóa cả tên tệp** (`-mhe=on`). Mật khẩu do Nguyễn Thanh Tùng tự nhập; **mật khẩu không ghi trong biên bản, trong repo hay trong nhật ký AI**.
+- Kiểm tra: `7z t` với mật khẩu đúng báo `Everything is Ok`, 49 thư mục, 8386 tệp, 741072412 byte, khớp với thư mục gốc. Chưa so SHA256 từng tệp sau khi giải nén.
+- Bản chưa mã hóa: thư mục gốc `studytask-tu-may-chu-2026-11-17` và tệp `.rar` cũ **đã được Nguyễn Thanh Tùng xóa ngày 17/11/2026**, sau khi `7z t` đạt. Trên máy chỉ còn tệp `.7z` mã hóa. (Xóa thường, chưa xóa an toàn; thùng rác Windows cần được dọn nếu có.)
+- **Đổi mật khẩu cùng ngày 17/11/2026:** mật khẩu đặt lần đầu bị coi là yếu nên đã bỏ; tệp được giải nén và nén lại bằng mật khẩu mới do Nguyễn Thanh Tùng tự đặt (13 ký tự). `7z t` đạt (49 thư mục, 8386 tệp) cả khi nhập mật khẩu lấy từ nơi cất. Tệp `.7z` dùng mật khẩu cũ và thư mục giải nén tạm đã xóa; hiện chỉ còn một tệp `.7z`.
+- **Nơi cất mật khẩu:** trình quản lý mật khẩu của Google (Chrome), mục `studytask-backup.local`. Mật khẩu không ghi trong biên bản, repo hay nhật ký AI.
+- **Bản chép thứ hai:** ngày 17/11/2026 Nguyễn Thanh Tùng chép tệp `.7z` sang `C:\backup\` (ổ SSD C, khác ổ vật lý với bản gốc ở ổ D là HDD). SHA256 hai bản trùng (`3C9D2B10…93D321FB`, 666636933 byte). **Giới hạn:** hai bản cùng nằm trong một máy, nên chỉ chống được hỏng một ổ cứng; chưa chống được mất máy, cháy, mã độc. Nguyễn Thanh Tùng chưa có ổ ngoài, chấp nhận rủi ro này cho đến khi có thiết bị ngoài.
 
 ## 4. Giới hạn
 
@@ -50,4 +60,8 @@ Mỗi bản có `config/mail.json` (mật khẩu ứng dụng gửi email) và `
 |---|---|
 | Rút ổ sau mỗi lần chép và cất đi (ghi ngày rút ổ vào biên bản) | Trương Thanh Vui |
 | Đặt lịch chép lại (mỗi tuần), ghi lần chép tiếp theo vào biên bản này | Trương Thanh Vui |
-| Nguyễn Thanh Tùng xác nhận (theo kế hoạch tuần 6 việc 1b) | Nguyễn Thanh Tùng |
+| Nguyễn Thanh Tùng xác nhận (theo kế hoạch tuần 6 việc 1b) | Nguyễn Thanh Tùng — đã xác nhận ngày 17/11/2026: mã hóa 7-Zip AES-256 (mục 3) |
+| ~~Cất mật khẩu của tệp `.7z`~~ — đã cất trong trình quản lý mật khẩu Google, 17/11/2026 (mục 3) | Nguyễn Thanh Tùng |
+| ~~Chép bản thứ hai~~ — đã chép sang `C:\backup\` ngày 17/11/2026 (mục 3) | Nguyễn Thanh Tùng |
+| Khi có ổ ngoài hoặc dịch vụ lưu trữ ngoài máy: chép thêm một bản ra đó, thử `7z t`, ghi ngày chép | Nguyễn Thanh Tùng |
+| ~~Xóa thư mục gốc và tệp `.rar` cũ chưa mã hóa~~ — đã xóa ngày 17/11/2026 (mục 3); dọn thùng rác Windows | Nguyễn Thanh Tùng |
