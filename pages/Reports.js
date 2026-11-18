@@ -2,7 +2,8 @@
 // Admin xem tất cả môn; Giáo viên xem các môn được phân công (subjects đã được lọc sẵn ở app.js)
 import { formatDate } from '../utils/helpers.js'
 import GradeBook from '../components/GradeBook.js'
-import { studentInScope } from '../utils/scope.js'
+import { studentInScope, offeringTitle } from '../utils/scope.js'
+import UserAvatar from '../components/UserAvatar.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -51,7 +52,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
     // Roster: SV được phân công môn + SV có hoạt động trong môn
     const map = new Map()
     allUsers.filter(u => u.role === 'student' && Array.isArray(u.subjectIds) && u.subjectIds.includes(sid) && studentInScope(user, u))
-      .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.username, username: u.username || '' }))
+      .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.username, username: u.username || '', avatar: u.avatar || '' }))
     activities.forEach(a => {
       if ((a.events || []).some(e => e.subjectId === sid) && !map.has(a.uid))
         map.set(a.uid, { uid: a.uid, name: a.name || a.username || a.email || a.uid, username: a.username || a.email || '' })
@@ -105,7 +106,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
         )
       ),
       view === 'theodoi' && subjects.length > 0 && h('select', { className: 'form-select', style: { width: 'auto', minWidth: 220 }, value: subId ?? '', onChange: e => setSubId(Number(e.target.value)) },
-        subjects.map(s => h('option', { key: s.id, value: s.id }, s.name))
+        subjects.map(s => h('option', { key: s.id, value: s.id }, offeringTitle(s)))
       )
     ),
 
@@ -190,7 +191,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                           h('tr', { key: s.uid, className: s.active ? '' : 'text-muted' },
                             h('td', null,
                               h('div', { className: 'd-flex align-items-center gap-2' },
-                                h('div', { className: 'report-avatar' }, initials(s.name)),
+                                h(UserAvatar, { name: s.name, src: s.avatar, size: 34 }),
                                 h('div', { className: 'min-w-0' },
                                   h('div', { className: 'fw-semibold text-truncate' }, s.name),
                                   s.username && h('div', { className: 'small text-muted text-truncate' }, s.username)
@@ -231,7 +232,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                                 : h('div', { className: 'd-flex flex-column gap-2' },
                                     rows.slice().sort((a, b) => (b.ev.score || 0) - (a.ev.score || 0)).map(({ s, ev }) =>
                                       h('div', { key: s.uid, className: 'd-flex align-items-center gap-2 report-quiz-row' },
-                                        h('div', { className: 'report-avatar sm' }, initials(s.name)),
+                                        h(UserAvatar, { name: s.name, src: s.avatar, size: 28 }),
                                         h('span', { className: 'flex-grow-1 text-truncate small fw-semibold' }, s.name),
                                         ev.correct != null && ev.total != null && h('span', { className: 'small text-muted' }, `${ev.correct}/${ev.total} câu`),
                                         h('span', { className: 'small text-muted d-none d-sm-inline' }, formatDate(ev.at)),
@@ -263,7 +264,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                               ),
                               viewers.length > 0
                                 ? h('div', { className: 'd-flex flex-wrap gap-1' },
-                                    viewers.map(s => h('span', { key: s.uid, className: 'report-chip' }, h('span', { className: 'report-avatar xs' }, initials(s.name)), s.name))
+                                    viewers.map(s => h('span', { key: s.uid, className: 'report-chip' }, h(UserAvatar, { name: s.name, src: s.avatar, size: 20 }), s.name))
                                   )
                                 : h('small', { className: 'text-muted' }, 'Chưa có sinh viên nào xem.')
                             )
@@ -294,7 +295,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                                     doers.map(s => {
                                       const sub = s.hwSubMap[refId] || {}
                                       return h('div', { key: s.uid, className: 'report-sub-row d-flex align-items-start gap-2' },
-                                        h('div', { className: 'report-avatar sm flex-shrink-0' }, initials(s.name)),
+                                        h(UserAvatar, { name: s.name, src: s.avatar, size: 28 }),
                                         h('div', { className: 'flex-grow-1 min-w-0' },
                                           h('div', { className: 'd-flex align-items-center gap-2 flex-wrap' },
                                             h('span', { className: 'fw-semibold small' }, s.name),

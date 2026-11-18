@@ -1,7 +1,10 @@
 // pages/Schedule.js – Thời khóa biểu & Lịch thi
 import { DAY_LABELS, DAY_ORDER, weekdayLabel, CLASS_FORMATS, EXAM_FORMATS } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
-import { classOptionsForSubject, classesInItems, semesterLabel, semestersOf, teacherSections, termLabel, FULL_ROLES } from '../utils/scope.js'
+import { classOptionsForSubject, classesInItems, semesterLabel, teacherSections, FULL_ROLES,
+         khoaChoices, termChoices, defaultTermSel, inKhoa, inTerm, termInfoOf, termKey, currentTerm } from '../utils/scope.js'
+import { TIET, blockFits, blockTime, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, todayIso, classOnDate, termWeekNumber, weekRangeLabel, fromIso } from '../utils/periods.js'
+import { isGuidedSubject } from '../utils/grading.js'
 
 const { useState, createElement: h } = window.React
 
@@ -33,10 +36,14 @@ const subjectLabel = (s) => `${s.name}${s.code ? ` (${s.code}${semesterLabel(s) 
 function ClassModal({ subjects, item, defaultTeacher, classOptionsFor, requireClass, onSave, onClose }) {
   const [form, setForm] = useState(item
     ? { description: '', link: '', ...item }
-    : { subjectId: subjects[0]?.id || '', day: 2, start: '07:00', end: '09:00', room: '', teacher: '', format: 'offline', description: '', link: '', ...defaultClass(classOptionsFor, requireClass, subjects[0]?.id) })
+    : { subjectId: subjects[0]?.id || '', day: 2, start: '07:30', end: '09:45', tietStart: 1, tietEnd: 3, room: '', teacher: '', format: 'offline', description: '', link: '', ...defaultClass(classOptionsFor, requireClass, subjects[0]?.id) })
   const dateErr = form.startDate && form.endDate && form.endDate < form.startDate
   const classOpts = classOptionsFor(Number(form.subjectId))
-  const valid = form.subjectId && form.start && form.end && !dateErr && (!requireClass || form.classId)
+  const soTiet = form.tietStart && form.tietEnd ? form.tietEnd - form.tietStart + 1 : 3
+  const tietValid = !form.tietStart || blockFits(form.tietStart, soTiet)           // khối tiết phải nằm gọn trong một buổi
+  const legacyTime = !!item && !item.tietStart && !tietRangeOf(item.start, item.end)   // giờ cũ không theo bảng tiết
+  const setBlock = (st, len) => setForm(f => { const b = blockTime(st, len); return { ...f, tietStart: st, tietEnd: st + len - 1, ...(b ? { start: b.start, end: b.end } : {}) } })
+  const valid = form.subjectId && form.start && form.end && !dateErr && tietValid && (!requireClass || form.classId)
   const isOnline = form.format === 'online' || form.format === 'hybrid'
 
   const pickSubject = (sid) => {
@@ -71,14 +78,21 @@ function ClassModal({ subjects, item, defaultTeacher, classOptionsFor, requireCl
             )
           ),
           h('div', { className: 'row g-3 mb-3' },
-            h('div', { className: 'col-6' },
-              h('label', { className: 'form-label fw-semibold' }, 'Giờ bắt đầu ', h('span', { className: 'text-danger' }, '*')),
-              h('input', { type: 'time', className: 'form-control', value: form.start, onChange: e => setForm({ ...form, start: e.target.value }) })
+            h('div', { className: 'col-7' },
+              h('label', { className: 'form-label fw-semibold' }, 'Tiết bắt đầu ', h('span', { className: 'text-danger' }, '*')),
+              h('select', { className: 'form-select', value: form.tietStart || '', onChange: e => e.target.value && setBlock(Number(e.target.value), soTiet) },
+                !form.tietStart && h('option', { value: '' }, '— chọn tiết —'),
+                Object.keys(TIET).map(n => h('option', { key: n, value: n }, `Tiết ${n} (${TIET[n][0]})`)))
             ),
-            h('div', { className: 'col-6' },
-              h('label', { className: 'form-label fw-semibold' }, 'Giờ kết thúc ', h('span', { className: 'text-danger' }, '*')),
-              h('input', { type: 'time', className: 'form-control', value: form.end, onChange: e => setForm({ ...form, end: e.target.value }) })
-            )
+            h('div', { className: 'col-5' },
+              h('label', { className: 'form-label fw-semibold' }, 'Số tiết'),
+              h('select', { className: 'form-select', value: soTiet, onChange: e => setBlock(form.tietStart || 1, Number(e.target.value)) },
+                [1, 2, 3, 4, 5, 6].map(n => h('option', { key: n, value: n }, `${n} tiết`)))
+            ),
+            h('div', { className: 'col-12 form-text mt-1' },
+              !tietValid ? h('span', { className: 'text-danger' }, 'Khối tiết phải nằm trong một buổi: sáng tiết 1–6, chiều tiết 7–12, tối tiết 13–16.')
+                : legacyTime && !form.tietStart ? h('span', { className: 'text-warning' }, `Giờ cũ ${form.start}–${form.end} không theo bảng tiết; chọn tiết để thay.`)
+                : `Tiết ${form.tietStart}–${form.tietEnd} · ${form.start} – ${form.end}`)
           ),
           h('div', { className: 'row g-3 mb-3' },
             h('div', { className: 'col-6' },
@@ -215,7 +229,9 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
   const [editExam, setEditExam] = useState(null)
   const [confirm,  setConfirm]  = useState(null)    // { kind:'cls'|'exam', id }
   const [fClass,   setFClass]   = useState('')      // bộ lọc lớp ('' = tất cả lớp trong phạm vi của tôi)
-  const [fSem,     setFSem]     = useState('')      // bộ lọc học kỳ (Admin / Đào tạo)
+  const [week,     setWeek]     = useState(() => mondayOf(todayIso()))   // Thứ Hai của tuần đang xem
+  const [fKhoa,    setFKhoa]    = useState('')      // bộ lọc khóa ('' = tất cả khóa trong phạm vi của tôi)
+  const [fTerm,    setFTerm]    = useState(null)    // bộ lọc học kỳ: null = mặc định học kỳ hiện tại, '' = tất cả học kỳ
 
   const isTeacher = role === 'admin' || role === 'teacher' || role === 'training'   // Phòng Đào tạo xếp lịch
   const subjectOf = (id) => subjects.find(s => s.id === id) || {}
@@ -226,12 +242,15 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
   const fullView = FULL_ROLES.includes(role)
 
   // ── Lưu (functional update để không mất dữ liệu môn khác) ──
+  const termFields = (sid) => { const t = subjectOf(sid); return t.namHoc && t.ky ? { khoa: t.khoa || '', namHoc: t.namHoc, ky: t.ky } : {} }
   const saveCls = (form) => {
+    form = { ...termFields(form.subjectId), ...form }
     if (clsModal === 'edit') setSchedule(prev => prev.map(c => c.id === editCls.id ? { ...c, ...form } : c))
     else setSchedule(prev => [...prev, { id: Date.now(), ...form }])
     setClsModal(null)
   }
   const saveExam = (form) => {
+    form = { ...termFields(form.subjectId), ...form }
     if (examModal === 'edit') setExams(prev => prev.map(c => c.id === editExam.id ? { ...c, ...form } : c))
     else setExams(prev => [...prev, { id: Date.now(), ...form }])
     setExamModal(null)
@@ -243,15 +262,46 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
   }
 
   // ── Dữ liệu hiển thị ──
-  const classChoices = classesInItems([...schedule, ...exams])
-  const semChoices = fullView ? semestersOf(subjects.filter(s => [...schedule, ...exams].some(x => x.subjectId === s.id))) : []
-  const visible = (x) => (!fClass || x.classId === fClass) && (!fSem || subjectOf(x.subjectId).hocKy === Number(fSem))
+  // Lịch được tách theo KHÓA và theo HỌC KỲ của năm học (mỗi mục gắn khoa/namHoc/ky; mục cũ lấy từ học phần). Mặc định chỉ học kỳ hiện tại
+  // để không dồn thời khóa biểu của cả 4 năm của mọi khóa vào một danh sách.
+  const allItems = [...schedule, ...exams]
+  const termItems = allItems.map(x => termInfoOf(x, subjectOf)).filter(Boolean)
+  const khoaOpts = khoaChoices(allItems.map(x => ({ khoa: x.khoa || subjectOf(x.subjectId).khoa })))
+  const termOpts = termChoices(termItems)
+  const termSel = fTerm === null ? defaultTermSel(termItems) : fTerm
+  const inScopeTK = (x) => inKhoa(x, fKhoa, subjectOf) && inTerm(x, termSel, subjectOf)
+  const classChoices = classesInItems(allItems.filter(inScopeTK))
+  const visible = (x) => inScopeTK(x) && (!fClass || x.classId === fClass)
   const shownSchedule = schedule.filter(visible), shownExams = exams.filter(visible)
-  const showFilters = role !== 'student' && (classChoices.length > 1 || semChoices.length > 1)
+  const showFilters = role !== 'student' && (khoaOpts.length > 1 || termOpts.length > 1 || classChoices.length > 1)
+  // Ô chọn môn trong form chỉ liệt kê học phần của học kỳ đang lọc (kèm môn của mục đang sửa) để không dài theo số năm
+  const modalSubjects = (extraId) => subjects.filter(sb => !isGuidedSubject(sb) && (sb.id === extraId || inTerm(sb, termSel) && inKhoa(sb, fKhoa)))   // môn hướng dẫn không xếp lịch
+  const resetFilters = () => { setFKhoa(''); setFTerm(null); setFClass('') }
+  const isDefault = !fKhoa && fTerm === null && !fClass
   const classBadge = (c) => c.classId && h('span', { className: 'badge bg-light text-dark border ms-2', style: { fontSize: '0.7rem' } }, h('i', { className: 'bi bi-people me-1' }), c.className || c.classId)
   const semBadge = (sub) => semesterLabel(sub) && h('span', { className: 'badge bg-primary-subtle text-primary ms-1', style: { fontSize: '0.7rem' } }, semesterLabel(sub))
-  const byDay = DAY_ORDER.map(d => ({ day: d, items: shownSchedule.filter(c => c.day === d).sort((a, b) => a.start.localeCompare(b.start)) }))
-                         .filter(g => g.items.length > 0)
+
+  // ── Thời khóa biểu theo TUẦN thật: mỗi tuần một danh sách, chuyển tuần theo mốc thời gian thật ──
+  // Buổi học lặp hằng tuần trong khoảng ngày [startDate, endDate] của học kỳ nên chỉ hiện ở các tuần thuộc học kỳ đó.
+  const today = todayIso()
+  const weekDays = weekDates(week)
+  const activeThisWeek = schedule.filter(c => weekDays.some(d => classOnDate(c, d.iso)))        // mọi buổi học diễn ra trong tuần này
+  const weekKhoaOpts = [...new Set([...khoaChoices(activeThisWeek.map(c => ({ khoa: c.khoa || subjectOf(c.subjectId).khoa }))), ...(fKhoa ? [fKhoa] : [])])].sort().reverse()
+  const weekClassChoices = classesInItems(activeThisWeek.filter(c => inKhoa(c, fKhoa, subjectOf)))
+  const weekOk = (x) => inKhoa(x, fKhoa, subjectOf) && (!fClass || x.classId === fClass)
+  const byTime = (a, b) => (a.tietStart || 99) - (b.tietStart || 99) || String(a.start || '').localeCompare(String(b.start || ''))
+  const dayItems = (d) => schedule.filter(c => weekOk(c) && classOnDate(c, d.iso)).sort(byTime)
+  const dayExams = (d) => exams.filter(e => weekOk(e) && e.date === d.iso).sort(byTime)
+  const weekCount = weekDays.reduce((n, d) => n + dayItems(d).length, 0)
+  const weekExamCount = weekDays.reduce((n, d) => n + dayExams(d).length, 0)
+  const weekTerms = [...new Map(weekDays.flatMap(d => dayItems(d)).map(c => [termKey(termInfoOf(c, subjectOf) || {}), termInfoOf(c, subjectOf) || c])).entries()]
+  const oneTerm = weekTerms.length === 1 && weekTerms[0][0] ? weekTerms[0][1] : null
+  const termStart = oneTerm && schedule.find(c => termKey(termInfoOf(c, subjectOf) || {}) === weekTerms[0][0] && c.startDate)
+  const weekNo = termStart ? termWeekNumber(termStart.startDate, termStart.endDate, week) : null
+  const isThisWeek = week === mondayOf(today)
+  // Môn hướng dẫn (thực tập, đồ án, khóa luận) của học kỳ hiện tại: không có thời khóa biểu cụ thể
+  const curKey = termKey(currentTerm())
+  const guidedNow = subjects.filter(sb => isGuidedSubject(sb) && (!termKey(sb) || termKey(sb) === curKey))
   const sortedExams = shownExams.slice().sort((a, b) => new Date(a.date) - new Date(b.date) || a.start.localeCompare(b.start))
   const now = new Date(); now.setHours(0, 0, 0, 0)
 
@@ -263,11 +313,11 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
       h('div', { className: 'flex-grow-1 min-w-0' },
         h('div', { className: 'fw-semibold' }, sub.name || 'Môn học', classBadge(c), semBadge(sub)),
         h('div', { className: 'd-flex flex-wrap gap-3 mt-1 small text-muted' },
-          h('span', null, h('i', { className: 'bi bi-clock me-1' }), `${c.start} – ${c.end}`),
+          h('span', null, h('i', { className: 'bi bi-clock me-1' }), tietLabel(c) ? `${tietLabel(c)} · ${c.start} – ${c.end}` : `${c.start} – ${c.end}`),
           c.room && h('span', null, h('i', { className: 'bi bi-geo-alt me-1' }), c.room),
           c.teacher && h('span', null, h('i', { className: 'bi bi-person me-1' }), c.teacher),
           h('span', { style: { color: cf.color } }, h('i', { className: `bi bi-${cf.icon} me-1` }), cf.label),
-          (c.startDate || c.endDate) && h('span', null, h('i', { className: 'bi bi-calendar-range me-1' }),
+          (c.startDate || c.endDate) && h('span', { title: 'Khoảng ngày diễn ra của học kỳ' }, h('i', { className: 'bi bi-calendar-range me-1' }),
             `${c.startDate ? fmtDate(c.startDate) : '…'} – ${c.endDate ? fmtDate(c.endDate) : '…'}`)
         ),
         c.description && h('div', { className: 'small text-muted mt-1' }, h('i', { className: 'bi bi-card-text me-1' }), c.description),
@@ -305,39 +355,83 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
         h('i', { className: 'bi bi-clipboard-check me-1' }), `Lịch thi${shownExams.length ? ` (${shownExams.length})` : ''}`)
     ),
 
-    // Bộ lọc: học kỳ (Admin/Đào tạo) và lớp
-    showFilters && h('div', { className: 'd-flex flex-wrap align-items-center gap-2 mb-4' },
+    // Tab thời khóa biểu: chuyển tuần theo mốc thời gian thật
+    tab === 'tkb' && h('div', { className: 'card border-0 shadow-sm mb-3' },
+      h('div', { className: 'card-body py-2 px-3 d-flex flex-wrap align-items-center gap-2' },
+        h('button', { className: 'btn btn-sm btn-outline-secondary', title: 'Tuần trước', onClick: () => setWeek(addDays(week, -7)) }, h('i', { className: 'bi bi-chevron-left' }), ' Tuần trước'),
+        h('button', { className: `btn btn-sm ${isThisWeek ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => setWeek(mondayOf(today)) }, 'Tuần này'),
+        h('button', { className: 'btn btn-sm btn-outline-secondary', title: 'Tuần sau', onClick: () => setWeek(addDays(week, 7)) }, 'Tuần sau ', h('i', { className: 'bi bi-chevron-right' })),
+        h('div', { className: 'ms-2' },
+          h('div', { className: 'fw-bold' }, weekRangeLabel(week), isThisWeek && h('span', { className: 'badge bg-success ms-2' }, 'Tuần hiện tại'),
+            weekNo && h('span', { className: 'badge bg-primary-subtle text-primary ms-2' }, `Tuần ${weekNo} của học kỳ ${oneTerm.ky} · ${oneTerm.namHoc}`)),
+          h('small', { className: 'text-muted' }, `${weekCount} tiết học${weekExamCount ? ` · ${weekExamCount} lịch thi` : ''} trong tuần`)),
+        h('div', { className: 'ms-auto d-flex align-items-center gap-2' },
+          h('label', { className: 'small text-muted mb-0' }, 'Đến ngày'),
+          h('input', { type: 'date', className: 'form-control form-control-sm', style: { width: 'auto' }, value: today === week ? today : '', 'aria-label': 'Chọn ngày để chuyển tới tuần chứa ngày đó',
+            onChange: e => e.target.value && setWeek(mondayOf(e.target.value)) }))
+      ),
+      (weekKhoaOpts.length > 1 || weekClassChoices.length > 1) && h('div', { className: 'card-body border-top py-2 px-3 d-flex flex-wrap align-items-center gap-2' },
+        h('i', { className: 'bi bi-funnel text-muted' }),
+        weekKhoaOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fKhoa, onChange: e => { setFKhoa(e.target.value); setFClass('') }, 'aria-label': 'Lọc theo khóa' },
+          h('option', { value: '' }, 'Tất cả khóa'), weekKhoaOpts.map(k => h('option', { key: k, value: k }, `Khóa ${k}`))),
+        weekClassChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fClass, onChange: e => setFClass(e.target.value), 'aria-label': 'Lọc theo lớp' },
+          h('option', { value: '' }, `Tất cả lớp (${weekClassChoices.length})`), weekClassChoices.map(c => h('option', { key: c.id, value: c.id }, c.name))),
+        (fKhoa || fClass) && h('button', { className: 'btn btn-sm btn-link', onClick: () => { setFKhoa(''); setFClass('') } }, 'Bỏ lọc'))
+    ),
+
+    // Tab lịch thi: lọc theo khóa, học kỳ, lớp (mặc định học kỳ hiện tại)
+    tab === 'thi' && showFilters && h('div', { className: 'd-flex flex-wrap align-items-center gap-2 mb-4' },
       h('i', { className: 'bi bi-funnel text-muted' }),
-      semChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fSem, onChange: e => setFSem(e.target.value), 'aria-label': 'Lọc theo học kỳ' },
+      khoaOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fKhoa, onChange: e => { setFKhoa(e.target.value); setFClass('') }, 'aria-label': 'Lọc theo khóa' },
+        h('option', { value: '' }, 'Tất cả khóa'),
+        khoaOpts.map(k => h('option', { key: k, value: k }, `Khóa ${k}`))
+      ),
+      termOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: termSel, onChange: e => { setFTerm(e.target.value); setFClass('') }, 'aria-label': 'Lọc theo học kỳ' },
         h('option', { value: '' }, 'Tất cả học kỳ'),
-        semChoices.map(n => h('option', { key: n, value: n }, termLabel(n)))
+        termOpts.map(t => h('option', { key: t.key, value: t.key }, t.label))
       ),
       classChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fClass, onChange: e => setFClass(e.target.value), 'aria-label': 'Lọc theo lớp' },
         h('option', { value: '' }, `Tất cả lớp (${classChoices.length})`),
         classChoices.map(c => h('option', { key: c.id, value: c.id }, c.name))
       ),
-      (fClass || fSem) && h('button', { className: 'btn btn-sm btn-link', onClick: () => { setFClass(''); setFSem('') } }, 'Bỏ lọc'),
-      h('small', { className: 'text-muted ms-1' }, `${shownSchedule.length} tiết học · ${shownExams.length} lịch thi`)
+      !isDefault && h('button', { className: 'btn btn-sm btn-link', onClick: resetFilters }, 'Về học kỳ hiện tại'),
+      h('small', { className: 'text-muted ms-1' }, `${shownExams.length} lịch thi`, termSel && termOpts.find(t => t.key === termSel)?.current ? ' · học kỳ hiện tại' : '')
     ),
 
-    // ── TAB: Thời khóa biểu ──
-    tab === 'tkb' && (
-      byDay.length === 0
-        ? h('div', { className: 'text-center text-muted py-5' },
-            h('i', { className: 'bi bi-calendar-x fs-1 d-block mb-3 opacity-25' }),
-            h('p', null, isTeacher ? 'Chưa có tiết học nào. Nhấn "Thêm tiết học" để bắt đầu.' : 'Chưa có thời khóa biểu.')
+    // ── TAB: Thời khóa biểu theo tuần ──
+    tab === 'tkb' && h('div', { className: 'd-flex flex-column gap-3' },
+      weekDays.filter(d => d.day !== 8 || dayItems(d).length || dayExams(d).length).map(d => {
+        const items = dayItems(d), exs = dayExams(d), isToday = d.iso === today
+        const [yy, mm, dd] = d.iso.split('-')
+        return h('div', { key: d.iso, className: `card border-0 shadow-sm${isToday ? ' border border-primary' : ''}`, style: isToday ? { boxShadow: '0 0 0 2px var(--primary)' } : undefined },
+          h('div', { className: 'card-header bg-transparent border-0 pt-3 px-4 fw-bold d-flex align-items-center gap-2' },
+            h('i', { className: 'bi bi-calendar3', style: { color: 'var(--primary)' } }), DAY_LABELS[d.day], h('span', { className: 'fw-normal text-muted' }, `${dd}/${mm}/${yy}`),
+            isToday && h('span', { className: 'badge bg-primary' }, 'Hôm nay'),
+            !items.length && !exs.length && h('span', { className: 'badge bg-light text-muted border ms-1' }, 'Nghỉ')),
+          (items.length > 0 || exs.length > 0) && h('div', { className: 'card-body pt-2 px-4 pb-3 d-flex flex-column gap-2' },
+            items.map(classCard),
+            exs.map(e => {
+              const sub = subjectOf(e.subjectId), ef = EXAM_FORMATS[e.format] || EXAM_FORMATS.tuLuan
+              return h('div', { key: 'e' + e.id, className: 'sched-item', style: { borderLeftColor: '#e74a3b' } },
+                h('div', { className: 'flex-grow-1 min-w-0' },
+                  h('div', { className: 'fw-semibold' }, h('span', { className: 'badge bg-danger me-2' }, 'Thi'), sub.name || 'Môn thi', classBadge(e), semBadge(sub)),
+                  h('div', { className: 'd-flex flex-wrap gap-3 mt-1 small text-muted' },
+                    h('span', null, h('i', { className: 'bi bi-clock me-1' }), tietLabel(e) ? `${tietLabel(e)} · ${e.start} – ${e.end}` : `${e.start}${e.end ? ' – ' + e.end : ''}`),
+                    e.room && h('span', null, h('i', { className: 'bi bi-geo-alt me-1' }), e.room),
+                    h('span', { style: { color: ef.color } }, h('i', { className: `bi bi-${ef.icon} me-1` }), ef.label))))
+            })
           )
-        : h('div', { className: 'd-flex flex-column gap-3' },
-            byDay.map(g =>
-              h('div', { key: g.day, className: 'card border-0 shadow-sm' },
-                h('div', { className: 'card-header bg-transparent border-0 pt-3 px-4 fw-bold' },
-                  h('i', { className: 'bi bi-calendar3 me-2', style: { color: 'var(--primary)' } }), DAY_LABELS[g.day]),
-                h('div', { className: 'card-body pt-2 px-4 pb-3 d-flex flex-column gap-2' },
-                  g.items.map(classCard)
-                )
-              )
-            )
-          )
+        )
+      }),
+      weekCount === 0 && weekExamCount === 0 && h('div', { className: 'text-center text-muted py-4' },
+        h('i', { className: 'bi bi-calendar-x fs-1 d-block mb-2 opacity-25' }),
+        h('p', { className: 'mb-1' }, 'Tuần này không có tiết học.'),
+        h('small', null, 'Có thể tuần này nằm ngoài thời gian học kỳ (nghỉ hoặc kỳ thi). Dùng "Tuần trước", "Tuần sau" hoặc chọn ngày để chuyển tuần.')),
+      guidedNow.length > 0 && h('div', { className: 'card border-0 shadow-sm' },
+        h('div', { className: 'card-body py-3 px-4' },
+          h('div', { className: 'fw-bold small mb-1' }, h('i', { className: 'bi bi-person-check me-2', style: { color: 'var(--primary)' } }), 'Môn hướng dẫn: không có thời khóa biểu cố định'),
+          h('div', { className: 'small text-muted mb-2' }, 'Thực tập, đồ án và khóa luận làm việc theo lịch hẹn với giáo viên hướng dẫn; kết quả phụ thuộc việc đáp ứng yêu cầu của người hướng dẫn.'),
+          h('div', { className: 'd-flex flex-wrap gap-2' }, guidedNow.map(sb => h('span', { key: sb.id, className: 'badge bg-info-subtle text-info' }, sb.name, sb.khoa ? ` · Khóa ${sb.khoa}` : '')))))
     ),
 
     // ── TAB: Lịch thi ──
@@ -370,7 +464,7 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
                     ),
                     h('div', { className: 'sched-exam-info' },
                       h('div', null, h('i', { className: 'bi bi-calendar-event me-2 text-muted' }), h('strong', null, weekdayLabel(e.date)), ', ', fmtDate(e.date)),
-                      h('div', null, h('i', { className: 'bi bi-clock me-2 text-muted' }), `${e.start}${e.end ? ' – ' + e.end : ''}`),
+                      h('div', null, h('i', { className: 'bi bi-clock me-2 text-muted' }), tietLabel(e) ? `${tietLabel(e)} · ` : '', `${e.start}${e.end ? ' – ' + e.end : ''}`),
                       e.room && h('div', null, h('i', { className: 'bi bi-geo-alt me-2 text-muted' }), e.room),
                       e.teacher && h('div', null, h('i', { className: 'bi bi-person me-2 text-muted' }), e.teacher),
                       e.description && h('div', { className: 'text-muted' }, h('i', { className: 'bi bi-card-text me-2' }), e.description)
@@ -388,8 +482,8 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
           )
     ),
 
-    clsModal  && h(ClassModal, { subjects, item: clsModal === 'edit' ? editCls : null, defaultTeacher, classOptionsFor, requireClass, onSave: saveCls, onClose: () => setClsModal(null) }),
-    examModal && h(ExamModal,  { subjects, item: examModal === 'edit' ? editExam : null, defaultTeacher, classOptionsFor, requireClass, onSave: saveExam, onClose: () => setExamModal(null) }),
+    clsModal  && h(ClassModal, { subjects: modalSubjects(editCls?.subjectId), item: clsModal === 'edit' ? editCls : null, defaultTeacher, classOptionsFor, requireClass, onSave: saveCls, onClose: () => setClsModal(null) }),
+    examModal && h(ExamModal,  { subjects: modalSubjects(editExam?.subjectId), item: examModal === 'edit' ? editExam : null, defaultTeacher, classOptionsFor, requireClass, onSave: saveExam, onClose: () => setExamModal(null) }),
     confirm   && h(ConfirmModal, { message: confirm.kind === 'cls' ? 'Xóa tiết học này?' : 'Xóa lịch thi này?', onConfirm: doConfirm, onClose: () => setConfirm(null) })
   )
 }

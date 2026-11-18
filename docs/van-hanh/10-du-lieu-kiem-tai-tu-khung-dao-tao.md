@@ -26,12 +26,12 @@ Dùng đúng lược đồ hiện có (bảng `accounts`, `docs`), không sửa 
 
 | Thành phần | Nơi lưu | Quy ước |
 |---|---|---|
-| Môn học | `sharedData/global.subjects` | id 1000+; có `khoiKienThuc`, `hocKy`, `boMon` |
+| Học phần mở (xem mục 9) | `sharedData/global.subjects` | id 1000+; mỗi bản ghi là một **lần mở** của môn: `khoa`, `namHoc`, `ky` (1\|2), `hocKy` (vị trí trong khung 1–8), `namThu`, `trangThai`, `teachers` (1–3 tên) |
 | Chương trình đào tạo | `curriculum/khung-cntt-mau` | Khớp `utils/curriculum.js` (các module theo khối kiến thức) |
-| Thời khóa biểu | `sharedData/global.schedule` | Mỗi lớp × môn: 2 buổi/tuần (môn 3–4 TC) hoặc 1 buổi; lớp, giáo viên, phòng **không trùng giờ**; có `classId` |
-| Lịch thi | `sharedData/global.exams` | Mỗi lớp thi các môn của kỳ cách nhau 2 ngày |
-| Tài liệu | `sharedData/global.materials` + tệp PDF thật `uploads/<mã>_<tên>.pdf` | Giáo trình, slide từng chương, bài tập, đề thi mẫu, tham khảo; nội dung PDF ngẫu nhiên (không nén được) |
-| Trắc nghiệm | `sharedData/global.quizzes` (không đáp án) + `quizKeys/<id>` | Đề 1 đã đóng, các đề sau đang mở; hợp lệ theo `quiz_shape_ok` của máy chủ |
+| Thời khóa biểu | `sharedData/global.schedule` | Theo **từng học kỳ của từng khóa**: mỗi lớp × học phần 2 buổi/tuần (môn 3–4 TC) hoặc 1 buổi; lớp, giáo viên, phòng **không trùng giờ trong cùng học kỳ**; có `classId`, `khoa`, `namHoc`, `ky`, `startDate`, `endDate` của học kỳ |
+| Lịch thi | `sharedData/global.exams` | Theo từng học kỳ: trong khoảng thi của học kỳ (tháng 1 hoặc tháng 6), mỗi lớp thi các môn cách nhau 2 ngày; có `khoa`, `namHoc`, `ky` |
+| Tài liệu | `sharedData/global.materials` + tệp PDF thật `uploads/<mã>_<tên>.pdf` | Chỉ học phần đã kết thúc/đang học; mỗi học phần có thư mục riêng nhưng **tệp PDF dùng chung giữa các năm** (giáo trình, slide dùng lại) nên số tệp ít hơn số mục; nội dung PDF ngẫu nhiên |
+| Trắc nghiệm | `sharedData/global.quizzes` (không đáp án) + `quizKeys/<id>` | Chỉ học phần đã kết thúc (đề đã đóng) và đang học (đề 1 đã đóng, các đề sau đang mở); hợp lệ theo `quiz_shape_ok` |
 | Tài khoản | `accounts` + `user/<uid>` + `userData/<uid>` | Xem bên dưới |
 | Lớp | `classes/<id>` | Danh sách sinh viên, giáo viên và buổi học của từng lớp học phần. **API không đọc được** (collection lạ bị từ chối); xem bằng SQL |
 | Danh sách đăng nhập | `<data-dir>/seed-accounts.csv` | `username,password,role,uid,class,cohort`, dùng cho `loadtest_studytask.py` |
@@ -43,22 +43,24 @@ Dùng đúng lược đồ hiện có (bảng `accounts`, `docs`), không sửa 
 | `user/<uid>` của sinh viên | `cohort` (`2023-2027`), `namHoc` (`2026-2027`), `hocKy` (1 hoặc 2), `namThu` (1–4), `classId`, `className`, `studentId` |
 | `userData/<uid>.profile` | `cohort`, `semester` ("Học kỳ 1 – Năm học 2026-2027"), `className`, `studentId`, … |
 | `classes/<id>` | `cohort`, `namHoc`, `hocKy`, `namThu` |
-| môn trong `sharedData/global.subjects` | `hocKy` 1–8 là **vị trí trong khung**, giao diện hiển thị "Năm 2 – Học kỳ 1" |
+| học phần trong `sharedData/global.subjects` | `khoa`, `namHoc`, `ky` là lần mở; `hocKy` 1–8 là vị trí trong khung |
 | `curriculum/khung-cntt-mau` | `cohort` = năm nhập học sớm nhất còn áp dụng khung (vd `2023`) |
 
-**Giáo viên.** Gom theo bộ môn (Lý luận chính trị, Toán, Ngoại ngữ & Kỹ năng, Lập trình, Hệ thống & Mạng, CNPM & CSDL, AI & Dữ liệu). `canTeachSubjectIds` = mọi môn của bộ môn (dạy được các môn chung cấu trúc ở nhiều học kỳ). Mỗi giáo viên nhận tối đa `--max-load` (mặc định 6) **lớp học phần** (lớp + môn); thiếu thì tự thêm giáo viên. Hồ sơ ghi `sections: [{classId, subjectId}]` và `subjectIds` = các môn **được phân công** (suy ra từ `sections`).
+**Giáo viên.** Gom theo bộ môn (Lý luận chính trị, Toán, Ngoại ngữ & Kỹ năng, Lập trình, Hệ thống & Mạng, CNPM & CSDL, AI & Dữ liệu); `canTeachCodes` = mã các môn của bộ môn (một giáo viên dạy được các môn chung cấu trúc và dạy lại cùng môn ở nhiều năm). **Mỗi học phần mở có từ 1 đến 3 giáo viên** (`--max-teachers`, mặc định 3): các lớp của khóa chia cho họ, khoảng `--classes-per-teacher` (4) lớp mỗi người; ít lớp thì 1 giáo viên, 10 lớp thì 2–3. Tải một giáo viên trong một học kỳ tối đa `--max-load` (8) lớp học phần ≈ 16 buổi/tuần; quá tải thì tạo thêm giáo viên mới thay vì vượt 3 người/học phần. Hồ sơ ghi `sections: [{classId, subjectId}]` và `subjectIds` = các học phần **được phân công** (mọi năm).
 
 **Tài khoản.** Sinh viên `sv<2 số cuối năm nhập học><lớp 2 số><số 3 chữ số>` (vd `sv2301001` = khóa 2023, lớp 01, số 001; mã số sinh viên là phần sau `sv`), giáo viên `gv<bộ môn><số>` (vd `gvlt03`). Đủ cả 7 bộ môn đều có giáo viên; bộ môn chưa có lớp học phần ở học kỳ này (Ngoại ngữ & Kỹ năng ở học kỳ 1) có giáo viên chưa được phân công (`subjectIds` trống). Mật khẩu băm PBKDF2 đúng như máy chủ; script kiểm tra khớp thuật toán trước khi ghi.
 
 ### Quy mô
 
-| Preset | Sinh viên | Giáo viên | Lớp | Buổi/tuần | Tệp PDF | Ghi chú |
-|---|---|---|---|---|---|---|
-| `small` | ~390 | ~17 | 16 | 134 | 259 tệp, ~5 MB | Thử nhanh (~20 s) |
-| `medium` (mặc định) | ~1.980 | ~64 | 80 | 670 | 333 tệp, ~120 MB | ~85 s trên laptop 12 luồng |
-| `large` | ~8.050 | ~249 | 320 | 2.680 | 407 tệp, ~720 MB | `sharedData` 2,7 MB (đã đo bằng `--dry-run`), bằng 54% giới hạn ghi 5 MB |
+| Preset | Lớp mỗi khóa | Sinh viên | Giáo viên | Học phần mở | Buổi/tuần: cả 8 học kỳ → hiện tại | Tệp PDF | `sharedData` |
+|---|---|---|---|---|---|---|---|
+| `small` | 3 | 292 | 21 | 148 (1 GV mỗi học phần) | 408 → 57 | 138 tệp, 3 MB | 0,7 MB |
+| `medium` (mặc định) | 10 | 982 | 44 | 148 (2–3 GV) | 1.360 → 190 | 172 tệp, 28 MB | 2,0 MB |
+| `large` | 16 | 1.599 | 63 | 148 (3 GV) | 2.176 → 304 | 206 tệp, 53 MB | 3,0 MB (59% giới hạn ghi 5 MB) |
 
-Tinh chỉnh bằng `--classes`, `--slides`, `--quizzes`, `--questions`, `--file-kb MIN,MAX`, `--no-files`. Cùng `--seed` cho cùng danh sách. Xem kế hoạch trước khi ghi: `--dry-run`.
+`--classes` là số lớp **mỗi khóa** (4 khóa đang học). Nhiều lớp hơn 16 mỗi khóa thì một học phần cần quá 3 giáo viên nên script báo lỗi thay vì vượt trần.
+
+Tinh chỉnh bằng `--classes`, `--max-teachers`, `--classes-per-teacher`, `--max-load`, `--nam-hoc`, `--hoc-ky`, `--slides`, `--quizzes`, `--questions`, `--file-kb MIN,MAX`, `--no-files`. Cùng `--seed` cho cùng danh sách. Xem kế hoạch trước khi ghi: `--dry-run`.
 
 ## 3. Chạy trên máy cá nhân
 
@@ -205,3 +207,32 @@ Cùng một môn mở ở nhiều lớp và do nhiều giáo viên đảm nhận
 ```bash
 python3 ~/loadtest/tools/scripts/seed_curriculum.py --data-dir /var/lib/studytask --upgrade-assignments
 ```
+
+## 9. Học phần mở theo năm, khóa và học kỳ (17/11/2026)
+
+Trước đây mỗi môn của khung chỉ có **một** bản ghi dùng chung cho mọi khóa, nên một môn dồn nhiều giáo viên và toàn bộ thời khóa biểu 4 năm vào một danh sách (hàng trăm buổi học, hàng trăm lịch thi). Mô hình mới:
+
+- **Học phần mở** = (môn, khóa, năm học, học kỳ). Mỗi khóa học đủ 8 học kỳ của khung nên mỗi môn xuất hiện 4 lần ở 4 năm khác nhau, mỗi lần là một bản ghi riêng ("thư mục" mới: tài liệu, đề, giáo viên riêng) đánh dấu `khoa`, `namHoc`, `ky`. Trạng thái: `da-ket-thuc` / `dang-hoc` / `ke-hoach` so với học kỳ hiện tại; học phần kế hoạch chưa có tài liệu và đề.
+- **Mỗi học phần 1–3 giáo viên**: Admin gán trong Bảng quản trị → Phân công môn học (chọn học kỳ, mỗi học phần hiện `n/3 GV`, đủ 3 thì không gán thêm). Máy chủ chặn người thứ 4 (`409 teacher-limit`); chỉ xét học phần mới thêm nên dữ liệu cũ đã vượt trần không bị khóa. Thống kê hệ thống đếm "đang học nhưng chưa có giáo viên" và "vượt 3 giáo viên".
+- **Hiển thị theo khóa**: trang Môn học nhóm "Khóa 2024-2028 · Năm 3 · Học kỳ 1 (2026-2027)", có bộ lọc khóa và học kỳ, **mặc định chỉ học kỳ hiện tại** (học kỳ 1 từ tháng 8 đến hết tháng 1, học kỳ 2 từ tháng 2 đến tháng 7). Danh sách chọn môn ở lịch học, deadline, lịch tháng, báo cáo ghi kèm năm học ("Cơ sở dữ liệu · HK1 2025-2026").
+- **Thời khóa biểu theo học kỳ của từng khóa**: mỗi mục có `khoa`, `namHoc`, `ky`, `startDate`/`endDate` của học kỳ; trang Lịch học & Thi lọc theo khóa, học kỳ, lớp, mặc định học kỳ hiện tại (medium: 380 buổi/tuần thay vì 2.680; chọn một khóa còn ~95). Lịch tháng chỉ hiện buổi học trong khoảng ngày của học kỳ.
+- **Chương trình đào tạo**: nhiều lần mở cùng mã môn đều thuộc chương trình, lần mở mới nhất được dùng để kiểm tra tín chỉ.
+
+Nâng cấp dữ liệu đã nạp bằng mô hình cũ cần nạp lại: `seed_curriculum.py --data-dir ... --replace` (xóa dữ liệu có nhãn của script rồi sinh lại; tài khoản thật giữ nguyên). Sau đó gán lại ảnh đại diện bằng `assign_avatars.py` vì `--replace` xóa tệp ảnh của sinh viên seed.
+
+## 10. Thời khóa biểu theo bảng 16 tiết, theo tuần thật (17/11/2026)
+
+**Bảng tiết** (nhà trường công bố, áp dụng từ học kỳ 1 năm học 2025-2026; `utils/periods.js` và `TIET` trong `seed_curriculum.py`): 16 tiết × 45 phút; sáng tiết 1–6 (07:30–12:15), chiều tiết 7–12 (12:45–17:30), tối tiết 13–16 (18:00–21:00). Mỗi buổi học/lịch thi lưu `tietStart`, `tietEnd` cùng `start`, `end` đúng giờ của bảng.
+
+**Quy tắc xếp lịch** (bộ sinh dữ liệu; trang thêm tiết học cũng chọn theo tiết và chặn khối tiết bắc qua giờ nghỉ):
+- Một buổi học là **một khối tiết liền nhau trong cùng buổi** của một môn. Số tiết/tuần = số tín chỉ (2, 3 hoặc 4): môn 3 tín chỉ = một khối 3 tiết; môn 4 tín chỉ thực hành = một khối 4 tiết; môn 4 tín chỉ lý thuyết = hai khối 2 tiết ở hai ngày khác nhau.
+- Lớp **trực tuyến** ưu tiên buổi tối (tiết 13–16) và cuối tuần; lớp **trực tiếp** ưu tiên sáng/chiều. Chủ nhật chỉ dùng cho lớp trực tuyến.
+- Mỗi lớp có **ít nhất 1 ngày nghỉ** (Thứ Hai–Thứ Bảy) ở mọi học kỳ (1–2 ngày nghỉ, chọn ngẫu nhiên); lịch dồn vào các ngày lớp đã học và các khối liền nhau để chừa ngày nghỉ, ít tiết trống xen kẽ.
+- Lớp, giáo viên, phòng không trùng **tiết** trong cùng học kỳ. Học kỳ gồm 15 tuần học bắt đầu từ Thứ Hai, rồi 3 tuần thi; mỗi bài thi 2 tiết, không thi Chủ nhật, mỗi lớp một môn mỗi ngày.
+- Tải giáo viên tính theo tiết (`--max-load` × 3 tiết/tuần, mặc định 24) thay vì theo số lớp.
+
+**Ba môn hướng dẫn** (Đồ án chuyên ngành IT405, Thực tập doanh nghiệp IT498, Khóa luận/Đồ án tốt nghiệp IT499; đánh dấu `kieuHoc: "huong-dan"`, môn cũ nhận ra qua tên): không có buổi học, không có lịch thi, không có đề trắc nghiệm, chỉ có tài liệu hướng dẫn và biểu mẫu. Mỗi lớp vẫn có 1–3 giáo viên hướng dẫn. **Quy chế điểm**: không có bộ trọng số; điểm môn = điểm tổng kết do giáo viên hướng dẫn nhập ở Bảng điểm (kết quả phụ thuộc người học có đáp ứng yêu cầu của người hướng dẫn); trang Quy chế điểm hiện ghi chú thay cho phần cấu hình tỷ trọng. Khi tạo môn tay có ô "Môn hướng dẫn".
+
+**Trang Lịch học & Thi**: thời khóa biểu hiện **theo từng tuần thật** (Thứ Hai–Chủ nhật, tiêu đề "16/11 – 22/11/2026", đánh dấu tuần hiện tại, hôm nay và ngày nghỉ, "Tuần 11 của học kỳ 1 · 2026-2027"), có Tuần trước / Tuần này / Tuần sau và ô chọn ngày để nhảy tới tuần bất kỳ. Buổi học chỉ hiện ở các tuần nằm trong ngày bắt đầu–kết thúc của học kỳ; sau tuần 15 chỉ còn lịch thi (hiện ngay trong ngày thi). Lịch theo tháng vẫn dùng cùng quy tắc ngày. Bộ lọc khóa và lớp áp dụng cho tuần đang xem; tab Lịch thi lọc theo khóa, học kỳ, lớp.
+
+Áp dụng lên server: cần nạp lại dữ liệu (`seed_curriculum.py --replace`, rồi `assign_avatars.py`) và cài gói giao diện mới. Chưa thực hiện lúc ghi (máy chủ đang chạy SMART).

@@ -78,8 +78,22 @@ export function autoWeights(presetKey, nCounted) {
   return { weights: w, dropLowest: drop }
 }
 
+// Môn hướng dẫn: thực tập, đồ án, khóa luận. Không có thời khóa biểu cụ thể và không tính điểm theo tỷ trọng chuyên cần – bài tập –
+// giữa kỳ – cuối kỳ: kết quả phụ thuộc việc người học có đáp ứng yêu cầu của giáo viên hướng dẫn hay không, nên giáo viên hướng dẫn nhập
+// thẳng điểm tổng kết (thang 10). Dữ liệu mới đánh dấu `kieuHoc: 'huong-dan'`; môn cũ chưa có dấu thì nhận ra qua tên.
+export const isGuidedSubject = (s) => !!s && (s.kieuHoc === 'huong-dan' ||
+  (s.kieuHoc == null && /(thực tập|khóa luận|đồ án)/i.test(String(s.name || '').normalize('NFC'))))
+
 // Chính sách đầy đủ của một môn (giá trị mặc định khi chưa cấu hình)
 export function defaultPolicy(subject = {}) {
+  if (isGuidedSubject(subject)) {            // môn hướng dẫn: điểm tổng kết = điểm do giáo viên hướng dẫn nhập (ck 100%), không có chuyên cần/bài tập
+    return {
+      preset: 'HD', guided: true, auto: false,
+      weights: { cc: 0, bt: 0, gk: 0, ck: 100 }, dropLowest: 0, ckOnline: false,
+      attendance: { method: 'score', sessions: 0, a: 1, b: 0.25, c: 0.25, participation: 0 },
+      practice: { enabled: false, theoryCredits: subject.credits || 0, practiceCredits: 0 },
+    }
+  }
   const preset = 'L1'
   return {
     preset, auto: true,
@@ -105,6 +119,7 @@ export function effectivePolicy(policy, nCounted) {
 // ── Mục 6 – kiểm tra cấu hình trước khi lưu ──
 // ctx: { nCounted, nOnlineCounted, credits }  → trả về mảng thông báo lỗi (rỗng = hợp lệ)
 export function validatePolicy(policy, ctx = {}) {
+  if (policy?.guided) return []                // môn hướng dẫn không có tỷ trọng để kiểm tra
   const { nCounted = 0, nOnlineCounted = 0, credits = 3 } = ctx
   const eff = effectivePolicy(policy, nCounted)
   const w = eff.weights

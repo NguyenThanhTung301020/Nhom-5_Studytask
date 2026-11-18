@@ -43,13 +43,21 @@ export function subjectUsageDetail(subjectId, data = {}) {
 export const subjectUsage = (subjectId, data) => subjectUsageDetail(subjectId, data).total
 
 export function checkCurriculum(curriculum, subjects) {
-  const byCode = new Map(subjects.filter(s => s.code).map(s => [norm(s.code), s]))
+  // Cùng một mã môn có thể mở ở nhiều năm/khóa (mỗi lần là một học phần riêng): đại diện là lần mở mới nhất, nhưng MỌI lần mở đều thuộc CTĐT
+  const allByCode = new Map()
+  for (const s of subjects.filter(s => s.code)) {
+    const k = norm(s.code)
+    if (!allByCode.has(k)) allByCode.set(k, [])
+    allByCode.get(k).push(s)
+  }
+  const newest = (list) => list.reduce((best, s) => (String(s.namHoc || '') + (s.ky || '') >= String(best.namHoc || '') + (best.ky || '') ? s : best))
+  const byCode = new Map([...allByCode].map(([k, list]) => [k, newest(list)]))
   const inProgram = new Set()
 
   const modules = (curriculum?.modules || []).map(m => {
     const courses = (m.courses || []).map(c => {
       const s = byCode.get(norm(c.code))
-      if (s) inProgram.add(s.id)
+      for (const x of allByCode.get(norm(c.code)) || []) inProgram.add(x.id)
       const creditMismatch = s && Number(s.credits) !== Number(c.credits)
       return { ...c, subject: s || null, offered: !!s, creditMismatch }
     })

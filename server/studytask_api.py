@@ -264,6 +264,33 @@ def is_count(d, key):
     return isinstance(v, int) and not isinstance(v, bool) and v >= 0
 
 
+MAX_TEACHERS_PER_SUBJECT = 3    # một học phần mở chỉ nên có từ 1 đến 3 giáo viên được cấp quyền
+
+
+def teacher_limit_error(uid, old, new):
+    """Admin gán thêm học phần cho giáo viên: mỗi học phần mở có tối đa MAX_TEACHERS_PER_SUBJECT giáo viên.
+    Chỉ xét các học phần MỚI thêm vào hồ sơ này (dữ liệu cũ đã vượt trần không chặn việc sửa các trường khác).
+    Trả về thông báo lỗi, hoặc None nếu hợp lệ."""
+    if new.get('role') != 'teacher' or not isinstance(new.get('subjectIds'), list):
+        return None
+    added = set(new['subjectIds']) - set((old or {}).get('subjectIds') or [])
+    if not added:
+        return None
+    count = {sid: 0 for sid in added}
+    for other, data in db().execute("SELECT id, data FROM docs WHERE col='user'"):
+        if other == uid:
+            continue
+        d = json.loads(data)
+        if d.get('role') == 'teacher':
+            for sid in set(d.get('subjectIds') or []) & added:
+                count[sid] += 1
+    full = sorted(sid for sid, n in count.items() if n >= MAX_TEACHERS_PER_SUBJECT)
+    if not full:
+        return None
+    return (f'Học phần {", ".join(str(x) for x in full)} đã có đủ {MAX_TEACHERS_PER_SUBJECT} giáo viên được phân công. '
+            f'Mỗi học phần chỉ nên có từ 1 đến {MAX_TEACHERS_PER_SUBJECT} giáo viên: hãy gỡ bớt một giáo viên trước khi gán thêm.')
+
+
 def teacher_sections(profile):
     """Các lớp học phần (lớp, môn) giáo viên đang dạy: `sections` ∩ `subjectIds`; None nếu hồ sơ chưa phân theo lớp.
     Cùng một môn có thể mở ở nhiều lớp và do nhiều giáo viên đảm nhận, nên chỉ lọc theo môn sẽ lộ dữ liệu của lớp khác."""
@@ -1471,6 +1498,9 @@ class Handler(BaseHTTPRequestHandler):
                 allowed.setdefault('role', 'student')
                 allowed.setdefault('subjectIds', [])
                 allowed['createdAt'] = time.strftime('%Y-%m-%d')
+                err = teacher_limit_error(None, {}, allowed)
+                if err:
+                    raise ApiError(409, 'teacher-limit', err)
                 uid = create_account(str(b.get('username', b.get('email', ''))), str(b.get('password', '')), allowed)
                 return self.send(200, {'uid': uid})
             if len(p) == 4 and p[3] == 'password' and method == 'POST':
@@ -1536,6 +1566,10 @@ class Handler(BaseHTTPRequestHandler):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
                 if col == 'sharedData' and id_ == 'global':
                     check_subject_removal(old, merged)
+                if col == 'user':
+                    err = teacher_limit_error(id_, old or {}, merged)
+                    if err:
+                        raise ApiError(409, 'teacher-limit', err)
                 apply_quiz_ops(quiz_ops, u)
                 if sync_phone is None:
                     doc_put(col, id_, merged)

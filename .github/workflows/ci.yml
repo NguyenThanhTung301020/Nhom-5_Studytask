@@ -77,6 +77,10 @@ jobs:
         run: python3 tests/server/test_seed_curriculum.py
       - name: Lọc theo lớp học phần – sinh viên chỉ thấy lịch lớp mình, giáo viên chỉ thấy và sửa lớp mình dạy
         run: python3 tests/server/test_class_scope.py
+      - name: Gán ảnh đại diện hàng loạt (tệp riêng mỗi sinh viên, không đè ảnh tự đặt, gỡ và purge dọn sạch)
+        run: python3 tests/server/test_assign_avatars.py
+      - name: Mỗi học phần mở chỉ có 1–3 giáo viên được cấp quyền (máy chủ chặn người thứ 4)
+        run: python3 tests/server/test_teacher_limit.py
       - name: Link minh chứng của phiếu xét tốt nghiệp
         run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn

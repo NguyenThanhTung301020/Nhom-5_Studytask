@@ -2,12 +2,14 @@
 """Sinh dữ liệu kiểm tải StudyTask từ khung đào tạo (Khung đào tạo mẫu.docx).
 
 Tạo vào CSDL SQLite của máy chủ (đúng lược đồ hiện có: bảng `accounts` và `docs`), không sửa mã máy chủ:
-  - môn học (mỗi dòng của khung) + chương trình đào tạo (curriculum/…)
+  - chương trình đào tạo (curriculum/…) và HỌC PHẦN MỞ theo năm: mỗi khóa học đủ 8 học kỳ của khung, mỗi lần mở là một bản ghi
+    riêng (khóa, năm học, học kỳ 1/2, trạng thái đã kết thúc/đang học/kế hoạch); cùng một môn mở lại ở năm khác là bản ghi mới
+    với thư mục tài liệu, đề trắc nghiệm, giáo viên riêng
   - 4 khóa đang học (ví dụ 2023-2027 … 2026-2030); mỗi khóa chia thành các lớp 20–30 sinh viên (ngẫu nhiên). Sinh viên được
-    lưu theo KHÓA, năm học và học kỳ 1/2 của năm (năm thứ tính từ khóa), không lưu "kỳ số mấy"; môn của họ là các môn của
-    học kỳ đang diễn ra theo khung (khóa năm 1 học HK1, năm 2 học HK3, …)
-  - giáo viên theo bộ môn: một giáo viên dạy được mọi môn cùng bộ môn (chung cấu trúc), ở nhiều học kỳ
-  - thời khóa biểu theo lớp, lịch thi, tài liệu (kèm tệp PDF thật trong uploads/), đề trắc nghiệm kèm khóa đáp án
+    lưu theo KHÓA, năm học và học kỳ 1/2 của năm; môn của họ là các học phần đang học
+  - giáo viên theo bộ môn; mỗi học phần mở có từ 1 đến 3 giáo viên, các lớp của khóa chia cho họ
+  - thời khóa biểu và lịch thi theo TỪNG học kỳ của từng khóa (có ngày bắt đầu/kết thúc học kỳ), tài liệu (tệp PDF thật trong
+    uploads/, dùng chung giữa các năm), đề trắc nghiệm kèm khóa đáp án
   - mật khẩu mặc định của mọi tài khoản: <vai trò>123  (student123, teacher123, ...)
 
 Ví dụ:
@@ -43,10 +45,10 @@ def term_of(today):
     return today.year - 1, 2
 
 
-PRESETS = {   # classes: số lớp mỗi học kỳ của khung (tổng số lớp = classes × số học kỳ); slides: số slide mỗi môn; quizzes/questions; file_kb: cỡ tệp tài liệu (KB)
-    'small':  dict(classes=2,  slides=2, quizzes=2, questions=5,  file_kb=(10, 30)),
-    'medium': dict(classes=10, slides=4, quizzes=3, questions=15, file_kb=(100, 600)),
-    'large':  dict(classes=40, slides=6, quizzes=4, questions=20, file_kb=(500, 3000)),
+PRESETS = {   # classes: số lớp MỖI KHÓA (4 khóa đang học); slides: số slide mỗi học phần; quizzes/questions: đề mỗi học phần; file_kb: cỡ tệp tài liệu (KB)
+    'small':  dict(classes=3,  slides=1, quizzes=1, questions=5,  file_kb=(10, 30)),
+    'medium': dict(classes=10, slides=2, quizzes=2, questions=10, file_kb=(60, 240)),
+    'large':  dict(classes=16, slides=3, quizzes=2, questions=15, file_kb=(100, 400)),
 }
 
 # ── Bộ môn: giáo viên cùng bộ môn dạy được mọi môn của bộ môn đó ─────────────────────────────
@@ -159,184 +161,285 @@ def make_pdf(title, size, rng):
 
 
 # ── Lập kế hoạch (thuần, không ghi gì) ───────────────────────────────────────────────────────
-SHIFTS = [('07:00', '09:30'), ('09:45', '12:15'), ('13:00', '15:30'), ('15:45', '18:15')]
-DAYS = [2, 3, 4, 5, 6, 7]                       # Thứ Hai … Thứ Bảy (cùng quy ước DAY_LABELS của giao diện)
-ALL_SLOTS = [(d, s) for d in DAYS for s in range(len(SHIFTS))]
+# 16 tiết học do nhà trường công bố (áp dụng từ học kỳ 1 năm học 2025-2026); mỗi tiết 45 phút
+TIET = {1: ('07:30', '08:15'), 2: ('08:15', '09:00'), 3: ('09:00', '09:45'), 4: ('10:00', '10:45'), 5: ('10:45', '11:30'), 6: ('11:30', '12:15'),
+        7: ('12:45', '13:30'), 8: ('13:30', '14:15'), 9: ('14:15', '15:00'), 10: ('15:15', '16:00'), 11: ('16:00', '16:45'), 12: ('16:45', '17:30'),
+        13: ('18:00', '18:45'), 14: ('18:45', '19:30'), 15: ('19:30', '20:15'), 16: ('20:15', '21:00')}
+SESSIONS = [(1, 6), (7, 12), (13, 16)]          # sáng, chiều, tối: một buổi học là một khối tiết liền nhau trong cùng một buổi
+GUIDED_CODES = {'IT405', 'IT498', 'IT499'}      # đồ án chuyên ngành, thực tập, khóa luận: không có thời khóa biểu cụ thể
+
+
+def block_starts(length):
+    """Mọi tiết bắt đầu hợp lệ của một khối `length` tiết (nằm gọn trong một buổi)."""
+    return [s for a, b in SESSIONS for s in range(a, b - length + 2)]
+
+
+def is_guided(c):
+    """Môn hướng dẫn (thực tập, đồ án, khóa luận): không xếp lịch/lịch thi, điểm do giáo viên hướng dẫn đánh giá."""
+    return c['code'].upper() in GUIDED_CODES or any(k in fold(c['name']).lower() for k in ('thuc tap', 'khoa luan', 'do an'))
+
+
+def weekly_blocks(c):
+    """Các khối tiết mỗi tuần của một môn: số tiết/tuần = số tín chỉ (2–4). Môn 4 tín chỉ thực hành học một khối 4 tiết,
+    môn lý thuyết 4 tín chỉ tách 2 khối 2 tiết ở hai ngày khác nhau. Môn hướng dẫn: không có khối nào."""
+    if is_guided(c):
+        return []
+    n = max(2, min(c['credits'], 4))
+    return [4] if n == 4 and c['code'] in LAB_COURSES else [2, 2] if n == 4 else [n]
 
 
 def room_name(i):
     return f"{'ABCDEFGHJK'[(i // 20) % 10]}{(i % 20) // 5 + 1}.{(i % 20) // 5 + 1}{i % 5 + 1:02d}" + (f'-{i // 200}' if i >= 200 else '')
 
 
-def sessions_per_week(c):
-    return 2 if 3 <= c['credits'] <= 4 else 1
+def term_dates(start_year, ky):
+    """(bắt đầu học, kết thúc học, bắt đầu thi, kết thúc thi) của học kỳ `ky` trong năm học start_year-(start_year+1):
+    15 tuần học bắt đầu từ một ngày Thứ Hai, tiếp đó 3 tuần thi."""
+    first = date(start_year, 9, 7) if ky == 1 else date(start_year + 1, 2, 8)
+    start = first + timedelta(days=(7 - first.weekday()) % 7)
+    end = start + timedelta(days=15 * 7 - 1)
+    return start, end, end + timedelta(days=1), end + timedelta(days=21)
 
 
 def build_plan(cfg, courses, rng, today):
+    """Mô hình: KHÓA (nhập học 2023 … 2026, mỗi khóa 4 năm = 8 học kỳ) → lớp → sinh viên;
+    HỌC PHẦN MỞ = (môn, khóa, năm học, học kỳ): cùng một môn mở lại ở năm khác là một bản ghi mới (thư mục tài liệu, đề, giáo viên
+    riêng) có nhãn năm học. Mỗi học phần mở có từ 1 đến `max_teachers` (3) giáo viên, các lớp của khóa được chia cho họ.
+    Thời khóa biểu và lịch thi sinh cho đủ 8 học kỳ của mỗi khóa (đã kết thúc, đang học, kế hoạch), mỗi mục gắn khóa/năm học/học kỳ
+    và ngày bắt đầu–kết thúc của học kỳ đó."""
     import studytask_api as api          # dùng đúng hàm kiểm tra đề của máy chủ để đề sinh ra luôn hợp lệ
     colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#6610f2', '#fd7e14']
     courses = [dict(c) for c in courses]
-    for i, c in enumerate(courses):
-        c['id'], c['group'], c['teacherNames'] = SUBJECT_BASE + i, group_of(c['code']), set()
+    for c in courses:
+        c['group'] = group_of(c['code'])
     by_sem = {}
     for c in courses:
         by_sem.setdefault(c['sem'], []).append(c)
     sems = sorted(by_sem)
     iso = lambda d: d.isoformat()
+    years = max(sems) // 2
+    nam_hoc, hoc_ky = cfg['nam_hoc'], cfg['hoc_ky']
+    cur = (nam_hoc, hoc_ky)
 
-    # lớp + sinh viên: mỗi KHÓA một nhóm lớp. Cùng một thời điểm (học kỳ hk của năm học nh) khóa năm thứ k học học kỳ thứ
-    # 2(k-1)+hk của khung, nên chỉ các học kỳ cùng tính chẵn/lẻ với hk có sinh viên (HK1 → HK1, HK3, HK5, HK7).
-    nam_hoc, hoc_ky, years = cfg['nam_hoc'], cfg['hoc_ky'], max(sems) // 2
-    active = [s for s in sems if s % 2 == (1 if hoc_ky == 1 else 0)]
-    per_cohort = cfg['classes'] * len(sems) // len(active)           # giữ nguyên tổng số lớp so với khi chia theo từng học kỳ
+    # ── khóa → lớp → sinh viên: khóa nhập học nam_hoc-k đang ở năm thứ k+1 (vị trí khung 2k+hoc_ky) ──
+    cohorts = []
+    for k in range(years):
+        intake = nam_hoc - k
+        cohorts.append({'intake': intake, 'khoa': f'{intake}-{intake + years}', 'yy': intake % 100, 'pos': 2 * k + hoc_ky, 'classes': []})
+
+    # ── học phần mở: mỗi khóa học đủ các học kỳ của khung, mỗi lần là một bản ghi riêng ──
+    offerings = []
+    for co in cohorts:
+        for p in sems:
+            sy, ky = co['intake'] + (p - 1) // 2, 1 if p % 2 else 2
+            status = 'da-ket-thuc' if (sy, ky) < cur else 'dang-hoc' if (sy, ky) == cur else 'ke-hoach'
+            for c in by_sem[p]:
+                offerings.append({**c, 'id': SUBJECT_BASE + len(offerings), 'cohort': co, 'khoa': co['khoa'], 'startYear': sy,
+                                  'namHoc': f'{sy}-{sy + 1}', 'ky': ky, 'status': status, 'teacherNames': set()})
+    term_of_o = lambda o: (o['startYear'], o['ky'])
+    terms = sorted({term_of_o(o) for o in offerings})
+
     classes, students = [], []
-    for s in active:
-        nam_thu = (s + 1) // 2
-        intake = nam_hoc - (nam_thu - 1)                              # năm nhập học của khóa này
-        cohort, yy = f'{intake}-{intake + years}', intake % 100       # khóa "2023-2027"
-        for n in range(1, per_cohort + 1):
+    for co in cohorts:
+        now_ids = [o['id'] for o in offerings if o['cohort'] is co and o['sem'] == co['pos']]
+        for n in range(1, cfg['classes'] + 1):
             size = rng.randint(cfg['min_students'], cfg['max_students'])
-            cl = {'id': f'CNTT{yy:02d}-{n:02d}', 'sem': s, 'cohort': cohort, 'namThu': nam_thu, 'namHoc': f'{nam_hoc}-{nam_hoc + 1}',
-                  'hocKy': hoc_ky, 'size': size, 'students': [], 'busy': set(), 'sections': []}
+            cl = {'id': f'CNTT{co["yy"]:02d}-{n:02d}', 'sem': co['pos'], 'cohort': co['khoa'], 'namThu': (co['pos'] + 1) // 2,
+                  'namHoc': f'{nam_hoc}-{nam_hoc + 1}', 'hocKy': hoc_ky, 'size': size, 'students': [], 'sections': []}
             for j in range(1, size + 1):
-                sid = f'{yy:02d}{n:02d}{j:03d}'
-                st = {'username': f'sv{sid}', 'studentId': sid, 'name': person_name(rng), 'role': 'student', 'class': cl,
-                      'subjectIds': [c['id'] for c in by_sem[s]]}
+                sid = f'{co["yy"]:02d}{n:02d}{j:03d}'
+                st = {'username': f'sv{sid}', 'studentId': sid, 'name': person_name(rng), 'role': 'student', 'class': cl, 'subjectIds': now_ids}
                 cl['students'].append(st)
                 students.append(st)
+            co['classes'].append(cl)
             classes.append(cl)
 
-    # giáo viên theo bộ môn
-    sections = [(cl, c) for cl in classes for c in by_sem[cl['sem']]]
-    per_group = {}
-    for _, c in sections:
-        per_group[c['group']] = per_group.get(c['group'], 0) + 1
+    # ── giáo viên theo bộ môn (dùng chung giữa các năm); khởi điểm đủ tải ở học kỳ đông nhất và ≥ max_teachers để chọn 1–3 người ──
     teachers, pool = [], {}
 
     def new_teacher(g):
         lst = pool.setdefault(g, [])
         idx = len(lst) + 1
-        t = {'username': f'gv{g}{idx:02d}', 'teacherId': f'GV{g.upper()}{idx:03d}', 'role': 'teacher', 'group': g, 'load': 0, 'busy': set(),
+        t = {'username': f'gv{g}{idx:02d}', 'teacherId': f'GV{g.upper()}{idx:03d}', 'role': 'teacher', 'group': g,
              'name': f'{rng.choice(TITLES)} {person_name(rng)}', 'sections': [],
-             'canTeachSubjectIds': [c['id'] for c in courses if c['group'] == g]}
+             'canTeachCodes': sorted({c['code'] for c in courses if c['group'] == g})}
         lst.append(t)
         teachers.append(t)
         return t
-    for g in BO_MON:    # đủ mọi bộ môn; bộ môn không có lớp học phần ở học kỳ này (vd. Ngoại ngữ ở học kỳ 2) vẫn có giáo viên, chưa được phân công
-        for _ in range(max(2, math.ceil(per_group.get(g, 0) / cfg['max_load']))):
+    wt_of = lambda o: sum(weekly_blocks(o)) or 1                       # tiết/tuần; môn hướng dẫn tính 1 (khối lượng hướng dẫn)
+    cap = cfg['max_load'] * 3             # trần TIẾT/tuần của một giáo viên trong một học kỳ (mặc định 24)
+    for g in BO_MON:
+        worst = max((sum(len(o['cohort']['classes']) * wt_of(o) for o in offerings if o['group'] == g and term_of_o(o) == t)
+                     for t in terms), default=0)
+        for _ in range(max(cfg['max_teachers'], math.ceil(worst / cap))):
             new_teacher(g)
 
-    # thời khóa biểu: lớp, giáo viên và phòng đều không trùng giờ
+    # ── thời khóa biểu theo từng học kỳ, xếp theo TIẾT: lớp, giáo viên và phòng không trùng tiết TRONG CÙNG học kỳ ──
+    #   - mỗi buổi là một khối tiết liền nhau trong một buổi (sáng/chiều/tối); môn lý thuyết 3 TC = 1 khối 3 tiết mỗi tuần
+    #   - lớp học trực tuyến ưu tiên buổi tối (tiết 13–16) và cuối tuần; lớp trực tiếp ưu tiên sáng/chiều các ngày trong tuần
+    #   - mỗi lớp có ít nhất 1 ngày nghỉ trong tuần (Thứ Hai–Thứ Bảy); Chủ nhật chỉ dùng cho lớp trực tuyến
+    #   - ưu tiên dồn lịch vào những ngày lớp đã học và các khối liền nhau để chừa ngày nghỉ, ít tiết trống xen kẽ
     rooms, labs = [room_name(i) for i in range(30)], [f'PM{i + 1:02d}' for i in range(6)]
-    room_busy, schedule = set(), []
+    room_busy, busy_c, busy_t, class_off, load, schedule, exams = set(), {}, {}, {}, {}, [], []
 
-    def pick_slots(busy_a, busy_b, n):
-        cand, days, picked = ALL_SLOTS[:], set(), []
-        rng.shuffle(cand)
-        for d, sh in cand:
-            if d in days or (d, sh) in busy_a or (d, sh) in busy_b:
+    def pick_block(cb, tb, off, used_days, class_days, length, online):
+        best, best_score = None, 1e9
+        for day in [d for d in range(2, 8) if d not in off] + ([8] if online else []):
+            if day in used_days:
                 continue
-            picked.append((d, sh))
-            days.add(d)
-            if len(picked) == n:
-                return picked
-        return None
+            for st in block_starts(length):
+                if any((day, t) in cb or (day, t) in tb for t in range(st, st + length)):
+                    continue
+                score = rng.random() * 0.9
+                if online:
+                    score += 0 if (st >= 13 or day >= 7) else 6          # tối hoặc cuối tuần
+                else:
+                    score += (5 if st >= 13 else 0) + (1 if day == 7 else 0)
+                if day not in class_days:
+                    score += 2                                            # dồn vào ngày đã học để chừa ngày nghỉ
+                if (day, st - 1) in cb or (day, st + length) in cb:
+                    score -= 1                                            # liền kề khối đã có, ít tiết trống
+                if score < best_score:
+                    best, best_score = (day, st), score
+        return best
 
-    def take_room(slot, lab):
-        lst, prefix = (labs, 'PM') if lab else (rooms, '')
+    def take_room(term, day, st, length, lab):
+        lst = labs if lab else rooms
         start = rng.randrange(len(lst))
         for i in range(len(lst)):
             r = lst[(start + i) % len(lst)]
-            if (slot, r) not in room_busy:
-                room_busy.add((slot, r))
-                return r
-        r = f'PM{len(lst) + 1:02d}' if lab else room_name(len(lst))
-        lst.append(r)
-        room_busy.add((slot, r))
+            if all((term, day, t, r) not in room_busy for t in range(st, st + length)):
+                break
+        else:
+            r = f'PM{len(lst) + 1:02d}' if lab else room_name(len(lst))
+            lst.append(r)
+        for t in range(st, st + length):
+            room_busy.add((term, day, t, r))
         return r
 
-    rng.shuffle(sections)
-    for cl, c in sections:
-        n = sessions_per_week(c)
-        chosen = None
-        cands = sorted((t for t in pool[c['group']] if t['load'] < cfg['max_load']), key=lambda t: (t['load'], rng.random()))
-        for t in cands:
-            slots = pick_slots(cl['busy'], t['busy'], n)
-            if slots:
-                chosen = (t, slots)
-                break
-        if not chosen:
-            t = new_teacher(c['group'])
-            chosen = (t, pick_slots(cl['busy'], t['busy'], n))
-        t, slots = chosen
-        t['load'] += 1
-        t['sections'].append({'classId': cl['id'], 'subjectId': c['id']})
-        c['teacherNames'].add(t['name'])
-        ids = []
-        for slot in slots:
-            cl['busy'].add(slot)
-            t['busy'].add(slot)
-            fmt = rng.choices(['offline', 'online', 'hybrid'], [80, 12, 8])[0]
-            schedule.append({'id': SCHEDULE_BASE + len(schedule) + 1, 'subjectId': c['id'], 'day': slot[0],
-                             'start': SHIFTS[slot[1]][0], 'end': SHIFTS[slot[1]][1],
-                             'room': 'Online' if fmt == 'online' else take_room(slot, c['code'] in LAB_COURSES),
-                             'teacher': t['name'], 'format': fmt, 'classId': cl['id'], 'className': cl['id'], 'seed': TAG})
-            ids.append(schedule[-1]['id'])
-        cl['sections'].append({'subjectId': c['id'], 'code': c['code'], 'teacherUsername': t['username'], 'teacherName': t['name'],
-                               'scheduleIds': ids, '_teacher': t})
+    def try_place(cl_key, t_key, term, blocks, fmt):
+        """Xếp các khối của một lớp học phần cho giáo viên t; thất bại thì trả None và không để lại dấu vết."""
+        cb, tb = busy_c.setdefault(cl_key, set()), busy_t.setdefault(t_key, set())
+        off, class_days = class_off[cl_key], {d for d, _ in cb}
+        got, used = [], set()
+        for i, length in enumerate(blocks):
+            online = fmt == 'online' or (fmt == 'hybrid' and i > 0)
+            pos = pick_block(cb, tb, off, used, class_days | used, length, online)
+            if pos is None:
+                for (d, st, ln, _) in got:
+                    for t in range(st, st + ln):
+                        cb.discard((d, t)); tb.discard((d, t))
+                return None
+            used.add(pos[0])
+            for t in range(pos[1], pos[1] + length):
+                cb.add((pos[0], t)); tb.add((pos[0], t))
+            got.append((pos[0], pos[1], length, online))
+        return got
 
-    # subjectIds của giáo viên = các môn ĐƯỢC PHÂN CÔNG (có lớp học phần); môn thuộc bộ môn nhưng chưa được giao nằm ở canTeachSubjectIds
-    for t in teachers:
+    exam_busy = set()
+    for term in terms:
+        t_start, t_end, ex_start, ex_end = term_dates(*term)
+        offs = [o for o in offerings if term_of_o(o) == term]
+        rng.shuffle(offs)
+        for o in offs:
+            co, blocks = o['cohort'], weekly_blocks(o)
+            wt = wt_of(o)
+            k = max(1, min(cfg['max_teachers'], math.ceil(len(co['classes']) / cfg['classes_per_teacher'])))
+            share = math.ceil(len(co['classes']) / k) * wt                  # tiết/tuần mỗi giáo viên nhận ở học phần này
+            ld = lambda t: load.get((t['username'], term), 0)
+            ranked = sorted(pool[o['group']], key=lambda t: (ld(t), rng.random()))
+            chosen = [t for t in ranked if ld(t) + share <= cap][:k]        # chỉ chọn người còn đủ chỗ; thiếu thì thêm giáo viên mới
+            while len(chosen) < k:
+                chosen.append(new_teacher(o['group']))
+            for cl in co['classes']:
+                cl_key = (cl['id'], term)
+                class_off.setdefault(cl_key, set(rng.sample(range(2, 8), rng.choice([1, 1, 2]))))     # 1–2 ngày nghỉ trong tuần
+                fmt = rng.choices(['offline', 'online', 'hybrid'], [80, 12, 8])[0] if blocks else 'huong-dan'
+                placed = None
+                for t in sorted(chosen, key=lambda t: (ld(t), rng.random())):
+                    if ld(t) + wt > cap:
+                        continue
+                    got = try_place(cl_key, (t['username'], term), term, blocks, fmt) if blocks else []
+                    if got is not None:
+                        placed = (t, got)
+                        break
+                if not placed:           # các giáo viên đã chọn kín tải/tiết: thay người đầy nhất bằng giáo viên mới, vẫn giữ tối đa k người
+                    fresh = new_teacher(o['group'])
+                    chosen[chosen.index(max(chosen, key=ld))] = fresh
+                    got = try_place(cl_key, (fresh['username'], term), term, blocks, fmt) if blocks else []
+                    placed = (fresh, got)
+                t, got = placed
+                load[(t['username'], term)] = ld(t) + wt
+                t['sections'].append({'classId': cl['id'], 'subjectId': o['id']})
+                o['teacherNames'].add(t['name'])
+                ids = []
+                for (day, st, length, online) in got:
+                    en = st + length - 1
+                    schedule.append({'id': SCHEDULE_BASE + len(schedule) + 1, 'subjectId': o['id'], 'day': day,
+                                     'start': TIET[st][0], 'end': TIET[en][1], 'tietStart': st, 'tietEnd': en,
+                                     'room': 'Online' if online else take_room(term, day, st, length, o['code'] in LAB_COURSES),
+                                     'teacher': t['name'], 'format': 'online' if online else 'hybrid' if fmt == 'hybrid' else 'offline',
+                                     'classId': cl['id'], 'className': cl['id'], 'khoa': o['khoa'], 'namHoc': o['namHoc'], 'ky': o['ky'],
+                                     'startDate': iso(t_start), 'endDate': iso(t_end), 'seed': TAG})
+                    ids.append(schedule[-1]['id'])
+                cl['sections'].append({'subjectId': o['id'], 'code': o['code'], 'namHoc': o['namHoc'], 'ky': o['ky'],
+                                       'teacherUsername': t['username'], 'teacherName': t['name'], 'scheduleIds': ids, '_teacher': t,
+                                       '_term': term, 'guided': not blocks})
+        # lịch thi của học kỳ: sau 15 tuần học, mỗi lớp thi các môn cách nhau 2 ngày, không rơi vào Chủ nhật, mỗi bài thi 2 tiết (90 phút)
+        # (môn hướng dẫn không có lịch thi: kết quả theo yêu cầu của giáo viên hướng dẫn)
+        for co in cohorts:
+            for cl in co['classes']:
+                for i, sec in enumerate(s for s in cl['sections'] if s['_term'] == term and not s['guided']):
+                    d = ex_start + timedelta(days=2 * i)
+                    d += timedelta(days=1) if d.weekday() == 6 else timedelta(0)
+                    st = rng.choice([1, 4, 7, 10])
+                    o = next(x for x in offerings if x['id'] == sec['subjectId'])
+                    r = next((r for r in rooms + labs if ((term, d, st), r) not in exam_busy), room_name(len(rooms) + len(exam_busy)))
+                    exam_busy.add(((term, d, st), r))
+                    fmt = 'thucHanh' if o['code'] in LAB_COURSES else rng.choice(['tuLuan', 'tracNghiem', 'tuLuan'])
+                    exams.append({'id': EXAM_BASE + len(exams) + 1, 'subjectId': o['id'], 'date': iso(d), 'start': TIET[st][0], 'end': TIET[st + 1][1],
+                                  'tietStart': st, 'tietEnd': st + 1, 'room': r, 'teacher': sec['teacherName'], 'format': fmt,
+                                  'classId': cl['id'], 'className': cl['id'], 'khoa': o['khoa'], 'namHoc': o['namHoc'], 'ky': o['ky'], 'seed': TAG})
+
+    for t in teachers:           # subjectIds = các học phần mở ĐƯỢC PHÂN CÔNG (mọi năm); môn thuộc bộ môn nhưng chưa giao nằm ở canTeachCodes
         t['subjectIds'] = sorted({sec['subjectId'] for sec in t['sections']})
+    over = [o for o in offerings if len(o['teacherNames']) > cfg['max_teachers']]
+    assert not over, (f'{len(over)} học phần mở có hơn {cfg["max_teachers"]} giáo viên vì số lớp mỗi khóa ({cfg["classes"]}) quá nhiều so với tải '
+                      f'cho phép; giảm --classes hoặc tăng --max-teachers/--max-load')
 
-    # lịch thi: mỗi lớp thi các môn của kỳ cách nhau 2 ngày, không rơi vào Chủ nhật
-    exams, exam_busy = [], set()
-    exam_start = today + timedelta(days=cfg['exam_in_days'])
-    for cl in classes:
-        for i, sec in enumerate(cl['sections']):
-            d = exam_start + timedelta(days=2 * i)
-            d += timedelta(days=1) if d.weekday() == 6 else timedelta(0)
-            sh = rng.randrange(len(SHIFTS))
-            course = next(c for c in courses if c['id'] == sec['subjectId'])
-            r = next((r for r in rooms + labs if ((d, sh), r) not in exam_busy), room_name(len(rooms) + len(exam_busy)))
-            exam_busy.add(((d, sh), r))
-            fmt = 'thucHanh' if course['code'] in LAB_COURSES else rng.choice(['tuLuan', 'tracNghiem', 'tuLuan'])
-            h, m = int(SHIFTS[sh][0][:2]), int(SHIFTS[sh][0][3:])
-            end = f'{(h * 60 + m + 90) // 60:02d}:{(h * 60 + m + 90) % 60:02d}'        # bài thi 90 phút
-            exams.append({'id': EXAM_BASE + len(exams) + 1, 'subjectId': sec['subjectId'], 'date': iso(d), 'start': SHIFTS[sh][0],
-                          'end': end, 'room': r, 'teacher': sec['teacherName'], 'format': fmt,
-                          'classId': cl['id'], 'className': cl['id'], 'seed': TAG})
-
-    # tài liệu
-    materials, mat_specs = [], []
-    for c in courses:
-        kinds = [('giaoTrinh', f'Giáo trình {c["name"]}', 'Tài liệu chính của học phần')]
-        kinds += [('slide', f'Slide {c["name"]} – Chương {k}', f'Bài giảng điện tử chương {k}') for k in range(1, cfg['slides'] + 1)]
-        kinds += [('baiTap', f'Bài tập {c["name"]} – Phần {k}', 'Bài tập có đáp án') for k in (1, 2)]
-        kinds += [('baiTap', f'Đề thi mẫu {c["name"]}', 'Đề thi các năm trước'), ('thamKhao', f'Tài liệu tham khảo {c["name"]}', 'Đọc thêm')]
+    # ── tài liệu và trắc nghiệm: học phần đã kết thúc hoặc đang học có nội dung; học phần kế hoạch chỉ có thời khóa biểu ──
+    files = {}                       # (mã môn, tiêu đề) → tệp dùng chung giữa các năm (giáo trình/slide dùng lại), nên ít tệp hơn học phần
+    materials, quizzes, keys = [], [], []
+    for o in offerings:
+        if o['status'] == 'ke-hoach':
+            continue
+        t_start, t_end, _, _ = term_dates(o['startYear'], o['ky'])
+        if is_guided(o):         # thực tập/đồ án/khóa luận: chỉ có hướng dẫn và biểu mẫu, không có slide, đề thi, trắc nghiệm
+            kinds = [('giaoTrinh', f'Hướng dẫn thực hiện {o["name"]}', 'Yêu cầu, tiến độ và biểu mẫu do giáo viên hướng dẫn quy định'),
+                     ('thamKhao', f'Mẫu báo cáo {o["name"]}', 'Biểu mẫu báo cáo')]
+        else:
+            kinds = [('giaoTrinh', f'Giáo trình {o["name"]}', 'Tài liệu chính của học phần')]
+            kinds += [('slide', f'Slide {o["name"]} – Chương {k}', f'Bài giảng điện tử chương {k}') for k in range(1, cfg['slides'] + 1)]
+            kinds += [('baiTap', f'Bài tập {o["name"]} – Phần 1', 'Bài tập có đáp án'), ('baiTap', f'Đề thi mẫu {o["name"]}', 'Đề thi các năm trước')]
+        names = sorted(o['teacherNames'])
         for typ, title, desc in kinds:
-            names = sorted(c['teacherNames'])
-            m = {'id': MATERIAL_BASE + len(materials) + 1, 'subjectId': c['id'], 'title': title, 'type': typ, 'description': desc,
-                 'url': '', 'uploadedBy': rng.choice(names) if names else '', 'uploadedAt': iso(today - timedelta(days=rng.randint(5, 80))),
-                 'seed': TAG}
+            m = {'id': MATERIAL_BASE + len(materials) + 1, 'subjectId': o['id'], 'title': title, 'type': typ, 'description': desc,
+                 'url': '', 'uploadedBy': rng.choice(names) if names else '',
+                 'uploadedAt': iso(min(today, t_start + timedelta(days=rng.randint(0, 40)))), 'seed': TAG}
             if cfg['files']:
-                size = rng.randint(cfg['file_kb'][0], cfg['file_kb'][1]) * 1024
-                m['fileName'] = f'{slug(title)}.pdf'
-                m['size'] = size
-                m['stored'] = f'{rng.getrandbits(64):016x}_{slug(title)}.pdf'
-                m['url'] = '/uploads/' + m['stored']
+                key = (o['code'], title)
+                if key not in files:
+                    files[key] = {'stored': f'{rng.getrandbits(64):016x}_{slug(title)}.pdf', 'size': rng.randint(cfg['file_kb'][0], cfg['file_kb'][1]) * 1024}
+                m.update(fileName=f'{slug(title)}.pdf', size=files[key]['size'], stored=files[key]['stored'], url='/uploads/' + files[key]['stored'])
             materials.append(m)
-
-    # trắc nghiệm: mỗi môn n đề, đề 1 đã đóng, các đề sau đang mở với hạn xa dần
-    quizzes, keys = [], []
-    for c in courses:
-        for qi in range(1, cfg['quizzes'] + 1):
+        past = o['status'] == 'da-ket-thuc'
+        for qi in range(1, 1 if is_guided(o) else cfg['quizzes'] + 1):
             qs = []
             for k in range(1, cfg['questions'] + 1):
                 topic, r = f'chủ đề {qi}.{k}', rng.random()
-                head = f'[{c["code"]}] '
+                head = f'[{o["code"]}] '
                 if r < 0.9:
-                    ans = [{'id': ch, 'text': f'Nhận định {ch.upper()} về {topic} của {c["name"]}'} for ch in 'abcd']
+                    ans = [{'id': ch, 'text': f'Nhận định {ch.upper()} về {topic} của {o["name"]}'} for ch in 'abcd']
                 if r < 0.7:
                     ans[rng.randrange(4)]['correct'] = True
                     qs.append({'id': k, 'type': 'single', 'text': head + f'Phát biểu nào sau đây đúng về {topic}?', 'answers': ans})
@@ -346,39 +449,39 @@ def build_plan(cfg, courses, rng, today):
                     qs.append({'id': k, 'type': 'multiple', 'text': head + f'Chọn tất cả nhận định đúng về {topic}:', 'answers': ans})
                 else:
                     qs.append({'id': k, 'type': 'fill', 'blanks': 1, 'text': head + f'Điền khuyết: khái niệm chính của {topic} là ____.',
-                               'accepted': [[f'khái niệm {qi}.{k}', f'khai niem {qi}.{k}']]})
-            due = today - timedelta(days=14) if qi == 1 else today + timedelta(days=10 * (qi - 1))
-            q = {'id': QUIZ_BASE + len(quizzes) + 1, 'subjectId': c['id'], 'title': f'Trắc nghiệm {c["name"]} – Đề {qi}',
-                 'description': 'Dữ liệu kiểm tải (nội dung câu hỏi được sinh tự động)', 'dueDate': iso(due),
-                 'status': 'closed' if qi == 1 else 'active', 'createdAt': f'{iso(today - timedelta(days=30))}T00:00:00.000Z',
-                 'questions': qs}
-            for qq in qs:
-                if qq['type'] == 'fill':
-                    qq.setdefault('answers', [])
+                               'accepted': [[f'khái niệm {qi}.{k}', f'khai niem {qi}.{k}']], 'answers': []})
+            if past:
+                due, status = t_end - timedelta(days=7 * (cfg['quizzes'] - qi)), 'closed'
+            else:
+                due, status = (today - timedelta(days=14), 'closed') if qi == 1 else (today + timedelta(days=10 * (qi - 1)), 'active')
+            q = {'id': QUIZ_BASE + len(quizzes) + 1, 'subjectId': o['id'], 'title': f'Trắc nghiệm {o["name"]} – Đề {qi}',
+                 'description': 'Dữ liệu kiểm tải (nội dung câu hỏi được sinh tự động)', 'dueDate': iso(due), 'status': status,
+                 'createdAt': f'{iso(due - timedelta(days=30))}T00:00:00.000Z', 'questions': qs}
             assert api.quiz_shape_ok(q) and api.quiz_key_complete(q), f'đề sinh ra không hợp lệ: {q["title"]}'
             keys.append((str(q['id']), api.quiz_key_of(q)))
             pub = api.quiz_strip(q)
             pub['seed'] = TAG
             quizzes.append(pub)
 
-    subjects = [{'id': c['id'], 'code': c['code'], 'name': c['name'], 'credits': c['credits'], 'color': colors[i % len(colors)],
-                 'teachers': sorted(c['teacherNames']), 'khoiKienThuc': c['block'], 'hocKy': c['sem'], 'boMon': BO_MON[c['group']],
-                 'seed': TAG} for i, c in enumerate(courses)]
+    subjects = [{'id': o['id'], 'code': o['code'], 'name': o['name'], 'credits': o['credits'], 'color': colors[o['sem'] % len(colors)],
+                 'teachers': sorted(o['teacherNames']), 'khoiKienThuc': o['block'], 'hocKy': o['sem'], 'boMon': BO_MON[o['group']],
+                 'khoa': o['khoa'], 'namHoc': o['namHoc'], 'ky': o['ky'], 'namThu': (o['sem'] + 1) // 2, 'trangThai': o['status'],
+                 **({'kieuHoc': 'huong-dan'} if is_guided(o) else {}), 'seed': TAG} for o in offerings]
 
     blocks = []
     for c in courses:
         if c['block'] not in [b['name'] for b in blocks]:
             blocks.append({'name': c['block'], 'courses': []})
         next(b for b in blocks if b['name'] == c['block'])['courses'].append({'code': c['code'], 'name': c['name'], 'credits': c['credits']})
-    oldest = cfg['nam_hoc'] - (years - 1)                           # khóa nhập học sớm nhất còn đang học
+    oldest = nam_hoc - (years - 1)                                  # khóa nhập học sớm nhất còn đang học
     curriculum = {'name': f'Khung đào tạo Công nghệ thông tin (áp dụng từ khóa {oldest})', 'major': 'Công nghệ thông tin', 'cohort': str(oldest),
                   'totalCredits': sum(c['credits'] for c in courses), 'seed': TAG,
                   'modules': [{'id': i + 1, 'name': b['name'], 'kind': 'elective' if 'chọn' in b['name'].lower() else 'required',
                                'minCredits': sum(x['credits'] for x in b['courses']), 'courses': b['courses']}
                               for i, b in enumerate(blocks)]}
-    return dict(courses=courses, classes=classes, students=students, teachers=teachers, schedule=schedule, exams=exams,
-                materials=materials, quizzes=quizzes, quiz_keys=keys, subjects=subjects, curriculum=curriculum,
-                rooms=len(rooms) + len(labs))
+    return dict(courses=courses, cohorts=cohorts, offerings=offerings, terms=terms, classes=classes, students=students, teachers=teachers,
+                schedule=schedule, exams=exams, materials=materials, files=list(files.values()), quizzes=quizzes, quiz_keys=keys,
+                subjects=subjects, curriculum=curriculum, rooms=len(rooms) + len(labs), load=load)
 
 
 # ── Ghi vào CSDL ─────────────────────────────────────────────────────────────────────────────
@@ -408,7 +511,7 @@ def user_docs(a, uid, today_s):
         prof.update(studentId=a['studentId'], faculty='Công nghệ thông tin', major='Công nghệ thông tin', className=cl['id'],
                     cohort=cl['cohort'], semester=f'Học kỳ {cl["hocKy"]} – Năm học {cl["namHoc"]}', gpa='')
     elif a['role'] == 'teacher':
-        d.update(teacherId=a['teacherId'], boMon=BO_MON[a['group']], sections=a['sections'], canTeachSubjectIds=a['canTeachSubjectIds'])
+        d.update(teacherId=a['teacherId'], boMon=BO_MON[a['group']], sections=a['sections'], canTeachCodes=a['canTeachCodes'])
         prof.update(teacherId=a['teacherId'], faculty='Công nghệ thông tin', department=BO_MON[a['group']], position='Giảng viên')
     else:
         prof.update(department=a['name'])
@@ -417,7 +520,13 @@ def user_docs(a, uid, today_s):
 
 def purge(api, data_dir, vacuum=False):
     con = api.db()
-    uids = [uid for uid, data in con.execute("SELECT id, data FROM docs WHERE col='user'") if json.loads(data).get('seed') == TAG]
+    uids, avatars = [], []
+    for uid, data in con.execute("SELECT id, data FROM docs WHERE col='user'"):
+        d = json.loads(data)
+        if d.get('seed') == TAG:
+            uids.append(uid)
+            if str(d.get('avatar', '')).startswith('/uploads/avatars/'):      # ảnh đại diện (scripts/assign_avatars.py hoặc tự tải lên)
+                avatars.append(os.path.basename(d['avatar']))
     meta = api.doc_get('meta', META_ID) or {}
     con.execute('BEGIN')
     for i in range(0, len(uids), 500):
@@ -448,6 +557,12 @@ def purge(api, data_dir, vacuum=False):
     con.execute("DELETE FROM docs WHERE col='meta' AND id=?", (META_ID,))
     con.execute('COMMIT')
     removed = 0
+    for name in avatars:
+        try:
+            os.remove(os.path.join(api.UPLOAD_DIR, 'avatars', name))
+        except OSError:
+            pass
+    con.execute("DELETE FROM docs WHERE col='meta' AND id='seed_avatars_v1'")
     for name in meta.get('files', []):
         try:
             os.remove(os.path.join(api.UPLOAD_DIR, name))
@@ -482,8 +597,9 @@ def upgrade_assignments(api):
             continue
         total += 1
         secs = sorted(per.get(uid, []), key=lambda s: (s['classId'], s['subjectId']))
-        new = dict(d, sections=secs, subjectIds=sorted({s['subjectId'] for s in secs}),
-                   canTeachSubjectIds=d.get('canTeachSubjectIds') or d.get('subjectIds') or [])
+        new = dict(d, sections=secs, subjectIds=sorted({s['subjectId'] for s in secs}))
+        if 'canTeachCodes' not in d and 'canTeachSubjectIds' not in d:        # hồ sơ rất cũ: giữ danh sách môn cũ làm "môn có thể dạy"
+            new['canTeachSubjectIds'] = d.get('subjectIds') or []
         if new != d:
             con.execute("UPDATE docs SET data=? WHERE col='user' AND id=?", (json.dumps(new, ensure_ascii=False), uid))
             n += 1
@@ -523,7 +639,7 @@ def write_all(api, plan, cfg, data_dir, workers):
             'id': cl['id'], 'name': cl['id'], 'cohort': cl['cohort'], 'namHoc': cl['namHoc'], 'hocKy': cl['hocKy'],
             'namThu': cl['namThu'], 'size': cl['size'],
             'studentUids': [uid_of[s['username']] for s in cl['students']],
-            'sections': [{k: v for k, v in sec.items() if k != '_teacher'} | {'teacherUid': uid_of[sec['teacherUsername']]}
+            'sections': [{k: v for k, v in sec.items() if k not in ('_teacher', '_term')} | {'teacherUid': uid_of[sec['teacherUsername']]}
                          for sec in cl['sections']],
             'seed': TAG}, ensure_ascii=False)))
 
@@ -533,12 +649,12 @@ def write_all(api, plan, cfg, data_dir, workers):
         frng = random.Random(cfg['seed'] + 1)
         t0 = time.time()
         total = 0
-        for m in plan['materials']:
-            with open(os.path.join(api.UPLOAD_DIR, m['stored']), 'wb') as f:
-                f.write(make_pdf(m['title'], m['size'], frng))
-            os.chmod(os.path.join(api.UPLOAD_DIR, m['stored']), 0o644)
-            files.append(m['stored'])
-            total += m['size']
+        for fl in plan['files']:             # mỗi tệp một lần: giáo trình, slide dùng lại giữa các năm nên nhiều học phần trỏ về cùng một tệp
+            with open(os.path.join(api.UPLOAD_DIR, fl['stored']), 'wb') as f:
+                f.write(make_pdf(fl['stored'].split('_', 1)[1].rsplit('.', 1)[0].replace('_', ' '), fl['size'], frng))
+            os.chmod(os.path.join(api.UPLOAD_DIR, fl['stored']), 0o644)
+            files.append(fl['stored'])
+            total += fl['size']
         print(f'Đã ghi {len(files)} tệp tài liệu ({total / 1e6:.1f} MB) sau {time.time() - t0:.0f}s', flush=True)
     materials = [{k: v for k, v in m.items() if k != 'stored'} for m in plan['materials']]
 
@@ -567,25 +683,32 @@ def write_all(api, plan, cfg, data_dir, workers):
 
 def summarize(plan, cfg, shared_bytes=None):
     st, tc = plan['students'], plan['teachers']
+    cur = (cfg['nam_hoc'], cfg['hoc_ky'])
     print('\n=== KẾ HOẠCH / KẾT QUẢ ===')
-    print(f"Môn học: {len(plan['courses'])} | học kỳ trong khung: {len({c['sem'] for c in plan['courses']})} | tổng tín chỉ: {plan['curriculum']['totalCredits']}")
-    print(f"Thời điểm: học kỳ {cfg['hoc_ky']}, năm học {cfg['nam_hoc']}-{cfg['nam_hoc'] + 1}")
+    print(f"Khung: {len(plan['courses'])} môn, {len({c['sem'] for c in plan['courses']})} học kỳ, {plan['curriculum']['totalCredits']} tín chỉ")
+    print(f"Thời điểm: học kỳ {cfg['hoc_ky']}, năm học {cfg['nam_hoc']}-{cfg['nam_hoc'] + 1} | {len({(x['namHoc'], x['ky']) for x in plan['schedule']})}/{len(plan['terms'])} học kỳ có thời khóa biểu (học kỳ toàn môn hướng dẫn không có)")
     print(f"Lớp: {len(plan['classes'])} (mỗi lớp {cfg['min_students']}–{cfg['max_students']} SV, thực tế "
           f"{min(c['size'] for c in plan['classes'])}–{max(c['size'] for c in plan['classes'])})")
-    for s in sorted({c['sem'] for c in plan['classes']}, reverse=True):
-        cls = [c for c in plan['classes'] if c['sem'] == s]
-        print(f"  Khóa {cls[0]['cohort']} (năm thứ {cls[0]['namThu']}): {len(cls)} lớp, {sum(c['size'] for c in cls)} sinh viên, "
-              f"đang học {len([x for x in plan['courses'] if x['sem'] == s])} môn (HK{s} của khung)")
+    for co in plan['cohorts']:
+        n = sum(c['size'] for c in co['classes'])
+        print(f"  Khóa {co['khoa']} (năm thứ {(co['pos'] + 1) // 2}): {len(co['classes'])} lớp, {n} sinh viên, đang học HK{co['pos']} của khung")
+    offs = plan['offerings']
+    by = {s: sum(1 for o in offs if o['status'] == s) for s in ('da-ket-thuc', 'dang-hoc', 'ke-hoach')}
+    per_o = [len(o['teacherNames']) for o in offs]
+    print(f"Học phần mở: {len(offs)} (đã kết thúc {by['da-ket-thuc']}, đang học {by['dang-hoc']}, kế hoạch {by['ke-hoach']}); "
+          f"mỗi học phần {min(per_o)}–{max(per_o)} giáo viên (tối đa {cfg['max_teachers']})")
     print(f"Sinh viên: {len(st)} | giáo viên: {len(tc)}" + (' | + 3 tài khoản phòng ban' if cfg['staff'] else ''))
     by_g = {}
     for t in tc:
-        by_g.setdefault(t['group'], []).append(t['load'])
+        by_g.setdefault(t['group'], []).append(max([v for (u, _), v in plan['load'].items() if u == t['username']] or [0]))
     for g, loads in by_g.items():
-        print(f"  {BO_MON[g]}: {len(loads)} GV, mỗi GV dạy {min(loads)}–{max(loads)} lớp học phần")
-    print(f"Thời khóa biểu: {len(plan['schedule'])} buổi/tuần, {len(plan['exams'])} lịch thi, {plan['rooms']} phòng")
-    mb = sum(m.get('size', 0) for m in plan['materials']) / 1e6
-    print(f"Tài liệu: {len(plan['materials'])} mục" + (f", khoảng {mb:.0f} MB tệp PDF" if cfg['files'] else ' (không tạo tệp)'))
-    print(f"Trắc nghiệm: {len(plan['quizzes'])} đề × {cfg['questions']} câu")
+        print(f"  {BO_MON[g]}: {len(loads)} GV, tải tối đa mỗi học kỳ {min(loads)}–{max(loads)} tiết/tuần")
+    now = [x for x in plan['schedule'] if (int(x['namHoc'][:4]), x['ky']) == cur]
+    print(f"Thời khóa biểu: {len(plan['schedule'])} buổi/tuần trên toàn bộ 8 học kỳ của 4 khóa; học kỳ hiện tại chỉ {len(now)} buổi/tuần; "
+          f"{len(plan['exams'])} lịch thi (cả 8 học kỳ); {plan['rooms']} phòng")
+    mb = sum(f['size'] for f in plan['files']) / 1e6
+    print(f"Tài liệu: {len(plan['materials'])} mục" + (f" dùng chung {len(plan['files'])} tệp PDF, khoảng {mb:.0f} MB" if cfg['files'] else ' (không tạo tệp)'))
+    print(f"Trắc nghiệm: {len(plan['quizzes'])} đề × {cfg['questions']} câu (học phần đã kết thúc và đang học)")
     if shared_bytes:
         print(f"sharedData/global: {shared_bytes / 1e6:.2f} MB" + ('  ⚠ gần giới hạn ghi 5 MB của máy chủ' if shared_bytes > SHARED_WARN_BYTES else ''))
 
@@ -596,7 +719,7 @@ def parse_args(argv):
     p.add_argument('--khung', default=DEFAULT_KHUNG, help='khung đào tạo: .json hoặc .docx (mặc định scripts/data/khung-dao-tao.json)')
     p.add_argument('--export-khung', metavar='JSON', help='đọc --khung rồi ghi ra JSON và thoát')
     p.add_argument('--preset', choices=PRESETS, default='medium')
-    p.add_argument('--classes', type=int, help='số lớp mỗi học kỳ của khung (tổng số lớp = số này × số học kỳ, chia đều cho các khóa đang học)')
+    p.add_argument('--classes', type=int, help='số lớp MỖI KHÓA (4 khóa đang học); mỗi học phần mở có tối đa --max-teachers giáo viên nên nhiều lớp thì mỗi giáo viên dạy nhiều lớp')
     p.add_argument('--min-students', type=int, default=20)
     p.add_argument('--max-students', type=int, default=30)
     p.add_argument('--slides', type=int, help='số slide mỗi môn')
@@ -604,10 +727,11 @@ def parse_args(argv):
     p.add_argument('--questions', type=int, help='số câu mỗi đề')
     p.add_argument('--file-kb', help='cỡ tệp tài liệu, dạng MIN,MAX (KB)')
     p.add_argument('--no-files', action='store_true', help='không tạo tệp PDF (tài liệu chỉ là bản ghi)')
-    p.add_argument('--max-load', type=int, default=6, help='số lớp học phần tối đa mỗi giáo viên (mặc định 6)')
+    p.add_argument('--max-teachers', type=int, default=3, help='số giáo viên tối đa cho một học phần mở (mặc định 3; mỗi học phần có từ 1 đến số này)')
+    p.add_argument('--classes-per-teacher', type=int, default=4, help='mỗi giáo viên của một học phần nhận khoảng bao nhiêu lớp (mặc định 4 → 10 lớp cần 3 giáo viên)')
+    p.add_argument('--max-load', type=int, default=8, help='số lớp học phần tối đa mỗi giáo viên trong MỘT học kỳ; trần thật tính theo tiết: --max-load × 3 tiết/tuần (mặc định 8 → 24 tiết)')
     p.add_argument('--nam-hoc', type=int, help='năm bắt đầu của năm học hiện tại (2026 = năm học 2026-2027); mặc định theo ngày hôm nay')
     p.add_argument('--hoc-ky', type=int, choices=(1, 2), help='học kỳ hiện tại của năm (1 hoặc 2); mặc định theo ngày hôm nay')
-    p.add_argument('--exam-in-days', type=int, default=40, help='kỳ thi bắt đầu sau bao nhiêu ngày kể từ hôm nay')
     p.add_argument('--staff', action='store_true', help='tạo thêm admin01/daotao01/taichinh01 (mật khẩu admin123/training123/finance123)')
     p.add_argument('--seed', type=int, default=20261112, help='hạt giống ngẫu nhiên (cùng hạt giống → cùng danh sách, cùng lớp)')
     p.add_argument('--workers', type=int, default=min(os.cpu_count() or 2, 16), help='số tiến trình băm mật khẩu')
@@ -644,11 +768,10 @@ def main(argv=None):
     cfg = dict(preset=a.preset, classes=a.classes or pre['classes'], min_students=a.min_students, max_students=a.max_students,
                slides=a.slides if a.slides is not None else pre['slides'], quizzes=a.quizzes or pre['quizzes'],
                questions=a.questions or pre['questions'], file_kb=file_kb, files=not a.no_files, max_load=a.max_load,
-               nam_hoc=a.nam_hoc or nh0, hoc_ky=a.hoc_ky or hk0, exam_in_days=a.exam_in_days, staff=a.staff, seed=a.seed)
+               max_teachers=a.max_teachers, classes_per_teacher=a.classes_per_teacher,
+               nam_hoc=a.nam_hoc or nh0, hoc_ky=a.hoc_ky or hk0, staff=a.staff, seed=a.seed)
     if not 1 <= cfg['classes'] <= 99:
         sys.exit('--classes phải từ 1 đến 99.')
-    if cfg['classes'] * 2 > 99:
-        sys.exit('--classes quá lớn: mỗi khóa sẽ có hơn 99 lớp (mỗi khóa có số lớp = classes × 2).')
 
     data_dir = os.path.abspath(a.data_dir) if a.data_dir else None
     if data_dir:
