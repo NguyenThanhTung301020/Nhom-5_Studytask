@@ -562,7 +562,7 @@ def can(op, col, id_, user, old=None, new=None):
             changed = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
             return owner and old.get('status') in ('submitted', 'needsFix') and new.get('status') == 'submitted' and not (changed & rev) and valid_evidence(new.get('evidence'))
         return mgr or (owner and old and old.get('status') == 'submitted')
-    if col in ('quizKeys', 'quizResults', 'quizArchive', 'quizBank'):
+    if col in ('quizKeys', 'quizResults', 'quizArchive', 'quizBank', 'examKeys', 'examSessions'):
         return False   # V3: khóa đáp án và kết quả chỉ đi qua /api/quiz/*, không đọc/ghi trực tiếp qua /api/doc
     return False   # collection lạ → từ chối (userSecrets không còn dùng)
 
@@ -642,9 +642,15 @@ def quiz_authorized(user, role, subject_id):
     return False
 
 
-def quizzes_for(user, role, stored):
+def exam_quiz_ids(shared):
+    """Mã các đề trắc nghiệm đang dùng làm đề thi trực tuyến (lịch thi có `quizId`)."""
+    return {str(e.get('quizId')) for e in (shared or {}).get('exams') or [] if isinstance(e, dict) and e.get('quizId') is not None}
+
+
+def quizzes_for(user, role, stored, exam_ids=frozenset()):
     """Danh sách đề mà người này được thấy: có quyền → đầy đủ khóa; còn lại → bản công khai, không có đề nháp,
-    sinh viên chỉ thấy đề môn mình học."""
+    sinh viên chỉ thấy đề môn mình học. Đề thi trực tuyến (`exam_ids`): người không có quyền chỉ thấy thông tin chung, KHÔNG có câu hỏi;
+    sinh viên chỉ nhận câu hỏi khi vào phòng thi bằng mã truy cập (POST /api/exam/{id}/start)."""
     ids = (doc_get('user', user['uid']) or {}).get('subjectIds') if role == 'student' else None
     out = []
     for q in stored or []:
@@ -653,7 +659,10 @@ def quizzes_for(user, role, stored):
         if quiz_authorized(user, role, q.get('subjectId')):
             out.append(quiz_merge(q, doc_get('quizKeys', str(q.get('id')))))
         elif quiz_status(q) != 'draft' and (ids is None or q.get('subjectId') in ids):
-            out.append(quiz_strip(q))
+            pub = quiz_strip(q)
+            if str(q.get('id')) in exam_ids:
+                pub = {**pub, 'questionCount': len(pub['questions']), 'questions': [], 'examLocked': True}
+            out.append(pub)
     return out
 
 
@@ -673,7 +682,7 @@ def project_shared(user, doc):
         return doc
     out, role = dict(doc), role_of(user)
     if 'quizzes' in out:
-        out['quizzes'] = quizzes_for(user, role, out.get('quizzes'))
+        out['quizzes'] = quizzes_for(user, role, out.get('quizzes'), exam_quiz_ids(doc))
     if role == 'student':
         prof = doc_get('user', user['uid']) or {}
         ids, cid = prof.get('subjectIds'), prof.get('classId')
@@ -799,7 +808,7 @@ def guard_quizzes(user, role, old_doc, merged):
                 continue
             out.append(quiz_update(oq, doc_get('quizKeys', k), nq, ops))
         else:
-            proj = quizzes_for(user, role, [oq])
+            proj = quizzes_for(user, role, [oq], exam_quiz_ids(old_doc))
             if (proj and (nq is None or not same_json(nq, proj[0]))) or (not proj and nq is not None):
                 raise deny
             out.append(oq)
@@ -815,6 +824,76 @@ def guard_quizzes(user, role, old_doc, merged):
         ops.append(('put', k, quiz_key_of(nq)))
         out.append(quiz_strip({**nq, 'status': 'draft'}))
     return {**merged, 'quizzes': out}, ops
+
+
+def guard_exams(old_doc, merged):
+    """Lịch thi có `quizId` (thi trực tuyến ngay trên trang): đề phải tồn tại và cùng môn với lịch thi.
+    Chỉ kiểm tra mục mới hoặc mục đổi `quizId`, để dữ liệu cũ không bị chặn."""
+    exams = merged.get('exams')
+    if not isinstance(exams, list):
+        return
+    old = {str(e.get('id')): e for e in (old_doc or {}).get('exams') or [] if isinstance(e, dict)}
+    quizzes = {str(q.get('id')): q for q in merged.get('quizzes') or [] if isinstance(q, dict)}
+    for e in exams:
+        if not isinstance(e, dict) or e.get('quizId') is None:
+            continue
+        o = old.get(str(e.get('id')))
+        if o is not None and o.get('quizId') == e.get('quizId'):
+            continue
+        q = quizzes.get(str(e.get('quizId')))
+        if q is None or q.get('subjectId') != e.get('subjectId'):
+            raise ApiError(400, 'bad-exam-quiz', 'Đề thi trực tuyến phải là đề trắc nghiệm có sẵn của cùng môn với lịch thi.')
+
+
+# ── Thi trực tuyến ngay trên trang ──────────────────────────────────
+# Lịch thi có `quizId` = bài thi trắc nghiệm làm trên web, giống làm trắc nghiệm nhưng phải: (1) vào đúng khung giờ của lịch thi,
+# (2) nhập MÃ TRUY CẬP do giám thị phát tại phòng thi (mã chỉ giáo viên/Admin xem được, lưu ở examKeys, không nằm trong dữ liệu dùng chung).
+# Câu hỏi chỉ được trả sau khi nhập đúng mã (examSessions ghi giờ vào thi); nộp bài phải có phiên này và còn trong giờ thi.
+EXAM_GRACE_SECONDS = 120        # cho nộp trễ tối đa 2 phút sau giờ kết thúc (độ trễ mạng)
+EXAM_DEFAULT_MINUTES = 90
+EXAM_MAX_TRIES = 5              # nhập sai mã quá 5 lần thì khóa 5 phút
+EXAM_LOCK_SECONDS = 300
+EXAM_CODE_RE = re.compile(r'[A-Za-z0-9]{4,12}')
+TIME_RE = re.compile(r'([01][0-9]|2[0-3]):[0-5][0-9]')
+
+
+def iso_utc(ts):
+    return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(ts))
+
+
+def exam_window(exam):
+    """(bắt đầu, kết thúc) theo giây UTC của lịch thi: ngày `date` + `start`/`end` giờ Việt Nam; thiếu hoặc sai `end` thì 90 phút. None nếu không đọc được."""
+    d, st, en = exam.get('date'), exam.get('start'), exam.get('end')
+    if not (isinstance(d, str) and DATE_RE.fullmatch(d) and isinstance(st, str) and TIME_RE.fullmatch(st)):
+        return None
+    try:
+        start = datetime.strptime(d + ' ' + st, '%Y-%m-%d %H:%M').replace(tzinfo=VN_TZ)
+    except ValueError:
+        return None
+    end = None
+    if isinstance(en, str) and TIME_RE.fullmatch(en):
+        end = datetime.strptime(d + ' ' + en, '%Y-%m-%d %H:%M').replace(tzinfo=VN_TZ)
+    if end is None or end <= start:
+        end = start + timedelta(minutes=EXAM_DEFAULT_MINUTES)
+    return start.timestamp(), end.timestamp()
+
+
+def find_exam(shared, eid):
+    return next((e for e in (shared or {}).get('exams') or [] if isinstance(e, dict) and str(e.get('id')) == str(eid)), None)
+
+
+def exam_staff_ok(user, role, exam):
+    """Admin, hoặc giáo viên dạy đúng lớp học phần của lịch thi (giám thị phát mã, theo dõi phòng thi)."""
+    if role == 'admin':
+        return True
+    if role != 'teacher' or not quiz_authorized(user, role, exam.get('subjectId')):
+        return False
+    secs = teacher_sections(doc_get('user', user['uid']))
+    return secs is None or not exam.get('classId') or (exam.get('classId'), exam.get('subjectId')) in secs
+
+
+def exam_session_of(eid, uid):
+    return doc_get('examSessions', f'{eid}_{uid}')
 
 
 def apply_quiz_ops(ops, who=None):
@@ -1185,8 +1264,9 @@ def bank_visible(user, role, item):
 
 def drop_quiz_results(uid):
     """Xóa kết quả trắc nghiệm (quizResults/{quizId}_{uid}) của một tài khoản bị xóa; khóa đáp án và đề không bị đụng."""
-    db().execute("DELETE FROM docs WHERE col='quizResults' AND id LIKE ? ESCAPE '\\'",
-                 ('%\\_' + uid.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_'),))
+    pat = '%\\_' + uid.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    for col in ('quizResults', 'examSessions'):         # kết quả trắc nghiệm và phiên vào phòng thi của tài khoản
+        db().execute("DELETE FROM docs WHERE col=? AND id LIKE ? ESCAPE '\\'", (col, pat))
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1562,6 +1642,7 @@ class Handler(BaseHTTPRequestHandler):
                         sync_phone = merged['profile']['phone']
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
+                    guard_exams(old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
                 if col == 'sharedData' and id_ == 'global':
@@ -1608,6 +1689,7 @@ class Handler(BaseHTTPRequestHandler):
                 merged[field] = arr
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
+                    guard_exams(old, merged)
                 if not can('update' if old is not None else 'create', col, id_, u, old or {}, merged):
                     raise ApiError(403, 'permission-denied', 'Bạn không có quyền thực hiện thao tác này.')
                 if col == 'sharedData' and id_ == 'global':
@@ -1668,6 +1750,83 @@ class Handler(BaseHTTPRequestHandler):
                     item['updatedAt'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
                     doc_put('quizBank', p[1], item)
                     return self.send(200, {'ok': True, 'count': len(item['questions'])})
+            raise ApiError(404, 'not-found', 'Không tìm thấy.')
+
+        # ── thi trực tuyến: mã truy cập, vào phòng thi, theo dõi phòng thi ──
+        if p[:1] == ['exam'] and len(p) == 3:
+            u = self.need_user()
+            role = role_of(u)
+            shared = doc_get('sharedData', 'global') or {}
+            exam = find_exam(shared, p[1])
+            if exam is None:
+                raise ApiError(404, 'not-found', 'Không tìm thấy lịch thi.')
+            eid = str(exam.get('id'))
+            if (p[2] == 'room' and method == 'GET') or (p[2] == 'code' and method == 'POST'):
+                if not exam_staff_ok(u, role, exam):
+                    raise ApiError(403, 'permission-denied', 'Chỉ giáo viên dạy lớp này hoặc Admin phát mã và xem phòng thi.')
+                if p[2] == 'code':
+                    b = self.json_body()
+                    code = str(b.get('code') or '').strip()
+                    if not code:
+                        code = ''.join(secrets.choice('ABCDEFGHJKLMNPQRSTUVWXYZ23456789') for _ in range(6))
+                    if not EXAM_CODE_RE.fullmatch(code):
+                        raise ApiError(400, 'bad-code', 'Mã truy cập gồm 4 đến 12 chữ cái hoặc chữ số.')
+                    doc_put('examKeys', eid, {'examId': exam.get('id'), 'code': code, 'updatedAt': iso_utc(time.time()), 'updatedBy': u['uid']})
+                    return self.send(200, {'code': code})
+                # id phiên là "{lịch thi}_{uid}": lấy theo khoảng khóa để khỏi phải thoát ký tự LIKE ("`" đứng ngay sau "_" trong ASCII)
+                rows = db().execute("SELECT data FROM docs WHERE col='examSessions' AND id >= ? AND id < ?", (eid + '_', eid + '`')).fetchall()
+                roster = []
+                for r in rows:
+                    sx = json.loads(r[0])
+                    if not sx.get('startedAt'):
+                        continue
+                    pu = doc_get('user', sx.get('uid')) or {}
+                    roster.append({'uid': sx.get('uid'), 'name': pu.get('name', ''), 'username': pu.get('username', ''),
+                                   'startedAt': sx.get('startedAt'), 'submittedAt': sx.get('submittedAt')})
+                roster.sort(key=lambda x: x['startedAt'])
+                win = exam_window(exam)
+                return self.send(200, {'code': (doc_get('examKeys', eid) or {}).get('code'), 'students': roster,
+                                       'start': win and iso_utc(win[0]), 'end': win and iso_utc(win[1])})
+            if p[2] == 'start' and method == 'POST':
+                if role != 'student':
+                    raise ApiError(403, 'permission-denied', 'Chỉ sinh viên vào phòng thi để làm bài.')
+                b = self.json_body()
+                prof = doc_get('user', u['uid']) or {}
+                quiz = next((x for x in shared.get('quizzes') or [] if isinstance(x, dict) and exam.get('quizId') is not None and str(x.get('id')) == str(exam['quizId'])), None)
+                if (quiz is None or quiz_status(quiz) == 'draft'
+                        or (prof.get('subjectIds') is not None and exam.get('subjectId') not in prof['subjectIds'])
+                        or (exam.get('classId') and prof.get('classId') and exam['classId'] != prof['classId'])):
+                    raise ApiError(404, 'not-found', 'Không tìm thấy bài thi trực tuyến của bạn.')
+                if quiz_status(quiz) != 'active':
+                    raise ApiError(400, 'quiz-closed', 'Bài thi đã đóng.')
+                win = exam_window(exam)
+                if win is None:
+                    raise ApiError(409, 'exam-no-time', 'Lịch thi chưa có ngày và giờ hợp lệ.')
+                now = time.time()
+                if now < win[0]:
+                    raise ApiError(400, 'exam-not-started', 'Chưa đến giờ thi.')
+                if now > win[1]:
+                    raise ApiError(400, 'exam-ended', 'Đã hết giờ làm bài thi.')
+                if db().execute("SELECT 1 FROM docs WHERE col='quizResults' AND id=?", (f"{quiz['id']}_{u['uid']}",)).fetchone():
+                    raise ApiError(409, 'already-submitted', 'Bạn đã nộp bài thi này rồi.')
+                sx = exam_session_of(eid, u['uid']) or {'uid': u['uid'], 'examId': exam.get('id'), 'tries': 0}
+                if not sx.get('startedAt'):            # lần đầu vào phòng thi: bắt buộc mã; vào lại (tải lại trang) thì không cần
+                    if sx.get('lockedUntil', 0) > now:
+                        raise ApiError(429, 'exam-locked', 'Nhập sai mã quá nhiều lần, thử lại sau %d giây.' % math.ceil(sx['lockedUntil'] - now))
+                    key = doc_get('examKeys', eid) or {}
+                    if not key.get('code'):
+                        raise ApiError(409, 'exam-no-code', 'Giám thị chưa phát mã truy cập.')
+                    if not str(b.get('code') or '').strip():      # chưa nhập mã (giao diện hỏi thử xem đã vào phòng thi chưa): không tính là nhập sai
+                        raise ApiError(403, 'exam-code-needed', 'Cần nhập mã truy cập.')
+                    if not hmac.compare_digest(str(b.get('code') or '').strip().upper().encode(), str(key['code']).upper().encode()):
+                        sx['tries'] = sx.get('tries', 0) + 1
+                        if sx['tries'] >= EXAM_MAX_TRIES:
+                            sx['tries'], sx['lockedUntil'] = 0, now + EXAM_LOCK_SECONDS
+                        doc_put('examSessions', f'{eid}_{u["uid"]}', sx)
+                        raise ApiError(403, 'exam-bad-code', 'Mã truy cập không đúng.')
+                    sx = {**sx, 'tries': 0, 'startedAt': iso_utc(now)}
+                    doc_put('examSessions', f'{eid}_{u["uid"]}', sx)
+                return self.send(200, {'quiz': quiz_strip(quiz), 'startedAt': sx['startedAt'], 'endsAt': iso_utc(win[1]), 'serverNow': iso_utc(now)})
             raise ApiError(404, 'not-found', 'Không tìm thấy.')
 
         # ── trắc nghiệm (V3): máy chủ chấm và ghi điểm ──
@@ -1741,7 +1900,21 @@ class Handler(BaseHTTPRequestHandler):
                     raise ApiError(404, 'not-found', 'Không tìm thấy đề hoặc bạn không học môn này.')
                 if quiz_status(quiz) != 'active':
                     raise ApiError(400, 'quiz-closed', 'Đề đã đóng.')
-                if quiz_due_passed(quiz):
+                linked = [e for e in shared.get('exams') or [] if isinstance(e, dict) and str(e.get('quizId')) == p[1]
+                          and (not e.get('classId') or not prof.get('classId') or e['classId'] == prof['classId'])]
+                session = None
+                if linked:          # đề thi trực tuyến: chỉ nộp được sau khi vào phòng thi bằng mã và trong giờ thi
+                    for e in linked:
+                        sx = exam_session_of(e.get('id'), u['uid'])
+                        win = exam_window(e)
+                        if sx and sx.get('startedAt') and win:
+                            session = (e, sx, win)
+                            break
+                    if session is None:
+                        raise ApiError(403, 'exam-code-required', 'Đây là bài thi trực tuyến: hãy vào phòng thi ở trang Lịch thi và nhập mã truy cập.')
+                    if time.time() > session[2][1] + EXAM_GRACE_SECONDS:
+                        raise ApiError(400, 'exam-ended', 'Đã hết giờ làm bài thi.')
+                elif quiz_due_passed(quiz):
                     raise ApiError(400, 'quiz-expired', 'Đã quá hạn làm bài.')
                 key = doc_get('quizKeys', p[1])
                 if not key:
@@ -1755,6 +1928,8 @@ class Handler(BaseHTTPRequestHandler):
                     db().execute('INSERT INTO docs VALUES (?,?,?)', ('quizResults', f'{p[1]}_{u["uid"]}', json.dumps(result, ensure_ascii=False)))
                 except sqlite3.IntegrityError:
                     raise ApiError(409, 'already-submitted', 'Bạn đã nộp bài này rồi.')
+                if session:
+                    doc_put('examSessions', f"{session[0].get('id')}_{u['uid']}", {**session[1], 'submittedAt': result['submittedAt']})
                 act = doc_get('activities', u['uid']) or {}       # bản sao cho Bảng điểm / Báo cáo lớp; client không tự ghi, không xóa được (V4)
                 events = list(act.get('events') or [])
                 events.append({'type': 'quiz', 'at': time.strftime('%Y-%m-%d', time.gmtime(now)), 'subjectId': quiz.get('subjectId'),

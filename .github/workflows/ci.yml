@@ -81,6 +81,8 @@ jobs:
         run: python3 tests/server/test_assign_avatars.py
       - name: Mỗi học phần mở chỉ có 1–3 giáo viên được cấp quyền (máy chủ chặn người thứ 4)
         run: python3 tests/server/test_teacher_limit.py
+      - name: Thi trực tuyến trên trang (mã truy cập, vào phòng thi theo giờ, không lộ câu hỏi ngoài phòng thi)
+        run: python3 tests/server/test_online_exam.py
       - name: Link minh chứng của phiếu xét tốt nghiệp
         run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn
