@@ -56,9 +56,20 @@ Việc đáng lưu ý: `smartctl -t long /dev/sda` được chạy trên cùng m
 
 Các bước này đã được thêm vào `.github/workflows/ci.yml` (`class_scope`, `assign_avatars`, `teacher_limit`). Kết quả chạy lại trên nhánh PR: `[điền sau khi CI chạy]`.
 
-## 4b. Bổ sung 18/11: chữ theo vai trò và thi trực tuyến trên trang (chưa triển khai)
+## 4b. Bổ sung 18/11: chữ theo vai trò và thi trực tuyến trên trang (đã triển khai 18/11, 09:11)
 
-Hai thay đổi V-30 và V-31 (xem 07) **chỉ chạy thử trên máy cá nhân**, chưa cài lên máy chủ thật; khi triển khai cần sao lưu CSDL trước như các lần trước. Máy chủ thêm hai collection `examKeys` (mã truy cập) và `examSessions` (giờ vào phòng thi), cả hai không đọc được qua `/api/doc`.
+Hai thay đổi V-30 và V-31 (xem 07) đã cài lên máy chủ thật sáng 18/11, từ nhánh `feat/ngoai-ke-hoach-lich-theo-vai-tro-thi-truc-tuyen` (tách từ `master` sau PR #62).
+
+**Các bước:**
+1. Sao lưu CSDL bằng API sao lưu của SQLite: `~/loadtest/backup-truoc-thi-online-2026-11-18.db` (`quick_check` = ok, 1.031 tài khoản, 2.301 bản ghi).
+2. Đóng gói bằng `git archive HEAD`, chép lên `~/deploy-1118`, so hash `studytask_api.py` với bản trong git: `1b0d2c701de19738` (khớp).
+3. Trương Thanh Vui chạy `cd ~/deploy-1118 && sudo bash deploy/deploy.sh` (cần mật khẩu `sudo` nên không chạy tự động). Không chạy nạp lại dữ liệu mẫu, không dừng dịch vụ lâu.
+
+**Kiểm tra sau triển khai (đạt):** hash `/opt/studytask/studytask_api.py` = `1b0d2c701de19738` (khớp bản trong git); `studytask-api` đang chạy; giao diện phiên bản `v202611180911` có `utils/exams.js`, `utils/roleText.js`, `pages/ExamRoom.js`; trang công khai trả 200; `POST /api/exam/{id}/start` và `/room` khi chưa đăng nhập trả 401 (đường dẫn mới đã có); số tài khoản vẫn 1.031 như bản sao lưu; `examKeys` và `examSessions` đang trống (chưa có kỳ thi trực tuyến thật). Dung lượng ổ gốc 8,2 GB/295 GB.
+
+**Chưa kiểm:** chưa tạo kỳ thi thử trên máy chủ thật để không thêm dữ liệu vào bộ dữ liệu đang dùng; luồng nhập mã, làm bài, nộp bài đã kiểm bằng `test_online_exam.py` và trên bản chạy thử cục bộ. **Quay lại:** cài lại bản của `master` bằng `deploy.sh`; CSDL không đổi cấu trúc nên không cần khôi phục bản sao lưu.
+
+Kết quả kiểm thử trước khi triển khai: Máy chủ thêm hai collection `examKeys` (mã truy cập) và `examSessions` (giờ vào phòng thi), cả hai không đọc được qua `/api/doc`.
 
 | Lệnh | Kết quả |
 |---|---|
