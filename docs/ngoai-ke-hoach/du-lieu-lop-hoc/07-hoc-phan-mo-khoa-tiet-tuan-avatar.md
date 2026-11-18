@@ -5,6 +5,8 @@ Người thực hiện: Trương Thanh Vui (cùng Claude Code, model Claude Sonn
 
 ## 1. Vì sao có đợt này
 
+> Cập nhật 18/11: thêm V-30 (chữ theo vai trò) và V-31 (thi trực tuyến trên trang). Hai mục này **chưa triển khai lên máy chủ thật**, mới chạy thử trên máy cá nhân. Làm trên nhánh `feat/ngoai-ke-hoach-lich-theo-vai-tro-thi-truc-tuyen` (tách từ `master` sau khi PR #61 đã gộp).
+
 Sau lần nạp 12/11 (xem 05), khi dùng thử trên web thật phát sinh các lỗi logic mà dữ liệu ít không lộ ra. Mỗi mục dưới đây có yêu cầu gốc, cách sửa, nơi xem mã và nơi xem minh chứng.
 
 | # | Vấn đề thấy được | Cách xử lý | Mã chính | Kiểm thử |
@@ -19,6 +21,8 @@ Sau lần nạp 12/11 (xem 05), khi dùng thử trên web thật phát sinh các
 | V-27 | Thực tập, Đồ án chuyên ngành, Khóa luận không có thời khóa biểu cụ thể và không tính điểm theo tỷ trọng | 3 môn (IT405, IT498, IT499) đánh dấu `kieuHoc: 'huong-dan'`: không có buổi học, lịch thi, đề trắc nghiệm; chỉ có tài liệu hướng dẫn/biểu mẫu; quy chế điểm `{cc 0, bt 0, gk 0, ck 100}`; giáo viên hướng dẫn nhập thẳng điểm tổng kết ở Bảng điểm; trang Quy chế điểm hiện ghi chú thay cho bộ trọng số | `utils/grading.js` (`isGuidedSubject`), `components/GradeBook.js`, `pages/GradingPolicy.js` | `tests/logic.test.mjs`, `test_seed_curriculum.py` |
 | V-28 | Trang tổng hợp hệ thống chưa khớp số liệu thật và danh mục môn trùng mã | Thống kê thêm số học phần mở và số khóa; bảng "Theo khóa"; môn trùng mã tính vào cùng chương trình, lấy bản mới nhất làm đại diện | `utils/systemStats.js`, `utils/curriculum.js`, `pages/Admin.js` | `tests/logic.test.mjs` |
 | V-29 | Cần kiểm tra đồng bộ ảnh ở số lượng lớn | Gắn ảnh đại diện **riêng cho từng sinh viên** từ kho ảnh có sẵn: thu nhỏ 256×256 JPEG (`scripts/prepare_avatars.ps1`), gắn ngẫu nhiên không trùng (`scripts/assign_avatars.py`, nhãn `avatarSeed: 'avatars-v1'`, có `--remove`, `--dry-run`) | `scripts/prepare_avatars.ps1`, `scripts/assign_avatars.py`, `pages/Directory.js`, `components/AccountManager.js` | `tests/server/test_assign_avatars.py` |
+| V-30 | Trang Lịch dùng chung chữ cho mọi vai trò ("Lịch học & Thi", "Thêm tiết học") nên giáo viên thấy chữ của sinh viên | Chữ theo vai trò: sinh viên "Lịch học", "Lịch thi"; giáo viên "Lịch giảng dạy", "Lịch thi", "Thêm buổi dạy", "Coi thi/Giám thị"; Đào tạo và Admin "Xếp lịch học & thi". Áp dụng cho thanh bên, trang Lịch (tuần, thi), Lịch theo tháng và thông báo. Dữ liệu không đổi, chỉ đổi chữ | `utils/roleText.js`, `components/Sidebar.js`, `pages/Schedule.js`, `pages/MonthCalendar.js`, `app.js` | `tests/logic.test.mjs` (mục "Nhãn lịch theo vai trò") |
+| V-31 | Thi trực tuyến phải ra ngoài trang bằng link, không kiểm soát được giờ, mã, ai vào | Lịch thi có thể gắn một **đề trắc nghiệm** (`quizId`) và làm ngay trên trang như trắc nghiệm, nhưng: chỉ vào được đúng giờ thi; phải nhập **mã truy cập do giám thị phát tại phòng thi** (giáo viên/Admin xem, tạo, đổi mã; sinh viên không đọc được qua bất kỳ API nào); câu hỏi chỉ trả sau khi nhập đúng mã; đồng hồ đếm ngược theo giờ máy chủ, hết giờ tự nộp; nộp một lần, máy chủ chấm; nhập sai mã 5 lần bị khóa 5 phút; giáo viên theo dõi sinh viên đã vào phòng thi / đã nộp; lịch thi chọn theo tiết như lịch học | `server/studytask_api.py` (`exam_window`, `guard_exams`, `/api/exam/{id}/start\|room\|code`), `pages/ExamRoom.js`, `pages/Schedule.js`, `pages/Quiz.js`, `utils/exams.js` | `tests/server/test_online_exam.py`, `tests/logic.test.mjs` |
 
 ## 2. Giới hạn đã biết
 
@@ -32,3 +36,4 @@ Sau lần nạp 12/11 (xem 05), khi dùng thử trên web thật phát sinh các
 - Danh bạ có ảnh đại diện: [bang-chung/2026-11-14/danh-ba-anh-dai-dien.jpg](bang-chung/2026-11-14/danh-ba-anh-dai-dien.jpg)
 - Thời khóa biểu tuần, góc nhìn sinh viên (chỉ thấy lớp mình, học kỳ hiện tại): [bang-chung/2026-11-17/tkb-tuan-sinh-vien.jpg](bang-chung/2026-11-17/tkb-tuan-sinh-vien.jpg)
 - Thời khóa biểu tuần, góc nhìn quản trị, lọc khóa và lớp: [bang-chung/2026-11-17/tkb-tuan-admin-loc-khoa-lop.jpg](bang-chung/2026-11-17/tkb-tuan-admin-loc-khoa-lop.jpg)
+- Phòng thi trực tuyến, góc nhìn giáo viên (mã truy cập, danh sách sinh viên đã vào và đã nộp), chụp 18/11 trên bản chạy thử: [bang-chung/2026-11-18/phong-thi-giao-vien-ma-truy-cap.jpg](bang-chung/2026-11-18/phong-thi-giao-vien-ma-truy-cap.jpg)

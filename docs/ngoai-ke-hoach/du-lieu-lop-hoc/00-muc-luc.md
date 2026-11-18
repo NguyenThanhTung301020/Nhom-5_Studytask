@@ -10,7 +10,6 @@ Cập nhật ngày 17/11/2026 (thêm 07 và 08). Người thực hiện: Trươn
 | [03-van-de-logic-phat-sinh.md](03-van-de-logic-phat-sinh.md) | Các vấn đề logic phát sinh khi đẩy dữ liệu thật tương ứng các lớp của một chuyên ngành | Phần quan trọng nhất của bộ báo cáo |
 | [04-kiem-thu-va-do-tai.md](04-kiem-thu-va-do-tai.md) | Kết quả kiểm thử tự động, đo tải, đo lưu trữ | Minh chứng số liệu |
 | [05-bien-ban-trien-khai-12-11.md](05-bien-ban-trien-khai-12-11.md) | Biên bản nạp dữ liệu lên máy chủ thật, sao lưu, cách quay lại | Minh chứng vận hành |
-| [06-doan-dan-vao-bao-cao-tuan.md](06-doan-dan-vao-bao-cao-tuan.md) | Đoạn viết sẵn để dán vào báo cáo tuần | Hoàn thiện báo cáo tuần |
 | [07-hoc-phan-mo-khoa-tiet-tuan-avatar.md](07-hoc-phan-mo-khoa-tiet-tuan-avatar.md) | Đợt 14–17/11: học phần mở theo khóa, 1–3 giáo viên, thời khóa biểu theo tiết và theo tuần, môn hướng dẫn, ảnh đại diện | Giải thích thay đổi và minh chứng hình ảnh (thư mục `bang-chung/`) |
 | [08-bien-ban-trien-khai-14-11-va-17-11.md](08-bien-ban-trien-khai-14-11-va-17-11.md) | Biên bản triển khai 14/11 và 17/11, số liệu máy chủ, sao lưu, cách quay lại | Minh chứng vận hành |
 

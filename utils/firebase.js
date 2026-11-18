@@ -198,6 +198,10 @@ export const fsDelete = (col, id) => _ready ? api('DELETE', docPath(col, id)) : 
 
 // ── Trắc nghiệm (V3): máy chủ chấm điểm; trình duyệt không có đáp án đúng ──
 export const submitQuiz = (quizId, answers) => api('POST', `/quiz/${enc(String(quizId))}/submit`, { answers })   // → { score, correct, total, submittedAt }
+// Thi trực tuyến: vào phòng thi bằng mã (→ { quiz, startedAt, endsAt, serverNow }), giáo viên phát mã và xem phòng thi
+export const startExam    = (examId, code) => api('POST', `/exam/${enc(String(examId))}/start`, { code })
+export const getExamRoom  = (examId) => api('GET', `/exam/${enc(String(examId))}/room`)                 // → { code, students[], start, end }
+export const setExamCode  = (examId, code) => api('POST', `/exam/${enc(String(examId))}/code`, { code: code || '' })   // '' = máy chủ sinh mã mới
 export const loadMyQuizResults = async () => _ready ? (await api('GET', '/quiz/mine')).results : []
 // Điểm chính thức của cả lớp (Admin: tất cả; giáo viên: môn/lớp mình dạy) cho Bảng điểm và Báo cáo lớp
 export const loadAllQuizResults = async () => _ready ? (await api('GET', '/quiz/results')).results : []

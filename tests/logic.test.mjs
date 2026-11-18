@@ -14,6 +14,8 @@ import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
 import { applyQuizResults, resultToEvent } from '../utils/quizScores.js'
 import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
+import { scheduleText, navLabel } from '../utils/roleText.js'
+import { hasRoomQuiz, canUseRoomQuiz, examWindow, examPhase, quizzesForExam, formatCountdown, validAccessCode, examErrorText } from '../utils/exams.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition, currentTerm, termKey, offeringTitle, inTerm, inKhoa, khoaChoices, termChoices, defaultTermSel, groupOfferings, groupTitle, semesterLabel as semLabel2 } from '../utils/scope.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
@@ -679,5 +681,81 @@ describe('Môn hướng dẫn: thực tập, đồ án, khóa luận', () => {
     assert.equal(pol.guided, undefined)
     assert.equal(pol.preset, 'L1')
     assert.deepEqual(validatePolicy(pol, { nCounted: 5 }).filter(e => e.includes('Tổng trọng số')), [])
+  })
+})
+
+describe('Nhãn lịch theo vai trò', () => {
+  test('sinh viên: lịch học và lịch thi; giáo viên: lịch giảng dạy và lịch thi', () => {
+    const sv = scheduleText('student'), gv = scheduleText('teacher')
+    assert.equal(sv.nav, 'Lịch học & Lịch thi')
+    assert.equal(gv.nav, 'Lịch giảng dạy & Lịch thi')
+    assert.equal(sv.weekTab, 'Lịch học')
+    assert.equal(gv.weekTab, 'Lịch giảng dạy')
+    assert.equal(sv.examTab, 'Lịch thi')
+    assert.equal(gv.examTab, 'Lịch thi')
+    assert.equal(gv.unit, 'buổi dạy')
+    assert.equal(sv.unit, 'tiết học')
+    assert.match(gv.addClass, /buổi dạy/)
+    assert.equal(sv.addClass, '')                         // sinh viên không có nút thêm
+  })
+  test('Đào tạo và Admin xếp lịch cho các lớp; vai trò lạ rơi về nhãn sinh viên', () => {
+    assert.equal(scheduleText('training').nav, 'Xếp lịch học & thi')
+    assert.equal(scheduleText('admin').title, 'Xếp lịch học & Lịch thi')
+    assert.equal(scheduleText().nav, scheduleText('student').nav)
+  })
+  test('giáo viên không còn chữ "Lịch học" ở trang lịch; sinh viên không có chữ "giảng dạy"', () => {
+    const gv = Object.values(scheduleText('teacher')).join(' | '), sv = Object.values(scheduleText('student')).join(' | ')
+    assert.equal(/Lịch học|lớp học trực tuyến/i.test(gv), false)
+    assert.equal(/giảng dạy|buổi dạy|dạy/i.test(sv), false)
+  })
+  test('navLabel chỉ đổi mục lịch; mục khác giữ nhãn gốc', () => {
+    assert.equal(navLabel({ key: 'schedule', label: 'x' }, 'teacher'), 'Lịch giảng dạy & Lịch thi')
+    assert.equal(navLabel({ key: 'calendar', label: 'x' }, 'student'), 'Lịch học theo tháng')
+    assert.equal(navLabel({ key: 'quiz', label: 'Trắc nghiệm' }, 'teacher'), 'Trắc nghiệm')
+  })
+})
+
+describe('Thi trực tuyến trên trang', () => {
+  const exam = (o = {}) => ({ id: 1, subjectId: 5, date: '2026-11-20', start: '18:00', end: '19:30', ...o })
+  const at = (hhmm) => Date.parse(`2026-11-20T${hhmm}:00+07:00`)
+  test('lịch thi có quizId là thi trên trang; chỉ hình thức trực tuyến/trắc nghiệm được gắn đề', () => {
+    assert.equal(hasRoomQuiz(exam({ quizId: 3 })), true)
+    assert.equal(hasRoomQuiz(exam()), false)
+    assert.equal(hasRoomQuiz(exam({ quizId: '' })), false)
+    assert.equal(canUseRoomQuiz('online'), true)
+    assert.equal(canUseRoomQuiz('tracNghiem'), true)
+    assert.equal(canUseRoomQuiz('tuLuan'), false)
+  })
+  test('khung giờ thi theo giờ Việt Nam; thiếu hoặc sai giờ kết thúc thì 90 phút', () => {
+    assert.deepEqual(examWindow(exam()), { start: at('18:00'), end: at('19:30') })
+    assert.equal(examWindow(exam({ end: '' })).end, at('19:30'))
+    assert.equal(examWindow(exam({ end: '17:00' })).end, at('19:30'))
+    assert.equal(examWindow(exam({ date: '' })), null)
+    assert.equal(examWindow(exam({ start: '25:00' })), null)
+  })
+  test('giai đoạn: chưa đến giờ, đang thi, đã kết thúc, không rõ', () => {
+    assert.equal(examPhase(exam(), at('17:59')), 'upcoming')
+    assert.equal(examPhase(exam(), at('18:00')), 'open')
+    assert.equal(examPhase(exam(), at('19:30')), 'open')
+    assert.equal(examPhase(exam(), at('19:31')), 'ended')
+    assert.equal(examPhase({ id: 2 }), 'unknown')
+  })
+  test('đề có thể gắn: cùng môn, chưa đóng, không phải đề bị khóa', () => {
+    const qs = [{ id: 1, subjectId: 5, status: 'draft' }, { id: 2, subjectId: 5, status: 'active' }, { id: 3, subjectId: 5, status: 'closed' }, { id: 4, subjectId: 6, status: 'active' }]
+    assert.deepEqual(quizzesForExam(qs, 5).map(q => q.id), [1, 2])
+  })
+  test('đồng hồ đếm ngược và mã truy cập', () => {
+    assert.equal(formatCountdown(65000), '01:05')
+    assert.equal(formatCountdown(3725000), '1:02:05')
+    assert.equal(formatCountdown(-5), '00:00')
+    assert.equal(validAccessCode('Thi2611'), true)
+    assert.equal(validAccessCode('abc'), false)
+    assert.equal(validAccessCode('a b c d'), false)
+    assert.equal(validAccessCode('x'.repeat(13)), false)
+  })
+  test('thông báo lỗi tiếng Việt cho từng mã lỗi của máy chủ', () => {
+    for (const c of ['exam-bad-code', 'exam-no-code', 'exam-not-started', 'exam-ended', 'exam-locked', 'already-submitted'])
+      assert.notEqual(examErrorText(c), 'Không vào được phòng thi.')
+    assert.equal(examErrorText('lạ', 'x'), 'x')
   })
 })

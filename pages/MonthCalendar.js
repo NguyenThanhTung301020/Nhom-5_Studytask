@@ -1,6 +1,8 @@
 // pages/MonthCalendar.js – Thời khóa biểu theo tháng: lịch học (lặp hằng tuần) + lịch thi trong tháng
 import { CLASS_FORMATS, EXAM_FORMATS } from '../utils/constants.js'
 import { offeringTitle } from '../utils/scope.js'
+import { scheduleText } from '../utils/roleText.js'
+import { hasRoomQuiz } from '../utils/exams.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
@@ -29,7 +31,8 @@ export function monthEvents(year, month, schedule, exams) {
   return map
 }
 
-export default function MonthCalendar({ schedule = [], exams = [], subjects = [], onNavigate }) {
+export default function MonthCalendar({ schedule = [], exams = [], subjects = [], onNavigate, role = 'student' }) {
+  const T = scheduleText(role)        // sinh viên: lịch học; giáo viên: lịch giảng dạy
   const now = new Date()
   const [ym, setYm]         = useState({ y: now.getFullYear(), m: now.getMonth() })
   const [selected, setSel]  = useState(todayIso())
@@ -84,8 +87,11 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
           h('span', { style: { color: fmt.color } }, h('i', { className: `bi bi-${fmt.icon} me-1` }), fmt.label)
         ),
         e.description && h('div', { className: 'small text-muted mt-1' }, e.description),
-        e.link && h('a', { href: e.link, target: '_blank', rel: 'noopener noreferrer', className: 'btn btn-sm btn-success mt-2' },
-          h('i', { className: 'bi bi-camera-video me-1' }), e.kind === 'exam' ? 'Vào phòng thi trực tuyến' : 'Vào lớp trực tuyến')
+        e.kind === 'exam' && hasRoomQuiz(e) && h('div', { className: 'small mt-2' }, h('i', { className: 'bi bi-shield-lock me-1', style: { color: '#e67e22' } }),
+          'Thi trực tuyến trên trang, cần mã truy cập do giám thị phát. ',
+          onNavigate && h('a', { href: '#', onClick: ev => { ev.preventDefault(); onNavigate('schedule') } }, role === 'student' ? 'Vào phòng thi ở trang Lịch thi' : 'Mở phòng thi ở trang Lịch thi')),
+        e.link && !(e.kind === 'exam' && hasRoomQuiz(e)) && h('a', { href: e.link, target: '_blank', rel: 'noopener noreferrer', className: 'btn btn-sm btn-success mt-2' },
+          h('i', { className: 'bi bi-camera-video me-1' }), e.kind === 'exam' ? 'Vào phòng thi trực tuyến' : T.joinClass)
       )
     )
   }
@@ -97,11 +103,11 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
   return h('div', { className: 'container-fluid py-4' },
     h('div', { className: 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-3' },
       h('div', null,
-        h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-calendar3 me-2', style: { color: 'var(--primary)' } }), 'Thời khóa biểu theo tháng'),
-        h('small', { className: 'text-muted' }, 'Lịch học hằng tuần và lịch thi trong tháng trên cùng một lịch')
+        h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-calendar3 me-2', style: { color: 'var(--primary)' } }), T.monthTitle),
+        h('small', { className: 'text-muted' }, T.monthSub)
       ),
       onNavigate && h('button', { className: 'btn btn-sm btn-outline-primary', onClick: () => onNavigate('schedule') },
-        h('i', { className: 'bi bi-calendar-week me-1' }), 'Xem theo tuần / quản lý lịch')
+        h('i', { className: 'bi bi-calendar-week me-1' }), T.monthMore)
     ),
 
     // Thanh điều khiển
@@ -116,7 +122,7 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
         h('div', { className: 'vr mx-1 d-none d-md-block' }),
         h('label', { className: 'form-check form-check-inline mb-0 small' },
           h('input', { type: 'checkbox', className: 'form-check-input', checked: show.class, onChange: () => setShow(s => ({ ...s, class: !s.class })) }),
-          h('span', { className: 'form-check-label' }, h('span', { className: 'mcal-dot', style: { background: 'var(--primary)' } }), 'Lịch học')),
+          h('span', { className: 'form-check-label' }, h('span', { className: 'mcal-dot', style: { background: 'var(--primary)' } }), T.legendClass)),
         h('label', { className: 'form-check form-check-inline mb-0 small' },
           h('input', { type: 'checkbox', className: 'form-check-input', checked: show.exam, onChange: () => setShow(s => ({ ...s, exam: !s.exam })) }),
           h('span', { className: 'form-check-label' }, h('span', { className: 'mcal-dot', style: { background: '#e67e22' } }), 'Lịch thi')),
@@ -128,7 +134,7 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
 
     // Thống kê tháng
     h('div', { className: 'd-flex flex-wrap gap-3 small text-muted mb-3' },
-      h('span', null, h('i', { className: 'bi bi-journal-text me-1 text-primary' }), `${nClass} buổi học trong ${monthLabel.toLowerCase()}`),
+      h('span', null, h('i', { className: 'bi bi-journal-text me-1 text-primary' }), `${nClass} ${T.unitMonth} trong ${monthLabel.toLowerCase()}`),
       h('span', null, h('i', { className: 'bi bi-clipboard-check me-1', style: { color: '#e67e22' } }), `${examList.length} lịch thi`),
       examList.length > 0 && h('span', null, 'Thi gần nhất: ',
         h('strong', null, (() => { const e = examList.find(x => x.date >= today) || examList[0]; return `${subjectOf(e.subjectId).name || ''} – ${e.date.split('-').reverse().join('/')}` })()))
@@ -166,7 +172,7 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
             selDate.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })),
           h('div', { className: 'card-body pt-2 px-4 pb-3 d-flex flex-column gap-2' },
             selEvents.length === 0
-              ? h('div', { className: 'text-muted small py-3 text-center' }, h('i', { className: 'bi bi-cup-hot d-block fs-3 mb-2 opacity-50' }), 'Không có lịch học hay lịch thi.')
+              ? h('div', { className: 'text-muted small py-3 text-center' }, h('i', { className: 'bi bi-cup-hot d-block fs-3 mb-2 opacity-50' }), T.empty)
               : selEvents.map(detail)
           )
         )

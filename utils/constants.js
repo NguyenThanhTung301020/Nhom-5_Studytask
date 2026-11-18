@@ -252,7 +252,7 @@ export const SAMPLE_EXAMS = [
 export const NAV_ITEMS = [
   { key: 'dashboard',  icon: 'speedometer2',        label: 'Dashboard', roles: ['admin','teacher','student','training','finance'] },
   { key: 'subjects',   icon: 'book',                label: 'Môn học',   roles: ['admin','teacher','student','training'] },
-  { key: 'schedule',   icon: 'calendar-week',       label: 'Lịch học & Thi', roles: ['admin','teacher','student','training'] },
+  { key: 'schedule',   icon: 'calendar-week',       label: 'Lịch học & Lịch thi', roles: ['admin','teacher','student','training'] },
   { key: 'calendar',   icon: 'calendar3',           label: 'Lịch theo tháng', roles: ['admin','teacher','student','training'] },
   { key: 'deadlines',  icon: 'clock',               label: 'Deadline',  roles: ['admin','teacher','student'] },
   { key: 'statistics', icon: 'bar-chart',           label: 'Thống kê',  roles: ['admin','teacher','student'] },
