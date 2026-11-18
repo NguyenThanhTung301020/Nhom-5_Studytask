@@ -56,6 +56,17 @@ Việc đáng lưu ý: `smartctl -t long /dev/sda` được chạy trên cùng m
 
 Các bước này đã được thêm vào `.github/workflows/ci.yml` (`class_scope`, `assign_avatars`, `teacher_limit`). Kết quả chạy lại trên nhánh PR: `[điền sau khi CI chạy]`.
 
+## 4b. Bổ sung 18/11: chữ theo vai trò và thi trực tuyến trên trang (chưa triển khai)
+
+Hai thay đổi V-30 và V-31 (xem 07) **chỉ chạy thử trên máy cá nhân**, chưa cài lên máy chủ thật; khi triển khai cần sao lưu CSDL trước như các lần trước. Máy chủ thêm hai collection `examKeys` (mã truy cập) và `examSessions` (giờ vào phòng thi), cả hai không đọc được qua `/api/doc`.
+
+| Lệnh | Kết quả |
+|---|---|
+| `npm run test:logic` | 123/123 đạt (thêm 10 kiểm tra: nhãn theo vai trò, khung giờ và mã thi) |
+| `python tests/server/test_online_exam.py` | KẾT QUẢ: ĐẠT (36 kiểm tra: không lộ câu hỏi/mã, đúng khung giờ, khóa khi nhập sai mã, nộp một lần, đề thường không đổi) |
+
+Chạy thử trên giao diện (dữ liệu mẫu, tài khoản sinh viên và giáo viên): sinh viên thấy "Lịch học", "Lịch thi", nhập sai mã bị từ chối, nhập đúng mã vào làm bài có đồng hồ đếm ngược, nộp được 10/10; giáo viên thấy "Lịch giảng dạy", "Thêm buổi dạy", mở "Phòng thi" thấy mã và sinh viên vừa nộp. Ảnh: `bang-chung/2026-11-18/phong-thi-giao-vien-ma-truy-cap.jpg`.
+
 ## 5. Việc chưa làm và rủi ro
 
 - Mã đã triển khai lên máy chủ **trước khi** có Approve của PR (cùng cách làm với 05); cần PR này được review và gộp để kho khớp với máy chủ. Nếu triển khai lại từ `master` khi chưa gộp, sẽ mất các thay đổi ở 07.
