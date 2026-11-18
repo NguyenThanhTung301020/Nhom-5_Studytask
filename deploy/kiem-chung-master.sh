@@ -133,14 +133,14 @@ while IFS= read -r f; do
   fi
   if [ "$R" = "$S" ]; then printf '  [KHOP]  %s  %s\n' "${R:0:16}" "$f"
   else NBAD=$((NBAD+1)); bad "$f (repo ${R:0:16}, máy chủ ${S:0:16})"; fi
-done < <(find $WEB_PATHS -type f | sort)
+done < <(find $WEB_PATHS -type f | LC_ALL=C sort)
 echo "  Tổng: $N tệp, khác hoặc thiếu: $NBAD"
 
 # ---------------------------------------------------------------- 5. Tệp thừa
 hr "5. TỆP CHẠY KHÔNG CÓ TRÊN GITHUB"
-find $WEB_PATHS -type f | sort > "$TMPD/repo.txt"
-(cd "$WEB" && find . -type f | sed 's|^\./||' | sort) > "$TMPD/web.txt"
-EXTRA="$(comm -13 "$TMPD/repo.txt" "$TMPD/web.txt")"
+find $WEB_PATHS -type f | LC_ALL=C sort > "$TMPD/repo.txt"
+(cd "$WEB" && find . -type f | sed 's|^\./||' | LC_ALL=C sort) > "$TMPD/web.txt"
+EXTRA="$(LC_ALL=C comm -13 "$TMPD/repo.txt" "$TMPD/web.txt")"
 if [ -z "$EXTRA" ]; then ok "Không có tệp thừa trong $WEB"
 else while IFS= read -r f; do bad "Tệp thừa $WEB/$f"; done <<< "$EXTRA"; fi
 (cd "$WEB" && find . -mindepth 1 -maxdepth 1 -type l ! -name 'v[0-9]*' -printf '%p -> %l\n') | while IFS= read -r l; do info "Liên kết lạ trong web root: $l"; done

@@ -7,7 +7,7 @@
 - Kế hoạch (nguyên văn): "Triển khai lại từ `master` (gồm [PR50], [PR51], [PR52], [PR54], [PR56]), so hash `studytask_api.py` và các tệp giao diện; xử lý script cài đặt cũ."
 - Kết quả cần đạt: "Máy chủ trùng hash với `master`; có biên bản trong `docs/van-hanh/`."
 - Thời điểm đo: **18/11/2026 12:31 UTC** (19:31 giờ Việt Nam). `master` lúc đo: `56c0bb4` (gộp [PR63]).
-- Cách đo: Claude Code chạy lệnh qua SSH (`studytask@192.168.2.187`) từ máy của Trương Thanh Vui, không dùng `sudo`. Phần đo hash là **chỉ đọc**; thay đổi duy nhất trên máy chủ là gỡ quyền thực thi ba script cũ (mục 5, 18/11 12:34 UTC). Hash tệp trên máy chủ tính bằng `sha256sum`; hash bản trong kho tính bằng `git show origin/master:<tệp> | sha256sum`.
+- Cách đo: Claude Code chạy lệnh qua SSH (`studytask@192.168.2.187`) từ máy của Trương Thanh Vui, không dùng `sudo`. Phần đo hash là **chỉ đọc**; thay đổi trên máy chủ gồm: gỡ quyền thực thi ba script cũ (mục 5, 18/11 12:34 UTC), chép script `kiem-chung-master.sh` lên `~` và chạy (mục 4c), và chuyển tệp thừa sang `~/luu-tru-2026-11-18/` do Trương Thanh Vui chạy bằng `sudo` (mục 4c). Hash tệp trên máy chủ tính bằng `sha256sum`; hash bản trong kho tính bằng `git show origin/master:<tệp> | sha256sum`.
 
 ## 0. Phân công thực hiện
 
@@ -16,8 +16,8 @@
 | `git fetch`, đọc trạng thái PR58–PR64 trên GitHub, xác định commit đích `56c0bb4` | Nguyễn Thanh Tùng, máy của Tùng (Claude Code chạy lệnh) | Làm được. PR58–PR63 đã gộp; PR64 đang mở nhưng chỉ có tài liệu, không đổi tệp chạy |
 | Đối chiếu độc lập qua Internet: tải từng tệp giao diện từ `https://sutdytask.io.vn/v202611180911/…`, so SHA256 với `master` `56c0bb4` (18/11 12:12 UTC) | Nguyễn Thanh Tùng, máy của Tùng | Làm được. **53/53 tệp** `app.js`, `style.css`, `components/`, `pages/`, `utils/` trùng; `index.html` trùng sau khi bỏ tiền tố `v202611180911/` (mục 4b) |
 | Kiểm tra web từ ngoài: trang chủ, `/api/auth/me`, endpoint mới của PR58, PR63, đường dẫn mã nguồn | Nguyễn Thanh Tùng, máy của Tùng | Làm được (mục 4b) |
-| Soạn script chỉ đọc `deploy/kiem-chung-master.sh` để đo lại toàn bộ trên máy chủ | Nguyễn Thanh Tùng, máy của Tùng (Claude Code soạn) | Đã soạn, chỉ kiểm cú pháp, **chưa chạy trên máy chủ** (nhánh cục bộ, chưa đẩy lên GitHub) |
-| Hash `/opt/studytask/studytask_api.py`, so tệp trong `/var/www/studytask`, xem thời điểm cài, `~/migration`, `~/deploy-log.txt`; gỡ quyền thực thi script cũ | **Không làm được trên máy Tùng do máy không kết nối được tới máy chủ, nên nhờ Trương Thanh Vui kết nối giùm** (Claude Code trên máy Vui chạy lệnh) | Mục 3–6 |
+| Soạn script chỉ đọc `deploy/kiem-chung-master.sh` để đo lại toàn bộ trên máy chủ | Nguyễn Thanh Tùng, máy của Tùng (Claude Code soạn) | Đã soạn trên máy Tùng; **Trương Thanh Vui chép lên máy chủ và chạy** 18/11 13:16 và 13:18 UTC, lần 2 **ĐẠT** (mục 4c) |
+| Hash `/opt/studytask/studytask_api.py`, so tệp trong `/var/www/studytask`, xem thời điểm cài, `~/migration`, `~/deploy-log.txt`; gỡ quyền thực thi script cũ; chạy script kiểm chứng; dọn tệp thừa | **Không làm được trên máy Tùng do máy không kết nối được tới máy chủ, nên nhờ Trương Thanh Vui kết nối giùm** (Claude Code trên máy Vui chạy lệnh) | Mục 3–6, 4c |
 
 ## 1. Kết luận
 
@@ -31,7 +31,9 @@
 | 5 PR của việc 1 ([PR50], [PR51], [PR52], [PR54], [PR56]) | Cả năm đã nằm trong `master` (mục 2); vì hash trùng `master` nên mã của chúng đang chạy |
 | Script cài đặt cũ | `install-api.sh` đã được đổi tên từ trước; **ngày 18/11 12:34 UTC đã gỡ quyền thực thi của cả ba script cũ** trong `~/migration` (mục 5) |
 
-Còn lại: cài lại từ `master` cho đúng quy trình; chưa rà hết tệp chạy không có trên GitHub (mục 4 chỉ so các tệp `.js`, `.html`, `.css`); `~/deploy-log.txt` chưa ghi các lần triển khai từ 12/11 (mục 6); múi giờ của mốc 18/11 09:11 cần xác nhận (mục 3); biên bản này chưa nằm trong kho GitHub, và Tùng chưa xác nhận (mục 7).
+**Script kiểm chứng `kiem-chung-master.sh` ra ĐẠT lúc 18/11 13:18:02 UTC** sau khi dọn tệp thừa (mục 4c): API, tiến trình, cấu hình, 54/54 tệp giao diện trùng `56c0bb4`, không còn tệp chạy ngoài GitHub, ba dịch vụ `active`.
+
+Còn lại: (tùy chọn) cài lại từ `master` cho đúng quy trình (mục 8b); `~/deploy-log.txt` chưa ghi các lần triển khai từ 12/11 (mục 6); đối chiếu tệp `.sha256` của báo cáo (mục 4c); biên bản này chưa nằm trên GitHub, và Tùng chưa xác nhận (mục 7).
 
 ## 2. Năm PR của việc 1 đã nằm trong `master`
 
@@ -59,7 +61,9 @@ Sau [PR56], `master` còn nhận thêm PR58 đến [PR63] (58, 59, 60, 61, 62, 6
 
 Lần cài ngày 18/11 diễn ra trước khi [PR63] được gộp vào `master` (gộp lúc 18:49 giờ Việt Nam), tức là **cài từ nhánh PR, không từ `master`**. Nội dung `master` sau khi gộp trùng nội dung đã cài (từ commit mã cuối `643aea8` của nhánh đến `56c0bb4`, `git diff` trên `server/`, `deploy/`, `app.js`, `style.css`, `index.html`, `components/`, `pages/`, `utils/` rỗng), nên hash vẫn khớp.
 
-**Cần xác nhận múi giờ của mốc 09:11:41.** Bảng ghi là UTC (tức 16:11 giờ Việt Nam), nhưng biên bản 08 ghi lần cài này là "sáng 18/11", và commit biên bản 08 ghi kết quả của lần cài (`c78682d`) có giờ 16:09:41 giờ Việt Nam, sớm hơn 16:11. Hai cách ghi không thể cùng đúng. Đề nghị Trương Thanh Vui chạy `timedatectl` và `systemctl show studytask-api -p ActiveEnterTimestamp` trên máy chủ để chốt.
+**Múi giờ của mốc 09:11:41: đã chốt là UTC**, tức **16:11 giờ Việt Nam**. Script kiểm chứng tính giờ khởi động tiến trình bằng `date -u` và ra `2026-11-18 09:11:41 UTC`, trùng `ActiveEnterTimestamp` của `studytask-api` (`Wed 2026-11-18 09:11:41 UTC`). Hai điểm cần ghi nhận:
+- Biên bản 08 (ngoài kế hoạch) mục 4b ghi lần cài này là "sáng 18/11" là **sai**; đúng là chiều 18/11. Cần sửa ở biên bản 08.
+- Commit `c78682d` ghi kết quả lần cài có giờ 16:09:41 giờ Việt Nam, sớm hơn lần khởi động 16:11:41 hai phút. Có thể đồng hồ máy cá nhân dùng để commit chạy lệch, hoặc kết quả được ghi trước khi cài xong; biên bản này không xác định được.
 
 ## 4. Bảng hash
 
@@ -82,7 +86,7 @@ Một số tệp giao diện chính (đường dẫn gốc `/var/www/studytask`)
 | `pages/Directory.js` | `d184682f86629e33` |
 | `components/AccountManager.js` | `9bb5c3ecce7a7388` |
 
-Toàn bộ: so 54 tệp `.js`, `.html`, `.css` (không tính thư mục `uploads`; các thư mục giao diện của `master` không có tệp `.json`) giữa máy chủ và `master`: **53 trùng, 1 khác (`index.html`)**. Cách so này lọc theo đuôi tệp nên **chưa chứng minh được không còn tệp chạy ngoài GitHub** (tệp đuôi khác, hoặc tệp có trên máy chủ mà `master` không có, chưa được liệt kê); `deploy.sh` chỉ chép đè, không xóa tệp cũ. `index.html` khác ở hai dòng:
+Toàn bộ: so 54 tệp `.js`, `.html`, `.css` (không tính thư mục `uploads`; các thư mục giao diện của `master` không có tệp `.json`) giữa máy chủ và `master`: **53 trùng, 1 khác (`index.html`)**. Cách so này lọc theo đuôi tệp nên **chưa chứng minh được không còn tệp chạy ngoài GitHub** (tệp đuôi khác, hoặc tệp có trên máy chủ mà `master` không có, chưa được liệt kê); `deploy.sh` chỉ chép đè, không xóa tệp cũ. Phần này được bổ sung bằng script ở mục 4c, và thực tế script đã tìm ra 31 tệp thừa. `index.html` khác ở hai dòng:
 
 | Máy chủ | `master` |
 |---|---|
@@ -105,7 +109,36 @@ Máy Tùng không SSH được, nhưng tải được các tệp giao diện cô
 | `GET /.git/HEAD`, `/uploads/.env` | 404 |
 | `GET /server/studytask_api.py`, `/deploy/deploy.sh`, `/docs/`, `/tests/` | Trả `index.html` của trang (1.511 byte, `text/html`): **không lộ mã nguồn** |
 
-Kết quả này trùng với phần Trương Thanh Vui đo qua SSH ở trên. Không đo được từ ngoài: tệp API (`/opt/studytask`) và tệp thừa trên máy chủ.
+Kết quả này trùng với phần Trương Thanh Vui đo qua SSH ở trên. Không đo được từ ngoài: tệp API (`/opt/studytask`) và tệp thừa trên máy chủ (đo ở mục 4c).
+
+### 4c. Kiểm chứng trên máy chủ bằng script `kiem-chung-master.sh`
+
+Script [`deploy/kiem-chung-master.sh`](../../deploy/kiem-chung-master.sh) do Nguyễn Thanh Tùng soạn (Claude Code hỗ trợ). Máy Tùng không kết nối được tới máy chủ, nên **Trương Thanh Vui chép script lên máy chủ (`~/kiem-chung-master.sh`) và chạy giùm** với `56c0bb4` (đỉnh `master` lúc đó). Script chỉ đọc, không cần `sudo`: tải mã của commit từ GitHub, so từng tệp với bản đang cài, kiểm tra tiến trình, cấu hình, tệp thừa, dịch vụ và web.
+
+| Lần | Giờ (UTC) | Kết luận | Lý do |
+|---|---|---|---|
+| 1 | 13:16:31 | **CHƯA ĐẠT: 31 mục** | Toàn bộ là "tệp thừa": 28 tệp của thư mục `.git` cũ và `.gitignore` trong `/var/www/studytask` (bản clone cũ, HEAD `d2941c8` ngày 01/11, `deploy.sh` không dùng), cùng hai bản sao lưu API cũ `studytask_api.py.bak-202611040747` và `.bak-202611060821` trong `/opt/studytask`. Mọi so sánh mã đều khớp. Qua Internet `/.git/HEAD`, `/.git/config`, `/.gitignore` đều trả 404, nên không lộ ra ngoài |
+| 2 | 13:18:02 | **ĐẠT** | Sau khi dọn (bên dưới): "máy chủ chạy đúng mã của commit trên, không có tệp chạy ngoài GitHub" |
+
+**Việc dọn giữa hai lần chạy** (Trương Thanh Vui chạy, có `sudo`): chuyển, không xóa, các tệp thừa sang `~/luu-tru-2026-11-18/` (`.git`, `.gitignore` và hai tệp `.bak`; đọc lại thấy cả bốn mục nằm ở đó). Lúc đọc lại, `/var/www/studytask` chỉ còn `app.js`, `style.css`, `index.html`, `components`, `pages`, `utils` và các liên kết phiên bản `v…`; `/opt/studytask` chỉ còn `studytask_api.py`. Hoàn tác bằng cách chuyển ngược lại.
+
+**Kết quả lần 2 (ĐẠT)**, theo báo cáo:
+
+| Mục | Kết quả |
+|---|---|
+| Commit đem so | `56c0bb4bf3c8b40bf25630bf51cad742f17293ad`, là đỉnh `master` trên GitHub lúc chạy |
+| `studytask_api.py` | SHA256 `1b0d2c701de197382dd1b9fb75abb42caa5bbb8b67f847f2b415c3fce92250a5`, trùng repo; tiến trình PID 35597 chạy `/usr/bin/python3 /opt/studytask/studytask_api.py serve`; khởi động 09:11:41 UTC, tệp ghi 09:11:40, không bị sửa sau khi khởi động |
+| Cấu hình | `studytask-api.service` và nginx trùng `deploy/`; `sites-enabled/studytask` trỏ đúng |
+| Giao diện | 54/54 tệp trùng (`index.html` so sau khi bỏ mã phiên bản); liên kết `v202611180911 -> .` đúng |
+| Tệp thừa | Không có trong `/var/www/studytask`; `/opt/studytask` chỉ có `studytask_api.py`; không còn `~/migration/install-api.sh` |
+| Dịch vụ và web | `studytask-api` `active` từ 18/11 09:11:41 UTC; `nginx`, `cloudflared` `active` từ 13/11 01:50 UTC; `/api/auth/me` nội bộ trả `{"user": null}`; trang chủ và `v202611180911/app.js` trả 200; `app.js` tải qua Cloudflare trùng repo |
+
+Minh chứng: [kiem-chung-master-20261118-131802.txt](bang-chung/2026-11-18/kiem-chung-master-20261118-131802.txt). SHA256 của tệp đã chép về: `fa40838cc7ca1088b95ac81dcaed5df103f3e102896d7b4530bae842f56e72e0`. **Chưa đối chiếu** với tệp `.sha256` do script tạo trên máy chủ (`~/health-logs/kiem-chung-master-20261118-131802.txt.sha256`), vì tệp này chưa được chép về. Báo cáo lần 1 (CHƯA ĐẠT) vẫn nằm trên máy chủ ở `~/health-logs/kiem-chung-master-20261118-131631.txt`.
+
+Hạn chế:
+- Script so mã ở thời điểm chạy, không chứng minh các lần cài trước đó (12/11, 14/11, 17/11).
+- Bản script đã chạy in cảnh báo `comm: not in sorted order` do `sort` và `comm` dùng thứ tự sắp xếp theo ngôn ngữ. Cảnh báo không làm sai kết quả lần này; bản trong repo đã thêm `LC_ALL=C` để hết cảnh báo.
+- Các thư mục cài tạm trong `~` (`deploy-1118`, `studytask-deploy`, `studytask-deploy-new` và các tệp `.tgz`) vẫn còn. Script chỉ liệt kê, không tính lỗi, vì các thư mục này không nằm trên đường chạy của dịch vụ.
 
 ## 5. Script cài đặt cũ
 
@@ -145,9 +178,11 @@ Từ giờ các tệp này không chạy trực tiếp được (`./deploy.sh` b
 | Việc | Người | Ghi chú |
 |---|---|---|
 | Đọc và xác nhận biên bản này | Nguyễn Thanh Tùng | Việc 1 là việc của Tùng theo kế hoạch. Đã rà soát bản nháp (mục 9); xác nhận cuối sau khi xong các việc bên dưới |
-| Chạy `deploy/kiem-chung-master.sh 56c0bb4` trên máy chủ (chỉ đọc): rà tệp chạy không có trên GitHub, tiến trình API có nạp đúng tệp trên đĩa không, cấu hình `studytask-api.service` và nginx; chụp phần KẾT LUẬN | Trương Thanh Vui (máy Tùng không kết nối được) | Mục 4 |
-| Cài lại một lần từ `master` `56c0bb4` bằng `deploy/deploy.sh` (sao lưu trước), chạy lại script trên để có bảng hash "sau" | Trương Thanh Vui | Mục 1, mục 3 |
-| Chốt múi giờ mốc 18/11 09:11:41 (`timedatectl`) | Trương Thanh Vui | Mục 3 |
+| ~~Chạy `deploy/kiem-chung-master.sh 56c0bb4` trên máy chủ~~ **Đã chạy 18/11 13:16 và 13:18 UTC, lần 2 ĐẠT**; đã dọn 31 tệp thừa sang `~/luu-tru-2026-11-18/` | Trương Thanh Vui (máy Tùng không kết nối được) | Mục 4c |
+| Chép `~/health-logs/kiem-chung-master-20261118-131802.txt.sha256` về để đối chiếu với hash ở mục 4c; chụp ảnh phần KẾT LUẬN lưu `bang-chung/2026-11-18/anh/` | Trương Thanh Vui | Mục 4c |
+| ~~Chốt múi giờ mốc 18/11 09:11:41~~ **Đã chốt: UTC** (16:11 giờ Việt Nam); sửa chữ "sáng 18/11" ở biên bản 08 ngoài kế hoạch | Trương Thanh Vui | Mục 3 |
+| (Tùy chọn) Cài lại một lần từ `master` bằng `deploy/deploy.sh` để đúng quy trình "triển khai từ `master`"; mã chạy không đổi vì đã trùng | Nhóm quyết định | Mục 1, mục 8b |
+| Dọn các thư mục cài tạm trong `~` (`deploy-1118`, `studytask-deploy*`, các tệp `.tgz`) sau khi nhóm đồng ý | Trương Thanh Vui | Mục 4c |
 | Bổ sung `~/deploy-log.txt` cho các lần 12/11, 14/11, 17/11, 18/11 | Trương Thanh Vui | Mục 6 |
 | ~~Gỡ quyền thực thi ba script cũ trong `~/migration`~~ **Đã làm 18/11 12:34 UTC** | Trương Thanh Vui (Claude Code chạy lệnh) | Mục 5 |
 | Đưa biên bản này vào kho GitHub (nhánh riêng, PR, review) để thỏa "có biên bản trong `docs/van-hanh/`" | Nguyễn Thanh Tùng | Đã ở nhánh cục bộ `docs/tuan7-trien-khai-master-18-11`; còn đẩy lên, mở PR, review |
@@ -172,9 +207,9 @@ ssh studytask@192.168.2.187 'tail -3 ~/deploy-log.txt; ls -la ~/migration'
 
 Script tự động hơn: `deploy/kiem-chung-master.sh` (chạy trên máy chủ, chỉ đọc; so toàn bộ API, cấu hình, giao diện với một commit của `master` tải từ GitHub, liệt kê tệp thừa, kiểm tra dịch vụ và web, in ĐẠT/CHƯA ĐẠT). Mục 16 của `deploy/evidence-check.sh` chỉ in hash của 4 tệp cũ (`Profile.js`, `Graduation.js`…) và không tự so với `master`, nên không đủ cho việc 1.
 
-## 8b. Cài lại từ `master` và kiểm chứng (việc ở mục 7, Trương Thanh Vui chạy)
+## 8b. Cài lại từ `master` và kiểm chứng (tùy chọn, chưa làm; dùng cho lần triển khai sau)
 
-Nội dung tệp chạy đã trùng `master`, nên lần cài này để **đúng quy trình** (cài từ `master`, không từ nhánh PR), ghi `~/deploy-log.txt` và rà tệp thừa. API khởi động lại vài giây; không nạp lại dữ liệu, CSDL không đổi cấu trúc. Nếu `master` có commit mới trước lúc cài, thay `56c0bb4` bằng commit đó.
+Nội dung tệp chạy đã trùng `master` và script ra ĐẠT (mục 4c), nên lần cài này chỉ để **đúng quy trình** (cài từ `master`, không từ nhánh PR) và ghi `~/deploy-log.txt`. Các lần triển khai sau nên theo đúng các bước này. API khởi động lại vài giây; không nạp lại dữ liệu, CSDL không đổi cấu trúc. Nếu `master` có commit mới trước lúc cài, thay `56c0bb4` bằng commit đó.
 
 1. **Kiểm chứng trước** (bảng hash "trước"): chép [`deploy/kiem-chung-master.sh`](../../deploy/kiem-chung-master.sh) lên máy chủ (`scp`, hoặc `cat > ~/kiem-chung-master.sh` rồi dán, `Ctrl+D`; so `sha256sum` với tệp trong repo), chạy `bash ~/kiem-chung-master.sh 56c0bb4`.
 2. **Sao lưu:**
@@ -223,7 +258,7 @@ Nội dung tệp chạy đã trùng `master`, nên lần cài này để **đún
 | Đầu biên bản | "Tùng không có quyền truy cập máy chủ" | Máy Tùng không kết nối được (SSH hết thời gian chờ), nên nhờ Vui kết nối giùm; thêm mục 0 phân công | Kết quả SSH 18/11 12:12 UTC |
 | Mục 1 | "Việc 1 đạt" | Đạt về kết quả; về quy trình, lần cài 18/11 lấy từ nhánh PR trước khi gộp | Biên bản 08 mục 4b; giờ gộp [PR63] |
 | Mục 3, dòng 14/11 | "Cài lại từ `master` tại `b9e2663`" | Kèm 4 tệp ảnh đại diện chưa commit, không thuần `master` | Biên bản 12 mục 2 |
-| Mục 3, dòng 18/11 | Ghi 09:11:41 là UTC, không nhận xét | Thêm ghi chú mâu thuẫn giờ với biên bản 08 và commit `c78682d`, cần chốt | `git log c78682d` |
+| Mục 3, dòng 18/11 | Ghi 09:11:41 là UTC, không nhận xét | Thêm ghi chú mâu thuẫn giờ với biên bản 08 và commit `c78682d`; sau đó đã chốt là UTC nhờ báo cáo script (mục 3) | `git log c78682d` |
 | Mục 4 | Có `.json`; ngầm coi là đã so toàn bộ | Bỏ `.json` (không có trong thư mục giao diện); nêu giới hạn lọc theo đuôi, chưa rà tệp thừa | `git ls-tree 56c0bb4` |
 | Mục 8 | Gợi ý `evidence-check.sh` | Gợi ý `kiem-chung-master.sh` | Nội dung mục 16 của `evidence-check.sh` |
 
