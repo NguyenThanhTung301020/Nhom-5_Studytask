@@ -1,5 +1,6 @@
 // components/Sidebar.js – Thanh điều hướng dọc, nhóm mục mở/thu độc lập
 import { NAV_ITEMS, NAV_GROUPS } from '../utils/constants.js'
+import { navLabel } from '../utils/roleText.js'
 
 const { useState, createElement: h } = window.React
 
@@ -43,7 +44,7 @@ export default function Sidebar({ user, currentPage, onNavigate, open, onClose, 
                   onClick: () => go(item.key),
                 },
                   h('i', { className: `bi bi-${item.icon}` }),
-                  h('span', null, item.label),
+                  h('span', null, navLabel(item, role)),
                   item.key === 'admin' && h('span', { className: 'sidebar-badge' }, 'Admin'),
                   badges[item.key] > 0 && h('span', { className: 'sidebar-unread' }, badges[item.key] > 99 ? '99+' : badges[item.key])
                 )

@@ -3,8 +3,9 @@ import { SUBJECT_COLORS } from '../utils/constants.js'
 import { submitQuiz, APP_ENV } from '../utils/firebase.js'
 import { assignIds } from '../utils/quizFile.js'
 import { ImportQuizModal, BankModal, QuizViewer, hasKey } from './QuizTools.js'
+import { formatCountdown } from '../utils/exams.js'
 
-const { useState, useMemo, createElement: h } = window.React
+const { useState, useMemo, useEffect, useRef, createElement: h } = window.React
 
 const ALPHA = ['A','B','C','D','E']
 const STATUS_LABELS = { draft:'Bản nháp', active:'Đang mở', closed:'Đã đóng' }
@@ -273,7 +274,8 @@ function QuizModal({ item, seed, subjects, onSave, onClose, user, role }) {
 // Student – Làm bài thi
 // ─────────────────────────────────────────────────────────────────
 
-export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
+// `endsAt`/`serverNow` (ISO): bài thi trực tuyến trong phòng thi: hiện đồng hồ đếm ngược theo giờ máy chủ, hết giờ tự nộp bài đang làm
+export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing, endsAt = null, serverNow = null, examLabel = '' }) {
   const [selected, setSelected] = useState({}) // { [questionId]: string | string[] }
   const [result,   setResult]   = useState(existing || null)   // existing: kết quả chính thức đã có (xem lại)
   const [sending,  setSending]  = useState(false)
@@ -316,6 +318,20 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
       setSending(false)
     }
   }
+
+  const endMs = endsAt ? Date.parse(endsAt) : null
+  const offsetMs = serverNow ? Date.parse(serverNow) - Date.now() : 0           // lệch giữa đồng hồ máy chủ và máy này
+  const [left, setLeft] = useState(endMs ? endMs - (Date.now() + offsetMs) : null)
+  const autoSent = useRef(false), submitRef = useRef(null)
+  submitRef.current = handleSubmit
+  useEffect(() => {
+    if (!endMs || result) return undefined
+    const t = setInterval(() => setLeft(endMs - (Date.now() + offsetMs)), 1000)
+    return () => clearInterval(t)
+  }, [endMs, !!result])
+  useEffect(() => {
+    if (endMs && left !== null && left <= 0 && !result && !autoSent.current) { autoSent.current = true; submitRef.current() }
+  }, [left])
 
   // ── Kết quả ──
   if (result) {
@@ -376,14 +392,17 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
             h('h5', { className:'modal-title fw-bold mb-0' }, quiz.title),
             h('small', { className:'text-muted' }, h('i',{className:'bi bi-book me-1'}), subjectName,
               h('span', { className:'mx-2' }, '·'),
-              h('i',{className:'bi bi-calendar3 me-1'}), new Date(quiz.dueDate).toLocaleDateString('vi-VN')
+              endMs ? h('span', null, h('i',{className:'bi bi-shield-lock me-1'}), examLabel || 'Bài thi trực tuyến')
+                    : h('span', null, h('i',{className:'bi bi-calendar3 me-1'}), new Date(quiz.dueDate).toLocaleDateString('vi-VN'))
             )
           ),
           h('button', { className:'btn-close', onClick:onClose })
         ),
         h('div', { className:'card-body px-4 py-2 border-bottom bg-light' },
           h('div', { className:'d-flex justify-content-between align-items-center small' },
-            h('span', { className:'text-muted' }, `${quiz.questions.length} câu hỏi`),
+            h('span', { className:'text-muted' }, `${quiz.questions.length} câu hỏi`,
+              endMs && h('span', { className:`badge ms-3 ${left <= 300000 ? 'bg-danger' : 'bg-primary'}`, title:'Thời gian còn lại theo đồng hồ máy chủ', 'aria-live':'off' },
+                h('i', { className:'bi bi-stopwatch me-1' }), left <= 0 ? 'Hết giờ' : `Còn ${formatCountdown(left)}`)),
             h('span', { className:`fw-semibold ${answered===quiz.questions.length?'text-success':'text-warning'}` },
               `Đã trả lời: ${answered}/${quiz.questions.length}`
             )
@@ -441,7 +460,7 @@ export function QuizTaker({ quiz, subjectName, onSubmit, onClose, existing }) {
 // Main Quiz Page
 // ─────────────────────────────────────────────────────────────────
 
-export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions, subjects, user, role, onActivity }) {
+export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions, subjects, user, role, onActivity, exams = [], onNavigate }) {
   const [modal,       setModal]       = useState(null)  // null | 'add' | 'edit'
   const [editItem,    setEditItem]    = useState(null)
   const [seed,        setSeed]        = useState(null)  // đề mẫu khi nhân bản
@@ -454,6 +473,8 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
 
   const mySubmissions = submissions.filter(s => s.userId === user?.uid)
   const submittedIds  = new Set(mySubmissions.map(s => s.quizId))
+  // Đề dùng cho lịch thi trực tuyến: sinh viên làm ở trang Lịch thi (phải nhập mã truy cập tại phòng thi), không làm ở đây
+  const isExamQuiz = (quiz) => !!quiz.examLocked || exams.some(e => e.quizId === quiz.id)
 
   const handleSave = (form) => {
     // `quizzes` ở trang này đã lọc theo môn; cập nhật trên danh sách đầy đủ (prev), nếu không máy chủ từ chối vì thiếu đề môn khác
@@ -540,13 +561,15 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
                   h('h6', { className:'fw-bold mb-1' }, quiz.title),
                   h('small', { className:'text-muted' }, h('i',{className:'bi bi-book me-1'}), subjectName(quiz.subjectId))
                 ),
-                h('span', { className:`badge bg-${STATUS_COLORS[quiz.status]}` }, STATUS_LABELS[quiz.status])
+                h('div', { className:'text-end' },
+                  h('span', { className:`badge bg-${STATUS_COLORS[quiz.status]}` }, STATUS_LABELS[quiz.status]),
+                  isExamQuiz(quiz) && h('div', null, h('span', { className:'badge bg-warning text-dark mt-1' }, h('i', { className:'bi bi-shield-lock me-1' }), 'Bài thi trực tuyến')))
               ),
 
               quiz.description && h('p', { className:'text-muted small mb-3' }, quiz.description),
 
               h('div', { className:'d-flex flex-wrap gap-2 mb-3' },
-                h('span', { className:'quiz-info-badge' }, h('i',{className:'bi bi-list-ol me-1'}), `${quiz.questions.length} câu`),
+                h('span', { className:'quiz-info-badge' }, h('i',{className:'bi bi-list-ol me-1'}), `${quiz.questionCount ?? quiz.questions.length} câu`),
                 h('span', { className:'quiz-info-badge' }, h('i',{className:'bi bi-calendar3 me-1'}),
                   new Date(quiz.dueDate).toLocaleDateString('vi-VN'),
                   expired && h('span', {className:'ms-1 text-danger'},'(Hết hạn)')
@@ -567,7 +590,12 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
 
               h('div', { className:'mt-auto d-flex gap-2' },
                 // Student actions
-                role === 'student' && !sub && quiz.status==='active' && !expired &&
+                role === 'student' && !sub && quiz.status==='active' && isExamQuiz(quiz) &&
+                  h('button', { className:'btn btn-warning flex-grow-1', disabled: !onNavigate, onClick:()=>onNavigate && onNavigate('schedule'),
+                      title:'Bài thi trực tuyến chỉ làm được trong phòng thi, sau khi nhập mã truy cập do giám thị phát' },
+                    h('i',{className:'bi bi-shield-lock me-1'}), 'Vào phòng thi ở Lịch thi'
+                  ),
+                role === 'student' && !sub && quiz.status==='active' && !expired && !isExamQuiz(quiz) &&
                   h('button', { className:'btn btn-primary flex-grow-1', onClick:()=>setTaking(quiz) },
                     h('i',{className:'bi bi-pencil-square me-1'}), 'Làm bài'
                   ),

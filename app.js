@@ -5,6 +5,7 @@ import { SAMPLE_SUBJECTS, SAMPLE_DEADLINES, SAMPLE_HOMEWORKS, SAMPLE_QUIZZES, SA
          DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY, STAFF_ROLES } from './utils/constants.js'
 import { load, save, applySettings, getDaysUntil } from './utils/helpers.js'
 import { scopeSubjects, scopeBySubject, scopeByClass } from './utils/scope.js'
+import { scheduleText } from './utils/roleText.js'
 import { getDocument } from './utils/store.js'
 import { DEFAULT_FINANCE_CONFIG, tuitionSummary, tuitionReminder } from './utils/tuition.js'
 import { initFirebase, isFirebaseReady, onAuth, fbLogout,
@@ -317,7 +318,7 @@ function App() {
       if (days < 0 || days > 14) return
       list.push({
         id: 'ex-' + e.id, page: 'schedule', icon: 'clipboard-check-fill', color: '#e67e22',
-        title: 'Lịch thi: ' + subName(e.subjectId),
+        title: scheduleText(user.role).notifExam + ': ' + subName(e.subjectId),
         desc: `${days === 0 ? 'Thi hôm nay' : days === 1 ? 'Thi ngày mai' : `Còn ${days} ngày`}${e.start ? ' · ' + e.start : ''}${e.room ? ' · ' + e.room : ''}`,
         sort: days + 0.5,
       })
@@ -607,12 +608,12 @@ function App() {
         page === 'profile'    && h(Profile,    { profile, setProfile, onSave: handleProfileSave, subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, user, onAvatarChange: handleAvatarChange }),
         page === 'library'    && h(Library,    { libraryLinks: library, setLibraryLinks: setLibrary, role: user.role }),
         page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
-        page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity }),
-        page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers }),
+        page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity, exams: myExams, onNavigate: navigate }),
+        page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers, quizzes: myQuizzes, submissions, setSubmissions }),
         page === 'tools'      && h(Tools,      {}),
         page === 'news'       && h(News,       { news, setNews, role: user.role }),
         page === 'forms'      && h(Forms,      { forms, setForms, role: user.role }),
-        page === 'calendar'   && h(MonthCalendar, { schedule: mySchedule, exams: myExams, subjects: mySubjects, onNavigate: navigate }),
+        page === 'calendar'   && h(MonthCalendar, { schedule: mySchedule, exams: myExams, subjects: mySubjects, onNavigate: navigate, role: user.role }),
         page === 'tuition'    && ['student', 'finance', 'admin'].includes(user.role) && h(Tuition, { user, allUsers, subjects }),
         page === 'grading'    && h(GradingPolicy, { user, subjects: mySubjects, quizzes: myQuizzes, homeworks }),
         page === 'curriculum' && ['training', 'admin'].includes(user.role) && h(Curriculum, { subjects, setSubjects, schedule, exams, deadlines, homeworks, materials, quizzes, allUsers }),
