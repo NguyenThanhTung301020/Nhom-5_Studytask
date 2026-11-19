@@ -74,7 +74,15 @@ export function RecoveryEmailCard() {
   const sendCode = () => run(async () => { await requestEmailLink(email.trim(), pw); setStep('code'); setPw('') },
     'Đã gửi mã 6 số tới email của bạn (hiệu lực 15 phút). Kiểm tra cả thư mục spam.')
   const verify = () => run(async () => { await verifyEmailLink(code.trim()); setStep('idle'); setCode(''); setEmail(''); await reload() }, 'Đã liên kết email cá nhân.')
-  const unlink = () => run(async () => { await unlinkEmail(pw); setStep('idle'); setPw(''); await reload() }, 'Đã gỡ email cá nhân.')
+  const unlink = () => run(async () => {
+    try { await unlinkEmail(pw) }
+    catch (e) {
+      // Email đã được gỡ ở tab/thiết bị khác: tải lại thẻ để không còn hiện email cũ, vẫn báo lỗi cho người dùng biết
+      if (e.code === 'email-not-linked') { setStep('idle'); setPw(''); await reload() }
+      throw e
+    }
+    setStep('idle'); setPw(''); await reload()
+  }, 'Đã gỡ email cá nhân.')
 
   const linked = acc && acc.recoveryEmail
   return h('div', { className: 'card border-0 shadow-sm p-3 mt-3' },

@@ -1133,21 +1133,61 @@ def link_email(uid, email):
             raise
 
 
+def drop_db_connection(tag):
+    """Bỏ kết nối dùng chung khi không ROLLBACK được: đóng kết nối thì SQLite tự hoàn tác giao dịch đang mở, lần gọi db()
+    sau mở kết nối mới. Giữ lại kết nối cũ sẽ làm mọi lệnh BEGIN về sau báo "cannot start a transaction within a transaction"."""
+    global _db
+    conn, _db = _db, None
+    sys.stderr.write('%s-DONG-KET-NOI bỏ kết nối CSDL dùng chung, lần gọi sau mở kết nối mới\n' % tag)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception as e:
+            sys.stderr.write('%s-DONG-KET-NOI lỗi khi đóng: %s\n' % (tag, type(e).__name__))
+
+
 def unlink_email(uid):
-    """Gỡ email cá nhân và hủy luôn mã đặt lại mật khẩu đang chờ: mã đó chỉ có giá trị khi email còn liên kết."""
+    """Gỡ email cá nhân và hủy luôn mã đặt lại mật khẩu đang chờ (mã đó chỉ có giá trị khi email còn liên kết), trong MỘT giao dịch.
+
+    - Thành công: xóa dòng contact_email của uid và mã purpose='reset' của uid, rồi COMMIT một lần.
+    - Chưa liên kết (hoặc đã gỡ trước đó): không thay đổi gì, ApiError 409 email-not-linked.
+    - Lỗi ở bất kỳ bước nào (BEGIN, xóa email, xóa mã, COMMIT): ROLLBACK toàn bộ; nếu ROLLBACK cũng lỗi thì bỏ kết nối dùng chung
+      (đóng kết nối = SQLite tự hoàn tác) để không treo giao dịch. Ghi log bước lỗi, KHÔNG ghi email hay uid đầy đủ,
+      rồi trả ApiError email-unlink-failed (503 nếu lỗi tạm thời như CSDL đang bị khóa, còn lại 500) không kèm chi tiết SQL.
+    """
     conn = db()
     with _lock:
-        conn.execute('BEGIN IMMEDIATE')
+        step = 'bat-dau'
         try:
-            conn.execute('DELETE FROM contact_email WHERE uid=?', (uid,))
+            conn.execute('BEGIN IMMEDIATE')
+            step = 'xoa-email'
+            if not conn.execute('DELETE FROM contact_email WHERE uid=?', (uid,)).rowcount:
+                step = 'huy-giao-dich-rong'
+                conn.execute('ROLLBACK')
+                raise ApiError(409, 'email-not-linked', 'Tài khoản chưa liên kết email cá nhân (có thể đã được gỡ trước đó).')
+            step = 'xoa-ma-dat-lai'
             conn.execute("DELETE FROM codes WHERE purpose='reset' AND uid=?", (uid,))
+            step = 'commit'
             conn.execute('COMMIT')
-        except Exception:
+        except ApiError:
+            raise
+        except Exception as e:
             # Lỗi giữa chừng phải hoàn tác: nếu không, email đã bị xóa nhưng mã đặt lại còn đó, và giao dịch treo trên kết nối dùng chung
             # làm mọi lệnh BEGIN sau đó báo "cannot start a transaction within a transaction".
-            if conn.in_transaction:
-                conn.execute('ROLLBACK')
-            raise
+            rolled = 'khong-can'
+            try:
+                if conn.in_transaction:
+                    conn.execute('ROLLBACK')
+                    rolled = 'ok'
+            except Exception as e2:
+                rolled = 'loi(%s)' % type(e2).__name__
+            sys.stderr.write('UNLINK-EMAIL-ROLLBACK uid=%s buoc=%s loi=%s hoan-tac=%s\n'
+                             % (str(uid)[:8], step, type(e).__name__, rolled))
+            if rolled.startswith('loi'):
+                drop_db_connection('UNLINK-EMAIL')
+            status = 503 if isinstance(e, sqlite3.OperationalError) and not rolled.startswith('loi') else 500
+            raise ApiError(status, 'email-unlink-failed',
+                           'Không gỡ được email cá nhân do lỗi máy chủ. Email cá nhân của bạn vẫn được giữ nguyên, hãy thử lại sau.') from e
 
 
 def find_uid(identifier):
