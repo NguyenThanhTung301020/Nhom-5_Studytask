@@ -15,6 +15,7 @@ import { summarizeSystem } from '../utils/systemStats.js'
 import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint } from '../utils/quizScores.js'
 import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
 import { scheduleText, navLabel } from '../utils/roleText.js'
+import { GENRES, genreOf, foldText, filterBooks, sortBooks, genreCounts, formatSize, bookFileUrl, sourceLine, safeSourceUrl } from '../utils/library.js'
 import { hasRoomQuiz, canUseRoomQuiz, examWindow, examPhase, quizzesForExam, formatCountdown, validAccessCode, examErrorText } from '../utils/exams.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition, currentTerm, termKey, offeringTitle, inTerm, inKhoa, khoaChoices, termChoices, defaultTermSel, groupOfferings, groupTitle, semesterLabel as semLabel2 } from '../utils/scope.js'
 
@@ -803,5 +804,51 @@ describe('Thi trực tuyến trên trang', () => {
     for (const c of ['exam-bad-code', 'exam-no-code', 'exam-not-started', 'exam-ended', 'exam-locked', 'already-submitted'])
       assert.notEqual(examErrorText(c), 'Không vào được phòng thi.')
     assert.equal(examErrorText('lạ', 'x'), 'x')
+  })
+})
+
+describe('Kho sách điện tử (Thư viện)', () => {
+  const books = [
+    { id: 'dac-nhan-tam', title: 'Đắc nhân tâm', author: 'Dale Carnegie', genre: 'ky-nang', size: 2621440, pages: 120 },
+    { id: 'thanh-kiem-2', title: 'Thanh kiếm và lá chắn – Tập 2', author: 'Vađim Kôgiepnhicốp', genre: 'van-hoc-nn', series: 'Thanh kiếm và lá chắn', size: 9000000, pages: 400 },
+    { id: 'thanh-kiem-10', title: 'Thanh kiếm và lá chắn – Tập 10', author: 'Vađim Kôgiepnhicốp', genre: 'van-hoc-nn', series: 'Thanh kiếm và lá chắn', size: 9500000, pages: 420 },
+    { id: 'hlm', title: 'Hồng Lâu Mộng', author: 'Tào Tuyết Cần', genre: 'van-hoc-nn', size: 18000000, pages: 312 },
+    { id: 'la', title: 'Sách lạ', genre: 'the-loai-khong-co', size: 100 },
+  ]
+  test('tìm không phân biệt dấu và hoa thường, mọi từ khóa đều phải có', () => {
+    assert.equal(foldText('Đắc Nhân Tâm'), 'dac nhan tam')
+    assert.deepEqual(filterBooks(books, { q: 'dac nhan' }).map(b => b.id), ['dac-nhan-tam'])
+    assert.deepEqual(filterBooks(books, { q: 'tuyet can' }).map(b => b.id), ['hlm'])
+    assert.deepEqual(filterBooks(books, { q: 'thanh kiem tap' }).map(b => b.id), ['thanh-kiem-2', 'thanh-kiem-10'])
+    assert.deepEqual(filterBooks(books, { q: 'dac xyz' }), [])
+    assert.equal(filterBooks(books, { q: '  ' }).length, books.length)
+  })
+  test('lọc theo thể loại; thể loại lạ nằm trong "Khác"', () => {
+    assert.deepEqual(filterBooks(books, { genre: 'van-hoc-nn' }).map(b => b.id), ['thanh-kiem-2', 'thanh-kiem-10', 'hlm'])
+    assert.deepEqual(filterBooks(books, { genre: 'khac' }).map(b => b.id), ['la'])
+    assert.deepEqual(genreCounts(books), { 'ky-nang': 1, 'van-hoc-nn': 3, khac: 1 })
+    assert.equal(genreOf({ genre: 'khong-co' }), GENRES.khac)
+  })
+  test('sắp xếp theo tên (số tự nhiên: Tập 2 trước Tập 10), dung lượng, số trang', () => {
+    assert.deepEqual(sortBooks(books, 'title').map(b => b.id).slice(0, 4), ['dac-nhan-tam', 'hlm', 'la', 'thanh-kiem-2'])
+    assert.ok(sortBooks(books, 'title').map(b => b.id).indexOf('thanh-kiem-2') < sortBooks(books, 'title').map(b => b.id).indexOf('thanh-kiem-10'))
+    assert.equal(sortBooks(books, 'size')[0].id, 'la')
+    assert.equal(sortBooks(books, 'pages')[0].id, 'la')
+    assert.equal(books[0].id, 'dac-nhan-tam')            // không đổi mảng gốc
+  })
+  test('dung lượng, đường dẫn tệp, dòng nguồn', () => {
+    assert.equal(formatSize(2621440), '3 MB')
+    assert.equal(formatSize(1610612736), '1.5 GB')
+    assert.equal(formatSize(2048), '2 KB')
+    assert.equal(formatSize(0), '0 B')
+    assert.equal(bookFileUrl('hong-lau-mong'), '/api/files/library/hong-lau-mong.pdf')
+    assert.equal(sourceLine({ sourceName: 'Internet Archive', sourceId: 'HongLauMong_201512' }), 'Internet Archive · HongLauMong_201512')
+    assert.equal(sourceLine({ sourceName: 'Internet Archive (tải thủ công, không có mã mục)' }), 'Internet Archive (tải thủ công, không có mã mục)')
+  })
+  test('chỉ mở liên kết nguồn https tới archive.org', () => {
+    assert.equal(safeSourceUrl('https://archive.org/details/HongLauMong_201512'), 'https://archive.org/details/HongLauMong_201512')
+    assert.equal(safeSourceUrl('javascript:alert(1)'), '')
+    assert.equal(safeSourceUrl('https://evil.example/details/x'), '')
+    assert.equal(safeSourceUrl(''), '')
   })
 })

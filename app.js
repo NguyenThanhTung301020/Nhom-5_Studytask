@@ -602,7 +602,7 @@ function App() {
         page === 'deadlines'  && h(Deadlines,  { subjects: mySubjects, deadlines: myDeadlines, setDeadlines, filterPreset: dlFilter, role: user.role }),
         page === 'statistics' && h(Statistics, { subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks }),
         page === 'profile'    && h(Profile,    { profile, setProfile, onSave: handleProfileSave, subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, user, onAvatarChange: handleAvatarChange }),
-        page === 'library'    && h(Library,    { libraryLinks: library, setLibraryLinks: setLibrary, role: user.role }),
+        page === 'library'    && h(Library),
         page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
         page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity, exams: myExams, onNavigate: navigate }),
         page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers, quizzes: myQuizzes, submissions, setSubmissions }),
