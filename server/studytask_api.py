@@ -20,6 +20,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 DATA_DIR   = os.environ.get('STUDYTASK_DATA', '/var/lib/studytask')
 UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
+LIBRARY_DIR = os.path.join(DATA_DIR, 'library')      # kho sách điện tử: books/<mã>.pdf (chỉ tải qua API sau khi đăng nhập); bìa ở uploads/library/<mã>.jpg
 DB_PATH    = os.path.join(DATA_DIR, 'studytask.db')
 PORT       = int(os.environ.get('STUDYTASK_PORT', '8787'))
 SESSION_TTL = 30 * 24 * 3600
@@ -35,6 +36,8 @@ MAGIC = {'pdf': (b'%PDF',), 'docx': (b'PK',), 'xlsx': (b'PK',), 'pptx': (b'PK',)
          'png': (b'\x89PNG',), 'jpg': (b'\xff\xd8',), 'jpeg': (b'\xff\xd8',), 'gif': (b'GIF8',), 'webp': (b'RIFF',),
          'doc': (b'\xd0\xcf\x11\xe0',), 'xls': (b'\xd0\xcf\x11\xe0',), 'ppt': (b'\xd0\xcf\x11\xe0',)}
 
+LIBRARY_ID = re.compile(r'[a-z0-9]+(?:-[a-z0-9]+)*')     # mã sách (ASCII, do scripts/prepare_library.py đặt)
+LIBRARY_FILE = re.compile(r'[a-z0-9-]{1,80}\.pdf')
 SUBMISSION_NAME = re.compile(r'[0-9a-f]{16}_[A-Za-z0-9._-]{1,70}\.[a-z0-9]{1,5}')
 INLINE_TYPES = {'pdf': 'application/pdf', 'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
                 'gif': 'image/gif', 'webp': 'image/webp'}
@@ -564,6 +567,8 @@ def can(op, col, id_, user, old=None, new=None):
         return mgr or (owner and old and old.get('status') == 'submitted')
     if col in ('quizKeys', 'quizResults', 'quizArchive', 'quizBank', 'examKeys', 'examSessions'):
         return False   # V3: khóa đáp án và kết quả chỉ đi qua /api/quiz/*, không đọc/ghi trực tiếp qua /api/doc
+    if col == 'libraryBooks':
+        return signed if op == 'read' else False     # danh mục sách điện tử: ai đăng nhập cũng đọc; chỉ scripts/import_library.py nạp, không ghi qua /api/doc
     return False   # collection lạ → từ chối (userSecrets không còn dùng)
 
 
@@ -1939,6 +1944,25 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, {'quizId': quiz['id'], 'score': score, 'correct': correct, 'total': total,
                                        'submittedAt': result['submittedAt']})
             raise ApiError(404, 'not-found', 'Không tìm thấy.')
+
+        # ── sách điện tử của Thư viện: chỉ người đã đăng nhập tải. API kiểm tra quyền rồi nhờ nginx phát tệp (X-Accel-Redirect),
+        #    nên hỗ trợ Range (đọc từng trang, tua nhanh) mà không đọc cả tệp hàng trăm MB vào bộ nhớ của API. Tệp KHÔNG nằm ở /uploads công khai. ──
+        if len(p) == 3 and p[:2] == ['files', 'library'] and method == 'GET':
+            self.need_user()
+            bid = p[2][:-4] if p[2].endswith('.pdf') else p[2]
+            book = doc_get('libraryBooks', bid) if LIBRARY_ID.fullmatch(bid) else None
+            fname = (book or {}).get('file') or ''
+            if not book or not LIBRARY_FILE.fullmatch(fname) or not os.path.isfile(os.path.join(LIBRARY_DIR, 'books', fname)):
+                raise ApiError(404, 'not-found', 'Không tìm thấy sách.')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/pdf')
+            self.send_header('Content-Length', '0')
+            self.send_header('X-Accel-Redirect', '/_library/' + fname)
+            self.send_header('Content-Disposition', f'inline; filename="{bid}.pdf"')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Cache-Control', 'private, max-age=3600')
+            self.end_headers()
+            return
 
         # ── tải bài nộp về: chỉ người nộp và nhân viên (nginx chuyển /uploads/submissions/* về đây) ──
         if len(p) == 3 and p[:2] == ['files', 'submissions'] and method == 'GET':
