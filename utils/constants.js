@@ -172,11 +172,11 @@ export const SAMPLE_QUIZZES = [
     dueDate: relDate(7), status: 'active', createdAt: new Date().toISOString(),
     questions: [
       { id: 1, text: 'Giới hạn của f(x) = x² khi x → 2 là bao nhiêu?', type: 'single',
-        answers: [{ id:'a', text:'2', correct:false },{ id:'b', text:'4', correct:true },{ id:'c', text:'6', correct:false },{ id:'d', text:'8', correct:false }] },
+        answers: [{ id:'a', text:'2'},{ id:'b', text:'4'},{ id:'c', text:'6' },{ id:'d', text:'8'}] },
       { id: 2, text: 'Hàm số nào sau đây LIÊN TỤC tại x = 0? (chọn tất cả đúng)', type: 'multiple',
-        answers: [{ id:'a', text:'f(x) = 1/x', correct:false },{ id:'b', text:'f(x) = |x|', correct:true },{ id:'c', text:'f(x) = x²', correct:true },{ id:'d', text:'f(x) = tan(x)', correct:false }] },
+        answers: [{ id:'a', text:'f(x) = 1/x'},{ id:'b', text:'f(x) = |x|'},{ id:'c', text:'f(x) = x²' },{ id:'d', text:'f(x) = tan(x)'}] },
       { id: 3, text: 'Đạo hàm của f(x) = x³ là:', type: 'single',
-        answers: [{ id:'a', text:'x²', correct:false },{ id:'b', text:'2x²', correct:false },{ id:'c', text:'3x²', correct:true },{ id:'d', text:'3x³', correct:false }] },
+        answers: [{ id:'a', text:'x²'},{ id:'b', text:'2x²' },{ id:'c', text:'3x²'},{ id:'d', text:'3x³' }] },
     ],
   },
   {
@@ -186,11 +186,11 @@ export const SAMPLE_QUIZZES = [
     dueDate: relDate(5), status: 'active', createdAt: new Date().toISOString(),
     questions: [
       { id: 1, text: 'Kiểu dữ liệu nào chiếm 4 bytes trong C?', type: 'single',
-        answers: [{ id:'a', text:'char', correct:false },{ id:'b', text:'short', correct:false },{ id:'c', text:'int', correct:true },{ id:'d', text:'double', correct:false }] },
+        answers: [{ id:'a', text:'char' },{ id:'b', text:'short' },{ id:'c', text:'int' },{ id:'d', text:'double'}] },
       { id: 2, text: 'Vòng lặp nào chạy ít nhất 1 lần dù điều kiện sai?', type: 'single',
-        answers: [{ id:'a', text:'for', correct:false },{ id:'b', text:'while', correct:false },{ id:'c', text:'do-while', correct:true },{ id:'d', text:'Tất cả đều sai', correct:false }] },
+        answers: [{ id:'a', text:'for' },{ id:'b', text:'while' },{ id:'c', text:'do-while' },{ id:'d', text:'Tất cả đều sai' }] },
       { id: 3, text: 'Chọn các cách khai báo mảng HỢP LỆ trong C:', type: 'multiple',
-        answers: [{ id:'a', text:'int a[5];', correct:true },{ id:'b', text:'int a[] = {1,2,3};', correct:true },{ id:'c', text:'int a[0];', correct:false },{ id:'d', text:'float b[3] = {1.0, 2.0};', correct:true }] },
+        answers: [{ id:'a', text:'int a[5];' },{ id:'b', text:'int a[] = {1,2,3};'},{ id:'c', text:'int a[0];'},{ id:'d', text:'float b[3] = {1.0, 2.0};' }] },
     ],
   },
 ]
