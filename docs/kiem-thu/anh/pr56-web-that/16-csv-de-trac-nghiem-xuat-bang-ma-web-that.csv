@@ -1,0 +1,7 @@
+﻿Loại,Câu hỏi,A,B,C,D,E,Đáp án
+một,'=1+1,2,-5,'+SUM(A1:A3),'@cmd,,A
+một,"' =HYPERLINK(""http://vi-du.test"",""bấm"")",'-2+3,'+84 912 345 678,"3,5",-0.5,,A
+nhiều,"Câu có dấu phẩy, ""ngoặc kép""; chấm phẩy
+và xuống dòng – tiếng Việt: Đào tạo",Đúng,'=A1,Sai,,,"A;B"
+điền khuyết,Điền: -=-,,,,,,"'=SUM(1,2)|3;;@x"
+một,+5,Có,Không,,,,A

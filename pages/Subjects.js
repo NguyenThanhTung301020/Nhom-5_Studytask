@@ -871,7 +871,8 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
       (modal || confirmId) && h(Portal, null,
         modal && h(SubjectModal, { item: modal === 'edit' ? editItem : null, onSave: handleSave, onClose: () => setModal(null) }),
         confirmId && h(ConfirmModal, {
-          message: 'Xóa môn học này? Môn không còn dữ liệu liên quan.',
+          // G3 (kiểm thử PR56 trên web thật): nêu tên môn như trang Chương trình ĐT, tránh xóa nhầm
+          message: (() => { const s = subjects.find(x => x.id === confirmId); return `Xóa môn ${s?.code ? s.code + ' – ' : ''}${s?.name || 'học này'}? Môn không còn dữ liệu liên quan.` })(),
           onConfirm: () => { setSubjects(prev => prev.filter((s) => s.id !== confirmId)); setConfirmId(null) },
           onClose: () => setConfirmId(null),
         })

@@ -17,6 +17,7 @@ import { summarizeSystem } from '../utils/systemStats.js'
 import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint } from '../utils/quizScores.js'
 import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
 import { scheduleText, navLabel } from '../utils/roleText.js'
+import { serverRejected, keysToReload, saveErrorText, echoGuard, recoverFromSaveError, USAGE_KEYS } from '../utils/sharedSync.js'
 import { GENRES, genreOf, foldText, filterBooks, sortBooks, genreCounts, formatSize, bookFileUrl, sourceLine, safeSourceUrl } from '../utils/library.js'
 import { hasRoomQuiz, canUseRoomQuiz, examWindow, examPhase, quizzesForExam, formatCountdown, validAccessCode, examErrorText } from '../utils/exams.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition, currentTerm, termKey, offeringTitle, inTerm, inKhoa, khoaChoices, termChoices, defaultTermSel, groupOfferings, groupTitle, semesterLabel as semLabel2 } from '../utils/scope.js'
@@ -809,6 +810,89 @@ describe('Thi trực tuyến trên trang', () => {
   })
 })
 
+// Lỗi L1 (kiểm thử PR56 trên web thật 19/11/2026): máy chủ trả 409 nhưng giao diện không báo, và mọi lần lưu môn
+// sau đó trong cùng tab đều bị từ chối theo.
+describe('Lưu dữ liệu chung bị máy chủ từ chối (L1)', () => {
+  const err = (code, message = 'x') => Object.assign(new Error(message), { code })
+
+  test('serverRejected: 4xx và mã lỗi của máy chủ là bị từ chối; lỗi mạng, 5xx thì không', () => {
+    assert.equal(serverRejected(err('subject-in-use')), true)
+    assert.equal(serverRejected(err('permission-denied')), true)
+    assert.equal(serverRejected(err('http-409')), true)
+    assert.equal(serverRejected(err('http-502')), false)
+    assert.equal(serverRejected(new TypeError('Failed to fetch')), false)
+    assert.equal(serverRejected(null), false)
+  })
+
+  test('keysToReload: bị chặn vì môn còn dữ liệu thì tải lại cả các khóa máy chủ đếm', () => {
+    assert.deepEqual(keysToReload('subjects', err('subject-in-use')), ['subjects', ...USAGE_KEYS])
+    assert.deepEqual(keysToReload('materials', err('permission-denied')), ['materials'])
+    assert.equal(new Set(keysToReload('materials', err('subject-in-use'))).size, 1 + USAGE_KEYS.length - 1)
+  })
+
+  test('saveErrorText: nêu khóa, câu của máy chủ, và nói rõ đã khôi phục hay cần tải lại', () => {
+    const t = saveErrorText('subjects', err('subject-in-use', 'Chưa bớt được môn D: còn 1 tài liệu. Hãy xử lý các mục đó trước.'))
+    assert.match(t, /môn học/)
+    assert.match(t, /còn 1 tài liệu\. Hãy xử lý các mục đó trước\. Màn hình đã được đưa về/)
+    assert.doesNotMatch(t, /\.\./)
+    assert.match(saveErrorText('news', new TypeError('Failed to fetch')), /tin tức.*kiểm tra kết nối/)
+  })
+
+  test('echoGuard: chỉ bỏ qua đúng giá trị đã đánh dấu, một lần', () => {
+    const g = echoGuard(); const v = [1]
+    g.mark('subjects', v)
+    assert.equal(g.skip('subjects', [1]), false)   // khác tham chiếu
+    assert.equal(g.skip('subjects', v), true)
+    assert.equal(g.skip('subjects', v), false)
+  })
+
+  // Mô phỏng đúng tình huống trên web thật: trang chưa biết tài liệu của môn D (người khác vừa thêm), xóa D, rồi sửa môn A.
+  test('L1: sau 409, màn hình về đúng máy chủ và lần sửa tiếp theo được lưu', async () => {
+    const server = {
+      data: { subjects: [{ id: 'A', credits: 1 }, { id: 'D' }], materials: [{ id: 'm2', subjectId: 'D' }], schedule: [] },
+      puts: 0,
+      async put(key, value) {   // như check_subject_removal: bỏ môn còn dữ liệu thì 409, không ghi
+        this.puts++
+        const next = { ...this.data, [key]: value }
+        const gone = this.data.subjects.filter(s => !next.subjects.some(x => x.id === s.id))
+        if (gone.some(s => next.materials.some(m => m.subjectId === s.id))) throw err('subject-in-use', 'Chưa bớt được môn D: còn 1 tài liệu.')
+        this.data = structuredClone(next)
+      },
+    }
+    const state = { subjects: structuredClone(server.data.subjects), materials: [], schedule: [] }   // trang đã cũ
+    const echo = echoGuard(); const shown = []; const waits = []
+    const persist = (key, value) => {   // giống useEffect + persistShared trong app.js
+      if (echo.skip(key, value)) return
+      waits.push(server.put(key, value).catch(async e => shown.push(await recoverFromSaveError(key, e, {
+        loadShared: async () => structuredClone(server.data), setters, echo,
+      }))))
+    }
+    const setters = Object.fromEntries(Object.keys(state).map(k => [k, v => { state[k] = v; persist(k, v) }]))
+    const settle = async () => { while (waits.length) await waits.shift() }
+
+    setters.subjects(state.subjects.filter(s => s.id !== 'D'))   // xóa D trên trang cũ
+    await settle()
+    assert.equal(shown.length, 1)
+    assert.match(shown[0], /còn 1 tài liệu/)
+    assert.deepEqual(state.subjects.map(s => s.id), ['A', 'D'])   // D hiện lại
+    assert.deepEqual(state.materials.map(m => m.id), ['m2'])       // và hiện dữ liệu đang chặn
+    assert.equal(server.puts, 1)                                   // không gửi ngược bản vừa tải
+
+    setters.subjects(state.subjects.map(s => s.id === 'A' ? { ...s, credits: 2 } : s))   // sửa A
+    await settle()
+    assert.equal(shown.length, 1)
+    assert.equal(server.data.subjects.find(s => s.id === 'A').credits, 2)   // trước khi sửa: máy chủ vẫn 1
+    assert.ok(server.data.subjects.some(s => s.id === 'D'))
+  })
+
+  test('lỗi mạng: không đổi màn hình, chỉ báo', async () => {
+    let loaded = false; const set = []
+    const t = await recoverFromSaveError('subjects', new TypeError('Failed to fetch'), {
+      loadShared: async () => { loaded = true; return {} }, setters: { subjects: v => set.push(v) }, echo: echoGuard(),
+    })
+    assert.equal(loaded, false); assert.equal(set.length, 0); assert.match(t, /kiểm tra kết nối/)
+  })
+})
 
 describe('D3 mục 2 – trang Tiện ích (V7)', () => {
   const src = readFileSync(new URL('../pages/Tools.js', import.meta.url), 'utf8')

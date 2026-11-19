@@ -1,0 +1,16 @@
+Kiem thu R4 tren web that https://sutdytask.io.vn – 19/11/2026 (gio VN ~12:40), tai khoan daotao (Phong Dao tao)
+Mon tam ZZ56D id=1795066428021. Sau khi trang da tai, them 1 tai lieu tam (zz56-mat-2) cho ZZ56D qua POST /api/doc/sharedData/global/append (200).
+Trang Mon hoc chua biet tai lieu nay -> bam Xoa mon hoc -> hop xac nhan "Mon khong con du lieu lien quan" -> Xoa.
+
+Mang (trinh duyet tich hop):
+  PUT /api/doc/sharedData/global -> 409
+  {"error": {"code": "subject-in-use", "message": "Chưa bớt được môn ZZ PR56 thử - dữ liệu cũ D (xóa sau kiểm thử): còn 1 tài liệu. Hãy xử lý các mục đó trước."}}
+Console:
+  [error] Failed to load resource: the server responded with a status of 409 ()
+  [error] Uncaught (in promise) Error: Chưa bớt được môn ZZ PR56 thử - dữ liệu cũ D (xóa sau kiểm thử): còn 1 tài liệu. Hãy xử lý các mục đó trước.
+      at api (https://sutdytask.io.vn/v202611190241/utils/firebase.js:33:17)
+Doc lai may chu: ZZ56D van con (158 mon), tai lieu cua ZZ56D van con 1. Man hinh: the ZZ56D bien mat, khong co thong bao loi.
+
+Loi L1 (he qua): cung tab, sua mon tam ZZ56A tu 1 TC thanh 2 TC -> Luu thay doi
+  PUT /api/doc/sharedData/global -> 409 (van vi ZZ56D bi thieu trong danh sach gui len)
+  Man hinh: ZZ56A "2 TC". May chu: ZZ56A credits = 1. Khong co thong bao loi.
