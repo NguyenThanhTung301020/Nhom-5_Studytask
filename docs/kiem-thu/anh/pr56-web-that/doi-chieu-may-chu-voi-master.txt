@@ -1,0 +1,79 @@
+Đối chiếu web thật https://sutdytask.io.vn với master – 2026-11-19 04:37:16 UTC
+master (origin) = fc0c702 (Merge pull request #67 from NguyenThanhTung301020/fix/tuan7-v4-kiem-thu-web-that-p1-p2)
+Build giao diện đang chạy: v202611190241 (index.html)
+
+## 1. SHA-256 từng tệp giao diện: web thật vs master
+TRUNG  app.js  live=62b5aea316d3 master=62b5aea316d3
+TRUNG  style.css  live=11811e53ede6 master=11811e53ede6
+TRUNG  components/AccountCards.js  live=7bf9e3e8fd02 master=7bf9e3e8fd02
+TRUNG  components/AccountManager.js  live=9bb5c3ecce7a master=9bb5c3ecce7a
+TRUNG  components/ActionMenu.js  live=5ad334f923e8 master=5ad334f923e8
+TRUNG  components/ChatNotifier.js  live=dfd278e8858d master=dfd278e8858d
+TRUNG  components/ConfirmModal.js  live=8a0c4d1c277d master=8a0c4d1c277d
+TRUNG  components/GradeBook.js  live=a538e9e311a4 master=a538e9e311a4
+TRUNG  components/Login.js  live=f29d0d86eb4d master=f29d0d86eb4d
+TRUNG  components/Navbar.js  live=31d718634c11 master=31d718634c11
+TRUNG  components/Portal.js  live=e90997ee1b0a master=e90997ee1b0a
+TRUNG  components/SettingsDrawer.js  live=c9a296cf5001 master=c9a296cf5001
+TRUNG  components/Sidebar.js  live=0cab25315aed master=0cab25315aed
+TRUNG  components/UserAvatar.js  live=0331c62337b5 master=0331c62337b5
+TRUNG  pages/Admin.js  live=03909cab3485 master=03909cab3485
+TRUNG  pages/Contact.js  live=1b1bdd93be7f master=1b1bdd93be7f
+TRUNG  pages/Curriculum.js  live=bc9718b5bd7d master=bc9718b5bd7d
+TRUNG  pages/Dashboard.js  live=30d10766acd3 master=30d10766acd3
+TRUNG  pages/Deadlines.js  live=fbff35c1a487 master=fbff35c1a487
+TRUNG  pages/Directory.js  live=d184682f8662 master=d184682f8662
+TRUNG  pages/ExamRoom.js  live=b3ee08ea5965 master=b3ee08ea5965
+TRUNG  pages/Forms.js  live=ef5ffdeb1545 master=ef5ffdeb1545
+TRUNG  pages/GradingPolicy.js  live=324c71ba2702 master=324c71ba2702
+TRUNG  pages/Graduation.js  live=3711608793c1 master=3711608793c1
+KHAC  pages/Library.js  live=82687a497716 master=eb7e7f7c27f4
+TRUNG  pages/MonthCalendar.js  live=03d1bfc47860 master=03d1bfc47860
+TRUNG  pages/News.js  live=3d8bcf533af5 master=3d8bcf533af5
+TRUNG  pages/Profile.js  live=851296b51506 master=851296b51506
+TRUNG  pages/Quiz.js  live=6e1bc4adbfa9 master=6e1bc4adbfa9
+TRUNG  pages/QuizTools.js  live=090d58053561 master=090d58053561
+KHAC  pages/Reports.js  live=c6e712927565 master=bba16bfdfb4d
+TRUNG  pages/Schedule.js  live=ac3114b5b2f9 master=ac3114b5b2f9
+TRUNG  pages/Statistics.js  live=6e9232856542 master=6e9232856542
+TRUNG  pages/Subjects.js  live=410593b72ffd master=410593b72ffd
+TRUNG  pages/Theses.js  live=967a6e45ce0b master=967a6e45ce0b
+TRUNG  pages/Tools.js  live=7c81e252abaf master=7c81e252abaf
+TRUNG  pages/Tuition.js  live=0823b1405bdb master=0823b1405bdb
+TRUNG  utils/chat.js  live=6b4a96d324bb master=6b4a96d324bb
+TRUNG  utils/constants.js  live=b8b9571cd397 master=b8b9571cd397
+TRUNG  utils/curriculum.js  live=f27b2c165f20 master=f27b2c165f20
+TRUNG  utils/exams.js  live=598d6009812f master=598d6009812f
+TRUNG  utils/firebase.js  live=132a830eef08 master=132a830eef08
+TRUNG  utils/grading.js  live=2ae2181fca0a master=2ae2181fca0a
+TRUNG  utils/helpers.js  live=78264fd3a783 master=78264fd3a783
+TRUNG  utils/periods.js  live=9215ff587938 master=9215ff587938
+TRUNG  utils/quizFile.js  live=d2b429d3458b master=d2b429d3458b
+TRUNG  utils/quizScores.js  live=a3d3291d915d master=a3d3291d915d
+TRUNG  utils/roleText.js  live=99a8324562ab master=99a8324562ab
+TRUNG  utils/sanitize.js  live=36d7498de7e6 master=36d7498de7e6
+TRUNG  utils/scope.js  live=95e746326dd5 master=95e746326dd5
+TRUNG  utils/store.js  live=bc3f48b13c80 master=bc3f48b13c80
+TRUNG  utils/systemStats.js  live=acddd217902f master=acddd217902f
+TRUNG  utils/tuition.js  live=64d1e9b8035e master=64d1e9b8035e
+
+## 2. Tệp chỉ có trên web thật, không có trong master
+pages/LibraryBooks.js -> HTTP 200
+master: KHÔNG có pages/LibraryBooks.js
+
+## 3. Nguồn gốc 2 tệp khác
+pages/Library.js trên web = commit 7aef50f (nhánh origin/feat/ngoai-ke-hoach-thu-vien-sach-archive, CHƯA gộp vào master)
+pages/Reports.js trên web = commit 0454524 (bản trước f248fbe của PR67, master đã có bản mới)
+
+## 4. API (không đăng nhập)
+{"error": {"code": "unauthenticated", "message": "Chưa đăng nhập."}}  <- HTTP 401 /api/files/library/abc.pdf
+{"error": {"code": "not-found", "message": "Không tìm thấy."}}  <- HTTP 404 /api/files/khongco/abc
+master không có tuyến /api/files/library (chỉ nhánh thư viện thêm, need_user -> 401). Tuyến lạ trả 404.
+=> API đang chạy có mã của nhánh thư viện, không phải đúng master.
+
+## 5. Tệp của PR56 (R2–R7) trên web thật
+TRUNG master  app.js
+TRUNG master  pages/Curriculum.js
+TRUNG master  pages/Subjects.js
+TRUNG master  utils/curriculum.js
+TRUNG master  utils/quizFile.js

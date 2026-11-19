@@ -1,0 +1,13 @@
+Thu ban sua L1 (nhanh fix/tuan7-l1-bao-loi-luu-du-lieu-chung) tren API tam cuc bo (127.0.0.1:5599 -> API 8804, du lieu tam), 19/11/2026.
+Tai khoan tam tr01 (training). Du lieu: mon ZZ56A (id 101, 1 TC), ZZ56D (id 104).
+1. Trang Mon hoc da tai. Them tai lieu m-d cho D qua POST .../append (200) - trang khong biet.
+2. Xoa mon D tren trang -> hop xac nhan -> Xoa:
+   PUT  /api/doc/sharedData/global -> 409 Conflict (subject-in-use)
+   GET  /api/doc/sharedData/global -> 200 (ban sua tai lai tu may chu)
+   (khong co PUT gui nguoc ban vua tai)
+   Man hinh: thong bao do "Chua luu duoc thay doi mon hoc: Chua bot duoc mon Mon D (thu L1): con 1 tai lieu. Hay xu ly cac muc do truoc. Man hinh da duoc dua ve dung du lieu tren may chu."
+   The mon D hien lai, kem "1 tai lieu".
+3. Sua mon A 1 -> 2 TC -> Luu thay doi:
+   PUT  /api/doc/sharedData/global -> 200 OK
+   May chu: ZZ56A:2, ZZ56D:1, materials [m-d]. (Truoc khi sua tren web that: PUT 409, may chu van 1 TC.)
+Console: chi con dong "Failed to load resource: 409 (Conflict)" cua trinh duyet (ghi nhan phan hoi 409); khong con "Uncaught (in promise)".
