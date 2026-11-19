@@ -2,6 +2,7 @@
 import { LIB_CAT, VN_LIBRARIES } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 import ActionMenu from '../components/ActionMenu.js'
+import LibraryBooks from './LibraryBooks.js'
 
 const { useState, createElement: h } = window.React
 
@@ -60,6 +61,7 @@ function LibraryModal({ item, onSave, onClose }) {
 }
 
 export default function Library({ libraryLinks, setLibraryLinks, role = 'student' }) {
+  const [tab,       setTab]       = useState('books')      // 'books' = kho sách điện tử (PDF trên máy chủ) | 'links' = liên kết và nguồn tham khảo
   const [filter,    setFilter]    = useState('all')
   const [search,    setSearch]    = useState('')
   const [modal,     setModal]     = useState(null)
@@ -118,21 +120,28 @@ export default function Library({ libraryLinks, setLibraryLinks, role = 'student
       h('div', { className: 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-4' },
         h('div', null,
           h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-journal-bookmark me-2', style: { color: 'var(--primary)' } }), 'Thư viện số'),
-          h('small', { className: 'text-muted' }, `${libraryLinks.length} đầu sách & tài nguyên · ${VN_LIBRARIES.length} thư viện miễn phí`)
+          h('small', { className: 'text-muted' }, tab === 'books' ? 'Kho sách điện tử đọc và tải ngay trên hệ thống' : `${libraryLinks.length} đầu sách & tài nguyên · ${VN_LIBRARIES.length} thư viện miễn phí`)
         ),
         h('div', { className: 'd-flex gap-2' },
           h('div', { className: 'input-group input-group-sm', style: { width: 220 } },
             h('span', { className: 'input-group-text bg-light border-end-0 text-muted' }, h('i', { className: 'bi bi-search' })),
-            h('input', { className: 'form-control border-start-0', placeholder: 'Tìm sách, tài nguyên...', value: search, onChange: (e) => setSearch(e.target.value) })
+            h('input', { className: 'form-control border-start-0', placeholder: tab === 'books' ? 'Tìm tên sách, tác giả (không cần gõ dấu)...' : 'Tìm sách, tài nguyên...', value: search, onChange: (e) => setSearch(e.target.value) })
           ),
-          isAdmin && h('button', { className: 'btn btn-primary btn-sm', onClick: () => { setEditItem(null); setModal('add') } },
+          isAdmin && tab === 'links' && h('button', { className: 'btn btn-primary btn-sm', onClick: () => { setEditItem(null); setModal('add') } },
             h('i', { className: 'bi bi-plus-lg me-1' }), 'Thêm sách'
           )
         )
       ),
 
+      // ── Hai mục của Thư viện ──
+      h('div', { className: 'd-flex gap-2 mb-4' },
+        h('button', { className: `btn btn-sm ${tab === 'books' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => setTab('books') }, h('i', { className: 'bi bi-book me-1' }), 'Kho sách điện tử'),
+        h('button', { className: `btn btn-sm ${tab === 'links' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => setTab('links') }, h('i', { className: 'bi bi-link-45deg me-1' }), 'Liên kết & nguồn tham khảo')),
+
+      tab === 'books' && h(LibraryBooks, { search }),
+
       // ── Thư viện số miễn phí Việt Nam ──
-      !search && filter === 'all' && h('div', { className: 'mb-4' },
+      tab === 'links' && !search && filter === 'all' && h('div', { className: 'mb-4' },
         h('div', { className: 'fw-bold mb-3' }, h('i', { className: 'bi bi-flag-fill me-2 text-danger' }), 'Thư viện số & kho sách miễn phí Việt Nam'),
         h('div', { className: 'row g-2' },
           VN_LIBRARIES.map(lib =>
@@ -151,7 +160,7 @@ export default function Library({ libraryLinks, setLibraryLinks, role = 'student
       ),
 
       // ── Category tabs ──
-      h('div', { className: 'lib-tabs mb-4' },
+      tab === 'links' && h('div', { className: 'lib-tabs mb-4' },
         catTabs.map((t) =>
           h('button', { key: t.key, className: `lib-tab ${filter === t.key ? 'active' : ''}`, onClick: () => setFilter(t.key) },
             h('i', { className: `bi bi-${t.icon} me-1` }), t.label, h('span', { className: 'lib-tab-count' }, t.count)
@@ -159,10 +168,10 @@ export default function Library({ libraryLinks, setLibraryLinks, role = 'student
         )
       ),
 
-      search && h('p', { className: 'text-muted small mb-3' }, 'Kết quả: ', h('strong', null, filtered.length), ` tài nguyên`),
+      tab === 'links' && search && h('p', { className: 'text-muted small mb-3' }, 'Kết quả: ', h('strong', null, filtered.length), ` tài nguyên`),
 
       // ── Kệ sách ──
-      filtered.length === 0
+      tab !== 'links' ? null : filtered.length === 0
         ? h('div', { className: 'text-center text-muted py-5' },
             h('i', { className: 'bi bi-journal-x fs-1 d-block mb-2 opacity-25' }),
             h('p', null, search ? 'Không tìm thấy tài nguyên nào.' : 'Chưa có đầu sách nào trong danh mục này.'),
