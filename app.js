@@ -14,6 +14,7 @@ import { initFirebase, isFirebaseReady, onAuth, fbLogout,
          getUserProfile, setUserProfile, getAllUsers,
          logActivity, loadAllActivities, loadMyQuizResults, loadAllQuizResults } from './utils/firebase.js'
 import { loadOfficialActivities } from './utils/quizScores.js'
+import { echoGuard, recoverFromSaveError } from './utils/sharedSync.js'
 
 import Login          from './components/Login.js'
 import Navbar         from './components/Navbar.js'
@@ -79,6 +80,7 @@ function App() {
   const [sidebarOpen,  setSidebarOpen]  = useState(false)   // mở sidebar trên mobile
   const [notifSeen,    setNotifSeen]    = useState(() => load('st_notif_seen', []))
   const [dlFilter,     setDlFilter]     = useState({})
+  const [syncError,    setSyncError]    = useState(null)   // câu báo lỗi khi máy chủ không nhận một lần lưu dữ liệu chung (L1)
 
   // Flag ngăn useEffect ghi Firestore trước khi load xong
   const dataReady = useRef(false)
@@ -88,6 +90,7 @@ function App() {
   // userData/{uid}    : profile, homeworks, submissions, library  (cá nhân)
   const loadAppData = useCallback(async (uid, fbUser) => {
     dataReady.current = false
+    setSyncError(null)
 
     let shared = null
     let personal = null
@@ -460,59 +463,68 @@ function App() {
   // Dữ liệu CHUNG → sharedData/global (chỉ admin/teacher ghi, student chỉ đọc)
   const canWriteShared = user?.role === 'admin' || user?.role === 'teacher' || user?.role === 'training'
 
-  useEffect(() => {
-    if (!dataReady.current) return
-    save('st_subjects', subjects)
-    if (canWriteShared) saveSharedKey('subjects', subjects)
-  }, [subjects, canWriteShared])
+  // Lỗi L1 (kiểm thử PR56 trên web thật): trước đây lỗi lưu bị bỏ qua. Máy chủ từ chối (vd. 409 bớt môn còn dữ liệu
+  // mà trang chưa biết) thì giao diện vẫn giữ bản bị từ chối, và mọi lần lưu khóa đó sau này cũng bị từ chối theo.
+  // Nay: báo lỗi, tải lại khóa đó (và dữ liệu đang chặn) từ máy chủ, đặt lại state; echo bỏ qua lần lưu ngược của bản vừa tải.
+  const sharedSetters = { subjects: setSubjects, deadlines: setDeadlines, quizzes: setQuizzes, materials: setMaterials,
+    homeworks: setHomeworks, schedule: setSchedule, exams: setExams, news: setNews, forms: setForms }
+  const echo = useRef(null)
+  if (!echo.current) echo.current = echoGuard()
+  const persistShared = useCallback((key, value) => {
+    save(`st_${key}`, value)
+    if (!canWriteShared || echo.current.skip(key, value)) return
+    saveSharedKey(key, value).catch(async (e) => {
+      console.warn(`[Server] lưu ${key}:`, e.message)
+      setSyncError(await recoverFromSaveError(key, e, {
+        loadShared: loadSharedData, setters: sharedSetters, echo: echo.current, store: (k, v) => save(`st_${k}`, v),
+      }))
+    })
+  }, [canWriteShared])   // eslint-disable-line -- sharedSetters chỉ gồm hàm set của useState, không đổi giữa các lần render
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_deadlines', deadlines)
-    if (canWriteShared) saveSharedKey('deadlines', deadlines)
-  }, [deadlines, canWriteShared])
+    persistShared('subjects', subjects)
+  }, [subjects, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_quizzes', quizzes)
-    if (canWriteShared) saveSharedKey('quizzes', quizzes)
-  }, [quizzes, canWriteShared])
+    persistShared('deadlines', deadlines)
+  }, [deadlines, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_materials', materials)
-    if (canWriteShared) saveSharedKey('materials', materials)
-  }, [materials, canWriteShared])
+    persistShared('quizzes', quizzes)
+  }, [quizzes, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_homeworks', homeworks)
-    if (canWriteShared) saveSharedKey('homeworks', homeworks)
-  }, [homeworks, canWriteShared])
+    persistShared('materials', materials)
+  }, [materials, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_schedule', schedule)
-    if (canWriteShared) saveSharedKey('schedule', schedule)
-  }, [schedule, canWriteShared])
+    persistShared('homeworks', homeworks)
+  }, [homeworks, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_exams', exams)
-    if (canWriteShared) saveSharedKey('exams', exams)
-  }, [exams, canWriteShared])
+    persistShared('schedule', schedule)
+  }, [schedule, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_news', news)
-    if (canWriteShared) saveSharedKey('news', news)
-  }, [news, canWriteShared])
+    persistShared('exams', exams)
+  }, [exams, persistShared])
 
   useEffect(() => {
     if (!dataReady.current) return
-    save('st_forms', forms)
-    if (canWriteShared) saveSharedKey('forms', forms)
-  }, [forms, canWriteShared])
+    persistShared('news', news)
+  }, [news, persistShared])
+
+  useEffect(() => {
+    if (!dataReady.current) return
+    persistShared('forms', forms)
+  }, [forms, persistShared])
 
   // Dữ liệu CÁ NHÂN → userData/{uid}
   useEffect(() => {
@@ -620,6 +632,10 @@ function App() {
         page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities, schedule, exams, materials }),
       )
     ),
+    syncError && h('div', { className: 'alert alert-danger alert-dismissible shadow small position-fixed start-50 translate-middle-x mb-0', role: 'alert',
+        style: { top: 72, zIndex: 2000, width: 'calc(100% - 32px)', maxWidth: 560 } },
+      h('i', { className: 'bi bi-exclamation-triangle-fill me-2' }), syncError,
+      h('button', { className: 'btn-close', 'aria-label': 'Đóng', onClick: () => setSyncError(null) })),
     h(ChatNotifier, { toasts: chatToasts, onClose: closeToast, onOpen: (t) => { closeToast(t.id); navigate('contact') } }),
     showSettings && h(SettingsDrawer, { settings, onChange: (s) => setSettings(s), onClose: () => setShowSettings(false) }),
     !showSettings && h('button', { className: 'fab-settings', title: 'Tùy chỉnh giao diện', onClick: () => setShowSettings(true) },
