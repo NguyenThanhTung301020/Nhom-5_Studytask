@@ -1,0 +1,13 @@
+# A8 – Giới hạn 2.000 sự kiện trên https://sutdytask.io.vn, tài khoản sv2610019
+# Thời điểm: 2026-11-18, 14:41:18–14:48:41 UTC (đồng hồ máy người kiểm thử); gọi POST /api/doc/activities/<uid>/append tuần tự trong trình duyệt đã đăng nhập sv2610019
+# (đúng tuyến giao diện dùng khi sinh viên xem tài liệu), mỗi sự kiện {type: material, at: 2026-11-18, subjectId: 1000, refId: 'kt-a8-<i>'}
+
+Trước: 5 sự kiện (3 quiz + 1 material từ giao diện + 1 homework ca A6a)
+Ghi thêm: 1995 sự kiện, 1995 lần 200, 0 lần lỗi, 442,8 giây (~4,5 yêu cầu/giây, không bị giới hạn tốc độ)
+Sau: 2000 sự kiện, kích thước tài liệu ~151 KB
+
+Sự kiện thứ 2001 qua API                     -> 403 permission-denied; vẫn 2000 sự kiện          ĐÚNG theo thiết kế
+Sự kiện thứ 2001 qua giao diện (mở "Slide Triết học Mác - Lênin – Chương 1")
+   -> console: [warn] [Firebase] logActivity: Bạn không có quyền thực hiện thao tác này.
+   -> giao diện KHÔNG báo gì cho sinh viên; nhật ký vẫn 2000, sự kiện bị mất                 GHI NHẬN (xem mục phát hiện)
+3 sự kiện quiz sau khi đầy: Đề A 5 (2/4), Đề B 0 (0/4), Đề C 0 (0/4) – giữ nguyên, vẫn ở đầu nhật ký

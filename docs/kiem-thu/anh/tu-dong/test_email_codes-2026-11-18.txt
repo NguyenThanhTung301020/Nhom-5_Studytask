@@ -1,0 +1,39 @@
+PASS L1: hai tài khoản cùng xin mã cho 1 email khi chưa ai xác minh (hợp lệ ở bước xin mã)
+PASS L1: A xác minh trước → 200
+PASS L1: B xác minh sau cùng email → 409 email-in-use
+PASS L1: liên kết của A KHÔNG bị xóa
+PASS L1: B không chiếm được email của A
+PASS L1: email chỉ thuộc đúng 1 tài khoản là A
+PASS L1: mật khẩu và hồ sơ của A, B không đổi
+PASS L1: A vẫn đăng nhập bằng mật khẩu cũ
+PASS L1: mã của B đã dùng thì không dùng lại được
+PASS L1: A đổi sang email mới → 200
+PASS L1: A chỉ còn đúng 1 liên kết là email mới
+PASS L1: hồ sơ và mật khẩu A vẫn không đổi sau khi đổi email
+PASS L1: email cũ của A được giải phóng, B liên kết được
+PASS L2: quên MK gửi mã tới email đã xác minh
+PASS L2 hợp lệ: mã đúng còn hạn → đặt lại được
+PASS L2 hợp lệ: đăng nhập bằng MK mới
+PASS L2 đã dùng: mã vừa dùng không dùng lại được
+PASS L2 không hợp lệ: mã sai → 400
+PASS L2 không hợp lệ: mã đúng nhưng định danh lạ → 400
+PASS L2 hết hạn: mã đúng nhưng quá 15 phút → 400
+PASS L2 hết hạn: mật khẩu không đổi
+PASS L2 gỡ email: có mã đặt lại còn hạn
+PASS L2 gỡ email: gỡ thành công
+PASS L2 gỡ email: mã đặt lại bị xóa khỏi CSDL
+PASS L2 gỡ email: mã cũ KHÔNG còn đặt lại được mật khẩu
+PASS L2 gỡ email: mật khẩu không bị đổi
+PASS L2 đổi email: liên kết email mới
+PASS L2 đổi email: mã gửi tới email cũ KHÔNG còn dùng được
+PASS L2 đổi email: mật khẩu không bị đổi
+PASS L2 phòng thủ: mã của email không còn liên kết bị từ chối khi đặt lại
+PASS L2 phòng thủ: mật khẩu không bị đổi
+PASS L2: tài khoản không còn email liên kết thì quên MK không gửi thư nào
+PASS Gỡ email: lỗi ở câu thứ hai thì ném lỗi lên trên
+PASS Gỡ email: lỗi giữa chừng thì hoàn tác, email vẫn còn liên kết
+PASS Gỡ email: lỗi giữa chừng thì mã đặt lại vẫn còn (không mất một nửa)
+PASS Gỡ email: sau lỗi không còn giao dịch treo trên kết nối dùng chung
+PASS Gỡ email: sau khi hết lỗi thì gỡ được cả email lẫn mã đặt lại
+
+KẾT QUẢ: TẤT CẢ ĐẠT

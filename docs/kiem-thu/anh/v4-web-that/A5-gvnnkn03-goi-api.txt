@@ -1,0 +1,8 @@
+# A5 – Giáo viên gvnnkn03 (không dạy sv2610019) gọi API nhật ký của sv2610019
+# Thời điểm: 2026-11-18 ~14:35 UTC, https://sutdytask.io.vn, chạy trong trình duyệt đã đăng nhập gvnnkn03
+# gvnnkn03: subjectIds [1019,1029,1056,1066,1093,1103,1130,1140]; sv2610019: lớp CNTT26-10, subjectIds [1000..1004]
+GET    /api/doc/activities/37928b9eacb413ea9f33e9275869            -> 403 permission-denied
+POST   /api/doc/activities/<sv2610019>/append (sự kiện quiz 10 điểm) -> 403 permission-denied
+PUT    /api/doc/activities/<sv2610019> (ghi đè events=[])           -> 403 permission-denied
+DELETE /api/doc/activities/<sv2610019>                              -> 403 permission-denied (tài liệu có tồn tại: nếu không, máy chủ trả 200)
+GET    /api/doc/activities (danh sách)                              -> 200, 0 tài liệu

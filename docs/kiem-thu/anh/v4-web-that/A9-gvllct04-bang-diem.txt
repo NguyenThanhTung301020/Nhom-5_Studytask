@@ -1,0 +1,9 @@
+# A9 – Điểm quiz khi nhật ký đầy, xem bằng gvllct04, https://sutdytask.io.vn, ~14:59–15:01 UTC 2026-11-18
+# Trạng thái: nhật ký sv2610019 = 2000 sự kiện (đầy) sau ca A8. KHÔNG cho sinh viên nộp bài (ngoài phạm vi).
+
+Giao diện: Quản lý lớp học > Bảng điểm & Chấm điểm > Bùi Anh Cường (sv2610019) > Triết học Mác - Lênin
+  Đề A (Kiểm thử lại V3)  5
+  Đề B (Kiểm thử lại V3)  0
+  Đề C (Kiểm thử lại V3)  0
+  Bài tập / TN (35%) 2.5 (bỏ 1 bài thấp nhất: (5+0)/2) · Điểm TB tất cả môn 2.50 (tạm tính)
+Máy chủ: /api/quiz/results -> 5, 0, 0 ; /api/doc/activities/<sv2610019> -> 3 sự kiện quiz 5, 0, 0  -> khớp giao diện
