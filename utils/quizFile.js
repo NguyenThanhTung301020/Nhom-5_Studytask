@@ -162,8 +162,10 @@ export function assignIds(questions, usedIds = []) {
 
 // ── Xuất ────────────────────────────────────────────────────────
 // Ô bắt đầu bằng = + - @ (kể cả sau khoảng trắng) bị Excel, LibreOffice coi là công thức (R6 review PR9 lần 2: câu hỏi
-// `=1+1` hiện thành 2). Thêm dấu ' như utils/sanitize.js; số thật như -5 giữ nguyên. Khi nhập lại, unFormula bỏ dấu này.
-const NUMBER = /^[+-]?\d+([.,]\d+)?$/
+// `=1+1` hiện thành 2). Thêm dấu ' như utils/sanitize.js; số âm như -5 giữ nguyên. Khi nhập lại, unFormula bỏ dấu này.
+// G2 (kiểm thử PR56 trên web thật): số có dấu + như `+5` trước đây được giữ nguyên, Excel hiện thành 5 (mất dấu +);
+// nay cũng thêm dấu ' để Excel hiện đúng `'+5`, nhập lại vẫn ra `+5`.
+const NUMBER = /^-?\d+([.,]\d+)?$/
 const FORMULA = /^\s*[=+\-@]/
 const csvCell = (v) => {
   let s = String(v ?? '')

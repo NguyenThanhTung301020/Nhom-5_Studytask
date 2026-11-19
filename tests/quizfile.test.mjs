@@ -147,6 +147,16 @@ test('R6 review PR9: xuất CSV không để ô bắt đầu bằng = + - @ thà
   assert.deepEqual(back.questions, original)
 })
 
+test("G2 kiểm thử PR56: ô số có dấu + như +5 được thêm dấu ' để Excel không bỏ dấu +; nhập lại vẫn là +5", () => {
+  const original = [{ text: '+5', type: 'single', answers: [{ id: 'a', text: '+0,5', correct: true }, { id: 'b', text: '-5', correct: false }, { id: 'c', text: '5', correct: false }] }]
+  const csv = questionsToCsv(original)
+  const cells = parseDelimited(csv.replace(/^﻿/, ''), ',').slice(1).flat()
+  assert.ok(cells.includes("'+5") && cells.includes("'+0,5"), "số có dấu + phải có dấu '")
+  assert.ok(cells.includes('-5') && cells.includes('5'), 'số âm và số thường giữ nguyên')
+  assert.deepEqual(questionsFromText(csv).questions, original)
+  assert.equal(unFormula("'+5"), '+5')
+})
+
 test("unFormula chỉ bỏ dấu ' do bản xuất thêm trước công thức", () => {
   assert.equal(unFormula("'=1+1"), '=1+1')
   assert.equal(unFormula("' @A1"), ' @A1')
