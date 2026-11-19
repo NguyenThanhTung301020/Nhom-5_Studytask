@@ -1,0 +1,55 @@
+{
+ "http": 200,
+ "body": {
+  "results": [
+   {
+    "uid": "22d8f40098cbf6e7370f9cfd3ce9",
+    "name": "Nguyễn Văn Một",
+    "username": "sv01",
+    "quizId": 101,
+    "subjectId": 1,
+    "score": 10.0,
+    "correct": 3,
+    "total": 3,
+    "submittedAt": "2026-11-19T03:18:47Z",
+    "migrated": false
+   },
+   {
+    "uid": "5cdd2100ab5790f2f5004a1fa1eb",
+    "name": "Phạm Thị Bốn",
+    "username": "sv04",
+    "quizId": 101,
+    "subjectId": 1,
+    "score": 0.0,
+    "correct": 0,
+    "total": 3,
+    "submittedAt": "2026-11-19T03:18:48Z",
+    "migrated": false
+   },
+   {
+    "uid": "9923606cfbc11b8388a7755ad603",
+    "name": "Trần Thị Hai",
+    "username": "sv02",
+    "quizId": 101,
+    "subjectId": 1,
+    "score": 6.7,
+    "correct": 2,
+    "total": 3,
+    "submittedAt": "2026-11-19T03:18:48Z",
+    "migrated": false
+   },
+   {
+    "uid": "22d8f40098cbf6e7370f9cfd3ce9",
+    "name": "Nguyễn Văn Một",
+    "username": "sv01",
+    "quizId": 102,
+    "subjectId": 1,
+    "score": 3.3,
+    "correct": 1,
+    "total": 3,
+    "submittedAt": "2026-11-19T03:18:48Z",
+    "migrated": false
+   }
+  ]
+ }
+}

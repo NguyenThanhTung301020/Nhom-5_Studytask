@@ -1,0 +1,37 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm các môn bạn phụ trách
+Lập trình Web
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+3
+Sĩ số
+sinh viên trong môn
+33%
+Đã xem tài liệu
+1/3 sinh viên
+0%
+Đã làm bài tập
+0/3 sinh viên
+67%
+Đã làm trắc nghiệm
+2/3 sinh viên
+Theo sinh viên
+Điểm trắc nghiệm
+Lượt xem tài liệu
+Bài tập
+SINH VIÊN	TÀI LIỆU ĐÃ XEM	BÀI TẬP ĐÃ LÀM	TRẮC NGHIỆM	ĐIỂM TB	HOẠT ĐỘNG GẦN NHẤT
+
+TH
+Trần Thị Hai
+sv02
+	1	0	1	6.7	19/11/2026
+
+VM
+Nguyễn Văn Một
+sv01
+	0	0	2	6.7	19/11/2026
+
+VB
+Lê Văn Ba
+sv03
+	0	0	0	—	Chưa hoạt động

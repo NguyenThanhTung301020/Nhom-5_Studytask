@@ -1,0 +1,36 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm các môn bạn phụ trách
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+Sinh viên:
+Nguyễn Văn Một
+Trần Thị Hai
+Lê Văn Ba
+Xuất bảng điểm SV này
+Xuất tất cả
+Nguyễn Văn Một
+sv01
+6.70
+Điểm TB tất cả môn
+Lập trình Web
+Tạm tính: 6.7
+TRẮC NGHIỆM
+Bài	Điểm gốc	Điểm
+Q101 – Kiểm tra HTMLĐiểm BT	10	
+
+Q102 – Kiểm tra CSSĐiểm BT	3.3	
+BÀI TẬP
+Chưa có bài tập.
+ĐIỂM DANH & ĐIỂM THI
+Điểm danh
+Giữa kỳ (20%)
+Cuối kỳ (55%)
+Chuyên cần (10%)
+—
+Bài tập / TN (15%)
+6.7
+Giữa kỳ (20%)
+—
+Cuối kỳ / SP (55%)
+—
+Chưa đủ điểm: Chuyên cần, Giữa kỳ, Cuối kỳ / SP – đang hiển thị điểm tạm tính.

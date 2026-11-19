@@ -1,0 +1,42 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm các môn bạn phụ trách
+Lập trình Web
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+3
+Sĩ số
+sinh viên trong môn
+33%
+Đã xem tài liệu
+1/3 sinh viên
+0%
+Đã làm bài tập
+0/3 sinh viên
+67%
+Đã làm trắc nghiệm
+2/3 sinh viên
+Theo sinh viên
+Điểm trắc nghiệm
+Lượt xem tài liệu
+Bài tập
+Q101 – Kiểm tra HTML
+2/3 đã làm (67%)
+Điểm TB: 8.3
+VM
+Nguyễn Văn Một
+3/3 câu
+19/11/2026
+10
+TH
+Trần Thị Hai
+2/3 câu
+19/11/2026
+6.7
+Q102 – Kiểm tra CSS
+1/3 đã làm (33%)
+Điểm TB: 3.3
+VM
+Nguyễn Văn Một
+1/3 câu
+19/11/2026
+3.3

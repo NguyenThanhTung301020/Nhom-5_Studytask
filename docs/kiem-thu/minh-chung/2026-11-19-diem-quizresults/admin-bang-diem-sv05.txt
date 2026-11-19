@@ -1,0 +1,35 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm toàn bộ môn học
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+Sinh viên:
+Hoàng Văn Năm
+Nguyễn Văn Một
+Phạm Thị Bốn
+Trần Thị Hai
+Lê Văn Ba
+Xuất bảng điểm SV này
+Xuất tất cả
+Hoàng Văn Năm
+sv05
+—
+Điểm TB tất cả môn
+Cơ sở dữ liệu
+TRẮC NGHIỆM
+Bài	Điểm gốc	Điểm
+Q201 – Kiểm tra SQLĐiểm BT	Chưa làm	
+BÀI TẬP
+Chưa có bài tập.
+ĐIỂM DANH & ĐIỂM THI
+Điểm danh
+Giữa kỳ (21%)
+Cuối kỳ (59%)
+Chuyên cần (10%)
+—
+Bài tập / TN (10%)
+—
+Giữa kỳ (21%)
+—
+Cuối kỳ / SP (59%)
+—
+Chưa đủ điểm: Chuyên cần, Bài tập / TN, Giữa kỳ, Cuối kỳ / SP – đang hiển thị điểm tạm tính.

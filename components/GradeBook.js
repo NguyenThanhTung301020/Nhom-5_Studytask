@@ -7,6 +7,7 @@ import { listDocuments } from '../utils/store.js'
 import { COMPONENT_LABEL, defaultPolicy, subjectColumns, countedColumns, evaluateStudentSubject, round1, isGuidedSubject } from '../utils/grading.js'
 import { toCSV } from '../utils/sanitize.js'
 import { studentInScope } from '../utils/scope.js'
+import { quizScoresErrorText } from '../utils/quizScores.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -30,6 +31,7 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
   const [saving,     setSaving]     = useState(false)
   const [policies,   setPolicies]   = useState({})   // { sid: policy }   – gradingPolicies
   const [colDocs,    setColDocs]    = useState({})   // { sid: {counted} } – gradingColumns
+  const [loadError,  setLoadError]  = useState(null) // không tải được điểm chính thức (quizResults)
   const fb = isFirebaseReady()
 
   // Sinh viên có đăng ký ít nhất 1 môn trong phạm vi đang xem
@@ -42,7 +44,10 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
 
   useEffect(() => {
     let alive = true
-    Promise.resolve(fetchActivities ? fetchActivities() : []).then(list => { if (alive) setActivities(list || []) })
+    setLoadError(null)
+    Promise.resolve(fetchActivities ? fetchActivities() : []).then(
+      list => { if (alive) setActivities(list || []) },
+      e => { if (alive) setLoadError(e?.message || String(e)) })
     ;(async () => {
       const g = fb ? ((await loadSharedData())?.grades || {}) : load('st_grades', {})
       if (alive) setGrades(g)
@@ -145,6 +150,8 @@ export default function GradeBook({ subjects = [], allUsers = [], quizzes = [], 
   const exportStudent = (s) => downloadCSV(`bang-diem-${(s.name || s.username).replace(/\s+/g, '-')}.csv`, [HEAD, ...studentRows(s)])
   const exportAll = () => { const body = []; students.forEach(s => body.push(...studentRows(s))); downloadCSV('bang-diem-tat-ca-sinh-vien.csv', [HEAD, ...body]) }
 
+  if (loadError) return h('div', { className: 'alert alert-danger small' },
+    h('i', { className: 'bi bi-exclamation-octagon me-1' }), quizScoresErrorText(loadError))
   if (activities === null) return h('div', { className: 'text-center py-4' },
     h('div', { className: 'spinner-border spinner-border-sm text-primary me-2' }),
     h('span', { className: 'text-muted small' }, 'Đang tải bảng điểm…')

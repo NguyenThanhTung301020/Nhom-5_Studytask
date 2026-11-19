@@ -13,7 +13,7 @@ import { initFirebase, isFirebaseReady, onAuth, fbLogout,
          loadUserData, saveUserKey,
          getUserProfile, setUserProfile, getAllUsers,
          logActivity, loadAllActivities, loadMyQuizResults, loadAllQuizResults } from './utils/firebase.js'
-import { applyQuizResults } from './utils/quizScores.js'
+import { loadOfficialActivities } from './utils/quizScores.js'
 
 import Login          from './components/Login.js'
 import Navbar         from './components/Navbar.js'
@@ -423,13 +423,9 @@ function App() {
 
   // ── Tải toàn bộ nhật ký hoạt động (admin/giáo viên) ──
   const fetchActivities = useCallback(async () => {
-    if (isFirebaseReady()) {
-      const acts = await loadAllActivities()
-      // Điểm trắc nghiệm lấy từ kết quả chính thức của máy chủ (quizResults), không từ sự kiện `quiz` trong nhật ký.
-      // Máy chủ chưa có endpoint này (bản cũ) thì giữ nhật ký như trước, để không mất điểm hiển thị.
-      try { return applyQuizResults(acts, await loadAllQuizResults()) }
-      catch (e) { console.warn('[Server] loadAllQuizResults – dùng nhật ký hoạt động:', e.message); return acts }
-    }
+    // Điểm trắc nghiệm lấy từ kết quả chính thức của máy chủ (quizResults), không từ sự kiện `quiz` trong nhật ký.
+    // Chỉ máy chủ bản cũ (chưa có endpoint, 404) mới dùng lại nhật ký; lỗi khác ném ra để Bảng điểm / Báo cáo lớp báo lỗi.
+    if (isFirebaseReady()) return loadOfficialActivities(loadAllActivities, loadAllQuizResults)
     // Demo: gộp dữ liệu mẫu + nhật ký đã ghi ở localStorage
     const map = new Map()
     SAMPLE_ACTIVITY.forEach(a => map.set(a.uid, { ...a, events: [...a.events] }))

@@ -12,7 +12,7 @@ import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.
 import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
-import { applyQuizResults, resultToEvent } from '../utils/quizScores.js'
+import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint } from '../utils/quizScores.js'
 import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
 import { scheduleText, navLabel } from '../utils/roleText.js'
 import { hasRoomQuiz, canUseRoomQuiz, examWindow, examPhase, quizzesForExam, formatCountdown, validAccessCode, examErrorText } from '../utils/exams.js'
@@ -524,6 +524,52 @@ describe('Điểm trắc nghiệm chính thức cho Bảng điểm và Báo cáo
   test('đầu vào lạ (null, thiếu uid) không làm hỏng kết quả', () => {
     assert.deepEqual(applyQuizResults(null, null), [])
     assert.deepEqual(applyQuizResults([{ uid: 'u1' }], [null, { quizId: 1 }]), [{ uid: 'u1', events: [] }])
+  })
+  test('nhiều lần làm bài trong nhật ký (10, 9): mỗi (sinh viên, đề) chỉ còn một điểm, đúng điểm chính thức', () => {
+    const acts = [{ uid: 'u2', events: [{ type: 'quiz', subjectId: 1, refId: 101, score: 10 }, { type: 'quiz', subjectId: 1, refId: 101, score: 9 }] }]
+    const quiz = applyQuizResults(acts, [res('u2', 101, 6.7)])[0].events.filter(e => e.type === 'quiz')
+    // Bảng điểm lấy sự kiện cuối, Báo cáo lớp lấy bản mới nhất theo đề: chỉ còn một sự kiện nên hai màn hình cùng ra 6.7
+    assert.deepEqual(quiz.map(e => [e.refId, e.score]), [[101, 6.7]])
+  })
+  test('sinh viên chưa làm bài: không có sự kiện quiz nào (hai màn hình hiện "Chưa làm" / "—")', () => {
+    const acts = [{ uid: 'u3', events: [{ type: 'material', subjectId: 1, refId: 1 }] }]
+    const out = applyQuizResults(acts, [res('u1', 101, 10)])
+    assert.equal(out.find(a => a.uid === 'u3').events.filter(e => e.type === 'quiz').length, 0)
+  })
+})
+
+describe('Tải điểm chính thức cho Bảng điểm và Báo cáo lớp (loadOfficialActivities)', () => {
+  const acts = [{ uid: 'u1', events: [{ type: 'quiz', subjectId: 1, refId: 101, score: 9 }, { type: 'material', refId: 1 }] }]
+  const ok = (v) => () => Promise.resolve(v)
+  const fail = (code, message = 'lỗi') => () => Promise.reject(Object.assign(new Error(message), code ? { code } : {}))
+  const official = [{ uid: 'u1', quizId: 101, subjectId: 1, score: 6.7, correct: 2, total: 3, submittedAt: '2026-11-19T03:00:00Z' }]
+
+  test('máy chủ trả kết quả: điểm trong nhật ký bị thay bằng điểm chính thức', async () => {
+    const out = await loadOfficialActivities(ok(acts), ok(official))
+    assert.deepEqual(out[0].events.filter(e => e.type === 'quiz').map(e => e.score), [6.7])
+  })
+  test('không có quizResults nào (danh sách rỗng): không còn điểm trắc nghiệm, sự kiện khác giữ nguyên', async () => {
+    const out = await loadOfficialActivities(ok(acts), ok([]))
+    assert.deepEqual(out[0].events, [{ type: 'material', refId: 1 }])
+  })
+  test('máy chủ bản cũ chưa có endpoint (404): dùng lại nhật ký như trước', async () => {
+    assert.equal(await loadOfficialActivities(ok(acts), fail('not-found')), acts)
+    assert.equal(await loadOfficialActivities(ok(acts), fail('http-404')), acts)
+  })
+  test('lỗi máy chủ 500: báo lỗi, không lặng lẽ hiện điểm 9 trong nhật ký', async () => {
+    await assert.rejects(loadOfficialActivities(ok(acts), fail('internal', 'Lỗi máy chủ (500)')), /500/)
+    await assert.rejects(loadOfficialActivities(ok(acts), fail('http-502')))
+  })
+  test('mất mạng hoặc hết phiên: báo lỗi', async () => {
+    await assert.rejects(loadOfficialActivities(ok(acts), () => Promise.reject(new TypeError('Failed to fetch'))), TypeError)
+    await assert.rejects(loadOfficialActivities(ok(acts), fail('unauthenticated')))
+  })
+  test('isMissingEndpoint chỉ nhận 404', () => {
+    assert.equal(isMissingEndpoint({ code: 'not-found' }), true)
+    assert.equal(isMissingEndpoint({ code: 'http-404' }), true)
+    assert.equal(isMissingEndpoint({ code: 'internal' }), false)
+    assert.equal(isMissingEndpoint(new TypeError('x')), false)
+    assert.equal(isMissingEndpoint(null), false)
   })
 })
 

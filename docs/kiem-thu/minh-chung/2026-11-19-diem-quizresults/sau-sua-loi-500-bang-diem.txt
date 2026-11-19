@@ -1,0 +1,5 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm toàn bộ môn học
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+Không tải được điểm trắc nghiệm chính thức (quizResults) từ máy chủ: Loi may chu (gia lap). Điểm không được hiển thị để tránh dùng số liệu từ nhật ký hoạt động. Hãy tải lại trang sau ít phút.
