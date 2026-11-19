@@ -11,7 +11,7 @@ Xóa user:   python3 studytask_api.py delete-user USERNAME
 Biến môi trường: STUDYTASK_DATA (mặc định /var/lib/studytask), STUDYTASK_PORT (8787).
 Phân quyền được chuyển từ firestore.rules (xem hàm can()).
 """
-import hashlib, hmac, json, math, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time, unicodedata
+import hashlib, hmac, html, json, math, os, queue, re, secrets, smtplib, sqlite3, sys, threading, time, unicodedata
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from http import cookies
@@ -1335,6 +1335,31 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(401, 'unauthenticated', 'Chưa đăng nhập.')
         return u
 
+    def send_library_error_page(self, e):
+        """Trang HTML báo lỗi khi mở sách của Thư viện bằng trình duyệt (chưa đăng nhập / không có sách). Mã trạng thái giữ nguyên."""
+        if e.status == 401:
+            title, text = 'Cần đăng nhập để đọc sách', 'Sách trong Thư viện chỉ dành cho tài khoản StudyTask. Hãy đăng nhập, rồi mở lại sách từ trang Thư viện.'
+            btn = 'Đăng nhập'
+        else:
+            title, text = 'Không tìm thấy sách', 'Sách này không có trong Thư viện hoặc đã được gỡ. Hãy chọn sách khác ở trang Thư viện.'
+            btn = 'Về trang Thư viện'
+        page = ('<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                f'<title>{html.escape(title)} – StudyTask</title><style>'
+                'body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f6fb;'
+                'font-family:"Segoe UI",Roboto,Arial,sans-serif;color:#2d3748;padding:16px;box-sizing:border-box}'
+                '.box{background:#fff;max-width:420px;width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:32px;text-align:center}'
+                '.icon{font-size:44px;line-height:1;margin-bottom:12px}h1{font-size:20px;margin:0 0 10px}p{margin:0 0 22px;color:#5a6474;line-height:1.5}'
+                'a{display:inline-block;background:#4e73df;color:#fff;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:600}'
+                f'</style></head><body><div class="box"><div class="icon">{"&#128274;" if e.status == 401 else "&#128214;"}</div>'
+                f'<h1>{html.escape(title)}</h1><p>{html.escape(text)}</p><a href="/">{html.escape(btn)}</a></div></body></html>').encode('utf-8')
+        self.send_response(e.status)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(page)))
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.end_headers()
+        self.wfile.write(page)
+
     def dispatch(self, method):
         try:
             if method != 'GET' and not self.same_origin_ok():
@@ -1948,12 +1973,18 @@ class Handler(BaseHTTPRequestHandler):
         # ── sách điện tử của Thư viện: chỉ người đã đăng nhập tải. API kiểm tra quyền rồi nhờ nginx phát tệp (X-Accel-Redirect),
         #    nên hỗ trợ Range (đọc từng trang, tua nhanh) mà không đọc cả tệp hàng trăm MB vào bộ nhớ của API. Tệp KHÔNG nằm ở /uploads công khai. ──
         if len(p) == 3 and p[:2] == ['files', 'library'] and method == 'GET':
-            self.need_user()
             bid = p[2][:-4] if p[2].endswith('.pdf') else p[2]
-            book = doc_get('libraryBooks', bid) if LIBRARY_ID.fullmatch(bid) else None
-            fname = (book or {}).get('file') or ''
-            if not book or not LIBRARY_FILE.fullmatch(fname) or not os.path.isfile(os.path.join(LIBRARY_DIR, 'books', fname)):
-                raise ApiError(404, 'not-found', 'Không tìm thấy sách.')
+            try:
+                self.need_user()
+                book = doc_get('libraryBooks', bid) if LIBRARY_ID.fullmatch(bid) else None
+                fname = (book or {}).get('file') or ''
+                if not book or not LIBRARY_FILE.fullmatch(fname) or not os.path.isfile(os.path.join(LIBRARY_DIR, 'books', fname)):
+                    raise ApiError(404, 'not-found', 'Không tìm thấy sách.')
+            except ApiError as e:
+                # Mở liên kết sách thẳng trên trình duyệt (tab mới, link chia sẻ): trả trang báo lỗi dễ đọc thay vì JSON thô
+                if 'text/html' not in (self.headers.get('Accept') or ''):
+                    raise
+                return self.send_library_error_page(e)
             self.send_response(200)
             self.send_header('Content-Type', 'application/pdf')
             self.send_header('Content-Length', '0')

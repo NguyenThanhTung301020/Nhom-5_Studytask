@@ -110,6 +110,17 @@ try:
     # ── tải tệp PDF ──
     st, _, _, _, _ = req('GET', '/api/files/library/sach-mot.pdf')
     chk('chưa đăng nhập không tải được PDF → 401', st == 401)
+    def browser_get(path, ck=''):
+        c = http.client.HTTPConnection('127.0.0.1', PORT, timeout=5)
+        c.request('GET', path, headers={'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8', 'Cookie': ck})
+        r = c.getresponse(); return r.status, (r.getheader('Content-Type') or ''), r.read().decode('utf-8', 'replace')
+    st, ct, body = browser_get('/api/files/library/sach-mot.pdf')
+    chk('mở link sách trên trình duyệt khi chưa đăng nhập → 401 kèm trang HTML dễ đọc (không phải JSON thô), có nút Đăng nhập',
+        st == 401 and ct.startswith('text/html') and 'Cần đăng nhập để đọc sách' in body and 'Đăng nhập' in body and '"error"' not in body)
+    st, ct, body = browser_get('/api/files/library/khong-co.pdf', sv)
+    chk('trình duyệt mở sách không có → 404 kèm trang HTML "Không tìm thấy sách"', st == 404 and ct.startswith('text/html') and 'Không tìm thấy sách' in body)
+    st, js, _, _, _ = req('GET', '/api/files/library/khong-co.pdf', ck=sv)
+    chk('ứng dụng (không xin HTML) vẫn nhận JSON lỗi như cũ', st == 404 and js.get('error', {}).get('code') == 'not-found')
     st, js, hd, raw, _ = req('GET', '/api/files/library/sach-mot.pdf', ck=sv)
     chk('đã đăng nhập: API ủy quyền cho nginx phát tệp (X-Accel-Redirect), không gửi thân tệp', st == 200 and hd.get('x-accel-redirect') == '/_library/sach-mot.pdf'
         and hd.get('content-type') == 'application/pdf' and raw == b'' and 'inline' in hd.get('content-disposition', ''))
