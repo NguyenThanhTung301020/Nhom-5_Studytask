@@ -47,10 +47,29 @@ def clean(s):
 
 
 def license_label(url):
-    for k, v in LICENSES.items():
-        if url and f'/{k}/' in url:
-            return v
-    return ''
+    """Nhãn giấy phép đọc từ đường dẫn Creative Commons trên Archive, có đúng phiên bản (3.0 / 4.0)."""
+    if not url:
+        return ''
+    if 'publicdomain/mark' in url:
+        return LICENSES['publicdomain/mark']
+    if re.search(r'/licenses/publicdomain/?$', url):
+        return 'Phạm vi công cộng (tuyên bố từ bỏ bản quyền kiểu cũ của Creative Commons)'
+    m = re.search(r'/licenses/(by(?:-[a-z]+)*)/(\d\.\d)', url)
+    if m:
+        kind, ver = m.groups()
+        note = {'by-nc-nd': 'ghi nguồn, phi thương mại, không phái sinh', 'by-nc': 'ghi nguồn, phi thương mại', 'by-sa': 'ghi nguồn, chia sẻ tương tự', 'by': 'ghi nguồn'}.get(kind, '')
+        return f'CC {kind.upper()} {ver}' + (f' ({note})' if note else '')
+    return 'Giấy phép khác (xem trang nguồn)'
+
+
+def lang_code(raw):
+    """Archive ghi ngôn ngữ lẫn lộn ('vie', 'Vietnamese', 'fre, vie'...): có tiếng Việt → 'vi', chỉ tiếng Anh → 'en', còn lại giữ nguyên."""
+    tokens = {t.strip().lower() for t in re.split(r'[,;/]', str(raw or ''))}
+    if tokens & {'vie', 'vi', 'vietnamese'}:
+        return 'vi'
+    if tokens & {'eng', 'en', 'english'}:
+        return 'en'
+    return str(raw or '')
 
 
 def fetch_meta(identifier):
@@ -125,7 +144,7 @@ def main():
             books.append({
                 'id': bid, 'title': title, 'author': author,
                 'genre': ov.get('genre', 'khac'), 'year': ov.get('year', ''),      # không lấy năm từ Archive: trường date ở đó nhiều khi là ngày tải lên
-                'language': ov.get('language') or ('vi' if (meta.get('language', 'vie') in ('vie', 'vi') or user_provided) else meta.get('language', '')),
+                'language': ov.get('language') or ('vi' if user_provided else lang_code(meta.get('language', 'vie'))),
                 'series': clean(ov.get('series') or (meta.get('title') if len(pdfs) > 1 and not user_provided else '')),
                 'description': ov.get('description', ''),
                 'sourceName': 'Internet Archive (tải thủ công, không có mã mục)' if user_provided else 'Internet Archive',

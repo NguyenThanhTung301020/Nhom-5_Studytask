@@ -13,6 +13,7 @@ export const GENRES = {
   'ton-giao':          { label: 'Tôn giáo',                icon: 'peace',           color: '#858796' },
   'nghe-thuat':        { label: 'Văn hóa – Nghệ thuật',    icon: 'palette',         color: '#d63384' },
   'ky-nang':           { label: 'Kỹ năng',                 icon: 'lightbulb',       color: '#20c997' },
+  'triet-hoc':         { label: 'Triết học – Tâm lý',      icon: 'compass',         color: '#8e44ad' },
   'khac':              { label: 'Khác',                    icon: 'three-dots',      color: '#6c757d' },
 }
 export const genreOf = (book) => GENRES[book?.genre] || GENRES.khac

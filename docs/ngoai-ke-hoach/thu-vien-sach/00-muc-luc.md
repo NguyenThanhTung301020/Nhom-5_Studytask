@@ -5,7 +5,7 @@ Cập nhật ngày 19/11/2026. Người thực hiện: Trương Thanh Vui (cùng
 
 | Tệp | Nội dung | Đọc khi cần |
 |---|---|---|
-| [01-nguon-va-tai-lieu-tham-khao.md](01-nguon-va-tai-lieu-tham-khao.md) | Nguồn Archive.org, trang tìm kiếm tham khảo, danh sách 70 sách kèm mã mục và giấy phép, lưu ý bản quyền | Ghi nguồn và tài liệu tham khảo trong báo cáo |
+| [01-nguon-va-tai-lieu-tham-khao.md](01-nguon-va-tai-lieu-tham-khao.md) | Nguồn Archive.org, trang tìm kiếm tham khảo, danh sách 179 sách kèm mã mục và giấy phép, lưu ý bản quyền | Ghi nguồn và tài liệu tham khảo trong báo cáo |
 | [02-thiet-ke-trien-khai-kiem-thu.md](02-thiet-ke-trien-khai-kiem-thu.md) | Cách lưu sách và bìa, cách hiển thị, quyền truy cập, kiểm thử, biên bản triển khai lên máy chủ | Minh chứng kỹ thuật và vận hành |
 | [03-luu-y-khi-ghi-vao-bao-cao-tong-quat.md](03-luu-y-khi-ghi-vao-bao-cao-tong-quat.md) | Những điều cần nhớ khi đưa phần này vào báo cáo tổng quát về sau, kèm đoạn viết sẵn | Hoàn thiện báo cáo tuần và báo cáo tổng quát |
 
