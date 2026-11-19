@@ -21,21 +21,21 @@ Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các m�
 |---|---|---|---|---|---|
 | | **BỎ** | | | | |
 | 1 | Lưu mật khẩu trong Firestore; cột "Mật khẩu" và chức năng Admin tự nhập mật khẩu mới cho người khác | Bỏ | Lỗ hổng V1; không được lưu mật khẩu dạng văn bản thuần. Thay bằng Cloud Function + Admin SDK hoặc email đặt lại mật khẩu | GVPB | 4 (vá tạm), 5 (bỏ hẳn) |
-| 2 | Tiện ích Giải trí, Dịch thuật (chỉ mở Google Translate), Máy tính bỏ túi | Bỏ | Ngoài nghiệp vụ quản lý học tập, không tạo giá trị riêng; máy tính dùng Function() (V7). Thu gọn để tập trung vào nghiệp vụ lõi | GVHD (tính khả thi) | 7 |
+| 2 | Tiện ích Giải trí, Dịch thuật (chỉ mở Google Translate), Máy tính bỏ túi | Bỏ | Ngoài nghiệp vụ quản lý học tập, không tạo giá trị riêng; máy tính dùng Function() (V7). Thu gọn để tập trung vào nghiệp vụ lõi. **Đã làm tuần 7**: bỏ 3 tiện ích khỏi `pages/Tools.js`, còn Pomodoro, Quy đổi điểm, ghi chú nhanh; kiểm thử `tests/logic.test.mjs` | GVHD (tính khả thi) | 7 |
 | 3 | Tự nạp dữ liệu mẫu vào Firestore và chế độ demo trên bản đang chạy | Bỏ | Dữ liệu mẫu lẫn vào dữ liệu thật (V6). Dữ liệu mẫu chỉ còn dùng qua script seed trên môi trường dev/Emulator | Nhóm rà soát | 5 |
 | 4 | Instance Firebase phụ để tạo tài khoản và đổi mật khẩu bằng đăng nhập ngầm | Bỏ | Phụ thuộc vào mật khẩu lưu trữ; thay bằng Admin SDK chạy ở máy chủ | GVPB | 5 |
 | | **SỬA** | | | | |
 | 5 | Firestore Security Rules | Sửa | Chặn người dùng tự sửa role, subjectIds, expiresAt (V2); giới hạn đọc activities (V4); kiểm tra trường, kiểu dữ liệu khi ghi | GVPB; nhóm rà soát | 4–5 |
 | 6 | Trắc nghiệm | Sửa | Tách đáp án ra bảng `quizKeys` chỉ Admin và giáo viên dạy môn nhận lại; máy chủ API Python chấm điểm và ghi `quizResults` (V3, V4). **Đã cài đặt tuần 6**, xem [D05](../thiet-ke/05-trac-nghiem-tach-dap-an-cham-diem-may-chu.md) mục 0 | GVHD (tính khả thi); nhóm rà soát | 5–6 |
 | 7 | Cấu trúc dữ liệu sharedData/global | Sửa | Phân quyền đọc theo môn học: máy chủ chỉ trả cho sinh viên bài tập, tài liệu, lịch học, lịch thi, deadline, đề trắc nghiệm của môn mình học và điểm của chính mình. **Không tách collection** (xem "Cập nhật tuần 6" ở trên). Đã cài đặt tuần 6, kiểm thử `tests/server/test_shared_scope.py` | GVPB | 6 |
-| 8 | Cách tính điểm trung bình môn | Sửa | Cho giáo viên cấu hình trọng số trắc nghiệm / bài tập / chuyên cần theo quy chế | GVPB | 7 |
+| 8 | Cách tính điểm trung bình môn | Sửa | Cho giáo viên cấu hình trọng số trắc nghiệm / bài tập / chuyên cần theo quy chế. **Đã cài đặt sớm** (`pages/GradingPolicy.js`, `utils/grading.js`): trọng số do Phòng Đào tạo đặt theo quy chế([thiết kế 02](../thiet-ke/02-quy-che-tinh-diem.md)), giáo viên chọn cột tính điểm (`gradingColumns`); kiểm thử `tests/logic.test.mjs` | GVPB | 7 |
 | 9 | Nền tảng front-end (React UMD qua CDN, không JSX) | Sửa | Chuyển sang Vite + JSX + ESLint để có bước build tối ưu, cải thiện LCP 2,9 s và Lighthouse 72/100 | GVPB | Sau tuần 5 |
-| 10 | Liên hệ hỗ trợ | Sửa | Chuyển tin nhắn vào collection riêng (supportTickets) để Quản trị viên xem và phản hồi (V5) | Nhóm rà soát | 7 |
+| 10 | Liên hệ hỗ trợ | Sửa | Chuyển tin nhắn vào collection riêng (supportTickets) để Quản trị viên xem và phản hồi (V5). **Đã cài đặt sớm** dưới dạng chat hỗ trợ trên máy chủ riêng (bảng `chat`, `/api/chat/*`) thay cho `supportTickets` vì đã bỏ Firestore; kiểm thử `tests/server/test_account.py` | Nhóm rà soát | 7 |
 | | **THÊM** | | | | |
 | 11 | Cloud Functions (backend): quản lý tài khoản, gán vai trò bằng custom claims, chấm trắc nghiệm | Thêm | Đưa nghiệp vụ nhạy cảm ra khỏi trình duyệt; bổ sung phần thiết kế, lập trình backend | GVPB | 4 (bản thử), 5 (hoàn thiện) |
 | 12 | Git/GitHub, quy ước nhánh và commit; CI/CD bằng GitHub Actions | Thêm | Chứng minh quá trình làm việc, đối chiếu nhật ký AI, tự động kiểm thử và triển khai | GVHD (dùng AI); TC2 CI/CD | 2, 5 |
 | 13 | Kiểm thử tự động: rules unit test, Vitest, Playwright | Thêm | Thay thế kiểm thử thủ công; chạy trong CI | GVPB; TC2 | 2, 10 |
-| 14 | Nhập danh sách lớp từ tệp CSV/Excel | Thêm | Giáo viên đưa lớp thật vào hệ thống nhanh, không phải tạo từng tài khoản – điều kiện để áp dụng thực tế | GVHD (tính khả thi) | 7 |
+| 14 | Nhập danh sách lớp từ tệp CSV/Excel | Thêm | Giáo viên đưa lớp thật vào hệ thống nhanh, không phải tạo từng tài khoản – điều kiện để áp dụng thực tế. **Dời sang tuần 8**: cần chốt người được nhập (Admin/Đào tạo hay giáo viên) và định dạng tệp | GVHD (tính khả thi) | 7 |
 | 15 | Nộp tệp trực tiếp (Firebase Storage) | Thêm | Không phụ thuộc liên kết Google Drive/OneDrive | GVPB; người dùng thử | 8 |
 | 16 | Xem lịch theo tháng | Thêm | 2/5 người dùng thử nghiệm đề nghị | Người dùng thử | 8 |
 | 17 | PWA và thông báo đẩy nhắc deadline | Thêm | 3/5 người dùng thử nghiệm đề nghị; nhắc việc khi không mở ứng dụng | Người dùng thử; GVPB | 9 |

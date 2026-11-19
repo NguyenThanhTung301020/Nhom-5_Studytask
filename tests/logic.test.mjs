@@ -2,7 +2,9 @@
 // Chạy: npm run test:logic
 // Các ví dụ số lấy từ tài liệu "Tỉ lệ và cách tính trọng số điểm theo loại môn".
 import { test, describe } from 'node:test'
+import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
+
 import {
   PRESETS, LIMITS, round1, homeworkScore, attendanceByRatio, attendanceByPenalty, attendanceCombined,
   subjectScore, autoWeights, suggestDropLowest, validatePolicy, defaultPolicy, effectivePolicy, attendanceFromData,
@@ -889,6 +891,17 @@ describe('Lưu dữ liệu chung bị máy chủ từ chối (L1)', () => {
       loadShared: async () => { loaded = true; return {} }, setters: { subjects: v => set.push(v) }, echo: echoGuard(),
     })
     assert.equal(loaded, false); assert.equal(set.length, 0); assert.match(t, /kiểm tra kết nối/)
+  })
+})
+
+describe('D3 mục 2 – trang Tiện ích (V7)', () => {
+  const src = readFileSync(new URL('../pages/Tools.js', import.meta.url), 'utf8')
+  test('không còn chạy chuỗi bằng Function() hay eval', () => {
+    assert.doesNotMatch(src, /\bFunction\s*\(|\beval\s*\(/)
+  })
+  test('đã bỏ Máy tính bỏ túi, Dịch thuật, Giải trí', () => {
+    for (const name of ['Calculator', 'Translator', 'Entertainment'])
+      assert.doesNotMatch(src, new RegExp(`\\b${name}\\b`))
   })
 })
 
