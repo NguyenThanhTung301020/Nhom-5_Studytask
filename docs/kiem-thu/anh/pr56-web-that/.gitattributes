@@ -1,0 +1,2 @@
+# Minh chứng kiểm thử: giữ nguyên từng byte (CSV xuất từ web thật dùng CRLF + BOM)
+*.csv -text
