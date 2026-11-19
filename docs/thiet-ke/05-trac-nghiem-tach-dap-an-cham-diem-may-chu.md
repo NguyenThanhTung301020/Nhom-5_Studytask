@@ -15,18 +15,23 @@ Việc 7 của kế hoạch tuần 6 (lập trình V3) do Trương Thanh Vui th�
 | Firestore Security Rules | Hàm `guard_quizzes()` ở máy chủ: đề mới chỉ ở `draft`; `draft → active → closed`, một chiều; sau `draft` chỉ đổi được `status`; chỉ xóa đề `draft` (đồng thời xóa khóa); không đổi môn; giáo viên chỉ ghi đề môn mình dạy; người không có quyền chỉ được gửi lại đúng bản họ thấy (nên trình duyệt tải rồi ghi ngược vẫn chạy); mở đề cần mỗi câu có đáp án đúng (câu một lựa chọn: đúng một đáp án) |
 | Điểm vào Bảng điểm | Máy chủ ghi `quizResults` (nguồn chính thức) và **đồng thời** ghi một sự kiện `quiz` vào `activities/{uid}` để Bảng điểm và Báo cáo lớp tiếp tục chạy. Giao diện không còn ghi điểm trắc nghiệm. `activity_write_ok()` **chặn chủ tài khoản tự thêm sự kiện `quiz`** (máy chủ ghi sự kiện này bằng `doc_put()`, không đi qua hàm kiểm tra nên luồng chấm điểm không bị ảnh hưởng; góp ý review PR40). Việc 8 (V4) còn lại: chuyển hai màn hình sang đọc `quizResults` |
 
-**Quyết định đã cài đặt cho 3 câu còn mở ở mục 8** (đề xuất của người lập trình, cần nhóm xác nhận ở việc 3):
+**Quyết định đã chốt cho các câu còn mở ở mục 8** (nhóm thống nhất ngày 16/11/2026):
+
+*Trả lời 3 câu hỏi mở của mục 8:*
 
 1. **Hạ tầng:** API Python của máy chủ riêng, không dùng Worker hay Cloud Function.
-2. **Chế độ offline/demo:** tắt nộp bài trắc nghiệm (nút bị khóa kèm thông báo), vì không có máy chủ chấm.
+2. **Chế độ offline/demo:** tắt nộp bài trắc nghiệm (nút bị khóa kèm thông báo), vì không có máy chủ chấm. Dữ liệu mẫu `SAMPLE_QUIZZES` không còn cờ `correct`, nên ở chế độ offline giáo viên mở đề mẫu sẽ không thấy đáp án nào được đánh dấu đúng.
 3. **Điểm cũ không đối chiếu được:** di trú một lần khi máy chủ khởi động (có sao lưu `studytask.db.bak-pre-quiz-v3`): lấy sự kiện mới nhất từ `activities` và bài trong `userData.submissions`, đặt `migrated: true`, **không chấm lại**; sinh viên đã có điểm cũ không nộp lại được.
+
+*Quyết định bổ sung khi lập trình:*
+
 4. **Đáp án sau khi nộp:** chỉ trả điểm và số câu đúng; giao diện không hiển thị đáp án đúng (kể cả khi đề đã đóng; xem đáp án chi tiết là việc riêng).
 5. **Hạn làm bài:** `dueDate` hết hiệu lực vào cuối ngày đó theo giờ Việt Nam (UTC+7); đề không có hạn hợp lệ thì không giới hạn.
 6. **Đề đang mở bất biến:** kể cả `dueDate` và mô tả; muốn sửa phải tạo đề mới.
 
 **Kiểm thử:** `tests/server/test_quiz_v3.py` (chạy trong CI) chuyển các ca RULE-01…18 và API-01…12 sang kiểm thử máy chủ, thêm ca di trú. Chưa có ca cho API-13 (token Emulator) vì không còn Firebase.
 
-**Chưa làm:** hạ cờ `correct` ở dữ liệu mẫu `utils/constants.js` (chỉ dùng ở chế độ offline); cập nhật `docs/phan-tich/03` và các mục 4, 5.1, 7 của tài liệu này theo máy chủ riêng (nội dung vẫn mô tả Firestore); thử trên web thật.
+**Chưa làm:** cập nhật `docs/phan-tich/03` và các mục 4, 5.1, 7 của tài liệu này theo máy chủ riêng (nội dung vẫn mô tả Firestore); thử trên web thật; sửa giao diện (`Quiz.js:531`, `Subjects.js:578`) đang so `new Date(quiz.dueDate) < new Date()` (tính theo UTC, báo hết hạn từ 7 giờ sáng ngày hạn) cho khớp máy chủ (hết hạn cuối ngày UTC+7); đây là việc riêng, không thuộc việc 8.
 
 [D06]: 06-chuyen-firebase-sang-may-chu-rieng.md
 
@@ -50,7 +55,7 @@ Thiết kế cách lưu đề không chứa đáp án đúng trong dữ liệu s
 
 Tài liệu này chỉ thiết kế mô hình dữ liệu, quyền truy cập, luồng máy chủ, kiểm thử và chuyển đổi dữ liệu. Chưa triển khai mã, chưa thay đổi Firestore Security Rules, chưa deploy và chưa thao tác trên project đang vận hành.
 
-**Ngoài phạm vi:** giới hạn thời gian làm bài; thiết kế chế độ offline/demo; quy trình nhập/sửa điểm thủ công trong `sharedData.grades`; cách xem đáp án đúng sau khi đề đóng; các loại hoạt động khác lưu trong `activities`. Riêng chế độ offline/demo, nhóm cần quyết định có tắt Trắc nghiệm hay không; tài liệu này không thiết kế cách chấm cho chế độ đó. Thứ tự ưu tiên điểm sửa tay so với điểm máy chủ trong Bảng điểm vẫn được giữ như quy định ở mục 3.4.
+**Ngoài phạm vi:** giới hạn thời gian làm bài; thiết kế chế độ offline/demo; quy trình nhập/sửa điểm thủ công trong `sharedData.grades`; cách xem đáp án đúng sau khi đề đóng; các loại hoạt động khác lưu trong `activities`. Riêng chế độ offline/demo, nhóm đã chốt tắt nộp bài trắc nghiệm (xem mục 0); tài liệu này không thiết kế cách chấm cho chế độ đó. Thứ tự ưu tiên điểm sửa tay so với điểm máy chủ trong Bảng điểm vẫn được giữ như quy định ở mục 3.4.
 
 ## 2. Hiện trạng và vấn đề
 
@@ -232,14 +237,14 @@ Khi triển khai cần bảo đảm các truy vấn của ứng dụng tương t
 | Ghi Firestore | Admin SDK. | Firestore REST API; thông tin xác thực service account phải lưu trong secret, không đưa vào mã nguồn. |
 | Công việc bổ sung | Ít hơn. | Cấu hình `ALLOWED_ORIGIN`, kiểm tra token, xử lý token truy cập Firestore và giới hạn tần suất. |
 
-Chấm điểm là việc máy khách không thể làm an toàn, phù hợp nguyên tắc ở mục 5 [Thiết kế 04](./04-thu-cloudflare-worker-dat-lai-mat-khau.md). **Đề xuất để nhóm xem xét:** dùng Cloudflare Worker vì đã có bản thử triển khai và chưa cần dựa vào Blaze. Đây chưa phải quyết định đã được nhóm duyệt; cần chốt cùng phương án máy chủ ở việc 3 tuần 5 trước khi lập trình. Nếu chọn Cloud Function, thay phần xác thực và truy cập Firestore theo `onCall`/Admin SDK, còn chính sách dữ liệu và ca kiểm thử giữ nguyên.
+Chấm điểm là việc máy khách không thể làm an toàn, phù hợp nguyên tắc ở mục 5 [Thiết kế 04](./04-thu-cloudflare-worker-dat-lai-mat-khau.md). Đã chốt dùng API Python trên máy chủ riêng, không dùng Worker hay Cloud Function (xem mục 0). Bảng trên giữ lại để thấy các phương án cân nhắc.
 
 ### 5.2. Quy trình nộp và chấm
 
 1. Người dùng đăng nhập Firebase; máy khách lấy ID token hiện hành.
 2. Máy khách gửi `POST` đến endpoint chấm với `{ quizId, answers }` và token trong `Authorization: Bearer ...`. Không nhận `score`, `correct`, `total`, UID hoặc `subjectId` từ máy khách làm dữ liệu đáng tin.
 3. Máy chủ xác minh token và lấy UID từ danh tính đã xác thực; từ chối token thiếu/sai/hết hạn hoặc sai project.
-4. Máy chủ đọc hồ sơ `user/{uid}` và xác nhận vai trò là sinh viên, sinh viên thuộc môn của đề; đọc `quizzes/{quizId}` và xác nhận đề đang `active` và chưa quá `dueDate`. Vì `dueDate` hiện lưu dạng ngày, cần thống nhất múi giờ và thời điểm kết thúc ngày hạn trước khi lập trình.
+4. Máy chủ đọc hồ sơ `user/{uid}` và xác nhận vai trò là sinh viên, sinh viên thuộc môn của đề; đọc `quizzes/{quizId}` và xác nhận đề đang `active` và chưa quá `dueDate`. Đã chốt `dueDate` hết hạn vào cuối ngày đó theo giờ Việt Nam (UTC+7) (xem mục 0; ý 5).
 5. Máy chủ đọc `quizKeys/{quizId}`, xác nhận khóa cùng môn với đề, rồi chấm từng câu. Giao diện cho phép nộp dù còn câu bỏ trống; câu không trả lời được tính sai kể cả khi tập đáp án đúng rỗng. Câu đơn hiện gửi đáp án dưới dạng chuỗi, câu nhiều lựa chọn gửi mảng; máy chủ chuẩn hóa chuỗi thành mảng một phần tử, giá trị thiếu thành mảng rỗng, rồi chuẩn hóa/sắp xếp ID để so sánh chính xác với tập đáp án đúng. Điểm thang 10 được tính theo công thức hiện tại `Math.round((correct / total) * 10 * 10) / 10`. Dùng thuật toán hiện tại trong [pages/Quiz.js:209,222–229](../../pages/Quiz.js#L209) làm căn cứ, tách thành hàm thuần để kiểm thử.
 6. Máy chủ tạo `quizResults/{quizId}_{uid}` với UID, môn, câu trả lời, điểm và thời điểm do máy chủ đặt. Việc tạo phải có tính nguyên tử và thất bại nếu tài liệu đã tồn tại để chặn nộp lần hai; không được ghi đè kết quả cũ.
 7. Máy chủ trả điểm và số câu đúng/tổng câu, không trả `correctAnswers`. Bảng điểm và Báo cáo lớp tải kết quả từ `quizResults`.
@@ -301,17 +306,17 @@ Các ca dưới đây sẽ được viết và chạy trong Emulator/kiểm th�
 
 | Rủi ro | Giảm thiểu / việc cần làm |
 |---|---|
-| Lộ khóa service account của Worker | Chỉ cấp quyền Firestore tối thiểu cần dùng; lưu trong Cloudflare Secret; luân chuyển khóa khi nghi bị lộ; tuyệt đối không ghi vào repo hoặc log. |
-| Xác minh ID token sai hoặc bỏ qua kiểm tra môn học/trạng thái đề | Kiểm thử token thiếu/sai/hết hạn, vai trò, môn học và trạng thái đề; từ chối mặc định nếu không xác minh được. |
-| Máy chủ bị gọi quá mức | Đặt `ALLOWED_ORIGIN`, giới hạn tần suất và kích thước payload; CORS không thay thế xác thực. |
+| Lộ khóa service account của Worker | **Không còn áp dụng (máy chủ riêng).** |
+| Xác minh phiên đăng nhập/cookie sai hoặc bỏ qua kiểm tra môn học/trạng thái đề | Kiểm thử phiên thiếu/sai/hết hạn, vai trò, môn học và trạng thái đề; từ chối mặc định nếu không xác minh được. |
+| Máy chủ bị gọi quá mức | Giới hạn tần suất và kích thước payload (phần `ALLOWED_ORIGIN` của Worker không còn áp dụng). |
 | Đáp án bị lộ qua collection đề hoặc phản hồi API | Kiểm tra payload lưu đề không có `correct`; sinh viên không đọc được `quizKeys`; API không trả khóa; bổ sung kiểm thử hồi quy. |
 | Sinh viên chia sẻ đáp án nhận được sau khi nộp | Chỉ trả điểm/số câu đúng ngay; không trả đáp án đúng trước khi đề đóng. |
-| Chế độ offline/demo vẫn chấm trên trình duyệt | Quyết định trước khi lập trình: tắt Trắc nghiệm trong chế độ offline/demo hoặc ghi rõ đây chỉ là dữ liệu thử, không phải điểm chính thức. |
+| Chế độ offline/demo vẫn chấm trên trình duyệt | Đã xử lý: đã tắt nộp bài trắc nghiệm ở chế độ offline/demo. |
 | Điểm cũ không thể xác minh | Gắn `migrated: true`, lưu bản sao và không tuyên bố các điểm này đã được chấm lại bởi máy chủ. |
 | Bảng điểm hoặc Báo cáo lớp vẫn đọc `activities` hoặc hai nguồn điểm lệch nhau | Chuyển cả hai màn hình sang `quizResults`; xác nhận dữ liệu và giao diện trước khi bỏ nguồn cũ, đồng thời giữ ưu tiên điểm sửa tay trong Bảng điểm. |
-| Nhánh Emulator chấp nhận token không ký lọt lên production | Tách cấu hình theo môi trường, kiểm tra cấu hình triển khai và có ca xác nhận production không bật nhánh Emulator. |
-| Độ trễ máy chủ ảnh hưởng thao tác nộp | Đo thời gian phản hồi trên Emulator và môi trường thử; báo trạng thái đang gửi, tránh cho người dùng gửi lặp. Tài liệu 04 đo thao tác Worker đặt lại mật khẩu khoảng 1,2–1,4 giây; đây không phải số đo của endpoint chấm bài. |
-| Ngày hạn có thể bị hiểu khác múi giờ | Chốt cách diễn giải `dueDate` dạng ngày (múi giờ và thời điểm hết hạn) và dùng cùng quy tắc ở giao diện lẫn máy chủ. |
-| Form hiện tạo đề ở trạng thái `active` mặc định | Tuần 6 phải đổi form tạo đề sang `draft`; chỉ cho kích hoạt sau khi đề và khóa đáp án đã được lưu thành công. |
+| Nhánh Emulator chấp nhận token không ký lọt lên production | **Không còn áp dụng (máy chủ riêng, không còn Firebase Emulator).** |
+| Độ trễ máy chủ ảnh hưởng thao tác nộp | Đo thời gian phản hồi trên máy thử; báo trạng thái đang gửi, tránh cho người dùng gửi lặp. Tài liệu 04 đo thao tác Worker đặt lại mật khẩu khoảng 1,2–1,4 giây; đây không phải số đo của endpoint chấm bài. |
+| Ngày hạn có thể bị hiểu khác múi giờ | Máy chủ: hết hạn vào cuối ngày theo UTC+7. Giao diện còn so theo UTC nên báo hết hạn từ 7 giờ sáng ngày hạn (xem “Chưa làm” ở mục 0). |
+| Form hiện tạo đề ở trạng thái `active` mặc định | Đã xử lý: form tạo đề đã mặc định `draft`; chỉ cho kích hoạt sau khi đề và khóa đáp án đã được lưu thành công. |
 
-**Cần nhóm/GVHD thống nhất trước tuần 6:** phương án Worker hay Cloud Function; có tắt Trắc nghiệm ở chế độ offline/demo không; chính sách giữ hay xử lý lại các điểm cũ không có đủ dữ liệu đối chiếu. Tài liệu này đề xuất Worker và không trả đáp án chi tiết ngay sau nộp, nhưng chưa thay thế quyết định chính thức của nhóm.
+**Đã chốt:** xem mục 0 (nhóm thống nhất ngày 16/11/2026): API Python trên máy chủ riêng; tắt nộp bài ở chế độ offline; điểm cũ di trú, gắn `migrated: true`, không chấm lại.
