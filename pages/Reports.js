@@ -4,6 +4,7 @@ import { formatDate } from '../utils/helpers.js'
 import GradeBook from '../components/GradeBook.js'
 import { studentInScope, offeringTitle } from '../utils/scope.js'
 import UserAvatar from '../components/UserAvatar.js'
+import { quizScoresErrorText } from '../utils/quizScores.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -30,10 +31,14 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
   const [subId,  setSubId]  = useState(subjects[0]?.id ?? null)
   const [tab,    setTab]    = useState('students')
   const [view,   setView]   = useState('theodoi')   // 'theodoi' | 'bangdiem'
+  const [loadError, setLoadError] = useState(null)  // không tải được điểm chính thức (quizResults)
 
   useEffect(() => {
     let alive = true
-    Promise.resolve(fetchActivities ? fetchActivities() : []).then(list => { if (alive) setActivities(list || []) })
+    setLoadError(null)
+    Promise.resolve(fetchActivities ? fetchActivities() : []).then(
+      list => { if (alive) setActivities(list || []) },
+      e => { if (alive) setLoadError(e?.message || String(e)) })
     return () => { alive = false }
   }, [fetchActivities])
 
@@ -128,6 +133,8 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
           h('i', { className: 'bi bi-folder-x fs-1 d-block mb-3 opacity-25' }),
           h('p', null, 'Bạn chưa được phân công môn học nào để theo dõi.')
         )
+      : loadError
+        ? h('div', { className: 'alert alert-danger small' }, h('i', { className: 'bi bi-exclamation-octagon me-1' }), quizScoresErrorText(loadError))
       : activities === null
         ? h('div', { className: 'text-center py-5' },
             h('div', { className: 'spinner-border text-primary mb-2' }),

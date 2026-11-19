@@ -1,0 +1,30 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm toàn bộ môn học
+Lập trình Web
+Cơ sở dữ liệu
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+1
+Sĩ số
+sinh viên trong môn
+0%
+Đã xem tài liệu
+0/1 sinh viên
+0%
+Đã làm bài tập
+0/1 sinh viên
+100%
+Đã làm trắc nghiệm
+1/1 sinh viên
+Theo sinh viên
+Điểm trắc nghiệm
+Lượt xem tài liệu
+Bài tập
+Q201 – Kiểm tra SQL
+1/1 đã làm (100%)
+Điểm TB: 8.0
+VN
+Hoàng Văn Năm
+2/3 câu
+05/11/2026
+8

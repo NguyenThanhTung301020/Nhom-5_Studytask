@@ -1,0 +1,27 @@
+Quản lý lớp học
+Theo dõi hoạt động & chấm điểm các môn bạn phụ trách
+Cơ sở dữ liệu
+Theo dõi hoạt động
+Bảng điểm & Chấm điểm
+1
+Sĩ số
+sinh viên trong môn
+0%
+Đã xem tài liệu
+0/1 sinh viên
+0%
+Đã làm bài tập
+0/1 sinh viên
+0%
+Đã làm trắc nghiệm
+0/1 sinh viên
+Theo sinh viên
+Điểm trắc nghiệm
+Lượt xem tài liệu
+Bài tập
+SINH VIÊN	TÀI LIỆU ĐÃ XEM	BÀI TẬP ĐÃ LÀM	TRẮC NGHIỆM	ĐIỂM TB	HOẠT ĐỘNG GẦN NHẤT
+
+VN
+Hoàng Văn Năm
+sv05
+	0	0	0	—	Chưa hoạt động

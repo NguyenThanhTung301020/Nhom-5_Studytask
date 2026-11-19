@@ -1,0 +1,9 @@
+{
+ "http": 403,
+ "body": {
+  "error": {
+   "code": "permission-denied",
+   "message": "Chỉ Admin và giáo viên xem điểm trắc nghiệm của lớp."
+  }
+ }
+}

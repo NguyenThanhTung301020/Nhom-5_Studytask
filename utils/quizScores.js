@@ -44,3 +44,29 @@ export function applyQuizResults(activities, results) {
   }
   return out
 }
+
+/** Máy chủ bản cũ (trước tuần 7) chưa có GET /api/quiz/results nên trả 404 `not-found`. */
+export const isMissingEndpoint = (e) => e?.code === 'not-found' || e?.code === 'http-404'
+
+/** Thông báo chung của Bảng điểm và Báo cáo lớp khi không tải được điểm chính thức. */
+export const quizScoresErrorText = (message) =>
+  `Không tải được điểm trắc nghiệm chính thức (quizResults) từ máy chủ${message ? ': ' + message : ''}. ` +
+  'Điểm không được hiển thị để tránh dùng số liệu từ nhật ký hoạt động. Hãy tải lại trang sau ít phút.'
+
+/**
+ * Nhật ký hoạt động kèm điểm trắc nghiệm chính thức: nguồn dữ liệu chung của Bảng điểm và Báo cáo lớp.
+ * - Máy chủ bản cũ chưa có endpoint (404): dùng lại sự kiện `quiz` trong nhật ký như trước, để không mất điểm hiển thị.
+ * - Lỗi khác (500, mất mạng, hết phiên…): ném lỗi để màn hình báo lỗi. Trước đây mọi lỗi đều quay về nhật ký nên
+ *   màn hình lặng lẽ hiện điểm cũ trong nhật ký (sai với điểm chính thức) mà người xem không biết.
+ */
+export async function loadOfficialActivities(loadActivities, loadResults) {
+  const acts = await loadActivities()
+  let results
+  try { results = await loadResults() }
+  catch (e) {
+    if (!isMissingEndpoint(e)) throw e
+    console.warn('[Server] chưa có GET /api/quiz/results – dùng nhật ký hoạt động:', e.message)
+    return acts
+  }
+  return applyQuizResults(acts, results)
+}
