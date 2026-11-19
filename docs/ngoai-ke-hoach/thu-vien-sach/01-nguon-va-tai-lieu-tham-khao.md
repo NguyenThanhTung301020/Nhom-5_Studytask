@@ -3,7 +3,7 @@
 
 ## 1. Nguồn
 
-**Internet Archive (https://archive.org)** là nguồn của toàn bộ sách có mã mục (62 sách, thuộc 46 mục). Nhóm không biên soạn, không chỉnh sửa nội dung sách; chỉ lưu bản PDF đã tải về trên máy chủ của nhóm để sinh viên đã đăng nhập đọc và tải trong hệ thống học tập.
+**Internet Archive (https://archive.org)** là nguồn của **cả 70 sách**: 62 sách có mã mục (thuộc 46 mục) và 8 sách tải về bằng tay nên không có mã mục (Trương Thanh Vui xác nhận ngày 19/11/2026). Nhóm không biên soạn, không chỉnh sửa nội dung sách; chỉ lưu bản PDF đã tải về trên máy chủ của nhóm để sinh viên đã đăng nhập đọc và tải trong hệ thống học tập.
 
 **Trang tìm kiếm dùng để tìm sách (do Trương Thanh Vui cung cấp):**
 https://archive.org/search?tab=texts&query=T%C3%A1c+ph%E1%BA%A9m+v%C4%83n+h%E1%BB%8Dc&page=3
@@ -33,7 +33,7 @@ https://archive.org/search?tab=texts&query=T%C3%A1c+ph%E1%BA%A9m+v%C4%83n+h%E1%B
 - Trang nguồn không ghi giấy phép **không có nghĩa là được dùng tự do**. Nhiều sách trong danh sách còn trong thời hạn bản quyền (ví dụ sách dịch, sách xuất bản gần đây, tạp chí). Việc một sách có trên Archive.org cũng không bảo đảm người đăng có quyền phân phối lại.
 - Vì vậy hệ thống **không đặt PDF ở địa chỉ công khai**: chỉ tải được qua `/api/files/library/<mã>.pdf` khi đã đăng nhập; trang Thư viện ghi rõ nguồn, giấy phép, và câu "chỉ dùng học tập, quyền tác giả thuộc tác giả và nhà xuất bản". PDF **không đưa vào git**; trong git chỉ có danh mục (tên, nguồn, giấy phép, SHA-256).
 - Giấy phép NC (phi thương mại) phù hợp với việc dùng học tập trong trường; ND (không phái sinh) nghĩa là không chỉnh sửa nội dung: nhóm không sửa sách, chỉ lấy trang 1 làm ảnh bìa hiển thị.
-- **8 sách trong thư mục "sách tự down"** (Đắc nhân tâm, Giai thoại và sấm kí Trạng Trình, Mặt trận miền Tây vẫn yên tĩnh, Tarzan of the Apes, Thanh kiếm và lá chắn tập 1 đến 4) **không có mã mục Archive tương ứng** trong thư mục nên ghi nguồn là "Người dùng cung cấp (nguồn gốc chưa xác định)". `[Thanh Vui xác nhận nguồn tải cụ thể, nếu có, để bổ sung vào danh mục]`.
+- **8 sách trong thư mục "sách tự down"** (Đắc nhân tâm, Giai thoại và sấm kí Trạng Trình, Mặt trận miền Tây vẫn yên tĩnh, Tarzan of the Apes, Thanh kiếm và lá chắn tập 1 đến 4) cũng tải từ Archive.org nhưng bằng tay nên **không có mã mục** và chưa có giấy phép đọc từ trang nguồn. Trong danh mục ghi nguồn "Internet Archive (tải thủ công, không có mã mục)", không có liên kết tới trang chi tiết. `[Thanh Vui bổ sung đường dẫn trang chi tiết của từng sách nếu còn nhớ, để người đọc kiểm chứng được]`.
 - Khuyến nghị trước khi mở cho người dùng bên ngoài trường hoặc công bố công khai: rà giấy phép từng sách, gỡ sách chưa rõ quyền (lệnh gỡ: `scripts/import_library.py --remove`), và xin ý kiến giảng viên hướng dẫn.
 
 ## 4. Danh sách 70 sách
@@ -98,14 +98,14 @@ Cột "Mã mục" là mã của mục trên Archive.org; một mục có thể c
 | 54 | Trại súc vật | George Orwell | Văn học nước ngoài | [phineas-pta-ebooks-collection](https://archive.org/details/phineas-pta-ebooks-collection) | Phạm vi công cộng |
 | 55 | Quãng đời sau lưng | Trần Đức Phổ | Văn học VN | [quang-doi-sau-lung](https://archive.org/details/quang-doi-sau-lung) | CC BY-NC-ND 4.0 |
 | 56 | Sơn lâm êm đềm | Lev Tolstoy | Văn học nước ngoài | [son-lam-em-dem-leon-tolstoi](https://archive.org/details/son-lam-em-dem-leon-tolstoi) | CC BY-NC-ND 4.0 |
-| 57 | Đắc nhân tâm | Dale Carnegie | Kỹ năng | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 58 | Giai thoại và sấm kí Trạng Trình | Phạm Đan Quế | Văn học VN | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 59 | Mặt trận miền Tây vẫn yên tĩnh | Erich Maria Remarque | Văn học nước ngoài | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 60 | Tarzan of the Apes | Edgar Rice Burroughs | Văn học nước ngoài | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 61 | Thanh kiếm và lá chắn – Tập 1 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 62 | Thanh kiếm và lá chắn – Tập 2 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 63 | Thanh kiếm và lá chắn – Tập 3 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
-| 64 | Thanh kiếm và lá chắn – Tập 4 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Người dùng cung cấp (không có mã Archive) | Chưa ghi |
+| 57 | Đắc nhân tâm | Dale Carnegie | Kỹ năng | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 58 | Giai thoại và sấm kí Trạng Trình | Phạm Đan Quế | Văn học VN | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 59 | Mặt trận miền Tây vẫn yên tĩnh | Erich Maria Remarque | Văn học nước ngoài | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 60 | Tarzan of the Apes | Edgar Rice Burroughs | Văn học nước ngoài | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 61 | Thanh kiếm và lá chắn – Tập 1 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 62 | Thanh kiếm và lá chắn – Tập 2 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 63 | Thanh kiếm và lá chắn – Tập 3 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
+| 64 | Thanh kiếm và lá chắn – Tập 4 | Vađim Kôgiepnhicốp | Văn học nước ngoài | Internet Archive, tải thủ công (không có mã mục) | Chưa ghi |
 | 65 | 60 bài luận tiếng Anh thông dụng | Trần Văn Hải | Ngôn ngữ | [taisachmoi.com-60-bai-luan-tieng-anh-thong-dung](https://archive.org/details/taisachmoi.com-60-bai-luan-tieng-anh-thong-dung) | Chưa ghi |
 | 66 | Tổng tập văn học Việt Nam – Tập 19 | Trung tâm Khoa học Xã hội và Nhân văn Quốc gia | Văn học VN | [tong-tap-van-hoc-viet-nam-19-ntg-2000](https://archive.org/details/tong-tap-van-hoc-viet-nam-19-ntg-2000) | CC BY-NC-ND 4.0 |
 | 67 | Tổng tập văn học Việt Nam – Tập 20 | Trung tâm Khoa học Xã hội và Nhân văn Quốc gia | Văn học VN | [tong-tap-van-hoc-viet-nam-20-ntg-2000](https://archive.org/details/tong-tap-van-hoc-viet-nam-20-ntg-2000) | CC BY-NC-ND 4.0 |

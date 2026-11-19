@@ -797,7 +797,7 @@ describe('Kho sách điện tử (Thư viện)', () => {
     assert.equal(formatSize(0), '0 B')
     assert.equal(bookFileUrl('hong-lau-mong'), '/api/files/library/hong-lau-mong.pdf')
     assert.equal(sourceLine({ sourceName: 'Internet Archive', sourceId: 'HongLauMong_201512' }), 'Internet Archive · HongLauMong_201512')
-    assert.equal(sourceLine({ sourceName: 'Người dùng cung cấp (nguồn gốc chưa xác định)' }), 'Người dùng cung cấp (nguồn gốc chưa xác định)')
+    assert.equal(sourceLine({ sourceName: 'Internet Archive (tải thủ công, không có mã mục)' }), 'Internet Archive (tải thủ công, không có mã mục)')
   })
   test('chỉ mở liên kết nguồn https tới archive.org', () => {
     assert.equal(safeSourceUrl('https://archive.org/details/HongLauMong_201512'), 'https://archive.org/details/HongLauMong_201512')

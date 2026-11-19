@@ -10,7 +10,8 @@ https://archive.org/details/HongLauMong_201512. Script:
   4. ghi danh mục scripts/data/thu-vien-sach.json (đưa vào git, KHÔNG gồm PDF) và <staging>/manifest.json (có đường dẫn tệp nguồn)
      để scripts/render_library_covers.ps1 vẽ bìa và scripts/import_library.py nạp lên máy chủ.
 
-Thư mục "sách tự down" (không có mã Archive.org tương ứng) được ghi nguồn là "người dùng cung cấp", không gắn đường dẫn Archive.
+Thư mục "sách tự down" gồm sách cũng tải từ Archive.org nhưng bằng tay nên không có mã mục (Trương Thanh Vui xác nhận 19/11/2026):
+ghi nguồn là "Internet Archive (tải thủ công, không có mã mục)", không gắn đường dẫn tới trang chi tiết.
 
 Dùng:
   python scripts/prepare_library.py --src E:\\sach --staging du-lieu-thu/library-staging            # có mạng: tải thông tin mục
@@ -24,7 +25,7 @@ META_CACHE = os.path.join(DATA, 'thu-vien-archive-meta.json')
 OVERRIDES = os.path.join(DATA, 'thu-vien-overrides.json')
 CATALOG = os.path.join(DATA, 'thu-vien-sach.json')
 TAG = 'library-v1'
-USER_PROVIDED_DIR = 'sách tự down'          # thư mục người dùng tự tải, không có mã Archive.org
+USER_PROVIDED_DIR = 'sách tự down'          # sách tải thủ công từ Archive.org, không có mã mục
 META_KEYS = ('title', 'creator', 'date', 'language', 'licenseurl', 'rights', 'publisher')
 
 LICENSES = {
@@ -127,7 +128,7 @@ def main():
                 'language': ov.get('language') or ('vi' if (meta.get('language', 'vie') in ('vie', 'vi') or user_provided) else meta.get('language', '')),
                 'series': clean(ov.get('series') or (meta.get('title') if len(pdfs) > 1 and not user_provided else '')),
                 'description': ov.get('description', ''),
-                'sourceName': 'Người dùng cung cấp (nguồn gốc chưa xác định)' if user_provided else 'Internet Archive',
+                'sourceName': 'Internet Archive (tải thủ công, không có mã mục)' if user_provided else 'Internet Archive',
                 'sourceId': '' if user_provided else folder,
                 'sourceUrl': '' if user_provided else 'https://archive.org/details/' + urllib.parse.quote(folder),
                 'license': lic, 'licenseLabel': license_label(lic) if lic else 'Chưa ghi giấy phép trên trang nguồn',
