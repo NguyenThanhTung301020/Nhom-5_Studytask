@@ -1,0 +1,24 @@
+# A6, A7 – Sinh viên sv2610019 (lớp CNTT26-10, học môn 1000–1004) ghi/sửa/xóa nhật ký trên https://sutdytask.io.vn
+# Thời điểm: 2026-11-18 ~14:40 UTC, gọi fetch trong trình duyệt đã đăng nhập sv2610019 (cùng cookie phiên như giao diện)
+# Trước khi thử: 3 sự kiện quiz (Đề A 5 điểm, Đề B 0, Đề C 0) – bản sao: sv2610019-nhat-ky-truoc-khi-thu.json
+
+[Giao diện] Môn học > Triết học Mác - Lênin > Tài liệu > "Xem / Tải về" Giáo trình  -> nhật ký thêm {type: material, subjectId: 1000, refId: 200001}   ĐÚNG
+
+A6a  append homework hợp lệ, môn 1000                       -> 200 {"ok": true}   ĐÚNG (được ghi)
+A6b  append quiz 10 điểm (tự ghi điểm)                       -> 403 permission-denied   ĐÚNG
+A6c  append homework kèm score=10                            -> 403   ĐÚNG
+A6d  append material môn 1019 (không học)                    -> 403   ĐÚNG
+A6e  append material không có subjectId                      -> 403   ĐÚNG
+A6f  append refId dài 101 ký tự                              -> 403   ĐÚNG
+A6g  append type lạ ('grade')                                -> 403   ĐÚNG
+A6h  append vào nhật ký sv2610026 (bạn cùng lớp)              -> 403   ĐÚNG
+
+A7a  PUT sửa điểm các sự kiện quiz lên 10                     -> 403   ĐÚNG
+A7b  PUT bỏ các sự kiện quiz                                  -> 403   ĐÚNG
+A7c  PUT events = []                                          -> 403   ĐÚNG
+A7d  PUT sửa refTitle một sự kiện material cũ                 -> 403   ĐÚNG
+A7e  DELETE /doc/activities/<chính mình>                      -> 403   ĐÚNG
+A7f  DELETE /doc/quizResults/<đề B>_<chính mình>              -> 403   ĐÚNG
+A7g  PUT   /doc/quizResults/<đề B>_<chính mình> score=10      -> 403   ĐÚNG
+
+Sau khi thử: 5 sự kiện; 3 sự kiện quiz giữ nguyên điểm (5, 0, 0); thêm 1 material (giao diện) + 1 homework (A6a).

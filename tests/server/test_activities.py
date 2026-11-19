@@ -256,7 +256,12 @@ try:
     check('Nhật ký có sự kiện kiểu cũ: vẫn thêm được sự kiện mới', sv4.append(sv4.uid, MAT2) == 200)
     ad.put('activities', sv4.uid, {'events': [{**MATERIAL, 'refId': i} for i in range(1999)]})
     check('Sự kiện thứ 2000: được', sv4.append(sv4.uid, MAT2) == 200)
-    check('Sự kiện thứ 2001: bị từ chối', sv4.append(sv4.uid, HOMEWORK) == 403)
+    before = ad.events(sv4.uid)
+    s = sv4.append(sv4.uid, HOMEWORK)
+    evs = ad.events(sv4.uid) or []
+    # P1 (kiểm thử web thật 18/11): trước đây 403 nên hoạt động mới mất lặng lẽ; nay bỏ sự kiện không phải quiz, cũ nhất
+    check('Sự kiện thứ 2001: được, nhật ký vẫn 2000, bỏ sự kiện cũ nhất (P1)',
+          s == 200 and len(evs) == 2000 and evs == before[1:] + [HOMEWORK], (s, len(evs), evs[:1]))
 
     # ── Lỗi 2 V4: chỉ Admin xóa nhật ký ──
     check('Admin sửa thẳng nhật ký: được', ad.put('activities', sv2.uid, {'events': [legacy]}) == 200)
@@ -332,13 +337,49 @@ try:
           len(evs) == 2000 and evs[0] == old_quiz[0] and evs[1] == fill[1] and evs[-2] == fill[-1], (len(evs), evs[:2]))
     check('Nhật ký đầy: giáo viên dạy môn vẫn thấy đủ 2 điểm quiz (Bảng điểm)',
           [(e['refId'], e['score']) for e in gv1.listed_events(sv7.uid) if e.get('type') == 'quiz'] == [(1, 0), (2, 10)])
+
+    # ── P1: nhật ký đầy, sinh viên tự ghi hoạt động mới (xem tài liệu, nộp bài) ──
+    full = ad.events(sv7.uid)                                   # 2000 sự kiện, quiz đề 1 ở đầu, quiz đề 2 ở cuối
+    first_nq = next(i for i, e in enumerate(full) if e.get('type') != 'quiz')
+    new_ev = {**MATERIAL, 'refId': 'moi-khi-day'}
+    check('P1 chuẩn bị: nhật ký sv7 đủ 2000, có quiz ở đầu', len(full) == 2000 and full[0].get('type') == 'quiz' and first_nq == 1)
+    s = sv7.append(sv7.uid, new_ev)
+    evs = ad.events(sv7.uid) or []
+    check('P1 nhật ký đầy: sinh viên xem tài liệu vẫn được ghi (200)', s == 200 and evs[-1] == new_ev, (s, evs[-1:]))
+    check('P1 nhật ký đầy: vẫn 2000, chỉ bỏ đúng sự kiện không phải quiz cũ nhất',
+          len(evs) == 2000 and evs == full[:first_nq] + full[first_nq + 1:] + [new_ev], len(evs))
+    check('P1 nhật ký đầy: hai điểm quiz giữ nguyên',
+          [(e['refId'], e['score']) for e in evs if e.get('type') == 'quiz'] == [(1, 0), (2, 10)])
+    check('P1 nhật ký đầy: giáo viên dạy môn thấy sự kiện mới',
+          (gv1.listed_events(sv7.uid) or [{}])[-1] == new_ev)
+    full = evs
+    check('P1 nhật ký đầy: tự ghi quiz vẫn bị từ chối',
+          sv7.append(sv7.uid, {**QUIZ, 'refId': 'q-tu-ghi'}) == 403 and ad.events(sv7.uid) == full)
+    check('P1 nhật ký đầy: sự kiện kèm điểm vẫn bị từ chối',
+          sv7.append(sv7.uid, {**SCORED, 'refId': 'diem-gia'}) == 403 and ad.events(sv7.uid) == full)
+    check('P1 nhật ký đầy: môn không học vẫn bị từ chối',
+          sv7.append(sv7.uid, {**MATERIAL, 'subjectId': 2, 'refId': 'mon-2'}) == 403 and ad.events(sv7.uid) == full)
+    x = {**MATERIAL, 'refId': 'gia-cat'}
+    nq = [i for i, e in enumerate(full) if e.get('type') != 'quiz']
+    check('P1 PUT tự chọn bỏ sự kiện quiz thay vì sự kiện cũ nhất: bị từ chối',
+          sv7.put('activities', sv7.uid, {'events': full[1:] + [x]}) == 403 and ad.events(sv7.uid) == full)
+    check('P1 PUT tự chọn bỏ sự kiện mới nhất thay vì cũ nhất: bị từ chối',
+          sv7.put('activities', sv7.uid, {'events': full[:nq[-1]] + full[nq[-1] + 1:] + [x]}) == 403 and ad.events(sv7.uid) == full)
+    check('P1 PUT bỏ hai sự kiện để thêm một: bị từ chối',
+          sv7.put('activities', sv7.uid, {'events': full[:nq[0]] + full[nq[0] + 2:] + [x]}) == 403 and ad.events(sv7.uid) == full)
+    check('P1 PUT đúng bản cắt của máy chủ: được (giống append)',
+          sv7.put('activities', sv7.uid, {'events': full[:nq[0]] + full[nq[0] + 1:] + [x]}) == 200
+          and ad.events(sv7.uid)[-1] == x and len(ad.events(sv7.uid)) == 2000)
+
     all_quiz = [{**QUIZ, 'refId': f'q{i}', 'at': '2026-11-01'} for i in range(2000)]
     ad.put('activities', sv1.uid, {'events': all_quiz})
     s, j = sv1.req('POST', '/api/quiz/2/submit', {'answers': {'1': 'b', '2': ['b']}})
     evs = ad.events(sv1.uid) or []
     check('Nhật ký toàn sự kiện quiz: không bỏ điểm nào, sự kiện mới vẫn được thêm',
           s == 200 and len(evs) == 2001 and evs[:2000] == all_quiz and evs[-1]['refId'] == 2, (s, len(evs)))
-    check('Nhật ký vượt giới hạn: sinh viên không tự thêm được sự kiện', sv1.append(sv1.uid, {**MAT2, 'refId': 'vuot'}) == 403)
+    before = ad.events(sv1.uid)
+    check('Nhật ký toàn quiz, vượt giới hạn: sinh viên không tự thêm được sự kiện (không có gì để bỏ)',
+          sv1.append(sv1.uid, {**MAT2, 'refId': 'vuot'}) == 403 and ad.events(sv1.uid) == before)
 finally:
     srv.terminate()
     try:

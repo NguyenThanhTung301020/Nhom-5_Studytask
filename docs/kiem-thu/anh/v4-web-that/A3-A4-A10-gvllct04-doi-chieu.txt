@@ -1,0 +1,18 @@
+# A3, A4, A10 – Giáo viên gvllct04 (dạy môn 1000 Triết học Mác - Lênin ở CNTT26-06 và CNTT26-10), https://sutdytask.io.vn
+# Thời điểm: 2026-11-18 ~14:58 UTC; sv2610019 đang ở trạng thái nhật ký đầy (2000 sự kiện) sau ca A8
+
+## Giao diện: Quản lý lớp học > Triết học Mác - Lênin · HK1 2026-2027 > Theo dõi hoạt động (bản chữ của trang)
+Sĩ số 54 sinh viên trong môn
+Đã xem tài liệu 2% (1/54) · Đã làm bài tập 2% (1/54) · Đã làm trắc nghiệm 2% (1/54)
+SINH VIÊN               TÀI LIỆU ĐÃ XEM  BÀI TẬP ĐÃ LÀM  TRẮC NGHIỆM  ĐIỂM TB  HOẠT ĐỘNG GẦN NHẤT
+Bùi Anh Cường sv2610019      1996             1              3         1.7     18/11/2026
+53 sinh viên còn lại           0                0              0          —      Chưa hoạt động
+
+## Máy chủ (API đọc bằng chính phiên gvllct04)
+GET /api/doc/activities               -> 200, 1 tài liệu (sv2610019, 2000 sự kiện, đều môn 1000)
+GET /api/doc/activities/<sv2610019>   -> 200, material 1996, homework 1, quiz 3 (Đề A 5, Đề B 0, Đề C 0), ngày gần nhất 2026-11-18
+GET /api/quiz/results                  -> 200, 3 kết quả của sv2610019: 5, 0, 0 (môn 1000)
+GET /api/doc/user: sinh viên lớp CNTT26-06 (28) + CNTT26-10 (26) học môn 1000 = 54
+
+## Đối chiếu
+Sĩ số 54 = 54 ✔ · Tài liệu 1996 = 1996 ✔ · Bài tập 1 = 1 ✔ · Trắc nghiệm 3 = 3 ✔ · Điểm TB 1.7 = (5+0+0)/3 = 1.67 ✔ · Ngày 18/11/2026 ✔

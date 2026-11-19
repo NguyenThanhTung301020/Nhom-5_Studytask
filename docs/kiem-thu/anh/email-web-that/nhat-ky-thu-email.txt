@@ -1,0 +1,36 @@
+# Phần B – nhật ký thử email trên https://sutdytask.io.vn, tài khoản sv2610019, hộp thư Gmail cá nhân của người kiểm thử (che: ng***@gmail.com)
+# Giờ UTC (giờ Việt Nam = UTC+7)
+
+~14:50  [Giao diện] Hồ sơ > Email cá nhân, nhập Gmail + mật khẩu KHÔNG đúng      -> POST /api/account/email 401 auth/wrong-password, báo "Mật khẩu hiện tại không đúng." (ảnh B1)
+~14:52  [Giao diện] nhập lại đúng mật khẩu hiện tại, bấm Gửi mã xác nhận         -> thư mã 6 số tới Gmail; người kiểm thử nhập mã, bấm Xác nhận
+        -> "Đã liên kết email cá nhân.", hiện ng••••••@gmail.com, nhãn Đã xác minh (ảnh B4)
+14:55:40 GET /api/account -> recoveryEmail = ng***@gmail.com (khớp giao diện), mailReady = true
+14:55:40 POST /api/account/email/verify code=000000 (sau khi đã xác minh, không còn mã chờ) -> 400 bad-code "Mã không đúng hoặc đã hết hạn."
+14:56:15 POST /api/auth/forgot identifier=sv2610019            -> 200 {"ok": true}  (mã đặt lại #1, dùng cho ca HẾT HẠN, hạn tới 15:11:15)
+14:56:15 POST /api/auth/forgot identifier=<không tồn tại>      -> 200 {"ok": true}  (trả lời giống hệt, không lộ tài khoản có tồn tại hay không)
+~15:08  [Giao diện, đã đăng xuất] Đăng nhập > Quên mật khẩu? > sv2610019 > Gửi mã     -> "Nếu tài khoản đã liên kết email cá nhân, một mã 6 số đã được gửi..." (ảnh B6)
+        Máy chủ tạo mã #2 và THAY mã #1 (bảng codes giữ 1 mã cho mỗi tài khoản và mục đích), nên ca hết hạn dùng mã #1 không còn làm được -> làm lại bằng mã #3
+~15:10  [Giao diện] nhập mã #2 từ thư mới nhất + mật khẩu mới (người kiểm thử tự đặt) > Đặt lại mật khẩu
+        -> "Đã đặt lại mật khẩu. Hãy đăng nhập bằng mật khẩu mới." (ảnh B8)
+~15:14  [Giao diện] đăng nhập sv2610019 bằng mật khẩu mới -> vào được, vai trò Sinh viên (ảnh B9)
+15:14:46 GET /api/auth/me -> sv2610019 ; GET /api/account -> recoveryEmail ng***@gmail.com (vẫn liên kết sau khi đặt lại)
+15:22   [Giao diện] Quên mật khẩu > Gửi mã -> mã #3 (thư lúc 22:22 giờ VN, người gửi StudyTask <tr***@gmail.com>, ảnh B7)
+15:23   [Giao diện] nhập mã #2 đã dùng (667858) + mật khẩu bất kỳ -> "Mã không đúng hoặc đã hết hạn." (ảnh B10-ma-da-dung)
+15:24   [Giao diện] nhập 000000 -> "Mã không đúng hoặc đã hết hạn." (ảnh B10-ma-sai)
+15:43   [Giao diện] trang đăng nhập đã về bước 1; bấm Gửi mã -> "Bạn yêu cầu quá nhiều lần. Thử lại sau ít phút." (429, giới hạn 6 thư/giờ/IP; ảnh B10-gioi-han-gui-thu-429)
+        -> không vào lại được bước 2 bằng giao diện để nhập mã #3 đã hết hạn (bước 2 chỉ hiện sau khi Gửi mã thành công, mà Gửi mã thành công sẽ thay mã #3 bằng mã mới)
+15:47:18 POST /api/auth/reset {identifier: sv2610019, code: <mã #3 do người kiểm thử cung cấp>, newPassword: <chuỗi ngẫu nhiên 36 ký tự, không lưu>}
+        -> 400 bad-code "Mã không đúng hoặc đã hết hạn."  (mã #3 tạo 15:22, hạn 15:37; mới sai 2 lần < 5; lần Gửi mã 15:43 bị 429 nên không tạo mã mới -> chỉ còn lý do HẾT HẠN)
+        Mật khẩu không đổi (máy chủ chỉ gọi set_password khi mã hợp lệ).
+
+# ── LẦN CHẠY LẠI bước 2, bước 3 của B10 – 19/11/2026, Claude Code thao tác trên giao diện theo yêu cầu người kiểm thử ──
+# (người kiểm thử tự gõ mật khẩu thử vào ô "Mật khẩu mới"; Claude Code không nhập mật khẩu)
+02:46:05 GET /api/auth/me -> user = null (trang đăng nhập, chưa ai đăng nhập)
+02:46:24 [Giao diện] nhập sv2610019 > Quên mật khẩu? > Gửi mã -> POST /api/auth/forgot 200, hiện bước 2 (mã #4, hạn 03:01:24) (ảnh lan2-B10-buoc2-da-gui-ma-4)
+02:48:04 [Giao diện] mã 667858 (đã dùng ở B8) + mật khẩu thử -> POST /api/auth/reset 400, "Mã không đúng hoặc đã hết hạn." (ảnh lan2-B10-ma-da-dung-667858)
+02:48:15 [Giao diện] mã 000000 + mật khẩu thử           -> POST /api/auth/reset 400, "Mã không đúng hoặc đã hết hạn." (ảnh lan2-B10-ma-sai-000000)
+         Trang giữ nguyên ở bước 2 (không tải lại) để thử mã #4 sau khi hết hạn.
+03:03:33 [Giao diện, cùng trang bước 2, không tải lại] mã #4 (người kiểm thử cung cấp sau khi hết hạn) + mật khẩu thử
+         -> POST /api/auth/reset 400, "Mã không đúng hoặc đã hết hạn." (ảnh lan2-B10-ma-het-han)
+         Mã #4 tạo 02:46:24, hạn 03:01:24; mới sai 2 lần (< 5); không gửi mã mới sau đó -> lý do từ chối chỉ có thể là HẾT HẠN.
+         Mật khẩu sv2610019 không đổi (máy chủ trả 400 trước bước đặt mật khẩu).

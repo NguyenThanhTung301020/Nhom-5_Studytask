@@ -335,7 +335,8 @@ def valid_activity_event(e):
 
 def activity_write_ok(uid, old, new):
     """Chủ tài khoản chỉ được thêm MỘT sự kiện hợp lệ (loại material hoặc homework, không phải quiz, không mang điểm,
-    thuộc môn đang học) vào cuối; phần cũ giữ nguyên, kể cả sự kiện quiz đã có."""
+    thuộc môn đang học) vào cuối; phần cũ giữ nguyên, kể cả sự kiện quiz đã có. Ngoại lệ duy nhất: nhật ký đầy thì phần cũ
+    được bỏ đúng những sự kiện không phải quiz, cũ nhất, theo trim_activity_events."""
     if not set(new) <= ACTIVITY_DOC_KEYS or new.get('uid', uid) != uid:
         return False
     if not (short_str(new, 'name', 100) and short_str(new, 'username', 254) and short_str(new, 'email', 254)):
@@ -349,6 +350,11 @@ def activity_write_ok(uid, old, new):
     if cur == prev:
         return True
     last = cur[-1] if len(cur) == len(prev) + 1 and cur[:-1] == prev else None
+    # P1 kiểm thử web thật 18/11: nhật ký đầy thì thêm sự kiện mới phải kèm việc bỏ sự kiện KHÔNG phải quiz, cũ nhất
+    # (cùng quy tắc trim_activity_events khi máy chủ chấm bài). Trước đây bị từ chối nên hoạt động mới mất lặng lẽ.
+    # Chỉ chấp nhận đúng bản cắt do máy chủ tính, nên chủ tài khoản không chọn được sự kiện nào bị bỏ, và quiz không bao giờ bị bỏ.
+    if last is None and cur and len(prev) + 1 > ACTIVITY_MAX_EVENTS and cur == trim_activity_events(prev + [cur[-1]]):
+        last = cur[-1]
     return (valid_activity_event(last) and last.get('type') != 'quiz'
             and not (set(last) & ACTIVITY_SCORE_KEYS) and studies_subject(uid, last.get('subjectId')))
 
@@ -1686,6 +1692,12 @@ class Handler(BaseHTTPRequestHandler):
                 arr = list(merged.get(field) or [])
                 if value not in arr:
                     arr.append(value)
+                    if col == 'activities' and field == 'events' and len(arr) > ACTIVITY_MAX_EVENTS:
+                        # Nhật ký đầy (P1): bỏ sự kiện không phải quiz, cũ nhất. Nếu phải bỏ chính sự kiện mới (nhật ký toàn quiz)
+                        # thì giữ nguyên để can() từ chối (403), không trả 200 khi thực ra không ghi gì.
+                        trimmed = trim_activity_events(arr)
+                        if trimmed and trimmed[-1] is value:
+                            arr = trimmed
                 merged[field] = arr
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
