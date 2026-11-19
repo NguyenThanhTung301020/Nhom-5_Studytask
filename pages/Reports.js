@@ -61,13 +61,21 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
 
     const eventsOf = (uid) => (activities.find(a => a.uid === uid)?.events || []).filter(e => e.subjectId === sid)
 
+    // P2 (kiểm thử web thật 18/11): sinh viên tự ghi được sự kiện material/homework với refId bất kỳ (máy chủ chỉ kiểm tra
+    // hình thức), nên chỉ đếm tài liệu và bài tập CÓ THẬT của môn này. So theo chuỗi để không lệch kiểu số/chuỗi của id.
+    const subMaterials = materials.filter(m => m.subjectId === sid)
+    const realMat = new Set(subMaterials.map(m => String(m.id)))
+    const realHw  = new Map(homeworks.filter(hw => hw.subjectId === sid).map(hw => [String(hw.id), hw.title]))
+    const isRealMat = (e) => e.type === 'material' && realMat.has(String(e.refId))
+    const isRealHw  = (e) => e.type === 'homework' && realHw.has(String(e.refId))
+
     // Thống kê theo từng sinh viên
     const students = roster.map(s => {
       const evs = eventsOf(s.uid)
-      const matViewed = [...new Set(evs.filter(e => e.type === 'material').map(e => e.refId))]
-      const hwDone    = [...new Set(evs.filter(e => e.type === 'homework').map(e => e.refId))]
+      const matViewed = [...new Set(evs.filter(isRealMat).map(e => e.refId))]
+      const hwDone    = [...new Set(evs.filter(isRealHw).map(e => e.refId))]
       const hwSubMap = {}
-      evs.filter(e => e.type === 'homework').forEach(e => { hwSubMap[e.refId] = e }) // bài nộp mới nhất
+      evs.filter(isRealHw).forEach(e => { hwSubMap[e.refId] = e }) // bài nộp mới nhất
       const quizMap = {}
       evs.filter(e => e.type === 'quiz').forEach(e => { quizMap[e.refId] = e }) // bản nộp mới nhất
       const quizList = Object.values(quizMap)
@@ -82,17 +90,16 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
     const cHw     = students.filter(s => s.hwDone.length).length
     const cQuiz   = students.filter(s => s.quizList.length).length
 
-    const subMaterials = materials.filter(m => m.subjectId === sid)
     const subQuizzes   = quizzes.filter(q => q.subjectId === sid)
 
-    // Bài tập xuất hiện trong nhật ký (refId → title)
+    // Bài tập có thật của môn đã xuất hiện trong nhật ký (refId → tên bài tập hiện tại, không lấy refTitle do sinh viên gửi)
     const hwSeen = new Map()
     activities.forEach(a => (a.events || []).forEach(e => {
-      if (e.subjectId === sid && e.type === 'homework') hwSeen.set(e.refId, e.refTitle)
+      if (e.subjectId === sid && isRealHw(e)) hwSeen.set(e.refId, realHw.get(String(e.refId)) || e.refTitle)
     }))
 
     return { roster, students, N, pct, cViewed, cHw, cQuiz, subMaterials, subQuizzes, hwSeen, eventsOf }
-  }, [subject, activities, allUsers, materials, quizzes])
+  }, [subject, activities, allUsers, materials, quizzes, homeworks])
 
   // ── Render ──
   return h('div', { className: 'container-fluid py-4' },
