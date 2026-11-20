@@ -1,0 +1,14 @@
+Bản sao lưu: /mnt/backup/studytask/2026-11-19_200136
+thoi_diem_utc: 2026-11-19 20:01:36
+may_chu: studytask
+csdl_bytes: 4284416
+so_tep_tai_len: 1391
+dung_luong_ban_nay: 60M
+studytask.db: OK
+integrity_check: ok
+accounts       bản sao lưu=1031  đang chạy=1031  khớp
+docs           bản sao lưu=2481  đang chạy=2481  khớp
+chat           bản sao lưu=6     đang chạy=6     khớp
+contact_email  bản sao lưu=3     đang chạy=3     khớp
+tệp tải lên: bản sao lưu=1391 đang chạy=1391
+KẾT QUẢ: khôi phục thử THÀNH CÔNG (dữ liệu thật không bị thay đổi)

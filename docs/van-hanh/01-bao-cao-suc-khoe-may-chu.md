@@ -297,44 +297,44 @@ Kiểm tra thêm bằng tay ở mỗi mốc: đọc SMART (`sudo smartctl -H -A 
 
 | Chỉ số | T0 (06/11) | T+7 | T+15 | Ngưỡng bình thường |
 |---|---|---|---|---|
-| Thời gian chạy liên tục / số lần khởi động lại ngoài kế hoạch | 1 ngày 20 giờ / 0 | 8 ngày 18 giờ / 0 |  | Không có lần khởi động ngoài kế hoạch |
-| Load trung bình 15 phút | 0,00 | 0,01 |  | < 1,0 (4 luồng) |
-| RAM đã dùng (MiB) | 576 | 705 |  | Không tăng liên tục; < 2.000 |
-| Swap đã dùng (MiB) | 0 | 0 |  | ≈ 0 |
-| RSS `studytask-api` / `cloudflared` / `nginx` (MB) | 30 / 41 / 29 | 67 / 41 / 33 (API khởi động lại 12/11 07:58 UTC, CSDL đã lớn hơn; API vượt mức 2 lần T0 = 60 MB) |  | Không tăng đều theo thời gian (rò rỉ); ≤ 2 lần T0 |
-| Ổ đĩa gốc đã dùng | 3% (7,3 GB) | 3% (8,2 GB) |  | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
-| Inode đã dùng | 1% | 1% |  | < 50% |
-| Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | 42 °C |  | < 60 °C khi nhàn rỗi |
-| SMART: tình trạng tự đánh giá | `PASSED` | `PASSED` |  | `PASSED` |
-| SMART `Reallocated_Sector_Ct` (5) | 2 | 2 (không đổi) |  | Không tăng so với T0 |
-| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | 0 / 0 |  | 0 / 0 |
-| SMART `Reported_Uncorrect` (187) | 1.650 | **1.651 (+1 so với T0, vượt ngưỡng)** |  | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
-| SMART `Command_Timeout` (188) | 1.624 | 1.624 (không đổi) |  | **Không tăng** so với T0 |
-| SMART `G-Sense_Error_Rate` (191) | 3.682 | **3.692 (+10 so với T0, vượt ngưỡng)** |  | Không tăng (máy đặt cố định, không bị rung) |
-| SMART `UDMA_CRC_Error_Count` (199) | 0 | 0 |  | 0 |
-| SMART nhiệt độ ổ (194) | 33 °C | 32 °C |  | < 45 °C |
-| SMART `Power_On_Hours` (9) | 4.699 | 4.862 (+163 so với T0) |  | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
-| `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | 0 / 0 / 0 |  | 0 |
-| Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | 0 |  | 0 |
-| Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | 0 |  | 0 |
-| Lỗi mức `err` mới (không tính các dòng đã biết ở 5.3, 5.6) | 0 | 1.651 dòng `connect_to … failed` (5.6 ghi 1.647 dòng ngày 04/11, chênh 4 dòng chưa đối chiếu); 28 dòng TLS/NTS của `chronyd` (đồng bộ giờ vẫn `yes`); vài dòng ACPI/SGX/nouveau của phần cứng |  | 0 |
-| Yêu cầu API trong cửa sổ | 2.178 (03–06/11) | 2.184 (06–13/11) |  | Tham khảo để thấy xu hướng sử dụng |
-| Mã 5xx (ngoài 501 do `HEAD`) | 0 | 0 |  | 0 |
-| Mã 403 mới | 0 từ 05/11 | 17 trong API (11 `PUT userData`, 6 `GET sharedData/global`); nginx có thêm 403 ở `/uploads/` ngày 12/11, trong đó `/uploads/.env`. Chưa điều tra |  | Gần 0; điều tra nếu tăng |
-| Mã 429 (bị giới hạn tần suất) | 0 | 0 |  | 0 (có nghĩa là có người dò mật khẩu) |
-| `Traceback` / `MAIL-ERROR` trong nhật ký API | 0 | 0 |  | 0 |
-| `cloudflared` kết nối lại (72 giờ / cửa sổ) | 23 / 72 giờ | 19 / 7 ngày (17 lần đăng ký lại thành công; cửa sổ dài hơn T0) |  | Tương đương; mỗi lần < vài giây, không có đợt kéo dài |
-| Site từ ngoài (HTTP / thời gian) | 200 / 0,20 giây | 200 / 0,24 giây (script đo từ máy chủ); đo từ 4G ngày 11/11: 200 / 0,77 giây |  | 200 và < 1 giây |
-| Ping 1.1.1.1 mất gói / trễ trung bình | 0% / ≈ 32–34 ms | 0% / 35,4 ms |  | < 1% / < 100 ms |
-| Lưu lượng card mạng (MB nhận/gửi từ lần khởi động) | 72,6 / 72,0 | 609,6 / 366,2 |  | Tham khảo; `vnstat` cho số theo ngày |
-| SSH đăng nhập sai / nguồn lạ | 22 / 0 | 5 / 0 (5 lần sai đều từ chính máy chủ) |  | Không có nguồn ngoài `192.168.2.175` |
-| Cổng đang lắng nghe | 22, 80, 8787 (nội bộ), 20241 (nội bộ) | 22, 80, 8787 (nội bộ), 20241 (nội bộ), 53 (nội bộ); không có cổng lạ |  | Không thêm cổng lạ |
-| Toàn vẹn cơ sở dữ liệu | ok | ok |  | `ok` |
-| Số bảng ghi `accounts` / `docs` / `chat` | 5 / 13 / 6 | 2.051 / 4.306 / 6 (tăng mạnh, xem 8.4a) |  | Tăng hợp lý theo việc sử dụng |
-| Bản sao lưu tự động mới nhất / số bản | 06/11 06:34 UTC / 1 | 12/11 20:03 UTC / 8 bản |  | < 24 giờ / tăng dần đến 14 |
-| Thử khôi phục (`studytask-restore-test.sh`) | Đạt (06/11) | Đạt (13/11): `accounts` 2.051, `docs` 4.306, `chat` 6, `contact_email` 2 khớp; 390 tệp tải lên |  | Đạt: checksum khớp, `integrity_check: ok` |
-| Ổ sao lưu `/mnt/backup` còn trống | 97 GB / 98 GB | 97 GB / 98 GB |  | > 20 GB |
-| Gói chờ cập nhật / cần khởi động lại | 10 / không | 18 / có (cần khởi động lại) |  | < 20; áp dụng bản vá bảo mật trong vòng 1 tuần |
+| Thời gian chạy liên tục / số lần khởi động lại ngoài kế hoạch | 1 ngày 20 giờ / 0 | 8 ngày 18 giờ / 0 | 7 ngày 6 giờ / 0 (khởi động lại có kế hoạch 13/11 01:49 UTC sau khi cập nhật gói) | Không có lần khởi động ngoài kế hoạch |
+| Load trung bình 15 phút | 0,00 | 0,01 | 0,00 | < 1,0 (4 luồng) |
+| RAM đã dùng (MiB) | 576 | 705 | 717 | Không tăng liên tục; < 2.000 |
+| Swap đã dùng (MiB) | 0 | 0 | 0 | ≈ 0 |
+| RSS `studytask-api` / `cloudflared` / `nginx` (MB) | 30 / 41 / 29 | 67 / 41 / 33 (API khởi động lại 12/11 07:58 UTC, CSDL đã lớn hơn; API vượt mức 2 lần T0 = 60 MB) | **73** / 43 / 33 (API khởi động lại lần cuối 19/11 06:55 UTC, mới chạy 1 ngày; vẫn vượt 60 MB) | Không tăng đều theo thời gian (rò rỉ); ≤ 2 lần T0 |
+| Ổ đĩa gốc đã dùng | 3% (7,3 GB) | 3% (8,2 GB) | **5% (13,8 GB)**: +5,6 GB so với T+7, trong đó 5,0 GB là kho sách `library/` (ngoài kế hoạch, 19/11); phần còn lại +0,6 GB | < 70%; tăng không quá ~1 GB/tuần nếu không có tệp tải lên mới |
+| Inode đã dùng | 1% | 1% | 1% | < 50% |
+| Nhiệt độ CPU `x86_pkg_temp` (nhàn rỗi) | 39–42 °C | 42 °C | 40 °C | < 60 °C khi nhàn rỗi |
+| SMART: tình trạng tự đánh giá | `PASSED` | `PASSED` | `PASSED` | `PASSED` |
+| SMART `Reallocated_Sector_Ct` (5) | 2 | 2 (không đổi) | 2 (không đổi) | Không tăng so với T0 |
+| SMART `Current_Pending_Sector` (197) / `Offline_Uncorrectable` (198) | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| SMART `Reported_Uncorrect` (187) | 1.650 | **1.651 (+1 so với T0, vượt ngưỡng)** | 1.651 (không tăng thêm từ T+7; vẫn +1 so với T0) | **Không tăng** so với T0 (tăng = ổ đang lỗi) |
+| SMART `Command_Timeout` (188) | 1.624 | 1.624 (không đổi) | 1.624 (không đổi) | **Không tăng** so với T0 |
+| SMART `G-Sense_Error_Rate` (191) | 3.682 | **3.692 (+10 so với T0, vượt ngưỡng)** | 3.692 (không tăng thêm từ T+7) | Không tăng (máy đặt cố định, không bị rung) |
+| SMART `UDMA_CRC_Error_Count` (199) | 0 | 0 | 0 | 0 |
+| SMART nhiệt độ ổ (194) | 33 °C | 32 °C | 32 °C | < 45 °C |
+| SMART `Power_On_Hours` (9) | 4.699 | 4.862 (+163 so với T0) | 5.037 (+338 so với T0; 14 ngày ≈ 337 giờ, ổ chạy liên tục) | Tăng đúng bằng số giờ trôi qua (≈ +168 sau 7 ngày, +360 sau 15 ngày) |
+| `studytask-api`, `nginx`, `cloudflared` tự khởi động lại | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 (API khởi động lại 6 lần do triển khai 17–19/11; nginx khởi động lại 20/11 06:15 UTC do `unattended-upgrades` cài bản vá nginx) | 0 |
+| Đơn vị dịch vụ lỗi (`systemctl --failed`) | 0 | 0 | 0 | 0 |
+| Lỗi OOM / I/O / hệ tệp trong nhật ký nhân | 0 | 0 | 0 | 0 |
+| Lỗi mức `err` mới (không tính các dòng đã biết ở 5.3, 5.6) | 0 | 1.651 dòng `connect_to … failed` (5.6 ghi 1.647 dòng ngày 04/11, chênh 4 dòng chưa đối chiếu); 28 dòng TLS/NTS của `chronyd` (đồng bộ giờ vẫn `yes`); vài dòng ACPI/SGX/nouveau của phần cứng | 17 dòng từ lần khởi động 13/11: 5 dòng `smartd` báo tự kiểm tra lỗi (17/11, đã biết ở 8.4c), 2 dòng thư báo của `smartd` không gửi được (thiếu `/usr/bin/mail`), còn lại ACPI/SGX/nouveau của phần cứng đã biết | 0 |
+| Yêu cầu API trong cửa sổ | 2.178 (03–06/11) | 2.184 (06–13/11) | 16.477 (05–20/11), trong đó 15.701 từ 13/11; cao nhất 7.801 ngày 18/11 (các đợt kiểm thử trên web thật) | Tham khảo để thấy xu hướng sử dụng |
+| Mã 5xx (ngoài 501 do `HEAD`) | 0 | 0 | **25 mã 500** trong 3 đợt (17/11 08:57, 18/11 03:10, 19/11 06:55 UTC), đều ở `PUT sharedData/global`, `PUT userData` (1 `GET`): `BrokenPipeError` khi trình duyệt đã ngắt kết nối, xem 8.4d | 0 |
+| Mã 403 mới | 0 từ 05/11 | 17 trong API (11 `PUT userData`, 6 `GET sharedData/global`); nginx có thêm 403 ở `/uploads/` ngày 12/11, trong đó `/uploads/.env`. Chưa điều tra | 126 trong cửa sổ 15 ngày; **109 mới sau T+7** (16/11: 16, 17/11: 29, 18/11: 62, 19/11: 1), chủ yếu `PUT userData` và `POST activities/append`, trùng giờ các đợt kiểm thử trên web thật; xem 8.4d | Gần 0; điều tra nếu tăng |
+| Mã 429 (bị giới hạn tần suất) | 0 | 0 | 7, đều `POST /api/auth/forgot` trong 18/11 15:39–15:47 UTC (thử luồng quên mật khẩu); giới hạn tần suất hoạt động đúng | 0 (có nghĩa là có người dò mật khẩu) |
+| `Traceback` / `MAIL-ERROR` trong nhật ký API | 0 | 0 | **50 dòng**, cùng 25 lần `BrokenPipeError` của các mã 500 ở trên; 0 `MAIL-ERROR` | 0 |
+| `cloudflared` kết nối lại (72 giờ / cửa sổ) | 23 / 72 giờ | 19 / 7 ngày (17 lần đăng ký lại thành công; cửa sổ dài hơn T0) | 97 / 15 ngày (59 lần đăng ký lại thành công), khoảng 6,5 lần/ngày, nhiều hơn T+7 (2,7 lần/ngày) | Tương đương; mỗi lần < vài giây, không có đợt kéo dài |
+| Site từ ngoài (HTTP / thời gian) | 200 / 0,20 giây | 200 / 0,24 giây (script đo từ máy chủ); đo từ 4G ngày 11/11: 200 / 0,77 giây | 200 / 0,42 giây (đo từ máy chủ); từ máy cá nhân ngày 20/11: 200 / 0,53 giây | 200 và < 1 giây |
+| Ping 1.1.1.1 mất gói / trễ trung bình | 0% / ≈ 32–34 ms | 0% / 35,4 ms | 0% / **60,3 ms** (cao hơn T+7, vẫn dưới ngưỡng) | < 1% / < 100 ms |
+| Lưu lượng card mạng (MB nhận/gửi từ lần khởi động) | 72,6 / 72,0 | 609,6 / 366,2 | 5.925,2 / 1.799,1 (từ 13/11; ngày 19/11 nhận 5,3 GiB do chép kho sách lên máy chủ) | Tham khảo; `vnstat` cho số theo ngày |
+| SSH đăng nhập sai / nguồn lạ | 22 / 0 | 5 / 0 (5 lần sai đều từ chính máy chủ) | 5 / 0 (vẫn là 5 lần sai ngày 10/11 từ chính máy chủ; đăng nhập thành công chỉ từ `192.168.2.175` và chính máy chủ) | Không có nguồn ngoài `192.168.2.175` |
+| Cổng đang lắng nghe | 22, 80, 8787 (nội bộ), 20241 (nội bộ) | 22, 80, 8787 (nội bộ), 20241 (nội bộ), 53 (nội bộ); không có cổng lạ | Như T+7; không có cổng lạ | Không thêm cổng lạ |
+| Toàn vẹn cơ sở dữ liệu | ok | ok | ok | `ok` |
+| Số bảng ghi `accounts` / `docs` / `chat` | 5 / 13 / 6 | 2.051 / 4.306 / 6 (tăng mạnh, xem 8.4a) | 1.031 / 2.481 / 6 (giảm do nạp lại dữ liệu mẫu 17/11: 982 sinh viên thay 2.051 tài khoản mẫu cũ) | Tăng hợp lý theo việc sử dụng |
+| Bản sao lưu tự động mới nhất / số bản | 06/11 06:34 UTC / 1 | 12/11 20:03 UTC / 8 bản | 19/11 20:01 UTC (12 giờ trước lúc đo) / 14 bản. **Không gồm kho sách `library/` (5,0 GB)**: mỗi bản chỉ 60 MB | < 24 giờ / tăng dần đến 14 |
+| Thử khôi phục (`studytask-restore-test.sh`) | Đạt (06/11) | Đạt (13/11): `accounts` 2.051, `docs` 4.306, `chat` 6, `contact_email` 2 khớp; 390 tệp tải lên | **Đạt (20/11)**: `accounts` 1.031, `docs` 2.481, `chat` 6, `contact_email` 3 khớp; 1.391 tệp tải lên | Đạt: checksum khớp, `integrity_check: ok` |
+| Ổ sao lưu `/mnt/backup` còn trống | 97 GB / 98 GB | 97 GB / 98 GB | 97 GB / 98 GB (dùng 243 MB) | > 20 GB |
+| Gói chờ cập nhật / cần khởi động lại | 10 / không | 18 / có (cần khởi động lại) | 16 / không. Gồm nhân Linux `7.0.0-44` (cài xong phải khởi động lại), `cloudflared` 2026.11.1 và 5 gói phát hành theo đợt từ 17/11 | < 20; áp dụng bản vá bảo mật trong vòng 1 tuần |
 
 ### 8.4a. Ghi nhận mốc T+7 (13/11/2026)
 
@@ -373,7 +373,7 @@ Số liệu ở mục 8.4 và 8.4a giữ nguyên làm bản ghi của ngày 13/1
 - **17 mã 403 đã điều tra:** 14 do một tab trình duyệt mất phiên ngày 09/11, 3 do script kiểm thử `smoke_live.py`; 403 ở `/uploads/` là lỗi quyền thư mục 750 (đã sửa 12/11) và các yêu cầu dò `/uploads/.env` từ bên ngoài. Không phải sự cố.
 - **Đính chính:** "CSDL 126 MB" ở mục 8.4a là dung lượng cả thư mục dữ liệu (chủ yếu `uploads`). Cơ sở dữ liệu cùng WAL khoảng 10 MB (`db+wal: 9975 KB` trong tệp bằng chứng T+7), nay `studytask.db` 4,1 MB.
 - **Bản sao lưu đã chép ra ổ ngoài G** ngày 17/11 06:12 UTC (12 bản, 8.362 tệp trùng SHA256, `integrity_check` ok; [biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6), gồm cả dữ liệu nạp 12/11.
-- **Ổ đĩa vẫn chưa đạt:** đã chạy `smartctl -t long` ngày 17/11, kết quả ở mục 8.4c dưới đây. Mốc T+15 (21/11) chưa đo.
+- **Ổ đĩa vẫn chưa đạt:** đã chạy `smartctl -t long` ngày 17/11, kết quả ở mục 8.4c dưới đây. Mốc T+15 đã đo ngày 20/11 (mục 8.4d).
 
 ### 8.4c Tự kiểm tra dài và đọc lại SMART ngày 17/11/2026 (việc 3 tuần 7)
 
@@ -424,6 +424,27 @@ Nhật ký chọn lọc ghi đoạn `705217–770752` ở trạng thái `Complet
 
 **Kết luận mục 8.4c: CHƯA ĐẠT, chưa thể kết luận ổ ổn.** Chưa có dấu hiệu lan rộng ở các chỉ số (5, 187, 188, 197, 198 không đổi đến lần đọc cuối; chỉ 200 nhích lên 1), nhưng có **vùng lỗi đọc nhiều sector liên tiếp** tại LBA 705216 trở đi, lặp lại ở cả ba lần kiểm tra, và phần lớn ổ chưa được quét. Bản sao lưu ngoài đã chép ngày 17/11 ([biên bản 09](09-bien-ban-sao-luu-ra-o-ngoai-2026-11-11.md) mục 6) là điểm an toàn hiện có. Việc nên làm: (1) xác định LBA 705216 thuộc phân vùng nào (`sudo fdisk -l /dev/sda`, `lsblk -f`) để biết lỗi nằm ở vùng đang dùng hay vùng trống; (2) nhóm ghi quyết định tiếp tục dùng ổ có điều kiện (theo dõi 187/188/197/198 hằng tuần, chép sao lưu ngoài hằng tuần) hoặc thay ổ; (3) nếu cần biết toàn bộ phạm vi lỗi, đọc quét cả ổ ở chế độ chỉ đọc vào giờ ít người dùng (`sudo badblocks -sv -b 4096 /dev/sda`, không ghi dữ liệu).
 
+### 8.4d. Ghi nhận mốc T+15 (20/11/2026, việc 6 tuần 7)
+
+Đo lúc **20/11/2026 08:34 UTC** (15:34 giờ Việt Nam), **sớm 1 ngày** so với lịch 21/11 ở mục 8.1, theo yêu cầu của Trương Thanh Vui; cửa sổ nhật ký `"-15 days"` (từ 05/11). Lệnh: `bash ~/health-check.sh "-15 days" --save` và `bash ~/setup/studytask-restore-test.sh` qua SSH (chỉ đọc; Claude Code chạy theo yêu cầu của Trương Thanh Vui), rồi đọc thêm nhật ký để tìm nguyên nhân các mã lỗi. SMART do Trương Thanh Vui chạy bằng `sudo`. Minh chứng ở [bang-chung/2026-11-20](bang-chung/2026-11-20/) (có `SHA256SUMS`):
+
+- [health-check-T15.txt](bang-chung/2026-11-20/health-check-T15.txt): bản chép của `~/health-logs/2026-11-20.txt`, SHA256 trùng tệp trên máy chủ (`96b81e6f…`).
+- [restore-test-T15.txt](bang-chung/2026-11-20/restore-test-T15.txt): thử khôi phục từ bản sao lưu 19/11 20:01 UTC.
+- [dieu-tra-T15.txt](bang-chung/2026-11-20/dieu-tra-T15.txt): mã 500, `Traceback`, 401, 403, 429, gói chờ, lần khởi động lại nginx.
+- [smart-T15.png](bang-chung/2026-11-20/smart-T15.png): `smartctl -H -A` và `-l selftest -l error`.
+
+**Ổ đĩa:** tự đánh giá `PASSED`; 5 = 2, 187 = 1.651, 188 = 1.624, 191 = 3.692, 196 = 2, 197 = 0, 198 = 0, 199 = 0, 200 = 1, nhiệt độ 32 °C; nhật ký lỗi ATA "No Errors Logged"; nhật ký tự kiểm tra **không có lần mới** (vẫn 3 lần `read failure` tại LBA 705216/705217 ở 8.4a, 8.4c). So với lần đọc cuối ngày 17/11: **không chỉ số nào trong ngưỡng nhóm xấu thêm**. `Load_Cycle_Count` (193) lên 359.440 (+10.536 từ 17/11, khoảng 3.500 lần/ngày). Kết luận cho ổ vẫn như 8.4c: **chưa đạt**, vùng lỗi đọc tại LBA 705216 chưa được xử lý, nhóm chưa ghi quyết định thay hay dùng tiếp có điều kiện.
+
+**Mã 500 và `Traceback` (25 mã, 50 dòng):** cả 25 lần đều là `BrokenPipeError`: trình duyệt đã đóng kết nối trong lúc API đang trả lời một lệnh lưu (`PUT sharedData/global` 17 lần, `PUT userData` 7 lần, 1 `GET`); API bắt lỗi rồi cố gửi mã 500 trên kết nối đã đóng nên ghi thêm một lỗi nữa. Ba đợt: 17/11 08:57 (4 phút sau lần cài 08:53), 18/11 03:10 (14 lần, trong buổi kiểm thử trên web thật) và 19/11 06:55 (đúng giây khởi động lại API khi cài kho sách). Đây không phải lỗi logic hay mất dữ liệu đã thấy, nhưng **API đang ghi lỗi do phía khách ngắt thành mã 500**; nên sửa để bỏ qua `BrokenPipeError`/`ConnectionResetError` khi gửi phản hồi, và kiểm tra lại các lần lưu `sharedData/global` trong ba đợt trên có được ghi đủ không.
+
+**401 và 403:** 1.303 mã 401 ngày 17/11 (08h–17h UTC, khoảng 150 lần mỗi giờ) gần như đều là `GET /api/chat/status`: một tab trình duyệt còn giữ phiên cũ sau lần nạp lại dữ liệu 17/11 08:53 và hỏi trạng thái chat liên tục; không có dấu hiệu dò mật khẩu (`POST /api/auth/login` 401 chỉ 42 lần trong 15 ngày). 109 mã 403 mới sau T+7 trùng giờ các đợt kiểm thử V3/V4 trên web thật 16–18/11. Riêng 18/11 có 10 lần `POST activities/append` bị 403, trùng mô tả lỗi P1 của kiểm thử V4 (nhật ký đầy không ghi được hoạt động mới) đã sửa ở `226c761` trên `master`; **máy chủ hiện chạy nhánh thư viện sách (API `97305fcc…`, giao diện `v202611190655`) chưa có bản sửa này**, nên lỗi có thể vẫn còn trên máy chủ cho đến khi cài lại từ `master`.
+
+**Điểm cần theo dõi:**
+- **Kho sách 5,0 GB không có trong bản sao lưu** (mỗi bản 60 MB) và nằm trên ổ có vùng lỗi đọc. Bản gốc chỉ còn ở máy cá nhân (`E:\sach`).
+- **RSS của API 73 MB**, vẫn vượt 2 lần T0 dù API mới chạy 1 ngày; lượng dữ liệu lớn hơn T0 nhiều nên chưa đủ để nói là rò rỉ. Cần đo lại sau vài ngày API chạy liên tục.
+- **16 gói chờ**, gồm nhân Linux mới (cần khởi động lại sau khi cài) và `cloudflared`. Bản vá bảo mật nginx đã được `unattended-upgrades` tự cài 20/11 06:15 UTC.
+- **Mạng kém hơn:** ping 60 ms (T+7 35 ms), `cloudflared` kết nối lại khoảng 6,5 lần/ngày (T+7 2,7 lần/ngày); trang vẫn trả 200 dưới 1 giây.
+- **Máy chủ không trùng `master`** từ 19/11 02:41 UTC (xem biên bản việc 1 tuần 7).
 
 ### 8.5. Cần làm gì khi vượt ngưỡng
 
@@ -450,6 +471,20 @@ Máy chủ được coi là **ổn định ở mức đề tài** nếu cả nă
 5. Có ít nhất một bản sao lưu tự động trong 24 giờ gần nhất và đã thử khôi phục thành công một lần.
 
 Nếu có điều kiện không đạt, ghi rõ trong báo cáo cùng nguyên nhân và hướng khắc phục thay vì bỏ qua.
+
+**Kết luận mốc T+15 (đo 20/11/2026, chi tiết 8.4d):**
+
+| # | Điều kiện | Kết quả | Ghi chú |
+|---|---|---|---|
+| 1 | Không khởi động lại ngoài kế hoạch; dịch vụ không tự khởi động lại | **Đạt** | Lần khởi động duy nhất (13/11) có kế hoạch; `NRestarts` 0/0/0. API khởi động lại do triển khai, nginx do bản vá tự động |
+| 2 | Không có 5xx, không có `Traceback` | **Chưa đạt** | 25 mã 500, 50 dòng `Traceback`, đều là `BrokenPipeError` khi trình duyệt ngắt kết nối; cần sửa cách API xử lý lỗi này |
+| 3 | Tài nguyên không tăng liên tục, trong ngưỡng | **Chưa đạt** | RSS API 73 MB (> 60 MB); đĩa +5,6 GB trong 1 tuần (5,0 GB là kho sách ngoài kế hoạch, có giải thích). RAM, swap, inode, nhiệt độ trong ngưỡng |
+| 4 | Truy cập từ ngoài thành công ≥ 99% | **Chưa đo** | Không có giám sát HTTP bên ngoài (8.2 mục 6 chưa làm). Các lần đo rời đều trả 200 dưới 1 giây |
+| 5 | Có bản sao lưu trong 24 giờ, thử khôi phục thành công | **Đạt** | Bản 19/11 20:01 UTC; thử khôi phục 20/11 khớp toàn bộ. Không gồm kho sách `library/` |
+
+**Kết luận chung: chưa đủ điều kiện kết luận "ổn định ở mức đề tài"** (2/5 đạt, 2 chưa đạt, 1 chưa đo). Phần dịch vụ chạy ổn: không sập, không mất dữ liệu, sao lưu và khôi phục đạt. Các điểm chưa đạt có nguyên nhân đã xác định và không do quá tải. Ổ đĩa vẫn **chưa đạt** (8.4c, 8.4d), là rủi ro lớn nhất còn lại.
+
+**Việc tiếp theo:** (1) sửa API để không ghi mã 500 khi trình duyệt ngắt kết nối; (2) cài lại máy chủ từ `master` để có bản sửa P1 (`226c761`); (3) sao lưu riêng thư mục `library/` ra ngoài ổ máy chủ; (4) nhóm ghi quyết định về ổ đĩa; (5) cài 16 gói chờ và khởi động lại có kế hoạch; (6) đăng ký giám sát HTTP bên ngoài nếu cần đo điều kiện 4.
 
 ## 9. Hạn chế của báo cáo
 

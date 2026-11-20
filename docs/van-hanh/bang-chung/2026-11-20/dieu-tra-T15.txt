@@ -1,0 +1,175 @@
+== 500 theo ngay/duong dan
+      3 2026-11-17T08
+     14 2026-11-18T03
+      8 2026-11-19T06
+      1 "GET /api/doc/user
+     17 "PUT /api/doc/sharedData/global
+      7 "PUT /api/doc/userData/<id>
+== Traceback/MAIL-ERROR
+      6 2026-11-17T08
+     28 2026-11-18T03
+     16 2026-11-19T06
+      7 Nov 18 03:10:07 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1589, in route
+      7 Nov 18 03:10:07 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1265, in dispatch
+      7 Nov 18 03:10:07 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1227, in send
+      4 Nov 19 06:55:28 studytask python3[47445]:   File "/opt/studytask/studytask_api.py", line 1675, in route
+      4 Nov 19 06:55:28 studytask python3[47445]:   File "/opt/studytask/studytask_api.py", line 1350, in dispatch
+      4 Nov 19 06:55:28 studytask python3[47445]:   File "/opt/studytask/studytask_api.py", line 1312, in send
+      3 Nov 19 06:55:29 studytask python3[47445]:   File "/opt/studytask/studytask_api.py", line 1675, in route
+      3 Nov 19 06:55:29 studytask python3[47445]:   File "/opt/studytask/studytask_api.py", line 1350, in dispatch
+      3 Nov 19 06:55:29 studytask python3[47445]:   File "/opt/studytask/studytask_api.py", line 1312, in send
+      3 Nov 18 03:10:06 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1589, in route
+      3 Nov 18 03:10:06 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1265, in dispatch
+      3 Nov 18 03:10:06 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1227, in send
+      3 Nov 17 08:57:26 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1589, in route
+      3 Nov 17 08:57:26 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1265, in dispatch
+      3 Nov 17 08:57:26 studytask python3[26147]:   File "/opt/studytask/studytask_api.py", line 1227, in send
+== 429
+2026-11-18T15:39:43+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+2026-11-18T15:39:47+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+2026-11-18T15:40:31+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+2026-11-18T15:41:11+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+2026-11-18T15:42:50+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+2026-11-18T15:43:27+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+2026-11-18T15:47:30+00:00 studytask python3[35597]: 127.0.0.1 "POST /api/auth/forgot HTTP/1.1" 429 -
+== nginx restart
+Nov 19 06:55:19 studytask nginx[47462]: 2026/11/19 06:55:19 [notice] 47462#47462: signal process started
+Nov 19 06:55:19 studytask systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy server.
+Nov 20 06:15:34 studytask systemd[1]: Stopping nginx.service - A high performance web server and a reverse proxy server...
+Nov 20 06:15:34 studytask systemd[1]: nginx.service: Deactivated successfully.
+Nov 20 06:15:34 studytask systemd[1]: Stopped nginx.service - A high performance web server and a reverse proxy server.
+Nov 20 06:15:34 studytask systemd[1]: nginx.service: Consumed 20.435s CPU time over 1w 4h 25min 21.191s wall clock time, 122M memory peak.
+Nov 20 06:15:34 studytask systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy server...
+Nov 20 06:15:34 studytask systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+== api starts
+Nov 17 08:53:20 studytask systemd[1]: Stopped studytask-api.service - StudyTask API (thay Firebase).
+Nov 17 08:53:20 studytask systemd[1]: Started studytask-api.service - StudyTask API (thay Firebase).
+Nov 18 09:11:41 studytask systemd[1]: Stopped studytask-api.service - StudyTask API (thay Firebase).
+Nov 18 09:11:41 studytask systemd[1]: Started studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 02:39:02 studytask systemd[1]: Stopped studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 02:39:02 studytask systemd[1]: Started studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 02:41:27 studytask systemd[1]: Stopped studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 02:41:27 studytask systemd[1]: Started studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 06:32:35 studytask systemd[1]: Stopped studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 06:32:35 studytask systemd[1]: Started studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 06:55:19 studytask systemd[1]: Stopped studytask-api.service - StudyTask API (thay Firebase).
+Nov 19 06:55:19 studytask systemd[1]: Started studytask-api.service - StudyTask API (thay Firebase).
+== backups
+2026-11-19_200136
+LATEST
+backup.log
+16
+/dev/mapper/ubuntu--vg-backup   98G  243M   97G   1% /mnt/backup
+== pkgs
+bpftool/resolute-updates 7.7.0+7.0.0-44.44 amd64 [upgradable from: 7.7.0+7.0.0-43.43] cloudflared/unknown 2026.11.1 amd64 [upgradable from: 2026.11.0] distro-info/resolute-updates 1.15ubuntu0.1 amd64 [upgradable from: 1.15] fwupd/resolute-updates 2.1.6-3ubuntu4~26.04.1 amd64 [upgradable from: 2.1.1-1ubuntu3.1] libfwupd3/resolute-updates 2.1.6-3ubuntu4~26.04.1 amd64 [upgradable from: 2.1.1-1ubuntu3.1] linux-generic/resolute-updates 7.0.0-44.44 amd64 [upgradable from: 7.0.0-43.43] linux-headers-generic/resolute-updates 7.0.0-44.44 amd64 [upgradable from: 7.0.0-43.43] linux-image-generic/resolute-updates 7.0.0-44.44 amd64 [upgradable from: 7.0.0-43.43] linux-libc-dev/resolute-updates 7.0.0-44.44 amd64 [upgradable from: 7.0.0-43.43] linux-perf/resolute-updates 7.0.0-44.44 amd64 [upgradable from: 7.0.0-43.43] linux-tools-common/resolute-updates 7.0.0-44.44 all [upgradable from: 7.0.0-43.43] python3-distro-info/resolute-updates 1.15ubuntu0.1 all [upgradable from: 1.15] python3-software-properties/resolute-updates 0.120.2 all [upgradable from: 0.120.1] snapd/resolute-updates 2.78+ubuntu26.04 amd64 [upgradable from: 2.77.1+ubuntu26.04.2] software-properties-common/resolute-updates 0.120.2 all [upgradable from: 0.120.1] ubuntu-drivers-common/resolute-updates 1:0.10.9ubuntu0.2 amd64 [upgradable from: 1:0.10.9] 
+== du
+132K	/var/lib/studytask/studytask.db.truoc-sua-review
+4.1M	/var/lib/studytask/studytask.db
+5.9M	/var/lib/studytask/studytask.db-wal
+56M	/var/lib/studytask/uploads
+5.0G	/var/lib/studytask/library
+== api ver
+97305fccf4f65c2b
+v202611190655
+== 1 traceback day
+      9 --
+      6 BrokenPipeError: [Errno 32] Broken pipe
+      6 ----------------------------------------
+      3 Traceback (most recent call last):
+      3 ERROR BrokenPipeError(32, 'Broken pipe')
+      3 During handling of the above exception, another exception occurred:
+      3 127.0.0.1 "PUT /api/doc/sharedData/global HTTP/1.1" 500 -
+      3     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+     42 --
+     28 BrokenPipeError: [Errno 32] Broken pipe
+     28 ----------------------------------------
+     14 Traceback (most recent call last):
+     14 ERROR BrokenPipeError(32, 'Broken pipe')
+     14 During handling of the above exception, another exception occurred:
+     14     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     14     self.send(500, {'error': {'code': 'internal', 'message': 'Lỗi máy chủ.'}})
+--
+     24 --
+     16 BrokenPipeError: [Errno 32] Broken pipe
+     15 ----------------------------------------
+      8 Traceback (most recent call last):
+      8 ERROR BrokenPipeError(32, 'Broken pipe')
+      8     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      8     self.send(500, {'error': {'code': 'internal', 'message': 'Lỗi máy chủ.'}})
+      6 During handling of the above exception, another exception occurred:
+--
+== apt history 20/11
+Start-Date: 2026-11-20  06:15:29
+Commandline: /usr/bin/unattended-upgrade
+Upgrade: nginx:amd64 (1.28.3-2ubuntu1.12, 1.28.3-2ubuntu1.14), nginx-common:amd64 (1.28.3-2ubuntu1.12, 1.28.3-2ubuntu1.14)
+End-Date: 2026-11-20  06:15:39
+
+Start-Date: 2026-11-20  06:15:41
+Commandline: /usr/bin/unattended-upgrade
+Upgrade: python3-jwt:amd64 (2.10.1-4ubuntu1.3, 2.10.1-4ubuntu1.4)
+End-Date: 2026-11-20  06:15:43
+2026-11-20 06:15:26,602 INFO Initial blacklist: 
+2026-11-20 06:15:26,602 INFO Initial whitelist (not strict): 
+2026-11-20 06:15:28,571 INFO Packages that will be upgraded: nginx nginx-common python3-jwt
+2026-11-20 06:15:28,572 INFO Writing dpkg log to /var/log/unattended-upgrades/unattended-upgrades-dpkg.log
+2026-11-20 06:15:45,493 INFO All upgrades installed
+== 401 theo ngay
+      8 2026-11-09
+     17 2026-11-10
+      9 2026-11-12
+     13 2026-11-13
+      2 2026-11-14
+     32 2026-11-16
+   1303 2026-11-17
+    112 2026-11-18
+      7 2026-11-19
+   1366 "GET /api/chat/status
+     42 "POST /api/auth/login
+     17 "GET /api/events
+     16 "POST /api/account/email
+     13 "GET /api/files/submissions/<id>
+== 403 theo ngay
+     14 2026-11-09
+      3 2026-11-10
+      1 2026-11-13
+     16 2026-11-16
+     29 2026-11-17
+     62 2026-11-18
+      1 2026-11-19
+== ssh fail
+2026-11-10T03:47:42+00:00 studytask sshd-session[46289]: Failed password for studytask from 192.168.
+2026-11-10T03:47:49+00:00 studytask sshd-session[46289]: Failed password for studytask from 192.168.
+2026-11-10T03:48:01+00:00 studytask sshd-session[46289]: Failed password for studytask from 192.168.
+2026-11-10T03:48:13+00:00 studytask sshd-session[46300]: Failed password for studytask from 192.168.
+2026-11-10T03:48:26+00:00 studytask sshd-session[46300]: Failed password for studytask from 192.168.
+== boots/uptime
+2026-11-13 01:49:19
+== 403 2026-11-16
+      5 05h       8 09h       3 12h 
+      8 "GET /api/doc/userData/<id>
+      4 "PUT /api/doc/userData/<id>
+      2 "PUT /api/doc/sharedData/global
+      1 "GET /api/quiz/<id>/archive
+== 403 2026-11-17
+      2 03h       4 04h      23 15h 
+     12 "PUT /api/doc/userData/<id>
+      9 "GET /api/doc/sharedData/global
+      2 "GET /api/quiz/<id>/results
+      2 "GET /api/doc/<id>/current
+== 403 2026-11-18
+      5 01h      16 02h       5 04h       4 06h      10 07h       1 12h       1 13h      20 14h 
+     19 "PUT /api/doc/userData/<id>
+     10 "POST /api/doc/activities/<id>/append
+      7 "GET /api/doc/sharedData/global
+      5 "PUT /api/doc/activities/<id>
+== 401 chat 17/11 gio
+      1 02h      12 08h     150 09h     130 10h     120 11h     147 12h     175 13h     147 14h     227 15h     120 16h      48 17h 
+== nginx 404/405
+nosudo
+      3 /graphql/api
+      3 /graphql
+      3 /api/graphql
+      3 /api/gql
+      3 /.well-known/security.txt
+      3 /.vscode/sftp.json
