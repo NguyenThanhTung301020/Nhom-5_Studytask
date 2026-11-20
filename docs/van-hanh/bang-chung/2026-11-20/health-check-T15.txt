@@ -1,0 +1,135 @@
+=== STUDYTASK HEALTH CHECK ===
+thoi_diem_do_utc: 2026-11-20 08:34:21
+cua_so_theo_doi: -15 days (journalctl --since)
+
+--- He thong
+uptime: up 1 week, 6 hours, 45 minutes
+load_1_5_15: 0.02 0.02 0.00
+ram_da_dung_MiB: 717 / 7368 (kha_dung 6651)
+swap_da_dung_MiB: 0 / 4095
+dia_goc_dung: 5% (13823956 KB / 309047680 KB)
+inode_dung: 1%
+nhiet_do_C (acpitz): 16.8
+nhiet_do_C (acpitz): 27.8
+nhiet_do_C (acpitz): 29.8
+nhiet_do_C (x86_pkg_temp): 40.0
+goi_cho_cap_nhat: 16
+can_reboot: khong
+dong_bo_gio: yes
+
+--- Khoi dong lai (journalctl --list-boots)
+IDX BOOT ID                          FIRST ENTRY                 LAST ENTRY
+ -3 738f9d7e11694c68ad630de52d8f4b2c Tue 2026-11-03 07:19:59 UTC Tue 2026-11-03 08:28:29 UTC
+ -2 83f1d19d4caf40e1b0f3a63061ba3651 Tue 2026-11-03 08:31:16 UTC Wed 2026-11-04 06:18:16 UTC
+ -1 ecefd3112acb486e973fb42caaf004dd Wed 2026-11-04 06:19:51 UTC Fri 2026-11-13 01:49:08 UTC
+  0 14930db545644097974713cea791eab0 Fri 2026-11-13 01:49:23 UTC Fri 2026-11-20 08:34:21 UTC
+
+--- Dich vu
+studytask-api: active | tu_khoi_dong_lai=0 | chay_tu=Thu 2026-11-19 06:55:19 UTC
+nginx: active | tu_khoi_dong_lai=0 | chay_tu=Fri 2026-11-20 06:15:34 UTC
+cloudflared: active | tu_khoi_dong_lai=0 | chay_tu=Fri 2026-11-13 01:50:18 UTC
+don_vi_loi: 0
+RSS_MB api/cloudflared/nginx: 73 / 43 / 33
+
+--- Loi he thong (lan chay hien tai)
+journal_err_so_dong: 17
+journal_err_nhom_theo_noi_dung (so cac con so thanh N):
+         3 Device: /dev/sda [SAT], previous self-test completed with error (read test element)
+         2 Device: /dev/sda [SAT], Self-Test Log error count increased from N to N
+         2 ACPI Error: Aborting method \_SB.PCIN.SATN.PRTN._GTF due to previous error (AE_NOT_FOUND) (N/psparse-N)
+         2 ACPI BIOS Error (bug): Could not resolve symbol [\_SB.PCIN.SATN.PRTN._GTF.DSSP], AE_NOT_FOUND (N/psargs-N)
+         1 xN/cpu: SGX disabled or unsupported by BIOS.
+         1 run-parts: /etc/smartmontools/run.d/Nmail exited with return code N
+         1 nouveau N:N:N.N: bus: MMIO read of N FAULT at NeN [ PRIVRING ]
+         1 Your system does not have /usr/bin/mail. Install the bsd-mailx or mailutils package.
+journal_err_moi_nhat:
+   Nov 17 06:50:18 studytask smartd[5493]: Warning via /usr/share/smartmontools/smartd-runner to root: failed (32-bit/8-bit exit status: 256/1)
+   Nov 17 08:50:17 studytask smartd[5493]: Device: /dev/sda [SAT], previous self-test completed with error (read test element)
+   Nov 17 08:50:17 studytask smartd[5493]: Device: /dev/sda [SAT], Self-Test Log error count increased from 2 to 3
+oom_io_fs_loi: 0
+
+--- API (-15 days)
+tong_yeu_cau: 16477
+ma_http:
+     14680 HTTP/1.1" 200
+      1503 HTTP/1.1" 401
+       126 HTTP/1.1" 403
+       118 HTTP/1.1" 404
+        25 HTTP/1.1" 500
+        14 HTTP/1.1" 400
+         7 HTTP/1.1" 429
+         4 HTTP/1.1" 409
+loi_5xx_tong: 25  (trong do 501 do HEAD /api/auth/me da biet: 0; can dieu tra neu so khac)
+traceback_hoac_MAIL_ERROR: 50
+bi_gioi_han_429: 7
+403_theo_duong_dan:
+        46 "PUT /api/doc/userData/<id>
+        24 "GET /api/doc/sharedData/global
+        10 "POST /api/doc/activities/<id>/append
+         8 "GET /api/doc/userData/<id>
+         6 "PUT /api/doc/sharedData/global
+yeu_cau_theo_ngay:
+         1 2026-11-05
+       328 2026-11-06
+         4 2026-11-08
+       495 2026-11-09
+       450 2026-11-10
+         1 2026-11-11
+       959 2026-11-12
+       440 2026-11-13
+       224 2026-11-14
+        21 2026-11-15
+      1614 2026-11-16
+      3937 2026-11-17
+      7801 2026-11-18
+      1639 2026-11-19
+        25 2026-11-20
+
+--- Cloudflare Tunnel (-15 days)
+ket_noi_lai: 97
+dang_ky_lai_thanh_cong: 59
+lan_gan_nhat: Nov 20 05:47:56
+
+--- nginx
+access_log_ma_http:
+       104 200
+        56 304
+        24 404
+         9 405
+         3 301
+error_log_so_dong: 4
+
+--- Bao mat
+ssh_dang_nhap_sai (Failed password): 5
+ssh_dang_nhap_sai_theo_nguon:       5 from 192.168.2.187;
+ssh_dang_nhap_thanh_cong_theo_nguon:     270 from 192.168.2.175;      1 from 192.168.2.187;
+cong_dang_nghe: 0.0.0.0:22 0.0.0.0:80 127.0.0.1:20241 127.0.0.1:8787 127.0.0.53%lo:53 127.0.0.54:53 [::]:22 
+
+--- Mang
+   5 packets transmitted, 5 received, 0% packet loss, time 4006ms
+   rtt min/avg/max/mdev = 59.259/60.346/62.306/1.104 ms
+luu_luong_tu_khoi_dong_MB (enp5s0) nhan/gui: 5925.2 / 1799.1
+     2026-11-14    60.14 MiB |   65.45 MiB |  125.59 MiB |   12.19 kbit/s
+     2026-11-15    30.55 MiB |   34.28 MiB |   64.82 MiB |    6.29 kbit/s
+     2026-11-16    66.41 MiB |  104.58 MiB |  170.99 MiB |   16.60 kbit/s
+     2026-11-17   105.18 MiB |  301.03 MiB |  406.21 MiB |   39.44 kbit/s
+     2026-11-18   178.31 MiB |  294.64 MiB |  472.95 MiB |   45.92 kbit/s
+     2026-11-19     5.30 GiB |  940.24 MiB |    6.22 GiB |  618.44 kbit/s
+     2026-11-20    17.81 MiB |   14.58 MiB |   32.38 MiB |    8.88 kbit/s
+     ------------------------+-------------+-------------+---------------
+      estimated    50.26 MiB |   41.12 MiB |   91.38 MiB |
+site: HTTP 200 trong 0.419039s
+
+--- Du lieu
+integrity_check: ok
+  accounts: 1031
+  sessions: 19
+  docs: 2481
+  chat: 6
+  contact_email: 3
+  codes: 1
+dung_luong_du_lieu: 5.1G ; db+wal: 11111 KB
+
+--- Sao luu
+ban_sao_luu_moi_nhat: /mnt/backup/studytask/2026-11-19_200136 (12 gio truoc)
+bao_cao_xong: 08:34:27
