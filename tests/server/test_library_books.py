@@ -134,6 +134,20 @@ try:
         req('GET', '/api/files/library/hong.pdf', ck=sv)[0] == 404 and req('GET', '/api/files/library/mat-tep.pdf', ck=sv)[0] == 404)
     chk('không có đường dẫn công khai tới PDF: /uploads/library chỉ chứa bìa', not [f for f in os.listdir(os.path.join(D, 'uploads', 'library')) if f.endswith('.pdf')])
 
+    # ── --prune: sách bị loại khỏi danh mục (vd. không rõ giấy phép) được gỡ, tệp chuyển vào library/removed/ chứ không xóa hẳn ──
+    cat1 = os.path.join(STG, 'catalog-1.json'); json.dump(catalog[:1], open(cat1, 'w', encoding='utf-8'), ensure_ascii=False)
+    r = run_import('--staging', STG, '--catalog', cat1, '--prune', '--dry-run')
+    chk('--prune --dry-run chỉ báo, không gỡ gì', r.returncode == 0 and '1 sách không còn trong danh mục' in r.stdout
+        and os.path.isfile(os.path.join(D, 'library', 'books', 'sach-hai.pdf')))
+    r = run_import('--staging', STG, '--catalog', cat1, '--prune')
+    rm_dirs = os.listdir(os.path.join(D, 'library', 'removed')) if os.path.isdir(os.path.join(D, 'library', 'removed')) else []
+    kept = [i for (i,) in db_rows("SELECT id FROM docs WHERE col='libraryBooks'")]
+    chk('--prune gỡ sách không còn trong danh mục: mất khỏi CSDL, PDF và bìa chuyển vào library/removed/ (khôi phục được)',
+        r.returncode == 0 and 'sach-hai' not in kept and 'sach-mot' in kept and not os.path.exists(os.path.join(D, 'library', 'books', 'sach-hai.pdf'))
+        and len(rm_dirs) == 1 and sorted(os.listdir(os.path.join(D, 'library', 'removed', rm_dirs[0]))) == ['danh-muc-da-go.json', 'sach-hai.jpg', 'sach-hai.pdf'])
+    chk('--prune không đụng bản ghi không do script nạp (không có nhãn seed)', 'hong' in kept and 'mat-tep' in kept)
+    chk('sách đã gỡ thì tải về → 404', req('GET', '/api/files/library/sach-hai.pdf', ck=sv)[0] == 404)
+
     # ── gỡ ──
     r = run_import('--remove')
     chk('--remove gỡ đúng sách do script nạp (danh mục, PDF, bìa, meta)', r.returncode == 0 and not os.path.exists(pdf)

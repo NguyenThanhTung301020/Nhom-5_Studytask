@@ -11,6 +11,7 @@ Danh mục mặc định là scripts/data/thu-vien-sach.json (do scripts/prepare
   python3 scripts/import_library.py --data-dir /var/lib/studytask --staging ~/library-staging            # nạp
   python3 scripts/import_library.py --data-dir ... --staging ... --dry-run                                  # chỉ báo kế hoạch
   python3 scripts/import_library.py --data-dir ... --remove                                                  # gỡ đúng sách do script này nạp
+  python3 scripts/import_library.py --data-dir ... --staging ... --prune                                     # nạp, đồng thời gỡ sách không còn trong danh mục
 
 Kết quả:
   <data>/library/books/<mã>.pdf        không công khai: chỉ tải qua /api/files/library/<mã>.pdf sau khi đăng nhập (nginx X-Accel-Redirect)
@@ -27,7 +28,7 @@ CATALOG = os.path.join(HERE, 'data', 'thu-vien-sach.json')
 TAG = 'library-v1'
 META_ID = 'seed_library_v1'
 FIELDS = ('id', 'title', 'author', 'genre', 'year', 'language', 'series', 'description', 'sourceName', 'sourceId', 'sourceUrl',
-          'license', 'licenseLabel', 'file', 'originalName', 'size', 'sha256')
+          'license', 'licenseLabel', 'rightsNote', 'file', 'originalName', 'size', 'sha256')
 
 
 def human(n):
@@ -77,6 +78,9 @@ def main(argv=None):
     ap.add_argument('--no-verify', action='store_true', help='bỏ kiểm tra SHA-256 của tệp trong staging (chỉ để thử nhanh)')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--remove', action='store_true', help='gỡ sách do script này nạp (xóa tệp, bìa và danh mục)')
+    ap.add_argument('--prune', action='store_true',
+                    help='gỡ sách do script này nạp mà KHÔNG còn trong danh mục (vd. sách bị loại vì bản quyền); PDF và bìa chuyển vào '
+                         '<data>/library/removed/<thời điểm>/ để có thể khôi phục, không xóa hẳn')
     a = ap.parse_args(argv)
 
     data = os.path.abspath(a.data_dir)
@@ -123,6 +127,11 @@ def main(argv=None):
             continue
         have = os.path.isfile(dst) and os.path.getsize(dst) == b['size']
         plan.append((b, src, cov, dst, have))
+    keep = {b['id'] for b in catalog}
+    stale = [(i, json.loads(d)) for i, d in con.execute("SELECT id, data FROM docs WHERE col='libraryBooks'")] if a.prune else []
+    stale = [(i, d) for i, d in stale if d.get('seed') == TAG and i not in keep]
+    if a.prune:
+        print(f'--prune: {len(stale)} sách không còn trong danh mục sẽ được gỡ' + (': ' + ', '.join(i for i, _ in stale[:10]) if stale else ''))
     need = sum(b['size'] for b, _, _, dst, have in plan if not have)
     free = shutil.disk_usage(data).free
     print(f'{len(plan)}/{len(catalog)} sách; cần chép {human(need)}, còn trống {human(free)}')
@@ -152,12 +161,25 @@ def main(argv=None):
         d = {k: b.get(k, '') for k in FIELDS}
         d.update({'cover': cover, 'pages': int(pages.get(b['id'], 0) or 0), 'addedAt': now, 'seed': TAG})
         docs.append((b['id'], json.dumps(d, ensure_ascii=False)))
+    moved = 0
+    if stale:
+        trash = os.path.join(data, 'library', 'removed', time.strftime('%Y%m%d-%H%M%S', time.gmtime()))
+        os.makedirs(trash, mode=0o750, exist_ok=True)
+        for i, d in stale:
+            for path in (os.path.join(books_dir, os.path.basename(d.get('file') or '')), os.path.join(cover_dir, i + '.jpg')):
+                if os.path.basename(path) and os.path.isfile(path):
+                    shutil.move(path, os.path.join(trash, os.path.basename(path)))
+                    moved += 1
+        json.dump([d for _, d in stale], open(os.path.join(trash, 'danh-muc-da-go.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     con.execute('BEGIN IMMEDIATE')
+    con.executemany("DELETE FROM docs WHERE col='libraryBooks' AND id=?", [(i,) for i, _ in stale])
     con.executemany("INSERT OR REPLACE INTO docs VALUES ('libraryBooks',?,?)", docs)
     con.execute("INSERT OR REPLACE INTO docs VALUES ('meta',?,?)", (META_ID, json.dumps(
         {'at': time.time(), 'books': len(docs), 'bytes': sum(b['size'] for b, *_ in plan)}, ensure_ascii=False)))
     con.execute('COMMIT')
     print(f'Xong: {len(docs)} sách vào danh mục ({done} tệp mới, {skipped} đã có). Tệp: {books_dir}')
+    if stale:
+        print(f'Đã gỡ {len(stale)} sách không còn trong danh mục; {moved} tệp chuyển vào {trash}')
     return 0
 
 

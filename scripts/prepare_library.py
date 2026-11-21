@@ -26,6 +26,8 @@ OVERRIDES = os.path.join(DATA, 'thu-vien-overrides.json')
 CATALOG = os.path.join(DATA, 'thu-vien-sach.json')
 TAG = 'library-v1'
 USER_PROVIDED_DIR = 'sách tự down'          # sách tải thủ công từ Archive.org, không có mã mục
+WS_DIR = 'wikisource-vi'                      # sách dựng từ Wikisource tiếng Việt (scripts/build_wikisource_books.py), thông tin ở WS_CATALOG
+WS_CATALOG = os.path.join(DATA, 'thu-vien-wikisource.json')
 META_KEYS = ('title', 'creator', 'date', 'language', 'licenseurl', 'rights', 'publisher')
 
 LICENSES = {
@@ -104,15 +106,32 @@ def main():
     ap.add_argument('--staging', required=True, help='thư mục ghi manifest.json (và nơi đặt bìa, tệp để chép lên máy chủ)')
     ap.add_argument('--offline', action='store_true', help='không gọi Archive.org, chỉ dùng scripts/data/thu-vien-archive-meta.json')
     ap.add_argument('--no-hash', action='store_true', help='bỏ qua SHA-256 (chỉ để thử nhanh)')
+    ap.add_argument('--allow-unlicensed', action='store_true',
+                    help='giữ cả sách trang nguồn không ghi giấy phép (mặc định LOẠI: từ 21/11/2026 kho chỉ nhận sách có giấy phép ghi rõ)')
     a = ap.parse_args()
 
     cache = json.load(open(META_CACHE, encoding='utf-8')) if os.path.exists(META_CACHE) else {}
     overrides = json.load(open(OVERRIDES, encoding='utf-8')) if os.path.exists(OVERRIDES) else {}
+    ws_cat = json.load(open(WS_CATALOG, encoding='utf-8')) if os.path.exists(WS_CATALOG) else {}
     folders = sorted(d for d in os.listdir(a.src) if os.path.isdir(os.path.join(a.src, d)))
-    books, used = [], set()
+    books, used, excluded = [], set(), []
     for folder in folders:
         pdfs = sorted(f for f in os.listdir(os.path.join(a.src, folder)) if f.lower().endswith('.pdf'))
         if not pdfs:
+            continue
+        if folder == WS_DIR:
+            for fn in pdfs:
+                info = ws_cat.get(fn[:-4])
+                if not info:
+                    sys.stderr.write(f'{WS_DIR}/{fn}: không có trong {os.path.basename(WS_CATALOG)}, bỏ qua\n')
+                    continue
+                path = os.path.join(a.src, folder, fn)
+                used.add(fn[:-4])
+                books.append({**{k: info.get(k, '') for k in ('title', 'author', 'genre', 'year', 'series', 'description', 'license', 'licenseLabel', 'rightsNote')},
+                              'id': fn[:-4], 'language': 'vi', 'sourceName': 'Wikisource tiếng Việt', 'sourceId': info['sourceTitle'],
+                              'sourceUrl': 'https://vi.wikisource.org/wiki/' + urllib.parse.quote(info['sourceTitle'].replace(' ', '_')),
+                              'file': fn, 'originalName': fn, 'size': os.path.getsize(path),
+                              'sha256': '' if a.no_hash else sha256(path), 'seed': TAG, 'source': os.path.abspath(path)})
             continue
         user_provided = folder == USER_PROVIDED_DIR
         meta = {}
@@ -140,7 +159,10 @@ def main():
             title = clean(ov.get('title') or (meta.get('title') if len(pdfs) == 1 else None) or title_from_file(stem))
             author = clean(ov.get('author') if 'author' in ov else (meta.get('creator') if len(pdfs) == 1 else ''))
             path = os.path.join(a.src, folder, fn)
-            lic = meta.get('licenseurl', '') if not user_provided else ''
+            lic = ov.get('license') or (meta.get('licenseurl', '') if not user_provided else '')
+            if ov.get('exclude'):                 # loại có chủ đích (rủi ro bản quyền, không phải tiếng Việt...), lý do ghi ở overrides
+                excluded.append((bid, ov['exclude']))
+                continue
             books.append({
                 'id': bid, 'title': title, 'author': author,
                 'genre': ov.get('genre', 'khac'), 'year': ov.get('year', ''),      # không lấy năm từ Archive: trường date ở đó nhiều khi là ngày tải lên
@@ -150,11 +172,21 @@ def main():
                 'sourceName': 'Internet Archive (tải thủ công, không có mã mục)' if user_provided else 'Internet Archive',
                 'sourceId': '' if user_provided else folder,
                 'sourceUrl': '' if user_provided else 'https://archive.org/details/' + urllib.parse.quote(folder),
-                'license': lic, 'licenseLabel': license_label(lic) if lic else 'Chưa ghi giấy phép trên trang nguồn',
+                'license': lic, 'licenseLabel': ov.get('licenseLabel') or (license_label(lic) if lic else 'Chưa ghi giấy phép trên trang nguồn'),
+                'rightsNote': ov.get('rightsNote', ''),   # căn cứ được dùng: vì sao sách thuộc phạm vi công cộng / ai cấp phép
                 'file': bid + '.pdf', 'originalName': fn, 'size': os.path.getsize(path),
                 'sha256': '' if a.no_hash else sha256(path), 'seed': TAG,
                 'source': os.path.abspath(path),
             })
+    # Chính sách bản quyền (21/11/2026): chỉ nhận sách mà trang nguồn Archive.org ghi giấy phép rõ (Creative Commons hoặc phạm vi công cộng).
+    # Sách tải thủ công (không có mã mục) và sách trang nguồn không ghi giấy phép bị loại khỏi danh mục.
+    if not a.allow_unlicensed:
+        dropped = [b for b in books if not b['license']]
+        books = [b for b in books if b['license']]
+        if dropped:
+            print(f'Loại {len(dropped)} sách không có giấy phép ghi rõ: ' + ', '.join(b['id'] for b in dropped[:8]) + (' ...' if len(dropped) > 8 else ''))
+    if excluded:
+        print(f'Loại {len(excluded)} sách theo danh sách loại trừ trong {os.path.basename(OVERRIDES)} (rủi ro bản quyền / không phải tiếng Việt)')
     os.makedirs(a.staging, exist_ok=True)
     if cache:
         json.dump(cache, open(META_CACHE, 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)
