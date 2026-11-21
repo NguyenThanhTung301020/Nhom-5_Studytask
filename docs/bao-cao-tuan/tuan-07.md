@@ -198,6 +198,7 @@ Kế hoạch lấy từ mọi việc còn tồn ở Phần 2 ("Việc đạt đ�
 1. Do nguồn lực của nhóm có hạn và số lượng công việc nhiều, phần việc ngoài kế hoạch làm song song chưa đạt như kỳ vọng. Nhóm xin thầy cho gia hạn đợt làm phần ngoài kế hoạch từ 3 tuần lên 5 tuần. Trong thời gian gia hạn, nhóm ưu tiên các việc trong kế hoạch; phần ngoài kế hoạch sắp xếp theo thứ tự: sửa lỗi trước, sau đó kiểm thử; không mở thêm chức năng mới và không cập nhật thêm giao diện, hình ảnh. Thầy có đồng ý với cách sắp xếp này không?
 2. Mốc T+15 cho thấy máy chủ chạy ổn (không sập, không mất dữ liệu, sao lưu và thử khôi phục đạt) nhưng mới đạt 2/5 điều kiện: còn mã 500 khi trình duyệt ngắt kết nối, RSS của API vượt ngưỡng và chưa có giám sát truy cập từ ngoài ([PR74]). Nhóm đề xuất sửa lỗi mã 500, theo dõi RSS sau lần cập nhật server, rồi đo lại ở mốc T+30 thay vì kết luận ngay ở T+15. Thầy có đồng ý không ?
 3. [D3] mục 14 (nhập danh sách lớp từ tệp CSV/Excel) dời sang tuần 8 vì nhóm chưa chốt ai được nhập danh sách: Admin/Phòng Đào tạo hay giáo viên. Nhóm đề xuất chỉ Admin và Phòng Đào tạo được nhập, giáo viên chỉ xem danh sách lớp mình dạy, để tránh tạo trùng hoặc sai tài khoản sinh viên. Thầy có đồng ý với cách phân quyền này không?
+4. Do có nhiều việc nhóm nhận thấy vẫn làm bình thường nhưng không cần phải làm báo cáo và kiểm tra liên tục nên nhóm quyết định đưa vào quy ước vậy không có hợp lý không ?
 
 ---
 
