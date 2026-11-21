@@ -28,7 +28,7 @@ CATALOG = os.path.join(HERE, 'data', 'thu-vien-sach.json')
 TAG = 'library-v1'
 META_ID = 'seed_library_v1'
 FIELDS = ('id', 'title', 'author', 'genre', 'year', 'language', 'series', 'description', 'sourceName', 'sourceId', 'sourceUrl',
-          'license', 'licenseLabel', 'file', 'originalName', 'size', 'sha256')
+          'license', 'licenseLabel', 'rightsNote', 'file', 'originalName', 'size', 'sha256')
 
 
 def human(n):

@@ -111,7 +111,7 @@ def main():
     cache = json.load(open(META_CACHE, encoding='utf-8')) if os.path.exists(META_CACHE) else {}
     overrides = json.load(open(OVERRIDES, encoding='utf-8')) if os.path.exists(OVERRIDES) else {}
     folders = sorted(d for d in os.listdir(a.src) if os.path.isdir(os.path.join(a.src, d)))
-    books, used = [], set()
+    books, used, excluded = [], set(), []
     for folder in folders:
         pdfs = sorted(f for f in os.listdir(os.path.join(a.src, folder)) if f.lower().endswith('.pdf'))
         if not pdfs:
@@ -142,7 +142,10 @@ def main():
             title = clean(ov.get('title') or (meta.get('title') if len(pdfs) == 1 else None) or title_from_file(stem))
             author = clean(ov.get('author') if 'author' in ov else (meta.get('creator') if len(pdfs) == 1 else ''))
             path = os.path.join(a.src, folder, fn)
-            lic = meta.get('licenseurl', '') if not user_provided else ''
+            lic = ov.get('license') or (meta.get('licenseurl', '') if not user_provided else '')
+            if ov.get('exclude'):                 # loại có chủ đích (rủi ro bản quyền, không phải tiếng Việt...), lý do ghi ở overrides
+                excluded.append((bid, ov['exclude']))
+                continue
             books.append({
                 'id': bid, 'title': title, 'author': author,
                 'genre': ov.get('genre', 'khac'), 'year': ov.get('year', ''),      # không lấy năm từ Archive: trường date ở đó nhiều khi là ngày tải lên
@@ -152,7 +155,8 @@ def main():
                 'sourceName': 'Internet Archive (tải thủ công, không có mã mục)' if user_provided else 'Internet Archive',
                 'sourceId': '' if user_provided else folder,
                 'sourceUrl': '' if user_provided else 'https://archive.org/details/' + urllib.parse.quote(folder),
-                'license': lic, 'licenseLabel': license_label(lic) if lic else 'Chưa ghi giấy phép trên trang nguồn',
+                'license': lic, 'licenseLabel': ov.get('licenseLabel') or (license_label(lic) if lic else 'Chưa ghi giấy phép trên trang nguồn'),
+                'rightsNote': ov.get('rightsNote', ''),   # căn cứ được dùng: vì sao sách thuộc phạm vi công cộng / ai cấp phép
                 'file': bid + '.pdf', 'originalName': fn, 'size': os.path.getsize(path),
                 'sha256': '' if a.no_hash else sha256(path), 'seed': TAG,
                 'source': os.path.abspath(path),
@@ -164,6 +168,8 @@ def main():
         books = [b for b in books if b['license']]
         if dropped:
             print(f'Loại {len(dropped)} sách không có giấy phép ghi rõ: ' + ', '.join(b['id'] for b in dropped[:8]) + (' ...' if len(dropped) > 8 else ''))
+    if excluded:
+        print(f'Loại {len(excluded)} sách theo danh sách loại trừ trong {os.path.basename(OVERRIDES)} (rủi ro bản quyền / không phải tiếng Việt)')
     os.makedirs(a.staging, exist_ok=True)
     if cache:
         json.dump(cache, open(META_CACHE, 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)

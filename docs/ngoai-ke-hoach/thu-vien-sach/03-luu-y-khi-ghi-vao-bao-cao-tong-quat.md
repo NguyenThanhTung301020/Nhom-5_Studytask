@@ -1,5 +1,6 @@
 # 03. Lưu ý khi ghi nhận vào báo cáo tổng quát
 > **NGOÀI KẾ HOẠCH CỦA NHÓM.** Phần việc này do Trương Thanh Vui làm riêng, không thuộc kế hoạch tuần 5, 6, 7 và không tính vào khối lượng các việc theo kế hoạch của nhóm. Đọc để hiểu một phần việc riêng, không dùng để đánh giá tiến độ kế hoạch.
+> **Đã cũ (21/11/2026):** số liệu dưới đây là trạng thái 179 sách ngày 19/11. Sau rà soát bản quyền kho còn 255 sách, xem [04](04-ra-soat-ban-quyen-21-11.md) và [05](05-danh-sach-255-sach.md).
 
 ## A. Những điều cần giữ khi viết báo cáo tổng quát sau này
 
