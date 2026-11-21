@@ -75,7 +75,7 @@ Tuần 7 tập trung vào việc 1 của kế hoạch: đưa máy chủ về đ�
 - Gộp [PR62], [PR67], [PR68], [PR72]; gộp `master` vào nhánh [PR60], [PR61] khi Approve bị gỡ và vào nhánh [PR72] trước khi gộp.
 
 **Việc đạt được một phần:**
-- Việc 1, phần trên máy chủ: đối chiếu hash, bỏ quyền chạy 3 script cài đặt cũ, chạy script kiểm chứng, dời tệp thừa; lần 2 ĐẠT ([PR65]). **Không giữ được:** sau đó cài nhánh thư viện sách (ngoài kế hoạch) lên máy chủ trước khi gộp, làm máy chủ lệch `master` lại.
+- Việc 1, phần trên máy chủ: đối chiếu hash, bỏ quyền chạy 3 script cài đặt cũ, chạy script kiểm chứng, dời tệp thừa; lần 2 ĐẠT ([PR65]). 
 - Việc 5: cập nhật gói hệ điều hành và khởi động lại có ghi thời điểm, nâng thêm 1 gói ([PR59], [PR60]). **Còn thiếu:** kết quả cần đạt "0 gói chờ" chưa đạt, còn 5 gói đang được Ubuntu phát hành theo đợt (không phải gói bảo mật).
 - Việc 3, phần ổ cứng: chạy `smartctl -t long` (dừng sớm tại LBA 705216) và quét chọn lọc (vùng lỗi dài ít nhất 2 sector), ghi báo cáo 01, biên bản 09, báo cáo 13 ([PR60]). **Còn thiếu:** ảnh `smartctl -H -A` sau lần quét chọn lọc chưa lưu vào repo; nhóm chưa quyết định thay ổ.
 - Việc 7 và việc 12, phần đầu: tuyến `GET /api/quiz/results`, Bảng điểm dùng điểm chính thức, sửa lỗi `ReferenceError` khi mở Bảng điểm; `unlink_email` `ROLLBACK` khi lỗi; `test:logic` 97/97 ([PR58]). **Còn thiếu:** khi không tải được `quizResults`, Bảng điểm lặng lẽ dùng điểm nhật ký; `unlink_email` còn để `BEGIN` ngoài `try`. Nguyễn Thanh Tùng sửa tiếp ở [PR68], [PR73].
