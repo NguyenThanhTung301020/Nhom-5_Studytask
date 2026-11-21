@@ -1,6 +1,6 @@
 # 01. Nguồn và tài liệu tham khảo
 > **NGOÀI KẾ HOẠCH CỦA NHÓM.** Phần việc này do Trương Thanh Vui làm riêng, không thuộc kế hoạch tuần 5, 6, 7 và không tính vào khối lượng các việc theo kế hoạch của nhóm. Đọc để hiểu một phần việc riêng, không dùng để đánh giá tiến độ kế hoạch.
-> **Đã cũ (21/11/2026):** số liệu dưới đây là trạng thái 179 sách ngày 19/11. Sau rà soát bản quyền kho còn 255 sách, xem [04](04-ra-soat-ban-quyen-21-11.md) và [05](05-danh-sach-255-sach.md).
+> **Đã cũ (21/11/2026):** số liệu dưới đây là trạng thái 179 sách ngày 19/11. Sau các lần rà soát 21/11 kho có 262 sách tiếng Việt chữ quốc ngữ, xem [06](06-ra-soat-sach-doc-duoc.md) và [05](05-danh-sach-sach.md).
 
 ## 1. Nguồn
 

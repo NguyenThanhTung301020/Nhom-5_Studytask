@@ -1,5 +1,6 @@
 # 04. Rà soát bản quyền kho sách (21/11/2026)
 > **NGOÀI KẾ HOẠCH CỦA NHÓM – KHÔNG THUỘC TUẦN NÀO.** Phần rà soát này do Trương Thanh Vui làm riêng ngày 21/11/2026, sau khi nhóm đã hoàn tất báo cáo tuần. Không thuộc kế hoạch tuần 5, 6, 7, không tính vào khối lượng của nhóm và **không cần đưa vào báo cáo tuần** (việc phụ, mức độ quan trọng thấp). Tài liệu chỉ để lưu vết vì sao sách được giữ hoặc gỡ.
+> **Đã cũ:** số liệu 255 sách ở đây là kết quả đợt 2. Lần rà soát 3 (sách tiếng Việt đọc được, 262 sách) ở [06](06-ra-soat-sach-doc-duoc.md).
 
 Người thực hiện: Trương Thanh Vui (cùng Claude Code, model Claude Opus 5.5). Thay cho số liệu 179 sách ở 01–03 (các tệp đó giữ nguyên làm lịch sử).
 
@@ -207,4 +208,4 @@ Tệp PDF và bìa đã chuyển vào `/var/lib/studytask/library/removed/<thờ
 python scripts/prepare_library.py --src 'E:\sach' --staging du-lieu-thu/library-staging --offline
 ```
 
-Phải in ra `255 sách`. Trên máy chủ: `SELECT COUNT(*) FROM docs WHERE col='libraryBooks'` ra 255. Danh sách đầy đủ: [05-danh-sach-255-sach.md](05-danh-sach-255-sach.md).
+Phải in ra `255 sách`. Trên máy chủ: `SELECT COUNT(*) FROM docs WHERE col='libraryBooks'` ra 255. Danh sách đầy đủ: [05-danh-sach-sach.md](05-danh-sach-sach.md).

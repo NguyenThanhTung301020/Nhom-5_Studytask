@@ -26,6 +26,8 @@ OVERRIDES = os.path.join(DATA, 'thu-vien-overrides.json')
 CATALOG = os.path.join(DATA, 'thu-vien-sach.json')
 TAG = 'library-v1'
 USER_PROVIDED_DIR = 'sách tự down'          # sách tải thủ công từ Archive.org, không có mã mục
+WS_DIR = 'wikisource-vi'                      # sách dựng từ Wikisource tiếng Việt (scripts/build_wikisource_books.py), thông tin ở WS_CATALOG
+WS_CATALOG = os.path.join(DATA, 'thu-vien-wikisource.json')
 META_KEYS = ('title', 'creator', 'date', 'language', 'licenseurl', 'rights', 'publisher')
 
 LICENSES = {
@@ -110,11 +112,26 @@ def main():
 
     cache = json.load(open(META_CACHE, encoding='utf-8')) if os.path.exists(META_CACHE) else {}
     overrides = json.load(open(OVERRIDES, encoding='utf-8')) if os.path.exists(OVERRIDES) else {}
+    ws_cat = json.load(open(WS_CATALOG, encoding='utf-8')) if os.path.exists(WS_CATALOG) else {}
     folders = sorted(d for d in os.listdir(a.src) if os.path.isdir(os.path.join(a.src, d)))
     books, used, excluded = [], set(), []
     for folder in folders:
         pdfs = sorted(f for f in os.listdir(os.path.join(a.src, folder)) if f.lower().endswith('.pdf'))
         if not pdfs:
+            continue
+        if folder == WS_DIR:
+            for fn in pdfs:
+                info = ws_cat.get(fn[:-4])
+                if not info:
+                    sys.stderr.write(f'{WS_DIR}/{fn}: không có trong {os.path.basename(WS_CATALOG)}, bỏ qua\n')
+                    continue
+                path = os.path.join(a.src, folder, fn)
+                used.add(fn[:-4])
+                books.append({**{k: info.get(k, '') for k in ('title', 'author', 'genre', 'year', 'series', 'description', 'license', 'licenseLabel', 'rightsNote')},
+                              'id': fn[:-4], 'language': 'vi', 'sourceName': 'Wikisource tiếng Việt', 'sourceId': info['sourceTitle'],
+                              'sourceUrl': 'https://vi.wikisource.org/wiki/' + urllib.parse.quote(info['sourceTitle'].replace(' ', '_')),
+                              'file': fn, 'originalName': fn, 'size': os.path.getsize(path),
+                              'sha256': '' if a.no_hash else sha256(path), 'seed': TAG, 'source': os.path.abspath(path)})
             continue
         user_provided = folder == USER_PROVIDED_DIR
         meta = {}
