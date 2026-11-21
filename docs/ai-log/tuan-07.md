@@ -133,7 +133,7 @@ Commit không có AI: `57d49a3` (Thanh Vui xóa tệp `06-doan-dan-vao-bao-cao-t
 3. **Gợi ý đánh số lại các mục làm sai chỗ trỏ mục.** Sau khi thêm mục Kết luận nhanh và đánh số lại, các chỗ "mục 3", "mục 4" trỏ sang mục khác. Đã sửa lại số mục.
 4. **Commit việc 8 thiếu nhãn `[AI]`.** AI tạo commit `e79a346` có dòng `Co-Authored-By` nhưng tiêu đề không có tiền tố `[AI]` theo quy ước nhóm. Commit đã gộp nên không sửa lại lịch sử; ghi nhận tại đây.
 
-## 5. Việc còn để ngỏ liên quan đến phần AI làm
+## 5. Việc còn để ngỏ liên quan đến phần AI
 
 | Việc | Người theo dõi |
 |---|---|
