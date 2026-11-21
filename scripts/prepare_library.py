@@ -104,6 +104,8 @@ def main():
     ap.add_argument('--staging', required=True, help='thư mục ghi manifest.json (và nơi đặt bìa, tệp để chép lên máy chủ)')
     ap.add_argument('--offline', action='store_true', help='không gọi Archive.org, chỉ dùng scripts/data/thu-vien-archive-meta.json')
     ap.add_argument('--no-hash', action='store_true', help='bỏ qua SHA-256 (chỉ để thử nhanh)')
+    ap.add_argument('--allow-unlicensed', action='store_true',
+                    help='giữ cả sách trang nguồn không ghi giấy phép (mặc định LOẠI: từ 21/11/2026 kho chỉ nhận sách có giấy phép ghi rõ)')
     a = ap.parse_args()
 
     cache = json.load(open(META_CACHE, encoding='utf-8')) if os.path.exists(META_CACHE) else {}
@@ -155,6 +157,13 @@ def main():
                 'sha256': '' if a.no_hash else sha256(path), 'seed': TAG,
                 'source': os.path.abspath(path),
             })
+    # Chính sách bản quyền (21/11/2026): chỉ nhận sách mà trang nguồn Archive.org ghi giấy phép rõ (Creative Commons hoặc phạm vi công cộng).
+    # Sách tải thủ công (không có mã mục) và sách trang nguồn không ghi giấy phép bị loại khỏi danh mục.
+    if not a.allow_unlicensed:
+        dropped = [b for b in books if not b['license']]
+        books = [b for b in books if b['license']]
+        if dropped:
+            print(f'Loại {len(dropped)} sách không có giấy phép ghi rõ: ' + ', '.join(b['id'] for b in dropped[:8]) + (' ...' if len(dropped) > 8 else ''))
     os.makedirs(a.staging, exist_ok=True)
     if cache:
         json.dump(cache, open(META_CACHE, 'w', encoding='utf-8'), ensure_ascii=False, indent=1, sort_keys=True)

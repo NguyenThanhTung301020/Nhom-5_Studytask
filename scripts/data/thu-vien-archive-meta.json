@@ -180,6 +180,13 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Bài Tập Hóa Hữu Cơ"
  },
+ "ban-dien-tro-ha-o-loi": {
+  "creator": "Phạm Mỹ Thạch 范美石",
+  "date": "1917",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Bản diễn trò Hà Ô Lôi 本演𠾇何烏雷"
+ },
  "bautroituoitho.-vn": {
   "creator": "Nguyễn Quang Riệu",
   "date": "2002",
@@ -253,6 +260,13 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Các phương pháp phân tích công cụ trong Hoá học hiện đại"
  },
+ "cac-thanh-truyen": {
+  "creator": "Girolamo Maiorica",
+  "date": "1646",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Các thánh truyện 各聖傳 (1646)"
+ },
  "cau-chuyen-khoa-hoc-nguyen-van-tuan": {
   "creator": "Nguyễn Văn Tuấn",
   "date": "2016",
@@ -276,12 +290,31 @@
   "publisher": "Cầu Vồng Moskva",
   "title": "Cây Xanh Rì Rào"
  },
+ "chi-nam-ngoc-am-giai-nghia-hia": {
+  "date": "1641",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Chỉ nam ngọc âm giải nghĩa (1641)"
+ },
+ "chinh-phu-ngam-1": {
+  "creator": "Đặng Trần Côn, Đoàn Thị Điểm",
+  "date": "1922",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Chinh phụ ngâm 征婦吟 (1922)"
+ },
  "chinh-tri-binh-dan-ban-moi-2018-pham-doan-trang": {
   "creator": "Pham Doan Trang",
   "date": "2018",
   "language": "vie",
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Chinh Tri Binh Dan Ban Moi 2018 Pham Doan Trang"
+ },
+ "chu-dich-luc-thap-tu-quai-giai-am": {
+  "date": "1880",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Chu dịch lục thập tứ quái giải âm 周易六十四卦解音"
  },
  "chu-han": {
   "creator": "Lý Lạc Nghị, Jim Waters (biên soạn), Nguyễn Văn Đổng (người dịch)",
@@ -298,6 +331,12 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "publisher": "Tổng hợp TP.HCM",
   "title": "Chữ Hán Trung Quốc"
+ },
+ "chu-kinh-dien-am": {
+  "date": "1900",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Chư kinh diễn âm 諸經演音 (1900)"
  },
  "chu-nghia-de-quoc-giai-doan-tot-cung-cua-chu-nghia-tu-ban": {
   "creator": "Vladimir Ilyich Lenin",
@@ -317,6 +356,19 @@
   "date": "1974",
   "language": "vie",
   "title": "Cơ cấu Việt Ngữ - quyển 2 (Trần Ngọc Ninh)"
+ },
+ "co-chau-phap-van-phat-ban-hanh-ngu-luc": {
+  "creator": "Viên Thái 圓態 (translator)",
+  "date": "1752",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Cổ Châu Pháp Vân phật bản hạnh ngữ lục 古珠法雲佛本行語録 (1752)"
+ },
+ "co-chau-phat-ban-hanh-1752": {
+  "date": "1752",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Cổ Châu Phật bản hạnh 古珠佛本行 (1752)"
  },
  "co-hoc-vat-ran-jean-marie-brebec": {
   "creator": " Jean Marie Brebec",
@@ -352,6 +404,13 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Con Rồng Việt Nam"
  },
+ "cong-an-tra-nghiem-bi-phap-phap": {
+  "creator": "Phan Duy Phiên, Dương Hợp, Trần Đôn, Nguyễn Chí",
+  "date": "1714",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Công án tra nghiệm bí pháp 公案查驗秘法"
+ },
  "cong-nghe-san-xuat-gom-su-nguyen-van-dung": {
   "creator": " Nguyễn Văn Dũng",
   "date": "2009",
@@ -359,6 +418,13 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "publisher": "Khoa học - Kỹ thuật",
   "title": "Công Nghệ Sản Xuất Gốm Sứ"
+ },
+ "cong-van-dich-dinh-bai-bien-cac-dan": {
+  "creator": "Tâm Hiển 心顯",
+  "date": "1732",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Công văn dịch đình bài biện các đàn 公文役庭排辦各𡊨 (1732)"
  },
  "cuoc-doi-cua-lenin-ma-ria-a-pri-le-gia-e-va-phan-1": {
   "language": "vie",
@@ -377,6 +443,19 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "publisher": "Thế giới",
   "title": "Vũ Trụ"
+ },
+ "dai-nam-quoc-ngu": {
+  "date": "1899",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Đại Nam quốc ngữ 大南國語 (1899)"
+ },
+ "dai-nam-quoc-tuy-uy": {
+  "creator": "Ngô Giáp Đậu",
+  "date": "1908",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Đại Nam quốc túy 大南國粹 (Incomplete)"
  },
  "dat-diu-ve-thuo-au-tho-nguyen-chan-hung": {
   "creator": "Nguyễn Chấn Hùng",
@@ -522,6 +601,13 @@
   "language": "vie",
   "title": "Họ Đã Nghĩ Như Thế – Bài viết của những đệ tử phương Tây của Ngài Ajahn Chah"
  },
+ "ho-thuong-thu-gia-le": {
+  "creator": "Hồ Sĩ Dương 胡士楊, Chu Bá Đang 朱伯璫",
+  "date": "1739",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Hồ Thượng thư gia lễ 胡尚書家禮 (1739)"
+ },
  "hoa-hoc-dai-cuong-1-cau-tao-chat-tran-thanh-hue": {
   "creator": "Tran Thanh Hue",
   "date": "2008",
@@ -529,12 +615,38 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Hoa Hoc Dai Cuong 1 Cau Tao Chat"
  },
+ "hoa-tien-nhuan-chinh": {
+  "date": "1875",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Hoa tiên nhuận chính 花箋潤正 (1875)"
+ },
+ "hoai-nam-ky": {
+  "creator": "Hoàng Quang",
+  "date": "1777",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Hoài Nam ký 懷南記"
+ },
+ "hoang-viet-luat-le-toat-yeu-dien-ca-u-dien": {
+  "creator": "Ngô Dĩnh 吳穎",
+  "date": "1813",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Hoàng Việt luật lệ toát yếu diễn ca 皇越律例撮要演歌"
+ },
  "hoctap-9.1958": {
   "creator": "Đảng Lao động Việt Nam",
   "date": "1958-09",
   "language": "vie",
   "licenseurl": "https://creativecommons.org/licenses/by-nc/4.0/",
   "title": "Tạp chí Học tập, số 9, năm 1958"
+ },
+ "hoi-dong-tu-giao": {
+  "date": "1911",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Hội đồng tứ giáo 會同四教 (1911)"
  },
  "hon-don-va-hai-hoa-trinh-xuan-thuan": {
   "creator": "Trịnh Xuân Thuận",
@@ -608,6 +720,13 @@
   "publisher": "Tổng hợp TP.HCM",
   "title": "Lịch Sử Vương Quốc Thái Lan"
  },
+ "lich-trieu-hien-chuong-loai-chi-q-1-12": {
+  "creator": "Phan Huy Chú 潘輝注",
+  "date": "1821",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Lịch triều hiến chương loại chí (q1-12) 歷朝憲章類誌"
+ },
  "luyen-van-1-nguyen-hien-le": {
   "creator": "Nguyễn Hiến Lê",
   "date": "2012",
@@ -622,6 +741,33 @@
   "language": "vie",
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Matter ( DK Eyewitness Books)"
+ },
+ "minh-tam-bao-giam-thich-nghia": {
+  "date": "1888",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Minh tâm bảo giám thích nghĩa 明心寶鑑釋義"
+ },
+ "mong-son-thi-thuc-khoa-nghi-1918": {
+  "creator": "Bích Liên 碧蓮",
+  "date": "1918",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Mông Sơn thí thực khoa nghi 蒙山施食科儀 (1918)"
+ },
+ "mss836cochinchinesefrench_202102": {
+  "creator": "Morrone, Joseph Maria, Rev.",
+  "date": "1819",
+  "language": "vie, fre",
+  "licenseurl": "http://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Cochin-Chinese & French vocabulary = Vocabulaire Cochin-Chinois et Français : Catholic Missionary at Saigon in Cochin-China, 1819."
+ },
+ "ngam-thuong-kho": {
+  "creator": "Emmanualê Hòa",
+  "date": "1865",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Ngắm thương khó 吟傷厙 (1865)"
  },
  "nghe-thuat-viet-luan-van-michel-beaud": {
   "creator": "Michel Beaud",
@@ -651,6 +797,13 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "publisher": "Tổng hợp TP.HCM",
   "title": "Nhà Thờ Công Giáo Ở Việt Nam Kiến Trúc - Lịch Sử"
+ },
+ "nhat-dung-thuong-dam": {
+  "creator": "Phạm Đình Hổ 范廷琥",
+  "date": "1851",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Nhật dụng thường đàm 日用常談 (1851)"
  },
  "nhat-ky_202203": {
   "creator": "Vương Trí Nhàn",
@@ -717,6 +870,13 @@
   "publisher": "Sở Giáo dục An Giang",
   "title": "Phân tích tác phẩm văn học dân gian"
  },
+ "phat-tu-an-thien-giai-quoc-am-luc-chuong": {
+  "creator": "Thích Phúc Điền 釋福田",
+  "date": "1845",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Phật tử an thiền giải quốc âm lục chương 佛子安禪觧國音六章 (1845)"
+ },
  "phe-phan-ly-tinh-thuan-tuy-immanuel-kant": {
   "creator": "Immanuel Kant; Bùi Văn Nam Sơn (người dịch)",
   "date": "2006",
@@ -765,6 +925,12 @@
   "publisher": "Giáo Dục ",
   "title": "Quang Học Sóng"
  },
+ "quy-y-thien-ban-1930": {
+  "date": "1930",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Quy y thiện bản 皈依善本 (1930)"
+ },
  "sa-ch-scan-co-so-ly-thuyet-cac-phan-ung-hoa-hoc-tran-thi-da-da-mo-khoa": {
   "creator": "Trần Thị Đà, Đặng Trần Phách",
   "date": "2006",
@@ -795,6 +961,19 @@
   "publisher": "Hội Nhà văn",
   "title": "Sài Gòn - Chuyện Đời Của Phố"
  },
+ "so-hoc-van-tan": {
+  "date": "1882",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Sơ học vấn tân 初學問津 (1882)"
+ },
+ "so-nghieu-doi-thoai": {
+  "creator": "Bùi Huy Đoàn 裴輝團, Lạc An 樂安",
+  "date": "1817",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Kính phụng Táo thần diễn ca 敬奉竈神演歌 - Sô nghiêu đối thoại 芻蕘對話"
+ },
  "so-phan-mot-con-nguoi-mikhail-sholokhov": {
   "creator": "Mikhail Sholokhov",
   "date": "2004",
@@ -819,6 +998,13 @@
   "publisher": "Giáo Dục ",
   "title": "Sóng"
  },
+ "su-ly-dung-thong": {
+  "creator": "Minh Châu Hương Hải 明珠香海",
+  "date": "1943",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Sự lý dung thông 事理融通"
+ },
  "taisachmoi.com-60-bai-luan-tieng-anh-thong-dung": {
   "title": "60 Bai Luan Tieng Anh Thong Dung"
  },
@@ -829,6 +1015,52 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Tam Ly Gia Dinh"
  },
+ "tam-thie-n-tu-toa-n-ye-u-1845": {
+  "date": "1845",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tam thiên tự toản yếu (1845)"
+ },
+ "tam-thien-tu-giai-am-tu-hoc-toat-yeu-oat-eu-1887": {
+  "creator": "Trương Vĩnh Ký",
+  "date": "1887",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tam thiên tự giải âm - Tự học toát yếu 三千字觧音 - 字學纂要 (1887)"
+ },
+ "tam-tu-kinh-luc-bat-dien-am": {
+  "date": "1906",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tam tự kinh lục bát diễn âm 三字經六八演音 (1906)"
+ },
+ "tam-tu-kinh-quoc-ngu-dien-ca": {
+  "creator": "Trương Vĩnh Ký",
+  "date": "1884",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tam Tự Kinh quốc ngữ diễn ca 三字經國演歌"
+ },
+ "tan-san-chinh-phu-ngam-dien-am-tu-khuc": {
+  "creator": "Đặng Trần Côn, Đoàn Thị Điểm",
+  "date": "1815",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tân san chinh phụ ngâm diễn âm từ khúc 新刋征婦吟演音辭曲"
+ },
+ "thach-sanh-tan-truyen-ab.-221": {
+  "date": "1912",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thạch Sanh tân truyện 石生新傳 (1912)"
+ },
+ "thai-tong-hoang-de-ngu-che-khoa-hu-luc": {
+  "creator": "Thận Trai 慎齋",
+  "date": "1734",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thái Tông hoàng đế ngự chế khoá hư lục 太宗皇帝御製課虛録"
+ },
  "than-khuc": {
   "creator": "Dante Alighieri, Nguyễn Văn Hoàn (người dịch) ",
   "date": "2009",
@@ -836,6 +1068,47 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "publisher": "Khoa học Xã hội",
   "title": "Thần Khúc"
+ },
+ "thanh-giao-yeu-ly-quoc-ngu": {
+  "creator": "Pierre Pigneau de Behaine",
+  "date": "1774",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thánh giáo yếu lý quốc ngữ 聖教要理國語"
+ },
+ "thi-kinh-giai-am": {
+  "date": "1714",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thi kinh giải âm (q1) 詩經解音"
+ },
+ "thien-nam-tiep-chu-ngoai-ki-su-luoc": {
+  "creator": "Nguyễn Bảo 阮保",
+  "date": "1874",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thiên Nam tiệp chú ngoại kỷ sử lược 天南捷註外紀史略"
+ },
+ "thien-tong-ban-hanh-anh": {
+  "creator": "Chân Nguyên 真源",
+  "date": "1745",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thiền tông bản hạnh 禪宗本行 (1745)"
+ },
+ "thien-tu-van-an": {
+  "creator": "Thích Phúc Điền 釋福田",
+  "date": "1845",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thiên tự văn 千字文 (1845)"
+ },
+ "tho-mai-gia-le_202506": {
+  "creator": "Hồ Gia Tân 胡嘉賓",
+  "date": "1920",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Thọ Mai gia lễ 壽梅家禮 (1920)"
  },
  "thuc-vat-duoc-truong-thi-dep": {
   "creator": "Trương Thị Đẹp",
@@ -873,12 +1146,32 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Tong Tap Van Hoc Viet Nam 28 Ntg 2000"
  },
+ "tran-dai-vuong-chinh-kinh-dich-am": {
+  "date": "1929",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Trần Đại vương chính kinh dịch âm 陳大王正經繹音 (1929)"
+ },
+ "trinh-quoc-cong-nguyen-binh-khiem-thi-tap": {
+  "creator": "Nguyễn Bỉnh Khiêm 阮秉謙",
+  "date": "1536",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Trình Quốc công Nguyễn Bỉnh Khiêm thi tập 程國公阮秉謙詩集"
+ },
  "truyen-ke-ve-109-nguyen-to-hoa-hoc": {
   "creator": "Trần Ngọc Mai",
   "date": "2006",
   "language": "vie",
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Truyện Kể Về 109 Nguyên Tố Hóa Học"
+ },
+ "truyen-ky-tan-pha_202503": {
+  "creator": "Đoàn Thị Điểm",
+  "date": "1811",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Truyền Kỳ Tân Phả"
  },
  "truyen-tay-bac": {
   "creator": "Tô Hoài",
@@ -945,6 +1238,13 @@
   "publisher": "Văn hóa Thông tin",
   "title": "Từ Điển Truyện Kiều"
  },
+ "tu-duc-thanh-che-tu-hoc-giai-nghia-ca-i-nghia": {
+  "creator": "Nguyễn Phúc Hồng Nhậm",
+  "date": "1898",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tự Đức thánh chế tự học giải nghĩa ca 嗣德聖製字學解義歌 (1898)"
+ },
  "tu-hoc-mot-nhu-cau-thoi-dai-nguyen-hien-le": {
   "creator": "Nguyễn Hiến Lê",
   "date": "2007",
@@ -965,6 +1265,12 @@
   "language": "vie",
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "Sổ tay chuyên ngành cơ điện tử"
+ },
+ "tu-thu-uoc-giai-gia-ab.-270-1": {
+  "date": "1839",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Tứ thư ước giải 四書約解 (AB.270-1)"
  },
  "tuc-ngu-ca-dao-viet-nam-tuyen-chon-bui-van-vuong": {
   "creator": "ThS. Bùi Văn Vượng, Huy Linh (Sưu tầm, tuyển chọn)",
@@ -1011,6 +1317,12 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "title": "VHTT So 01 2023"
  },
+ "viet-steno-1921": {
+  "date": "1921",
+  "language": "vie",
+  "licenseurl": "http://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Quốc ngữ viết tắt"
+ },
  "vietnam-thoi-phap-do-ho-nguyen-the-anh-1970": {
   "date": "1970",
   "language": "vie",
@@ -1024,5 +1336,23 @@
   "licenseurl": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "publisher": "Tân Việt",
   "title": "Vương Dương Minh"
+ },
+ "xuan-huong-thi-tap-q-1": {
+  "date": "1930",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Xuân Hương thi tập 春香詩習 (q1) 1930"
+ },
+ "xuan-huong-thi-tap-q-2": {
+  "date": "1930",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Xuân Hương thi tập 春香詩習 (q2) 1930"
+ },
+ "xuat-gia-sa-di-quoc-am-thap-gioi": {
+  "date": "1797",
+  "language": "vie",
+  "licenseurl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "title": "Xuất gia sa di quốc âm thập giới 出家沙彌國音十戒"
  }
 }
