@@ -42,7 +42,8 @@ function BookDetail({ book, onClose }) {
                 h('div', { className: 'card-body py-2 small' },
                   h('div', { className: 'fw-semibold mb-1' }, h('i', { className: 'bi bi-info-circle me-1' }), 'Nguồn và bản quyền'),
                   h('div', null, 'Nguồn: ', src ? h('a', { href: src, target: '_blank', rel: 'noopener noreferrer' }, sourceLine(book)) : sourceLine(book)),
-                  h('div', null, 'Giấy phép trên trang nguồn: ', book.licenseLabel || 'Chưa ghi'),
+                  h('div', null, 'Giấy phép: ', book.licenseLabel || 'Chưa ghi'),
+                  book.rightsNote && h('div', null, 'Căn cứ: ', book.rightsNote),
                   h('div', { className: 'text-muted mt-1' }, 'Sách chỉ dùng để học tập, nghiên cứu trong trường. Quyền tác giả thuộc tác giả và nhà xuất bản; không đăng lại ra ngoài hệ thống.')))))))))
 }
 

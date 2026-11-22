@@ -1,0 +1,291 @@
+{
+ "_ghi-chu": "Nguồn ảnh bìa trên trang Thư viện (scripts/library_cover_design.py). \"commons\": dùng trang bìa bản in gốc trên Wikimedia Commons (bản in trước 1951, phạm vi công cộng; phần lớn do BnF Gallica số hóa). \"thiet-ke\": bìa vẽ bằng chữ và hoa văn hình học. Sách Wikisource không có trong tệp này → \"thiet-ke\"; sách quét (Archive) không có trong tệp này → giữ trang bìa thật của bản quét.",
+ "ws-bo-chong": {
+  "nguon": "commons",
+  "tep": "Bo chong.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Bo_chong.pdf",
+  "namIn": "1939",
+  "giayPhep": "Public domain"
+ },
+ "ws-chut-phan-linh-dinh": {
+  "nguon": "commons",
+  "tep": "Chut phan linh dinh 1.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Chut_phan_linh_dinh_1.pdf",
+  "namIn": "1928",
+  "giayPhep": "Public domain"
+ },
+ "ws-con-nha-ngheo": {
+  "nguon": "commons",
+  "tep": "Con nha ngheo.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Con_nha_ngheo.pdf",
+  "namIn": "1930",
+  "giayPhep": "Public domain"
+ },
+ "ws-cu-kinh": {
+  "nguon": "commons",
+  "tep": "Cu kinh.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Cu_kinh.pdf",
+  "namIn": "1942",
+  "giayPhep": "Public domain"
+ },
+ "ws-cuoi-guong": {
+  "nguon": "commons",
+  "tep": "Cuoi guong 2.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Cuoi_guong_2.pdf",
+  "namIn": "1935",
+  "giayPhep": "Public domain"
+ },
+ "ws-hanh-thuc-ca": {
+  "nguon": "commons",
+  "tep": "Hạnh Thục ca.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:H%E1%BA%A1nh_Th%E1%BB%A5c_ca.pdf",
+  "namIn": "1950",
+  "giayPhep": "Public domain"
+ },
+ "ws-khoc-tham": {
+  "nguon": "commons",
+  "tep": "Khoc tham.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Khoc_tham.pdf",
+  "namIn": "1935",
+  "giayPhep": "Public domain"
+ },
+ "ws-khoi-tinh-con": {
+  "nguon": "commons",
+  "tep": "Khoi tinh con 2.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Khoi_tinh_con_2.pdf",
+  "namIn": "1922",
+  "giayPhep": "Public domain"
+ },
+ "ws-ke-lam-nguoi-chiu": {
+  "nguon": "commons",
+  "tep": "Ke lam nguoi chiu 3.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Ke_lam_nguoi_chiu_3.pdf",
+  "namIn": "1929",
+  "giayPhep": "Public domain"
+ },
+ "ws-luan-ly-giao-khoa-thu-lop-dong-au": {
+  "nguon": "commons",
+  "tep": "Luan ly giao khoa thu - Dong au.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Luan_ly_giao_khoa_thu_-_Dong_au.pdf",
+  "namIn": "1925",
+  "giayPhep": "Public domain"
+ },
+ "ws-luan-ly-giao-khoa-thu-lop-so-dang": {
+  "nguon": "commons",
+  "tep": "Luan ly giao khoa thu - So dang.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Luan_ly_giao_khoa_thu_-_So_dang.pdf",
+  "namIn": "1925",
+  "giayPhep": "Public domain"
+ },
+ "ws-leu-chong": {
+  "nguon": "commons",
+  "tep": "Leu chong.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Leu_chong.pdf",
+  "namIn": "1941",
+  "giayPhep": "Public domain"
+ },
+ "ws-len-tam": {
+  "nguon": "commons",
+  "tep": "Len tam.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Len_tam.pdf",
+  "namIn": "1922",
+  "giayPhep": "Public domain"
+ },
+ "ws-lam-di": {
+  "nguon": "commons",
+  "tep": "Lam di 1939.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Lam_di_1939.pdf",
+  "namIn": "1939",
+  "giayPhep": "Public domain"
+ },
+ "ws-luc-si": {
+  "nguon": "commons",
+  "tep": "Com Thay Com Co va Luc Si 1937.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Com_Thay_Com_Co_va_Luc_Si_1937.pdf",
+  "namIn": "1937",
+  "giayPhep": "Public domain"
+ },
+ "ws-nam-hai-di-nhan-liet-truyen": {
+  "nguon": "commons",
+  "tep": "Nam Hai di nhan liet truyen.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Nam_Hai_di_nhan_liet_truyen.pdf",
+  "namIn": "1909",
+  "giayPhep": "Public domain"
+ },
+ "ws-net-muc-tinh": {
+  "nguon": "commons",
+  "tep": "Net muc tinh.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Net_muc_tinh.pdf",
+  "namIn": "1937",
+  "giayPhep": "Public domain"
+ },
+ "ws-quoc-van-trich-diem": {
+  "nguon": "commons",
+  "tep": "Quoc van trich diem 1930.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Quoc_van_trich_diem_1930.pdf",
+  "namIn": "1930",
+  "giayPhep": "Public domain"
+ },
+ "ws-sach-quan-che": {
+  "nguon": "commons",
+  "tep": "Sach quan che.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Sach_quan_che.pdf",
+  "namIn": "1888",
+  "giayPhep": "Public domain"
+ },
+ "ws-su-ky-tu-ma-thien": {
+  "nguon": "commons",
+  "tep": "Su Ky Tu Ma Thien 1944.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Su_Ky_Tu_Ma_Thien_1944.pdf",
+  "namIn": "1944",
+  "giayPhep": "Public domain"
+ },
+ "ws-tat-den": {
+  "nguon": "commons",
+  "tep": "Tat den.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Tat_den.pdf",
+  "namIn": "1939",
+  "giayPhep": "Public domain"
+ },
+ "ws-tai-toi": {
+  "nguon": "commons",
+  "tep": "Tai toi.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Tai_toi.pdf",
+  "namIn": "1938",
+  "giayPhep": "Public domain"
+ },
+ "ws-tay-suong-ky": {
+  "nguon": "commons",
+  "tep": "Mai Tay (Tay suong ky).pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Mai_Tay_(Tay_suong_ky).pdf",
+  "namIn": "1943",
+  "giayPhep": "Public domain"
+ },
+ "ws-tap-bai-thi-bang-so-hoc-yeu-luoc": {
+  "nguon": "commons",
+  "tep": "Tap bai thi bang So hoc yeu luoc.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Tap_bai_thi_bang_So_hoc_yeu_luoc.pdf",
+  "namIn": "1925",
+  "giayPhep": "Public domain"
+ },
+ "ws-tu-hon": {
+  "nguon": "commons",
+  "tep": "Tu hon.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Tu_hon.pdf",
+  "namIn": "1937",
+  "giayPhep": "Public domain"
+ },
+ "ws-tuc-ca-le": {
+  "nguon": "commons",
+  "tep": "Turcaret 2.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Turcaret_2.pdf",
+  "namIn": "1930",
+  "giayPhep": "Public domain"
+ },
+ "ws-luan-ly-giao-khoa-thu-lop-du-bi": {
+  "nguon": "commons",
+  "tep": "Luan ly giao khoa thu - Du bi.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Luan_ly_giao_khoa_thu_-_Du_bi.pdf",
+  "namIn": "1925",
+  "giayPhep": "Public domain"
+ },
+ "ws-dai-guong-truyen": {
+  "nguon": "commons",
+  "tep": "Dai guong truyen.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Dai_guong_truyen.pdf",
+  "namIn": "1925",
+  "giayPhep": "Public domain"
+ },
+ "ws-chuyen-giai-buon-cuon-sau": {
+  "nguon": "commons",
+  "tep": "Chuyen giai buon 2.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Chuyen_giai_buon_2.pdf",
+  "namIn": "1887",
+  "giayPhep": "Public domain"
+ },
+ "ws-linh-nam-dat-su": {
+  "nguon": "commons",
+  "tep": "Linh Nam dat su 1.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Linh_Nam_dat_su_1.pdf",
+  "namIn": "1925",
+  "giayPhep": "Public domain"
+ },
+ "ws-doi-cach-mang-phan-boi-chau": {
+  "nguon": "commons",
+  "tep": "Doi cach mang Phan Boi Chau.pdf",
+  "trang": 1,
+  "url": "https://commons.wikimedia.org/wiki/File:Doi_cach_mang_Phan_Boi_Chau.pdf",
+  "namIn": "1945",
+  "giayPhep": "Public domain"
+ },
+ "1-thessalonians-commentary-vietnamese": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "jamesjudebiblecommentaryvietnameseversio": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "phcmtheophaolthrmathegospelaccordingtopa": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "sgialu-caschcngvccsbookofactscommentary": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "bkh-011944": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "bkh-061942": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "khoa-ho-c-ta-p-chi-revue-de-vulgarisatio": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "khoa-ho-c-ta-p-chi-revue-de-vulgarisatio-2": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "khoa-ho-c-ta-p-chi-revue-de-vulgarisatio-2-3": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ },
+ "khoa-ho-c-ta-p-chi-revue-de-vulgarisatio-2-3-4": {
+  "nguon": "thiet-ke",
+  "lyDo": "trang đầu bản quét là trang chữ hoặc trang trắng, nhiều số trùng tên"
+ }
+}

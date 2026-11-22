@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Kho sách điện tử của Thư viện: nạp bằng scripts/import_library.py, danh mục chỉ đọc khi đã đăng nhập, tệp PDF chỉ tải qua API
 (API tạm cổng 8805, dữ liệu tạm; dùng PDF giả vài byte, không cần sách thật)."""
-import hashlib, http.client, json, os, shutil, sqlite3, stat, subprocess, sys, tempfile, time
+import hashlib, http.client, json, os, re, shutil, sqlite3, stat, subprocess, sys, tempfile, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, '..', '..')
@@ -82,7 +82,7 @@ try:
     chk('PDF nằm ở library/books (không công khai), bìa ở uploads/library; chép đủ byte', os.path.getsize(pdf) == 5009 + 0 and os.path.isfile(os.path.join(D, 'uploads', 'library', 'sach-mot.jpg')))
     chk('tệp đọc được cho nginx (644), thư mục 755 (bỏ qua trên Windows)', os.name == 'nt' or (stat.S_IMODE(os.stat(pdf).st_mode) == 0o644 and stat.S_IMODE(os.stat(os.path.dirname(pdf)).st_mode) == 0o755))
     row = json.loads(db_rows("SELECT data FROM docs WHERE col='libraryBooks' AND id='sach-hai'")[0][0])
-    chk('danh mục có nguồn, giấy phép, số trang, bìa, nhãn seed', row['pages'] == 34 and row['cover'] == '/uploads/library/sach-hai.jpg' and row['sourceUrl'].startswith('https://archive.org/details/')
+    chk('danh mục có nguồn, giấy phép, số trang, bìa, nhãn seed', row['pages'] == 34 and re.fullmatch(r'/uploads/library/sach-hai\.jpg\?v=[0-9a-f]{10}', row['cover']) and row['sourceUrl'].startswith('https://archive.org/details/')
         and row['seed'] == 'library-v1' and row['licenseLabel'] and row['size'] == 7009)
     r = run_import('--staging', STG, '--catalog', cat)
     chk('chạy lại: bỏ qua sách đã có (không chép lại)', r.returncode == 0 and '0 tệp mới, 2 đã có' in r.stdout)
@@ -133,6 +133,20 @@ try:
     chk('danh mục bị sửa (đường dẫn thoát thư mục, hoặc tệp đã mất) → 404, không lộ tệp khác',
         req('GET', '/api/files/library/hong.pdf', ck=sv)[0] == 404 and req('GET', '/api/files/library/mat-tep.pdf', ck=sv)[0] == 404)
     chk('không có đường dẫn công khai tới PDF: /uploads/library chỉ chứa bìa', not [f for f in os.listdir(os.path.join(D, 'uploads', 'library')) if f.endswith('.pdf')])
+
+    # ── --prune: sách bị loại khỏi danh mục (vd. không rõ giấy phép) được gỡ, tệp chuyển vào library/removed/ chứ không xóa hẳn ──
+    cat1 = os.path.join(STG, 'catalog-1.json'); json.dump(catalog[:1], open(cat1, 'w', encoding='utf-8'), ensure_ascii=False)
+    r = run_import('--staging', STG, '--catalog', cat1, '--prune', '--dry-run')
+    chk('--prune --dry-run chỉ báo, không gỡ gì', r.returncode == 0 and '1 sách không còn trong danh mục' in r.stdout
+        and os.path.isfile(os.path.join(D, 'library', 'books', 'sach-hai.pdf')))
+    r = run_import('--staging', STG, '--catalog', cat1, '--prune')
+    rm_dirs = os.listdir(os.path.join(D, 'library', 'removed')) if os.path.isdir(os.path.join(D, 'library', 'removed')) else []
+    kept = [i for (i,) in db_rows("SELECT id FROM docs WHERE col='libraryBooks'")]
+    chk('--prune gỡ sách không còn trong danh mục: mất khỏi CSDL, PDF và bìa chuyển vào library/removed/ (khôi phục được)',
+        r.returncode == 0 and 'sach-hai' not in kept and 'sach-mot' in kept and not os.path.exists(os.path.join(D, 'library', 'books', 'sach-hai.pdf'))
+        and len(rm_dirs) == 1 and sorted(os.listdir(os.path.join(D, 'library', 'removed', rm_dirs[0]))) == ['danh-muc-da-go.json', 'sach-hai.jpg', 'sach-hai.pdf'])
+    chk('--prune không đụng bản ghi không do script nạp (không có nhãn seed)', 'hong' in kept and 'mat-tep' in kept)
+    chk('sách đã gỡ thì tải về → 404', req('GET', '/api/files/library/sach-hai.pdf', ck=sv)[0] == 404)
 
     # ── gỡ ──
     r = run_import('--remove')
