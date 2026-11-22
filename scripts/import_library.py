@@ -155,9 +155,12 @@ def main(argv=None):
         else:
             skipped += 1
         cover = ''
+        cov_dst = os.path.join(cover_dir, b['id'] + '.jpg')
         if os.path.isfile(cov):
-            put_file(cov, os.path.join(cover_dir, b['id'] + '.jpg'))
-            cover = f'/uploads/library/{b["id"]}.jpg'
+            put_file(cov, cov_dst)
+        if os.path.isfile(cov_dst):         # staging không có bìa mới thì giữ bìa đang có trên máy chủ
+            ver = sha256(cov_dst)[:10]      # đổi bìa thì đổi URL, để Cloudflare/trình duyệt không giữ ảnh cũ
+            cover = f'/uploads/library/{b["id"]}.jpg?v={ver}'
         d = {k: b.get(k, '') for k in FIELDS}
         d.update({'cover': cover, 'pages': int(pages.get(b['id'], 0) or 0), 'addedAt': now, 'seed': TAG})
         docs.append((b['id'], json.dumps(d, ensure_ascii=False)))

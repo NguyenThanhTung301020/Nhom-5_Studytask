@@ -20,12 +20,14 @@ Dùng:
 """
 import argparse, hashlib, html as H, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import library_cover_design as lcd  # noqa: E402  bìa dùng chung với ảnh bìa trên trang Thư viện
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 CATALOG = os.path.join(HERE, 'data', 'thu-vien-wikisource.json')
 API = 'https://vi.wikisource.org/w/api.php'
 UA = {'User-Agent': 'studytask-library-import/1.0 (non-commercial student project)'}
 EDGE = r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-COLORS = {'van-hoc-vn': '#7b2d26', 'ton-giao': '#2c5d63', 'chinh-tri-lich-su': '#1f3b70', 'ngon-ngu': '#5b4a14', 'triet-hoc': '#5b2c6f', 'khoa-hoc': '#1e6b3a'}
 _last = [0.0]
 
 
@@ -78,10 +80,16 @@ class Pages:
         return d
 
 
-def subpages(titles):
-    """Danh sách mọi trang con của các trang gốc (một lần gọi allpages cho mỗi gốc)."""
+def subpages(titles, cache_dir):
+    """Danh sách mọi trang con của các trang gốc (một lần gọi allpages cho mỗi gốc), lưu đệm ở <cache>/subpages.json
+    để lần dựng sau không gọi lại API (và nội dung sách không đổi theo các trang con mới thêm trên Wikisource)."""
+    f = os.path.join(cache_dir, 'subpages.json')
+    known = json.load(open(f, encoding='utf-8')) if os.path.exists(f) else {}
     out = {}
     for t in titles:
+        if t in known:
+            out[t] = known[t]
+            continue
         kids, cont = [], {}
         while True:
             r = api(action='query', list='allpages', apnamespace=0, apprefix=t + '/', aplimit=500, apfilterredir='nonredirects', **cont)
@@ -89,7 +97,8 @@ def subpages(titles):
             if 'continue' not in r:
                 break
             cont = r['continue']
-        out[t] = kids
+        out[t] = known[t] = kids
+        json.dump(known, open(f, 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
     return out
 
 
@@ -184,7 +193,7 @@ def ordered_parts(pages, m, kids):
     return out
 
 
-def compose(b, pages, kids):
+def compose(b, pages, kids, style):
     secs = []
     poetry = b['kind'] == 'poetry'
     for m in b['members']:
@@ -203,24 +212,23 @@ def compose(b, pages, kids):
                 head = ''
             secs.append('<section>%s%s</section>' % (head, c))
     body = ''.join(secs)
-    who = b['author'] + (' – ' if b['author'] and b.get('translator') else '') + (b['translator'] + ' dịch' if b.get('translator') else '')
     src = ('Văn bản quy phạm pháp luật / văn kiện chính thức – không thuộc đối tượng bảo hộ quyền tác giả.' if b['kind'] == 'law'
            else 'Tác phẩm thuộc phạm vi công cộng (tác giả, dịch giả mất trước năm 1976).')
-    col = COLORS.get(b['genre'], '#333')
+    foot = (H.escape(src) + '<br>Văn bản lấy từ Wikisource tiếng Việt (vi.wikisource.org), giấy phép CC BY-SA 4.0.'
+            '<br>Thư viện StudyTask – dùng cho học tập, phi thương mại.')
+    cover = lcd.cover_html(b, style, '148mm', '209mm', footer=foot)   # 209 mm: tránh tràn sang trang 2
+    cover_css = lcd.CSS
     doc = f'''<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>{H.escape(b['title'])}</title><style>
 @page{{size:A5;margin:15mm 13mm 16mm}} @page:first{{margin:0}}
 html{{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 body{{margin:0;font-family:"Times New Roman",Times,serif;font-size:11.5pt;line-height:1.45;color:#111;text-align:justify}}
-.cover{{height:209mm;width:148mm;margin:0;padding:30mm 14mm 0;overflow:hidden;background:{col};color:#fff;text-align:center;page-break-after:always;box-sizing:border-box}}
-.cover h1{{font-size:23pt;line-height:1.25;margin:22mm 0 9mm}} .cover .a{{font-size:13.5pt}} .cover .y{{font-size:11pt;margin-top:4mm;opacity:.85}}
-.cover .s{{font-size:8.5pt;margin-top:38mm;opacity:.85;line-height:1.4}}
+{cover_css}
 h2.ch{{page-break-before:always;font-size:15pt;text-align:center;margin:2mm 0 6mm}} section:first-of-type h2.ch{{page-break-before:auto}}
 h3.poem{{font-size:12.5pt;text-align:center;margin:9mm 0 3mm;page-break-after:avoid}}
 h1,h2,h3,h4{{text-align:center;page-break-after:avoid}} section h2{{font-size:14pt}} section h3{{font-size:12.5pt}} section h4{{font-size:11.5pt}}
 p{{margin:0 0 .45em}} table{{margin:auto;border-collapse:collapse}} td{{vertical-align:top;padding:1px 4px}}
 dl,dd{{margin:0}} .poem,dd{{text-align:left}} ul,ol{{padding-left:1.4em}}
-</style></head><body><div class="cover"><h1>{H.escape(b['title'])}</h1><div class="a">{H.escape(who)}</div><div class="y">{H.escape(b['year'])}</div>
-<div class="s">{src}<br>Văn bản lấy từ Wikisource tiếng Việt (vi.wikisource.org), giấy phép CC BY-SA 4.0.<br>Thư viện StudyTask – dùng cho học tập, phi thương mại.</div></div>
+</style></head><body><div style="page-break-after:always">{cover}</div>
 {body}</body></html>'''
     return doc, text_len(body)
 
@@ -236,16 +244,19 @@ def main():
     cat = json.load(open(CATALOG, encoding='utf-8'))
     ids = a.only.split(',') if a.only else list(cat)
     roots = sorted({m for i in ids for m in cat[i]['members'] if cat[i]['kind'] != 'poetry'})
-    kids = subpages(roots)
+    kids = subpages(roots, a.cache)
     need = {m for i in ids for m in cat[i]['members']} | {k for v in kids.values() for k in v}
     pages = Pages(a.cache, a.dump, need)
+    styles = lcd.assign(lcd.all_books(os.path.join(lcd.DATA, 'thu-vien-sach.json')))
+    missing = [b for b in lcd.all_books(CATALOG) if b['id'] not in styles]     # sách mới chưa có trong danh mục chung
+    styles.update(lcd.assign(missing))
     os.makedirs(a.out, exist_ok=True)
     tmp = os.path.join(a.cache, 'html'); os.makedirs(tmp, exist_ok=True)
     for n, i in enumerate(ids, 1):
         pdf = os.path.join(a.out, i + '.pdf')
         if os.path.exists(pdf) and not a.force:
             continue
-        doc, chars = compose(cat[i], pages, kids)
+        doc, chars = compose(dict(cat[i], id=i), pages, kids, styles[i])
         hp = os.path.join(tmp, i + '.html')
         open(hp, 'w', encoding='utf-8').write(doc)
         subprocess.run([EDGE, '--headless=new', '--disable-gpu', '--no-sandbox', '--no-pdf-header-footer',

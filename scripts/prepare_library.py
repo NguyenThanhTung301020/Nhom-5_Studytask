@@ -28,6 +28,7 @@ TAG = 'library-v1'
 USER_PROVIDED_DIR = 'sách tự down'          # sách tải thủ công từ Archive.org, không có mã mục
 WS_DIR = 'wikisource-vi'                      # sách dựng từ Wikisource tiếng Việt (scripts/build_wikisource_books.py), thông tin ở WS_CATALOG
 WS_CATALOG = os.path.join(DATA, 'thu-vien-wikisource.json')
+COVERS = os.path.join(DATA, 'thu-vien-bia.json')       # nguồn ảnh bìa (scripts/library_cover_design.py)
 META_KEYS = ('title', 'creator', 'date', 'language', 'licenseurl', 'rights', 'publisher')
 
 LICENSES = {
@@ -113,6 +114,7 @@ def main():
     cache = json.load(open(META_CACHE, encoding='utf-8')) if os.path.exists(META_CACHE) else {}
     overrides = json.load(open(OVERRIDES, encoding='utf-8')) if os.path.exists(OVERRIDES) else {}
     ws_cat = json.load(open(WS_CATALOG, encoding='utf-8')) if os.path.exists(WS_CATALOG) else {}
+    covers = json.load(open(COVERS, encoding='utf-8')) if os.path.exists(COVERS) else {}
     folders = sorted(d for d in os.listdir(a.src) if os.path.isdir(os.path.join(a.src, d)))
     books, used, excluded = [], set(), []
     for folder in folders:
@@ -127,6 +129,10 @@ def main():
                     continue
                 path = os.path.join(a.src, folder, fn)
                 used.add(fn[:-4])
+                bia = covers.get(fn[:-4]) or {}
+                if bia.get('nguon') == 'commons':   # ảnh bìa lấy từ bản in gốc: ghi nguồn ngay trong căn cứ
+                    info = {**info, 'rightsNote': info.get('rightsNote', '') + f' Ảnh bìa: trang bìa bản in gốc năm {bia["namIn"]} '
+                            f'(Wikimedia Commons, tệp "{bia["tep"]}", phạm vi công cộng).'}
                 books.append({**{k: info.get(k, '') for k in ('title', 'author', 'genre', 'year', 'series', 'description', 'license', 'licenseLabel', 'rightsNote')},
                               'id': fn[:-4], 'language': 'vi', 'sourceName': 'Wikisource tiếng Việt', 'sourceId': info['sourceTitle'],
                               'sourceUrl': 'https://vi.wikisource.org/wiki/' + urllib.parse.quote(info['sourceTitle'].replace(' ', '_')),

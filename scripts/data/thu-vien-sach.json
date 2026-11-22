@@ -520,8 +520,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ai_l%C3%A0m_%C4%91%C6%B0%E1%BB%A3c",
   "file": "ws-ai-lam-duoc.pdf",
   "originalName": "ws-ai-lam-duoc.pdf",
-  "size": 917140,
-  "sha256": "ba3aae591c8de572ffdb7c1c6e435dee5fb109ad4297150b750a4fbd6e2936e3",
+  "size": 1026887,
+  "sha256": "3beec60984778ba97c46b6419becb502f787626aba7629dd67af51f2b6f9e09d",
   "seed": "library-v1"
  },
  {
@@ -541,8 +541,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%81i_t%C3%ACnh_mi%E1%BA%BFu",
   "file": "ws-ai-tinh-mieu.pdf",
   "originalName": "ws-ai-tinh-mieu.pdf",
-  "size": 876153,
-  "sha256": "5c6dc4ec7e04ce8c1b72837c8c73d6468cde1d764e45daf3fc7e530c1f2817db",
+  "size": 909685,
+  "sha256": "d4f3a31f1c262f543d41525042eb5165838fc49a636740f83d231ed0e064b5b8",
   "seed": "library-v1"
  },
  {
@@ -562,8 +562,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ba_c%C3%A1i_s%E1%BB%AD_li%E1%BB%87u_t%C3%ACm_th%E1%BA%A5y_trong_s%C3%A1ch_%C4%91%E1%BA%A1o",
   "file": "ws-ba-cai-su-lieu-tim-thay-trong-sach-dao.pdf",
   "originalName": "ws-ba-cai-su-lieu-tim-thay-trong-sach-dao.pdf",
-  "size": 201312,
-  "sha256": "ef92127b4d4e27ff57679b8b79645f19fc82d1b07beada17eaee4defe97ec84f",
+  "size": 233788,
+  "sha256": "b03d3b8f8494781cf1220879bbcfc85a7e0ef44e32af76960ce9b3bd13cc4c46",
   "seed": "library-v1"
  },
  {
@@ -583,8 +583,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ba_ng%C3%A0y_lu%C3%A2n_l%E1%BA%A1c",
   "file": "ws-ba-ngay-luan-lac.pdf",
   "originalName": "ws-ba-ngay-luan-lac.pdf",
-  "size": 1283576,
-  "sha256": "cb91472bfe7a609d90a50eeed55388756250e9a62c5c7a9b8f511dea26d003e4",
+  "size": 1311477,
+  "sha256": "ec6614cf0e10754a830ff2a02abcfcf607621b78721ef86c860465ab4e0e73d1",
   "seed": "library-v1"
  },
  {
@@ -604,8 +604,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%C3%A0i_tr%E1%BB%AB_c%C3%A1i_n%E1%BA%A1n_Phan_Kh%C3%B4i_%E1%BB%9F_Nam_K%E1%BB%B3",
   "file": "ws-bai-tru-cai-nan-phan-khoi-o-nam-ky.pdf",
   "originalName": "ws-bai-tru-cai-nan-phan-khoi-o-nam-ky.pdf",
-  "size": 389022,
-  "sha256": "ff85c55b7dbacacafc19af86bd9eee1164a92956597884abac6f49e779f38646",
+  "size": 419680,
+  "sha256": "2bc2b83cdcfc4a9b0b1786231939490a84e342c655a3b1e6b07970b97e14fa37",
   "seed": "library-v1"
  },
  {
@@ -625,8 +625,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%C3%A0n_v%E1%BB%81_qu%E1%BB%91c_h%E1%BB%8Dc",
   "file": "ws-ban-ve-quoc-hoc.pdf",
   "originalName": "ws-ban-ve-quoc-hoc.pdf",
-  "size": 181749,
-  "sha256": "842ffb52d9ec9bb91a8f7addf8e15d995ac4885ed1242ec32d6940b025ecd948",
+  "size": 234076,
+  "sha256": "46aa6246b6ec4ea5dedfd4ae336956e8e687001a3339736b5461589c739d6276",
   "seed": "library-v1"
  },
  {
@@ -646,8 +646,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%C3%ADch_C%C3%A2u_k%E1%BB%B3_ng%E1%BB%99",
   "file": "ws-bich-cau-ky-ngo.pdf",
   "originalName": "ws-bich-cau-ky-ngo.pdf",
-  "size": 210177,
-  "sha256": "c2e41a81e4eb3ca20aae79de44dc62971a4d7857e487e456def81d8b03fa2048",
+  "size": 234252,
+  "sha256": "71460b9a1f331e1eb2706ac7d9b3a3da5f1c420b1ca560aa2f3bc29f57a16b78",
   "seed": "library-v1"
  },
  {
@@ -667,8 +667,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Bi%E1%BB%87n_ch%C3%A1nh_l%E1%BA%A1i_m%E1%BA%A5y_l%E1%BB%9Di_ph%C3%AA_b%C3%ACnh_c%E1%BB%A7a_%C3%B4ng_Phan_Kh%C3%B4i",
   "file": "ws-bien-chanh-lai-may-loi-phe-binh-cua-ong-phan-khoi.pdf",
   "originalName": "ws-bien-chanh-lai-may-loi-phe-binh-cua-ong-phan-khoi.pdf",
-  "size": 188620,
-  "sha256": "b54f040378c44fbccc57d371494bb51743926979181ff0cc9b1f972bbd30a556",
+  "size": 232018,
+  "sha256": "8e2330055a75eee5d9014c3b446a6475495c5c451ee34b563e466b8bb1b9a077",
   "seed": "library-v1"
  },
  {
@@ -680,7 +680,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1939 (Wikimedia Commons, tệp \"Bo chong.pdf\", phạm vi công cộng).",
   "id": "ws-bo-chong",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -688,8 +688,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%8F_ch%E1%BB%93ng",
   "file": "ws-bo-chong.pdf",
   "originalName": "ws-bo-chong.pdf",
-  "size": 621056,
-  "sha256": "1513ad9e7881ad9b98790a693e696ccc1699a25561d2b939bd3b87adbd39f0d4",
+  "size": 645783,
+  "sha256": "19c80fbeebd686773051a42f775c642e9fb2e101f6bf6d09903240c9cbc3c84e",
   "seed": "library-v1"
  },
  {
@@ -709,8 +709,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%99_lu%E1%BA%ADt_D%C3%A2n_s%E1%BB%B1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-bo-luat-dan-su-viet-nam-2015.pdf",
   "originalName": "ws-bo-luat-dan-su-viet-nam-2015.pdf",
-  "size": 3462191,
-  "sha256": "6709e386ccca0593b0402d278058525b3add1e8403745f479fbc49cb3c92fe8e",
+  "size": 3518419,
+  "sha256": "1d068e48217196ff7c756bd08d56ed2376ebe4331d9aaa217becb0358fd1f0f0",
   "seed": "library-v1"
  },
  {
@@ -730,8 +730,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%99_lu%E1%BA%ADt_H%C3%A0ng_h%E1%BA%A3i_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-bo-luat-hang-hai-viet-nam-2015.pdf",
   "originalName": "ws-bo-luat-hang-hai-viet-nam-2015.pdf",
-  "size": 1290295,
-  "sha256": "2ad34ffe1436c971f2b7757094d1a22e70beb0f43b7925b401f08717e60d264a",
+  "size": 1336457,
+  "sha256": "42cf4d7f8b94344228666c5b347c3b059f2ab4e3b8176f6314ecfed26a08540c",
   "seed": "library-v1"
  },
  {
@@ -751,8 +751,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%99_lu%E1%BA%ADt_H%C3%ACnh_s%E1%BB%B1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-bo-luat-hinh-su-viet-nam-2015.pdf",
   "originalName": "ws-bo-luat-hinh-su-viet-nam-2015.pdf",
-  "size": 5258345,
-  "sha256": "774435a21a3bd2f09219ba8c854d5864bac0c63f1a387c98b0e98086b9625e4b",
+  "size": 5311079,
+  "sha256": "856647b4979ad3c80aa7c782da1697d617e0d59abe03977470853393079525ec",
   "seed": "library-v1"
  },
  {
@@ -772,8 +772,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%99_lu%E1%BA%ADt_Lao_%C4%91%E1%BB%99ng_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-bo-luat-lao-dong-viet-nam-2012.pdf",
   "originalName": "ws-bo-luat-lao-dong-viet-nam-2012.pdf",
-  "size": 840753,
-  "sha256": "65bfdf4144233e503572ec5003309f0c4321c3ccd8b54aeac52bd3143aa42b95",
+  "size": 937024,
+  "sha256": "415fff02f8c2d9fbbbf0ba680da56671ba264d3ac396d5c2224287f75316030c",
   "seed": "library-v1"
  },
  {
@@ -793,8 +793,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%99_lu%E1%BA%ADt_T%E1%BB%91_t%E1%BB%A5ng_d%C3%A2n_s%E1%BB%B1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-bo-luat-to-tung-dan-su-viet-nam-2015.pdf",
   "originalName": "ws-bo-luat-to-tung-dan-su-viet-nam-2015.pdf",
-  "size": 4116376,
-  "sha256": "a707565bb1e289eb10e10d44a03b93cd088ff543c4f5f81a0bdc05c241327f61",
+  "size": 4171709,
+  "sha256": "a6ee88605070fe87c4846d9d0862873573c254a1388946792be221a53738c9db",
   "seed": "library-v1"
  },
  {
@@ -814,8 +814,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%99_lu%E1%BA%ADt_T%E1%BB%91_t%E1%BB%A5ng_h%C3%ACnh_s%E1%BB%B1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-bo-luat-to-tung-hinh-su-viet-nam-2015.pdf",
   "originalName": "ws-bo-luat-to-tung-hinh-su-viet-nam-2015.pdf",
-  "size": 4329592,
-  "sha256": "f2b7a611eb092333342321f03fb2f64e5304738bb052f851c3893ac53521f743",
+  "size": 4455245,
+  "sha256": "af0ff20b933c6c47f955ba7820958e6bd9c7c777b1a00b8a703ed38389e06116",
   "seed": "library-v1"
  },
  {
@@ -835,8 +835,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%8F_v%E1%BB%A3",
   "file": "ws-bo-vo.pdf",
   "originalName": "ws-bo-vo.pdf",
-  "size": 550839,
-  "sha256": "d23d1064086d195300bcc0cfde49f78da82756a844345fa3f55cce474b3c9cb7",
+  "size": 635401,
+  "sha256": "94a747b0c44092d3163be673ee1f1aeb0d07d967dc225ab7dd5fe77f61718a9f",
   "seed": "library-v1"
  },
  {
@@ -856,8 +856,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%E1%BB%A9c_th%C6%B0_h%E1%BB%91i_h%E1%BA%ADn",
   "file": "ws-buc-thu-hoi-han.pdf",
   "originalName": "ws-buc-thu-hoi-han.pdf",
-  "size": 702471,
-  "sha256": "b80db2222fae66e29ea8fc1142e53e157cf9cccce8d57bc911cf9b9f7910090f",
+  "size": 756036,
+  "sha256": "bc28242116fa53b8447e017d247725641904036649e56f47db8ad65a19b68283",
   "seed": "library-v1"
  },
  {
@@ -877,8 +877,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%A1i_%E1%BA%A3nh_h%C6%B0%E1%BB%9Fng_c%E1%BB%A7a_Kh%E1%BB%95ng_gi%C3%A1o_%E1%BB%9F_n%C6%B0%E1%BB%9Bc_ta",
   "file": "ws-cai-anh-huong-cua-khong-giao-o-nuoc-ta.pdf",
   "originalName": "ws-cai-anh-huong-cua-khong-giao-o-nuoc-ta.pdf",
-  "size": 585692,
-  "sha256": "e26a3ad70a2030ecd72104c582841b3a4dfe1a246f3e8c364ca9e0740bcc9a4a",
+  "size": 638346,
+  "sha256": "dc1c036184ce11fb043fb3c9842a88f20e5fa8f700c15fcb7696dec45b3bcf80",
   "seed": "library-v1"
  },
  {
@@ -898,8 +898,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Cao_v%E1%BB%8Dng_c%E1%BB%A7a_b%E1%BB%8Dn_thanh_ni%C3%AAn_An_Nam",
   "file": "ws-cao-vong-cua-bon-thanh-nien-an-nam.pdf",
   "originalName": "ws-cao-vong-cua-bon-thanh-nien-an-nam.pdf",
-  "size": 195208,
-  "sha256": "5405f12502fc6bd3494b5aa5d17931517e3a7bb01105cab3d97146c56b17c91f",
+  "size": 210834,
+  "sha256": "563fcb85d0e2bc077b08ab9e12b4fc6cd0406d6d68978543d9ae92b86ecd45e0",
   "seed": "library-v1"
  },
  {
@@ -919,8 +919,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Cha_con_ngh%C4%A9a_n%E1%BA%B7ng",
   "file": "ws-cha-con-nghia-nang.pdf",
   "originalName": "ws-cha-con-nghia-nang.pdf",
-  "size": 710905,
-  "sha256": "3a139018fa8159f7aa247d8ed0a443a687b24231d214f59497c50f670757163f",
+  "size": 843274,
+  "sha256": "dfa2f149c72a857e9c67585dda4de428218663595ad9a4389087836c8fa0135a",
   "seed": "library-v1"
  },
  {
@@ -940,8 +940,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ch%E1%BB%8B_%C4%90%C3%A0o%2C_Ch%E1%BB%8B_L%C3%BD",
   "file": "ws-chi-dao-chi-ly.pdf",
   "originalName": "ws-chi-dao-chi-ly.pdf",
-  "size": 1396216,
-  "sha256": "6d36724dc78dd0fae8f634192d6258eebe08b227ce4f073b6fbe0876796d8142",
+  "size": 1445463,
+  "sha256": "4ace7161b3bd93310e9d1c1761a05d295fe60112ec025487248c30f445e8feb7",
   "seed": "library-v1"
  },
  {
@@ -961,8 +961,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ch%E1%BB%91ng_n%E1%BA%A1ng_l%C3%AAn_%C4%91%C6%B0%E1%BB%9Dng",
   "file": "ws-chong-nang-len-duong.pdf",
   "originalName": "ws-chong-nang-len-duong.pdf",
-  "size": 163706,
-  "sha256": "0e55a4d63ceb5fd45ada5d1cea6bee321c10406389cf73ff080ff87bb580435e",
+  "size": 190623,
+  "sha256": "225ada317dfb0f4853a2f215fb54f9f91247fdfef4b0e14795f224a95677b1f4",
   "seed": "library-v1"
  },
  {
@@ -982,8 +982,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ch%C3%BAa_t%C3%A0u_Kim_Quy",
   "file": "ws-chua-tau-kim-quy.pdf",
   "originalName": "ws-chua-tau-kim-quy.pdf",
-  "size": 913711,
-  "sha256": "81233e6e88a666f3b4f140662edbe6c869d67ec99da5e8d835d596da788f345e",
+  "size": 948643,
+  "sha256": "17e337405a02d9e81d5dfe64a485c2f80cf840923856183c46851ebce8efe386",
   "seed": "library-v1"
  },
  {
@@ -995,7 +995,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1928 (Wikimedia Commons, tệp \"Chut phan linh dinh 1.pdf\", phạm vi công cộng).",
   "id": "ws-chut-phan-linh-dinh",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1003,8 +1003,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ch%C3%BAt_ph%E1%BA%ADn_linh_%C4%91inh",
   "file": "ws-chut-phan-linh-dinh.pdf",
   "originalName": "ws-chut-phan-linh-dinh.pdf",
-  "size": 1060189,
-  "sha256": "10e3a53b184255d19ed52f89bce62c790ba47e37031cc3a7323e58d628f4b53e",
+  "size": 1100106,
+  "sha256": "be87e693650bc16ddbe1ca50e5c719991f98073f28d3b301048cb6ef8223c7ef",
   "seed": "library-v1"
  },
  {
@@ -1024,8 +1024,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Chuy%E1%BA%BFn_%C4%91i_B%E1%BA%AFc_K%E1%BB%B3_n%C4%83m_%E1%BA%A4t_H%E1%BB%A3i_1876",
   "file": "ws-chuyen-di-bac-ky-nam-at-hoi-1876.pdf",
   "originalName": "ws-chuyen-di-bac-ky-nam-at-hoi-1876.pdf",
-  "size": 380531,
-  "sha256": "e9e488be3f8bc1c6828737d1f1639ede27f3b49255b658f1879a5f77560e372e",
+  "size": 453804,
+  "sha256": "6c10770fd14e4b9670e0860eb06d36fdb3419436c8085a994a43c642b6ad320a",
   "seed": "library-v1"
  },
  {
@@ -1037,7 +1037,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Huỳnh Tịnh Của mất năm 1907: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Huỳnh Tịnh Của mất năm 1907: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1887 (Wikimedia Commons, tệp \"Chuyen giai buon 2.pdf\", phạm vi công cộng).",
   "id": "ws-chuyen-giai-buon-cuon-sau",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1045,8 +1045,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Chuy%E1%BB%87n_gi%E1%BA%A3i_bu%E1%BB%93n_cu%E1%BB%91n_sau",
   "file": "ws-chuyen-giai-buon-cuon-sau.pdf",
   "originalName": "ws-chuyen-giai-buon-cuon-sau.pdf",
-  "size": 764330,
-  "sha256": "eec1f3599f882cbc2740d2f1df9f7b78b71eacbf247897051df5f6b346ad03ba",
+  "size": 804823,
+  "sha256": "bd85c63eba13821c16b91bd6575853906b7c7ae4751e35033eb2075d1d15ffe2",
   "seed": "library-v1"
  },
  {
@@ -1066,8 +1066,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Chuy%E1%BB%87n_gi%E1%BA%A3i_bu%E1%BB%93n",
   "file": "ws-chuyen-giai-buon.pdf",
   "originalName": "ws-chuyen-giai-buon.pdf",
-  "size": 732369,
-  "sha256": "9e587763fb9187cb48744faff9ebf74d47a50913224ac01e146164dfae290bc4",
+  "size": 776570,
+  "sha256": "8eb009a0d204b1dc0d1ee63c45670b8d7a4b2207af286003c3af9b7ae2b2b542",
   "seed": "library-v1"
  },
  {
@@ -1087,8 +1087,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Chuy%E1%BB%87n_h%E1%BA%B1ng_ng%C3%A0y",
   "file": "ws-chuyen-hang-ngay.pdf",
   "originalName": "ws-chuyen-hang-ngay.pdf",
-  "size": 483184,
-  "sha256": "3f420d885c974c559aa3706188f86d2402924e8295cb5c4f9d932adcb784ac4c",
+  "size": 515510,
+  "sha256": "46c788dbbed9603b2a6bc96903f823754ce0859ad1b51e0fc4da8526d60f9ff8",
   "seed": "library-v1"
  },
  {
@@ -1108,8 +1108,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Con_nh%C3%A0_gi%C3%A0u",
   "file": "ws-con-nha-giau.pdf",
   "originalName": "ws-con-nha-giau.pdf",
-  "size": 1262562,
-  "sha256": "1e8c3b1f577f4ace15bafee33a298907d74e4139504076976ea1115df2c069b0",
+  "size": 1306251,
+  "sha256": "a63427bd878ea2b6dae6c81952a63ff5e516960b1fa032616715406811eb648c",
   "seed": "library-v1"
  },
  {
@@ -1121,7 +1121,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1930 (Wikimedia Commons, tệp \"Con nha ngheo.pdf\", phạm vi công cộng).",
   "id": "ws-con-nha-ngheo",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1129,8 +1129,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Con_nh%C3%A0_ngh%C3%A8o",
   "file": "ws-con-nha-ngheo.pdf",
   "originalName": "ws-con-nha-ngheo.pdf",
-  "size": 1397702,
-  "sha256": "33179add39e7a741d998c2c571bfb0f411858acc048797e8d9e35e43d3abe21d",
+  "size": 1434575,
+  "sha256": "a165bae7b4ffc7a2269b6346f42dbfab876003b75900aeb8799a47ac25d895ae",
   "seed": "library-v1"
  },
  {
@@ -1150,8 +1150,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%B4ng_%C6%B0%E1%BB%9Bc_Berne_v%E1%BB%81_B%E1%BA%A3o_h%E1%BB%99_c%C3%A1c_t%C3%A1c_ph%E1%BA%A9m_v%C4%83n_h%E1%BB%8Dc_v%C3%A0_ngh%E1%BB%87_thu%E1%BA%ADt",
   "file": "ws-cong-uoc-berne-ve-bao-ho-cac-tac-pham-van-hoc-va-n.pdf",
   "originalName": "ws-cong-uoc-berne-ve-bao-ho-cac-tac-pham-van-hoc-va-n.pdf",
-  "size": 382896,
-  "sha256": "7780edaa34f3f9d9e1197e4fa4d4bd9b20ba1cddf010b47a6f81bb9ffc4ceb4a",
+  "size": 425786,
+  "sha256": "974be614e6e59c6523e764cfeb2eaa187fe3375129a5107c8d1ff87d659b6581",
   "seed": "library-v1"
  },
  {
@@ -1171,8 +1171,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%B4ng_%C6%B0%E1%BB%9Bc_Li%C3%AAn_Hi%E1%BB%87p_Qu%E1%BB%91c_v%E1%BB%81_Lu%E1%BA%ADt_bi%E1%BB%83n",
   "file": "ws-cong-uoc-lien-hiep-quoc-ve-luat-bien.pdf",
   "originalName": "ws-cong-uoc-lien-hiep-quoc-ve-luat-bien.pdf",
-  "size": 2086208,
-  "sha256": "31aa6164ec90616dce8faf3a410e0bdb1171e6525f2da96ed64a6360ea358749",
+  "size": 2137068,
+  "sha256": "95cbe4c2fb2f23befd78c5ff0d11469dd6f6a3e5167049cc6be8bb70c748a9c9",
   "seed": "library-v1"
  },
  {
@@ -1184,7 +1184,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1942 (Wikimedia Commons, tệp \"Cu kinh.pdf\", phạm vi công cộng).",
   "id": "ws-cu-kinh",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1192,8 +1192,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C6%B0_K%E1%BB%89nh",
   "file": "ws-cu-kinh.pdf",
   "originalName": "ws-cu-kinh.pdf",
-  "size": 636677,
-  "sha256": "b093c06a757a287e8adb4d05517963ced5411d2b03a6dbc65ed0500b0a494ec3",
+  "size": 673178,
+  "sha256": "e81f6d21c6300803f7072f50064ee77269067826d4fa63093ab81be9ab5616aa",
   "seed": "library-v1"
  },
  {
@@ -1213,8 +1213,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Cung_o%C3%A1n_ng%C3%A2m_kh%C3%BAc_%28b%E1%BA%A3n_ph%E1%BB%95_bi%E1%BA%BFn%29",
   "file": "ws-cung-oan-ngam-khuc.pdf",
   "originalName": "ws-cung-oan-ngam-khuc.pdf",
-  "size": 418619,
-  "sha256": "ebfe380c9e4ff28df39df5eaef89e357d3ced6281aebb339328053175502ffc3",
+  "size": 448395,
+  "sha256": "6f26a455fc9f1c1af42dbe19225cc88836c9eb7713bd8c9e8d47afb9d15462ad",
   "seed": "library-v1"
  },
  {
@@ -1234,8 +1234,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%B9ng_s%C6%B0_Thi%E1%BB%87n_Chi%E1%BA%BFu_b%C3%A0n_v%E1%BB%81_l%E1%BB%91i_d%E1%BB%8Bch_s%C3%A1ch_hay_l%C3%A0_ph%C3%AA_b%C3%ACnh_l%E1%BB%91i_d%E1%BB%8Bch_c%E1%BB%A7a_s%C3%A1ch_%22Ph%E1%BA%ADt_h%E1%BB%8Dc_t%E1%BB%95ng_y%E1%BA%BFu%22",
   "file": "ws-cung-su-thien-chieu-ban-ve-loi-dich-sach-hay-la-ph.pdf",
   "originalName": "ws-cung-su-thien-chieu-ban-ve-loi-dich-sach-hay-la-ph.pdf",
-  "size": 214518,
-  "sha256": "9fd2180c0fe2d5d394f06c567756b1fd80efa8a06c33c4480889fcfead066eee",
+  "size": 268700,
+  "sha256": "8c1ef35723ca775f0ff58fec00b9e1a83bee94df03b9cb82d756cab8ef1035eb",
   "seed": "library-v1"
  },
  {
@@ -1247,7 +1247,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1935 (Wikimedia Commons, tệp \"Cuoi guong 2.pdf\", phạm vi công cộng).",
   "id": "ws-cuoi-guong",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1255,8 +1255,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C6%B0%E1%BB%9Di_g%C6%B0%E1%BB%A3ng",
   "file": "ws-cuoi-guong.pdf",
   "originalName": "ws-cuoi-guong.pdf",
-  "size": 900110,
-  "sha256": "2a1b512681c0bc7fc49290ab143f1dc7d57165ebe3cd58fa70f208776c5dc627",
+  "size": 954489,
+  "sha256": "eb67907bd48e674d79049a249341ec287496d543310d242b5be17f3bcc5d40dc",
   "seed": "library-v1"
  },
  {
@@ -1268,7 +1268,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tản Đà mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tản Đà mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1925 (Wikimedia Commons, tệp \"Dai guong truyen.pdf\", phạm vi công cộng).",
   "id": "ws-dai-guong-truyen",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1276,8 +1276,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%C3%A0i_g%C6%B0%C6%A1ng_truy%E1%BB%87n",
   "file": "ws-dai-guong-truyen.pdf",
   "originalName": "ws-dai-guong-truyen.pdf",
-  "size": 817481,
-  "sha256": "9c9f17cb8b8ba7f0b21d0cfae7443e2e7b3fef4bbf1913f5ac190590896fbe7e",
+  "size": 854562,
+  "sha256": "a2c1776128af82701e1a53298f1f88a67a8666013516f074a533bd27fffce839",
   "seed": "library-v1"
  },
  {
@@ -1297,8 +1297,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%E1%BA%A1i_Nam_Qu%E1%BB%91c_s%E1%BB%AD_Di%E1%BB%85n_ca",
   "file": "ws-dai-nam-quoc-su-dien-ca.pdf",
   "originalName": "ws-dai-nam-quoc-su-dien-ca.pdf",
-  "size": 585014,
-  "sha256": "05eb4e4990e427b7d37e02ba6f5d08afaf141f02e172c76a61c1c4ead567ea26",
+  "size": 616917,
+  "sha256": "2641bc4f8686df84735706437c94534a057242f6ce257ec0d3b0eb7035bc2396",
   "seed": "library-v1"
  },
  {
@@ -1318,8 +1318,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%E1%BA%A1i_ngh%C4%A9a_di%E1%BB%87t_th%C3%A2n",
   "file": "ws-dai-nghia-diet-than.pdf",
   "originalName": "ws-dai-nghia-diet-than.pdf",
-  "size": 1198025,
-  "sha256": "b402f46b154dc322ad6c6487694a242eefb1502f630713f860a77652de113bca",
+  "size": 1229628,
+  "sha256": "5682dfe685ef8bcd697036d966dabed03bb88a741ff4265819ee30e76730d876",
   "seed": "library-v1"
  },
  {
@@ -1339,8 +1339,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%E1%BA%A7u_Ph%C3%A1p_Ch%C3%ADnh_ph%E1%BB%A7_th%C6%B0",
   "file": "ws-dau-phap-chinh-phu-thu.pdf",
   "originalName": "ws-dau-phap-chinh-phu-thu.pdf",
-  "size": 202849,
-  "sha256": "1a168686ccce09d9c68a178aa36b9bd87bff40d90a6a5ae21a8a91149fc6640b",
+  "size": 266055,
+  "sha256": "2dd1f36c4073740518d7153ed2deecbaa5c2a4f726b176e9d8e273e9ef468a24",
   "seed": "library-v1"
  },
  {
@@ -1360,8 +1360,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/D%C3%A2y_oan",
   "file": "ws-day-oan.pdf",
   "originalName": "ws-day-oan.pdf",
-  "size": 485454,
-  "sha256": "864773f7aae7b9b9284793153ef4bb3d2b489c8cb3b90fc8d0049548b13e226a",
+  "size": 547510,
+  "sha256": "7c8ff105e7efa763ef4e71e4477bc147c3189c611a8ed3c6a0e5a11c4a61c219",
   "seed": "library-v1"
  },
  {
@@ -1381,8 +1381,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90i_h%E1%BB%8Dc_%C4%91i_thi",
   "file": "ws-di-hoc-di-thi.pdf",
   "originalName": "ws-di-hoc-di-thi.pdf",
-  "size": 264578,
-  "sha256": "5aeda6cb3ce65bbd491c1755c5feda0ada27accb2ab40942b266c54c40fd5d9e",
+  "size": 302767,
+  "sha256": "d434dcaa5f00b2588888a4f27da0bc09dc3f76285f204cd8cb0d85823747fc3e",
   "seed": "library-v1"
  },
  {
@@ -1402,8 +1402,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90i%E1%BB%81u_%C4%91%C3%ACnh_c%C3%A1i_%C3%A1n_qu%E1%BB%91c_h%E1%BB%8Dc",
   "file": "ws-dieu-dinh-cai-an-quoc-hoc.pdf",
   "originalName": "ws-dieu-dinh-cai-an-quoc-hoc.pdf",
-  "size": 672646,
-  "sha256": "30497099aac9f026d672ad99995ac87e0083e9132e1e09ede05c39279c3ddefa",
+  "size": 697689,
+  "sha256": "168d1ef1f986ea874dcaaef85e40c575d55e7d12d4f5272680ec408b727092b9",
   "seed": "library-v1"
  },
  {
@@ -1423,8 +1423,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%E1%BB%97_n%C6%B0%C6%A1ng_n%C6%B0%C6%A1ng_b%C3%A1o_o%C3%A1n",
   "file": "ws-do-nuong-nuong-bao-oan.pdf",
   "originalName": "ws-do-nuong-nuong-bao-oan.pdf",
-  "size": 1110130,
-  "sha256": "8ff16f1f711010195061628f2ae020e89faf5bd1e377f73835bff2bc99886036",
+  "size": 1210890,
+  "sha256": "96d687d7fcbc8db88d9724bd76c5cd31fafaa86b45b550f19014ec9e93bdc50e",
   "seed": "library-v1"
  },
  {
@@ -1444,8 +1444,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%C3%B3a_hoa_t%C3%A0n",
   "file": "ws-doa-hoa-tan.pdf",
   "originalName": "ws-doa-hoa-tan.pdf",
-  "size": 747530,
-  "sha256": "65c76e621ddc496b6020c66c1443d57fb3e69a31376ac926030e9d6794b251a3",
+  "size": 803917,
+  "sha256": "b04747d8f0de2e8121916102e60f7a53eb33a980cf9e7725f5fc91be06b564d5",
   "seed": "library-v1"
  },
  {
@@ -1465,8 +1465,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90o%E1%BA%A1n_t%C3%ACnh",
   "file": "ws-doan-tinh.pdf",
   "originalName": "ws-doan-tinh.pdf",
-  "size": 945742,
-  "sha256": "9acf5782bba23141e01d0a61030a20cd0b5de6992b8fb0e72a0ee338a59e3946",
+  "size": 977791,
+  "sha256": "40e34fdcb2a8eb779a9fd46e8b47a966a94e5f4bf2a6568610b52024eb27cb28",
   "seed": "library-v1"
  },
  {
@@ -1486,8 +1486,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%E1%BB%99c_th%C6%B0_t%C3%B9y_b%C3%BAt",
   "file": "ws-doc-thu-tuy-but.pdf",
   "originalName": "ws-doc-thu-tuy-but.pdf",
-  "size": 202717,
-  "sha256": "9a80b77199da0575348de8e944acc9876dbaf4a40954a45e095063ffdbc3148a",
+  "size": 253641,
+  "sha256": "3fecd236c42ac471d46ed426ace88a7b079e2b62c4743f9d83b8c71ca1504496",
   "seed": "library-v1"
  },
  {
@@ -1499,7 +1499,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Đào Trinh Nhất mất năm 1951: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Đào Trinh Nhất mất năm 1951: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1945 (Wikimedia Commons, tệp \"Doi cach mang Phan Boi Chau.pdf\", phạm vi công cộng).",
   "id": "ws-doi-cach-mang-phan-boi-chau",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1507,8 +1507,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%E1%BB%9Di_c%C3%A1ch_m%E1%BA%A1ng_Phan_B%E1%BB%99i_Ch%C3%A2u",
   "file": "ws-doi-cach-mang-phan-boi-chau.pdf",
   "originalName": "ws-doi-cach-mang-phan-boi-chau.pdf",
-  "size": 594740,
-  "sha256": "e2dbfcf47ffb0e4e68c6245d0a3103830dd199d0b594c868e006e59a2b3bdcb7",
+  "size": 633485,
+  "sha256": "87a622a78c4759d46852f8e892e342d64ca853614fe0b37efc50c79ba7a1fe90",
   "seed": "library-v1"
  },
  {
@@ -1528,8 +1528,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%C3%B4i_%C4%91i%E1%BB%81u_n%C3%AAn_bi%E1%BA%BFt_v%E1%BB%81_Nho_gi%C3%A1o",
   "file": "ws-doi-dieu-nen-biet-ve-nho-giao.pdf",
   "originalName": "ws-doi-dieu-nen-biet-ve-nho-giao.pdf",
-  "size": 208524,
-  "sha256": "37b3226f78cf664fb5ade2c88325c069ee0edb1c4fa67279518b3aa52ae2c3b0",
+  "size": 251378,
+  "sha256": "75e45410edcb2d930d30ad8f9586ebe7ff81bb07dfc6f078e882ccd9997b7cd9",
   "seed": "library-v1"
  },
  {
@@ -1549,8 +1549,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%C3%B4ng_Chu_li%E1%BB%87t_qu%E1%BB%91c",
   "file": "ws-dong-chu-liet-quoc.pdf",
   "originalName": "ws-dong-chu-liet-quoc.pdf",
-  "size": 465169,
-  "sha256": "4592267c98d9fdd3574a510400a89fa56f3ae11ff2877f9c916d0dcc6e6e8796",
+  "size": 503473,
+  "sha256": "4644ff6168526d1f58b8312e50a49bca73747773751b930295a334a619a22db2",
   "seed": "library-v1"
  },
  {
@@ -1570,8 +1570,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/D%C6%B0%C6%A1ng_T%E1%BB%AB_-_H%C3%A0_M%E1%BA%ADu",
   "file": "ws-duong-tu-ha-mau.pdf",
   "originalName": "ws-duong-tu-ha-mau.pdf",
-  "size": 826532,
-  "sha256": "a9cdf187260e55fb4b75f6b179c11eaee5178e5b2078b0b0baac2977120ce12b",
+  "size": 860362,
+  "sha256": "c54a46d90825349dae9af84709daaee4261beae89893f43dfd031f1ed20367da",
   "seed": "library-v1"
  },
  {
@@ -1591,8 +1591,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%8A-sai",
   "file": "ws-e-sai.pdf",
   "originalName": "ws-e-sai.pdf",
-  "size": 1355958,
-  "sha256": "9152c055537851bcfc572abaebd2573bb04f0450e8c008868ce0d9a10590fa3f",
+  "size": 1391859,
+  "sha256": "4051acd4cef2544b9891775bdb42a24b82cd608b29e0e78566e648e49fb20964",
   "seed": "library-v1"
  },
  {
@@ -1612,8 +1612,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Gia_%C4%90%E1%BB%8Bnh_ph%C3%BA",
   "file": "ws-gia-dinh-phu.pdf",
   "originalName": "ws-gia-dinh-phu.pdf",
-  "size": 247402,
-  "sha256": "1cca12e8186ff9f4e45901fff22b6e48688666aad85e2537450af1346e6e28fb",
+  "size": 280866,
+  "sha256": "47ef848683b2fa453f7330d3046abccd0384f7215db7fde9f5b38b930223ab42",
   "seed": "library-v1"
  },
  {
@@ -1633,8 +1633,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/H%C3%A0_N%E1%BB%99i_b%C4%83m_s%C3%A1u_ph%E1%BB%91_ph%C6%B0%E1%BB%9Dng",
   "file": "ws-ha-noi-bam-sau-pho-phuong.pdf",
   "originalName": "ws-ha-noi-bam-sau-pho-phuong.pdf",
-  "size": 371002,
-  "sha256": "8f6563bddb52ae85ecf2dbd945212135dd2436868537b98065af799b169bf30d",
+  "size": 500409,
+  "sha256": "58f4cd2b6be8edbd21e3666d0f7dd6e0a111a25ece696a4b988663f95994f7dc",
   "seed": "library-v1"
  },
  {
@@ -1654,8 +1654,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hai_kh%E1%BB%91i_t%C3%ACnh",
   "file": "ws-hai-khoi-tinh.pdf",
   "originalName": "ws-hai-khoi-tinh.pdf",
-  "size": 778314,
-  "sha256": "4c1fa6523de343ae4dc5cc19a99f37a576eb712fef1fed43d5987bfb4b1fe9d0",
+  "size": 830883,
+  "sha256": "3339d11c16a8b69eaafb7891d7c0d6e43dbbf95782068947776d1af86ed25fc8",
   "seed": "library-v1"
  },
  {
@@ -1675,8 +1675,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/H%E1%BA%A3i_ngo%E1%BA%A1i_huy%E1%BA%BFt_th%C6%B0",
   "file": "ws-hai-ngoai-huyet-thu.pdf",
   "originalName": "ws-hai-ngoai-huyet-thu.pdf",
-  "size": 301802,
-  "sha256": "87c93c6b24f41d6a4322f6d49b624c804e17f82ba8e795e6c8168cf2ba84dd37",
+  "size": 370751,
+  "sha256": "6b6dca6df9a7f28e1f6a9ebff0e3f7d562821b9f115f1c2fc25c0f3c8d0a11db",
   "seed": "library-v1"
  },
  {
@@ -1696,8 +1696,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hai_Th%C3%A0_c%C6%B0%E1%BB%9Bi_v%E1%BB%A3",
   "file": "ws-hai-tha-cuoi-vo.pdf",
   "originalName": "ws-hai-tha-cuoi-vo.pdf",
-  "size": 342318,
-  "sha256": "df2a0c89ea9163e646fd9cacec75f34831ca91522bfb6888185583f68373035d",
+  "size": 376580,
+  "sha256": "551c9bb6b01371297895c3b9a88ff3aa7638ca82a74eefc00bcc5341d6d7587b",
   "seed": "library-v1"
  },
  {
@@ -1717,8 +1717,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hai_v%E1%BB%A3",
   "file": "ws-hai-vo.pdf",
   "originalName": "ws-hai-vo.pdf",
-  "size": 660011,
-  "sha256": "e18e0764a1b6c2c99f0cec26d02c234844b2a75eb7ca7c0d4d1c9d20fe6f7cd2",
+  "size": 690182,
+  "sha256": "e6dca13bc21209b2736742ebbcdd9c478ee6dbbd6da8aa86bea8fb423efe834e",
   "seed": "library-v1"
  },
  {
@@ -1738,8 +1738,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/H%C3%A1n_h%E1%BB%8Dc_%E1%BB%9F_b%C3%AAn_Ph%C3%A1p",
   "file": "ws-han-hoc-o-ben-phap.pdf",
   "originalName": "ws-han-hoc-o-ben-phap.pdf",
-  "size": 232205,
-  "sha256": "c978376eb4e71028f7fda8ded4437c4e6c50b8466b5d68de20e937a557d2d1db",
+  "size": 287904,
+  "sha256": "7cbe79c64b2f7ad8c10b5034d24b63300696e16f7642b49165191bf05fde6887",
   "seed": "library-v1"
  },
  {
@@ -1759,8 +1759,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/H%E1%BA%A1nh_ph%C3%BAc_l%E1%BB%91i_n%C3%A0o",
   "file": "ws-hanh-phuc-loi-nao.pdf",
   "originalName": "ws-hanh-phuc-loi-nao.pdf",
-  "size": 852742,
-  "sha256": "6270a56318ebf87039d39b9029363787d83ac0c37627c3462e03fc7d62c3d056",
+  "size": 883189,
+  "sha256": "362e48d29a474f5490fe054d833f8063f074c83ffe0cde1d1b49f13f189f9df9",
   "seed": "library-v1"
  },
  {
@@ -1772,7 +1772,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt. Bản dịch: Trần Trọng Kim.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Trần Trọng Kim mất năm 1953: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Trần Trọng Kim mất năm 1953: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1950 (Wikimedia Commons, tệp \"Hạnh Thục ca.pdf\", phạm vi công cộng).",
   "id": "ws-hanh-thuc-ca",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1780,8 +1780,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/H%E1%BA%A1nh_Th%E1%BB%A5c_ca",
   "file": "ws-hanh-thuc-ca.pdf",
   "originalName": "ws-hanh-thuc-ca.pdf",
-  "size": 1272129,
-  "sha256": "5b92d9d2709c826f0b2eea8a4313d274d751c9b05d1a99e3a0086c70d99eebd3",
+  "size": 1308944,
+  "sha256": "a102e12cb833da45976ca8a472a6dce47e8bc363bc20e046ba089da11db120a1",
   "seed": "library-v1"
  },
  {
@@ -1801,8 +1801,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFn_ph%C3%A1p_H%E1%BB%A3p_ch%C3%BAng_qu%E1%BB%91c_Hoa_K%E1%BB%B3",
   "file": "ws-hien-phap-hop-chung-quoc-hoa-ky.pdf",
   "originalName": "ws-hien-phap-hop-chung-quoc-hoa-ky.pdf",
-  "size": 181726,
-  "sha256": "250e396578bf69689230b1aebb9f61a9e0a587af2f7fa8f033d47d735a2282e7",
+  "size": 231171,
+  "sha256": "462d31dd7cf39921e4d6130250c856463b3ab66889f75b07432fe3d2066c3c1b",
   "seed": "library-v1"
  },
  {
@@ -1822,8 +1822,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFn_ph%C3%A1p_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_1980",
   "file": "ws-hien-phap-viet-nam-1980.pdf",
   "originalName": "ws-hien-phap-viet-nam-1980.pdf",
-  "size": 415866,
-  "sha256": "b2fd7f1a84ec31f028a4d6e194b3b16ad50bf5b7d9fdad12bda049843164c7bb",
+  "size": 453824,
+  "sha256": "fe23ab97a0adaa7a6b0e30530c330f5c186d950d04ba7e522dd150a7e39f5949",
   "seed": "library-v1"
  },
  {
@@ -1843,8 +1843,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFn_ph%C3%A1p_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_1992",
   "file": "ws-hien-phap-viet-nam-1992.pdf",
   "originalName": "ws-hien-phap-viet-nam-1992.pdf",
-  "size": 405245,
-  "sha256": "dd54b6d0dcc1f9d472c0954e15411ea68f790f047b3e094f66d0e0b002960ea6",
+  "size": 435305,
+  "sha256": "6daae53795f8e2c346de8580cedadf8e19ae59d5a69e51a2bf280cdbfbe1015f",
   "seed": "library-v1"
  },
  {
@@ -1864,8 +1864,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFn_ph%C3%A1p_Vi%E1%BB%87t_Nam_C%E1%BB%99ng_h%C3%B2a_1956",
   "file": "ws-hien-phap-viet-nam-cong-hoa-1956.pdf",
   "originalName": "ws-hien-phap-viet-nam-cong-hoa-1956.pdf",
-  "size": 256259,
-  "sha256": "5a3889ec5cc3dd34f5ea680fc856d6aec30bf91712900738e86ad744543bc0fa",
+  "size": 318061,
+  "sha256": "da44b889c7a52bf4d34dff97d67a7b3539f8fe6c3a0b7240b4ec4249a237ce4b",
   "seed": "library-v1"
  },
  {
@@ -1885,8 +1885,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFn_ph%C3%A1p_Vi%E1%BB%87t_Nam_D%C3%A2n_ch%E1%BB%A7_C%E1%BB%99ng_h%C3%B2a_1946",
   "file": "ws-hien-phap-viet-nam-dan-chu-cong-hoa-1946.pdf",
   "originalName": "ws-hien-phap-viet-nam-dan-chu-cong-hoa-1946.pdf",
-  "size": 180867,
-  "sha256": "75fa1a54bfae1f7dfbd9754282feacf1fca941e0b0ab6b0110acb9eae4cbd9e1",
+  "size": 216256,
+  "sha256": "5b3e8484451878347588e6dfc246326de34998b921218bdae8f456283256d6ab",
   "seed": "library-v1"
  },
  {
@@ -1906,8 +1906,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFn_ph%C3%A1p_Vi%E1%BB%87t_Nam_D%C3%A2n_ch%E1%BB%A7_C%E1%BB%99ng_h%C3%B2a_1959",
   "file": "ws-hien-phap-viet-nam-dan-chu-cong-hoa-1959.pdf",
   "originalName": "ws-hien-phap-viet-nam-dan-chu-cong-hoa-1959.pdf",
-  "size": 304403,
-  "sha256": "303c869fd8ca5dadd02d4784b72935415a837b7e39c9108e8b988f4be87cbd9f",
+  "size": 346330,
+  "sha256": "64a042e6f39ed622cd8f48588b156ef88a1759593b864bb8ac46be870f673959",
   "seed": "library-v1"
  },
  {
@@ -1927,8 +1927,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BB%87p_%C6%B0%E1%BB%9Bc_c%E1%BB%A7a_WIPO_v%E1%BB%81_Quy%E1%BB%81n_t%C3%A1c_gi%E1%BA%A3",
   "file": "ws-hiep-uoc-cua-wipo-ve-quyen-tac-gia.pdf",
   "originalName": "ws-hiep-uoc-cua-wipo-ve-quyen-tac-gia.pdf",
-  "size": 163565,
-  "sha256": "da778502482ed182f0544325f565cf3bb065f6f3d7c0a3d72a179c45be74beb7",
+  "size": 217899,
+  "sha256": "0b5457da44224d02c34f84c75411e35a095f5671308998f07b0aa30c4e9c81bc",
   "seed": "library-v1"
  },
  {
@@ -1948,8 +1948,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hi%E1%BA%BFu_Kinh_di%E1%BB%85n_ngh%C4%A9a",
   "file": "ws-hieu-kinh-dien-nghia.pdf",
   "originalName": "ws-hieu-kinh-dien-nghia.pdf",
-  "size": 585172,
-  "sha256": "de74d422e979614dd4ea618239fcaa5cc1d549f1cbf2fb1d344e871daa9f7e44",
+  "size": 641245,
+  "sha256": "f9d49eb181a7df4f6edf23468e42bd319641760a95b941f62f5fe3ea1d79614c",
   "seed": "library-v1"
  },
  {
@@ -1969,8 +1969,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Hoa_ti%C3%AAn",
   "file": "ws-hoa-tien.pdf",
   "originalName": "ws-hoa-tien.pdf",
-  "size": 483926,
-  "sha256": "78e3d9c5f305861278d45b43e6e4581e7995fd55334b55e0e74971794f7d623b",
+  "size": 603978,
+  "sha256": "7a7c010c49eceb049404be4401116ccc16ed6cfb608994e385bc68168e2ba544",
   "seed": "library-v1"
  },
  {
@@ -1982,7 +1982,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1929 (Wikimedia Commons, tệp \"Ke lam nguoi chiu 3.pdf\", phạm vi công cộng).",
   "id": "ws-ke-lam-nguoi-chiu",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -1990,8 +1990,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/K%E1%BA%BB_l%C3%A0m_ng%C6%B0%E1%BB%9Di_ch%E1%BB%8Bu",
   "file": "ws-ke-lam-nguoi-chiu.pdf",
   "originalName": "ws-ke-lam-nguoi-chiu.pdf",
-  "size": 1206571,
-  "sha256": "4d0cbc1f24a2544cd53506600295351139e9380cd96ff8e4333f43a0bcf96846",
+  "size": 1328306,
+  "sha256": "181200e6e0386d77f47d7a52c5406cffb32bc558b31ec581cbcd9f7436a6620a",
   "seed": "library-v1"
  },
  {
@@ -2011,8 +2011,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Kh%C3%A1i_lu%E1%BA%ADn_v%E1%BB%81_v%C4%83n_h%E1%BB%8Dc_ch%E1%BB%AF_H%C3%A1n_%E1%BB%9F_n%C6%B0%E1%BB%9Bc_ta",
   "file": "ws-khai-luan-ve-van-hoc-chu-han-o-nuoc-ta.pdf",
   "originalName": "ws-khai-luan-ve-van-hoc-chu-han-o-nuoc-ta.pdf",
-  "size": 324009,
-  "sha256": "07482e232ce7f3e8cd64ba6bfef7d08429e669a9b1e9c5a7e3cb9c49cfef28a1",
+  "size": 355494,
+  "sha256": "5db3ed939a03484835d7841b559a92bfec48b36f923846b2d202dfcf8584d26f",
   "seed": "library-v1"
  },
  {
@@ -2024,7 +2024,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1935 (Wikimedia Commons, tệp \"Khoc tham.pdf\", phạm vi công cộng).",
   "id": "ws-khoc-tham",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2032,8 +2032,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Kh%C3%B3c_th%E1%BA%A7m",
   "file": "ws-khoc-tham.pdf",
   "originalName": "ws-khoc-tham.pdf",
-  "size": 850265,
-  "sha256": "abeeaba6cfeed087dcff49dbf86ced183d48ea63bc8f45dff7453824e03a2bf4",
+  "size": 881059,
+  "sha256": "88972c92f83e3f3f8ae1dc40db33ac709a21806ea984824a3ef3c515b7f8aa42",
   "seed": "library-v1"
  },
  {
@@ -2045,7 +2045,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tản Đà mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tản Đà mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1922 (Wikimedia Commons, tệp \"Khoi tinh con 2.pdf\", phạm vi công cộng).",
   "id": "ws-khoi-tinh-con",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2053,8 +2053,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Kh%E1%BB%91i_t%C3%ACnh_con",
   "file": "ws-khoi-tinh-con.pdf",
   "originalName": "ws-khoi-tinh-con.pdf",
-  "size": 643798,
-  "sha256": "ce802c999ff234801214b719999f244df71f04bfbc9881e25cbf6fa898980523",
+  "size": 695908,
+  "sha256": "ce8e1d0ba561462f4e020b8333e136290d747bc1197c94e9ff677ed1b7c7b263",
   "seed": "library-v1"
  },
  {
@@ -2074,8 +2074,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Kinh_D%E1%BB%8Bch",
   "file": "ws-kinh-dich.pdf",
   "originalName": "ws-kinh-dich.pdf",
-  "size": 2316552,
-  "sha256": "a48cdead6799373dfcb02063fd564a661d44e0086f3b9294a7c635a0fed0733b",
+  "size": 2356521,
+  "sha256": "bda9a1e1ca3e50bebececc8d1505bd19349146c2d3613dd87c28863fbe12b699",
   "seed": "library-v1"
  },
  {
@@ -2095,8 +2095,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%C3%A1ng_th%E1%BA%BF_K%C3%BD",
   "file": "ws-kinh-thanh-cuu-uoc-ban-1925-quyen-1-sang-the-ky-e.pdf",
   "originalName": "ws-kinh-thanh-cuu-uoc-ban-1925-quyen-1-sang-the-ky-e.pdf",
-  "size": 12420545,
-  "sha256": "5d3a53e31a37a4e91541d45506b62aefee4cac3cf6cf08a4715215a879d9c898",
+  "size": 12453036,
+  "sha256": "4c44b1952f3c71ce0965e10c21f40df1195b472fa7e45ab1977e04a678d75469",
   "seed": "library-v1"
  },
  {
@@ -2116,8 +2116,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Gi%C3%B3p",
   "file": "ws-kinh-thanh-cuu-uoc-ban-1925-quyen-2-giop-ma-la-chi.pdf",
   "originalName": "ws-kinh-thanh-cuu-uoc-ban-1925-quyen-2-giop-ma-la-chi.pdf",
-  "size": 10135598,
-  "sha256": "760449a369f0a84e9de153592ea82bd720d78ed992e3978ce40bedf335643b62",
+  "size": 10215982,
+  "sha256": "01c53529a22b04c0f4a2cc5a55248bccaf35b9d8c34890e526a0b9c56980189c",
   "seed": "library-v1"
  },
  {
@@ -2137,8 +2137,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ma-thi-%C6%A1",
   "file": "ws-kinh-thanh-tan-uoc-ban-1925.pdf",
   "originalName": "ws-kinh-thanh-tan-uoc-ban-1925.pdf",
-  "size": 7731311,
-  "sha256": "3cbe26b0bedceffb345188dfcec215917ca921fbf77966454fbf7870553d03c3",
+  "size": 7785140,
+  "sha256": "12bae2eb345e1c236c0d47a50624142d4d11661057c58808fba4eec1c7425781",
   "seed": "library-v1"
  },
  {
@@ -2158,8 +2158,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%C3%A1_c%E1%BB%9D_th%C3%AAu_s%C3%A1u_ch%E1%BB%AF_v%C3%A0ng",
   "file": "ws-la-co-theu-sau-chu-vang.pdf",
   "originalName": "ws-la-co-theu-sau-chu-vang.pdf",
-  "size": 527119,
-  "sha256": "6162b6e56e2fe461415651e833369c9ce39cc3bcb32988db87cadb8a0ba8de5b",
+  "size": 713423,
+  "sha256": "3215e2d6eb79b3a8a6711c8a0a15b0e2af926461c6e433d103fc4d7fe8d9d3b8",
   "seed": "library-v1"
  },
  {
@@ -2179,8 +2179,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%E1%BA%A1c_%C4%91%C6%B0%E1%BB%9Dng",
   "file": "ws-lac-duong.pdf",
   "originalName": "ws-lac-duong.pdf",
-  "size": 817551,
-  "sha256": "33648ecdf5c38d985bb34948099dc3336f35757d851250c9f99f705310841e9a",
+  "size": 851100,
+  "sha256": "34f6dc92f2e4dcd316b25d1fca706c5b5d349d6620ed8d10dbc8ef69fd06e53e",
   "seed": "library-v1"
  },
  {
@@ -2192,7 +2192,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Vũ Trọng Phụng mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Vũ Trọng Phụng mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1939 (Wikimedia Commons, tệp \"Lam di 1939.pdf\", phạm vi công cộng).",
   "id": "ws-lam-di",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2200,8 +2200,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%C3%A0m_%C4%91%C4%A9",
   "file": "ws-lam-di.pdf",
   "originalName": "ws-lam-di.pdf",
-  "size": 544082,
-  "sha256": "1844819d4cf7f06b6713c16bfe10c92e84ecf77c27d7443d865599efa69ea4af",
+  "size": 574505,
+  "sha256": "d4dc90096a792d0604a033948f8788b1ae150feef7b3b7928762b9829f91d368",
   "seed": "library-v1"
  },
  {
@@ -2213,7 +2213,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tản Đà mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tản Đà mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1922 (Wikimedia Commons, tệp \"Len tam.pdf\", phạm vi công cộng).",
   "id": "ws-len-tam",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2221,8 +2221,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%C3%AAn_t%C3%A1m",
   "file": "ws-len-tam.pdf",
   "originalName": "ws-len-tam.pdf",
-  "size": 552720,
-  "sha256": "9a524aefff3f4b18bbf33c0e09054aae09315b9ef2b6f369e085b304c544a36a",
+  "size": 583079,
+  "sha256": "6f296479f1eab9c96fe2055eadc3916b8fef50dc24fe00f6bae1f3648ea6ddf6",
   "seed": "library-v1"
  },
  {
@@ -2234,7 +2234,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Ngô Tất Tố mất năm 1954: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Ngô Tất Tố mất năm 1954: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1941 (Wikimedia Commons, tệp \"Leu chong.pdf\", phạm vi công cộng).",
   "id": "ws-leu-chong",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2242,8 +2242,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%E1%BB%81u_ch%C3%B5ng",
   "file": "ws-leu-chong.pdf",
   "originalName": "ws-leu-chong.pdf",
-  "size": 1870603,
-  "sha256": "2cb5604230c0e142dd7ae1123f9937ff1d379588c353b83304192bde22bae472",
+  "size": 1924078,
+  "sha256": "67f0da8329fa6aee9830e45a0967ce04fcf370da8cfc9cd014a42385bac41fa3",
   "seed": "library-v1"
  },
  {
@@ -2255,7 +2255,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt. Bản dịch: Nguyễn Hữu Tiến.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Nguyễn Hữu Tiến mất năm 1941: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Nguyễn Hữu Tiến mất năm 1941: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1925 (Wikimedia Commons, tệp \"Linh Nam dat su 1.pdf\", phạm vi công cộng).",
   "id": "ws-linh-nam-dat-su",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2263,8 +2263,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%C4%A9nh_Nam_d%E1%BA%ADt_s%E1%BB%AD",
   "file": "ws-linh-nam-dat-su.pdf",
   "originalName": "ws-linh-nam-dat-su.pdf",
-  "size": 3170240,
-  "sha256": "00f99c59ac36a85d94e7656fb080796b3a4184aa4491866cc8603b30f28c825e",
+  "size": 3203998,
+  "sha256": "2764b41b7a121aee9c4716b6dbc948ea8ad557f38b7afcc858f6a4fcec04a341",
   "seed": "library-v1"
  },
  {
@@ -2284,8 +2284,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%E1%BB%9Di_th%E1%BB%81_tr%C6%B0%E1%BB%9Bc_mi%E1%BB%85u",
   "file": "ws-loi-the-truoc-mieu.pdf",
   "originalName": "ws-loi-the-truoc-mieu.pdf",
-  "size": 681760,
-  "sha256": "653a70bed9032aa31b1f4455d781f3c94d2da9d2d5ec35c947716e1070d93cb2",
+  "size": 745060,
+  "sha256": "c3b3128ed2746f61d9b7da650397236276705de894f4e3b2a358af06e2272043",
   "seed": "library-v1"
  },
  {
@@ -2297,7 +2297,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tác phẩm khuyết danh đã công bố hơn 75 năm: hết thời hạn bảo hộ (Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tác phẩm khuyết danh đã công bố hơn 75 năm: hết thời hạn bảo hộ (Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1925 (Wikimedia Commons, tệp \"Luan ly giao khoa thu - Dong au.pdf\", phạm vi công cộng).",
   "id": "ws-luan-ly-giao-khoa-thu-lop-dong-au",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2305,8 +2305,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%C3%A2n_l%C3%BD_gi%C3%A1o_khoa_th%C6%B0_-_L%E1%BB%9Bp_%C4%90%E1%BB%93ng_%E1%BA%A5u",
   "file": "ws-luan-ly-giao-khoa-thu-lop-dong-au.pdf",
   "originalName": "ws-luan-ly-giao-khoa-thu-lop-dong-au.pdf",
-  "size": 727199,
-  "sha256": "63377022fc94f45bcc39aa8376b62fc845c4569541f6ff1187da2eec02984cce",
+  "size": 765819,
+  "sha256": "d9681d1565a1dbb012680ff1bb1d46897ca84e1bce2a03fe00ca120bd3dd1a61",
   "seed": "library-v1"
  },
  {
@@ -2318,7 +2318,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Trần Trọng Kim mất năm 1953: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Trần Trọng Kim mất năm 1953: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1925 (Wikimedia Commons, tệp \"Luan ly giao khoa thu - Du bi.pdf\", phạm vi công cộng).",
   "id": "ws-luan-ly-giao-khoa-thu-lop-du-bi",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2326,8 +2326,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%C3%A2n_l%C3%BD_gi%C3%A1o_khoa_th%C6%B0_-_L%E1%BB%9Bp_D%E1%BB%B1_b%E1%BB%8B",
   "file": "ws-luan-ly-giao-khoa-thu-lop-du-bi.pdf",
   "originalName": "ws-luan-ly-giao-khoa-thu-lop-du-bi.pdf",
-  "size": 804633,
-  "sha256": "3d96081b4423f8ba19ca0f7864df9d71f86c6dfc7eeb99d0f736b81c36b93dd5",
+  "size": 854176,
+  "sha256": "718f16754af966960d375d4f0eb65026361380daa6ff5c6fa5a7300e379cc199",
   "seed": "library-v1"
  },
  {
@@ -2339,7 +2339,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tác phẩm khuyết danh đã công bố hơn 75 năm: hết thời hạn bảo hộ (Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tác phẩm khuyết danh đã công bố hơn 75 năm: hết thời hạn bảo hộ (Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1925 (Wikimedia Commons, tệp \"Luan ly giao khoa thu - So dang.pdf\", phạm vi công cộng).",
   "id": "ws-luan-ly-giao-khoa-thu-lop-so-dang",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -2347,8 +2347,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%C3%A2n_l%C3%BD_gi%C3%A1o_khoa_th%C6%B0_-_L%E1%BB%9Bp_S%C6%A1_%C4%91%E1%BA%B3ng",
   "file": "ws-luan-ly-giao-khoa-thu-lop-so-dang.pdf",
   "originalName": "ws-luan-ly-giao-khoa-thu-lop-so-dang.pdf",
-  "size": 1351876,
-  "sha256": "4d4fa7241197b3eaeb0ccb3703476bb4e6e127e2dc40e6db8e6baa09e3104358",
+  "size": 1398796,
+  "sha256": "10816bc11905389feb877a12063332fbee911fce31cf92666babebd3ed4cba33",
   "seed": "library-v1"
  },
  {
@@ -2368,8 +2368,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_An_ninh_m%E1%BA%A1ng_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2018",
   "file": "ws-luat-an-ninh-mang-viet-nam-2018.pdf",
   "originalName": "ws-luat-an-ninh-mang-viet-nam-2018.pdf",
-  "size": 385711,
-  "sha256": "ba6efd77ae3e3369d7c961a36fa84618790c3ac939bf9df7db595d45347461ae",
+  "size": 429359,
+  "sha256": "a2d7baa7296ec5a263feb975836b2c1345ce3099a954eb63cdf89b3839a47ee0",
   "seed": "library-v1"
  },
  {
@@ -2389,8 +2389,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_An_to%C3%A0n_th%E1%BB%B1c_ph%E1%BA%A9m_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-an-toan-thuc-pham-viet-nam-2010.pdf",
   "originalName": "ws-luat-an-toan-thuc-pham-viet-nam-2010.pdf",
-  "size": 443651,
-  "sha256": "446b8da83762a59900793eac1f84c94b8efdf7dde1652f2b938135a1dbbbdabd",
+  "size": 489085,
+  "sha256": "4c774e85bd7cb16e8be9f8f72c39053a684a35303d8630ec36d9e44e1a20533f",
   "seed": "library-v1"
  },
  {
@@ -2410,8 +2410,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_ban_h%C3%A0nh_v%C4%83n_b%E1%BA%A3n_quy_ph%E1%BA%A1m_ph%C3%A1p_lu%E1%BA%ADt_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-luat-ban-hanh-van-ban-quy-pham-phap-luat-viet-nam.pdf",
   "originalName": "ws-luat-ban-hanh-van-ban-quy-pham-phap-luat-viet-nam.pdf",
-  "size": 897195,
-  "sha256": "c2eac5b82866f3e6e6e8796476ffe2b56e88812e999ecce669a4a55f27d65f62",
+  "size": 1104921,
+  "sha256": "d301cbbb34a1e44f3ad2c798b9dcda2205fa31f38ea5fb4cbabd8d5ff120e975",
   "seed": "library-v1"
  },
  {
@@ -2431,8 +2431,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_B%E1%BA%A3o_hi%E1%BB%83m_ti%E1%BB%81n_g%E1%BB%ADi_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-bao-hiem-tien-gui-viet-nam-2012.pdf",
   "originalName": "ws-luat-bao-hiem-tien-gui-viet-nam-2012.pdf",
-  "size": 221204,
-  "sha256": "1a46a0d73aa58e537a2b0e28a9bd994d86645d58d8db82003c83a242c75b7d1c",
+  "size": 271033,
+  "sha256": "6741b24879f6e5feb7eb75b4cfb4759e5c7b8f37c92d7407e0ae7388178e2a8e",
   "seed": "library-v1"
  },
  {
@@ -2452,8 +2452,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Bi%E1%BB%83n_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-bien-viet-nam-2012.pdf",
   "originalName": "ws-luat-bien-viet-nam-2012.pdf",
-  "size": 294188,
-  "sha256": "ed80bb10ad6f0a538c4141e3e3240e13faaa36efd9061892d6f48dff50b54d9a",
+  "size": 340565,
+  "sha256": "fbaa718d7d396a11e1246f1ed3dcb5e1561d4ba1b5c08e938f33ee8b0b30e81d",
   "seed": "library-v1"
  },
  {
@@ -2473,8 +2473,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_B%C3%ACnh_%C4%91%E1%BA%B3ng_gi%E1%BB%9Bi_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2006",
   "file": "ws-luat-binh-dang-gioi-viet-nam-2006.pdf",
   "originalName": "ws-luat-binh-dang-gioi-viet-nam-2006.pdf",
-  "size": 279442,
-  "sha256": "1ff2631ab077b8705151c6ded584a9f805837cc4e4d9667934dfcf819b1de095",
+  "size": 316791,
+  "sha256": "8baf67907f2ca9663b2e8fcaa050287c04d64ff623ce2a8e4b1d04380719a52d",
   "seed": "library-v1"
  },
  {
@@ -2494,8 +2494,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_B%C6%B0u_ch%C3%ADnh_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-buu-chinh-viet-nam-2010.pdf",
   "originalName": "ws-luat-buu-chinh-viet-nam-2010.pdf",
-  "size": 278888,
-  "sha256": "067758dc4eb4e986e44643c21e2c2f8be2898a854ae95b37c6390648c4c6bc38",
+  "size": 317695,
+  "sha256": "eaf166c4f87483304e0a7ad43e0a608ad89d9c7ed615f8e5b24a281f57280492",
   "seed": "library-v1"
  },
  {
@@ -2515,8 +2515,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_C%C3%B4ng_an_nh%C3%A2n_d%C3%A2n_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2014",
   "file": "ws-luat-cong-an-nhan-dan-viet-nam-2014.pdf",
   "originalName": "ws-luat-cong-an-nhan-dan-viet-nam-2014.pdf",
-  "size": 313894,
-  "sha256": "05e1eec08090f5a082f1e1d39bc811e3b81f92a31c9a575ed6d9c51480f78073",
+  "size": 366409,
+  "sha256": "448d2bad04c6919ce4aa2cad3b1e8705ed94017b0f5b29be17f9dc8c4663e4ac",
   "seed": "library-v1"
  },
  {
@@ -2536,8 +2536,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_C%C3%B4ng_%C4%91o%C3%A0n_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-cong-doan-viet-nam-2012.pdf",
   "originalName": "ws-luat-cong-doan-viet-nam-2012.pdf",
-  "size": 216401,
-  "sha256": "92a6e5e2b2eb06011596aee1c58a3a38aea160f8068a62d8a249baedc01bd377",
+  "size": 335192,
+  "sha256": "98dc748e666eca2619fc9b0daca4f95d9594494d772e311529ad1481d39154fb",
   "seed": "library-v1"
  },
  {
@@ -2557,8 +2557,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_C%C3%B4ng_ngh%E1%BB%87_th%C3%B4ng_tin_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2006",
   "file": "ws-luat-cong-nghe-thong-tin-viet-nam-2006.pdf",
   "originalName": "ws-luat-cong-nghe-thong-tin-viet-nam-2006.pdf",
-  "size": 361783,
-  "sha256": "67aeb719fd374fdc94e6d22e9d6d9134d5182e6a7f88477da96db7c3d4346322",
+  "size": 400996,
+  "sha256": "086fad3ec68eedd7c0f897ed88f2d3cee3dfbb5d3f8c926525984ff0164e646c",
   "seed": "library-v1"
  },
  {
@@ -2578,8 +2578,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_%C4%90a_d%E1%BA%A1ng_sinh_h%E1%BB%8Dc_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2008",
   "file": "ws-luat-da-dang-sinh-hoc-viet-nam-2008.pdf",
   "originalName": "ws-luat-da-dang-sinh-hoc-viet-nam-2008.pdf",
-  "size": 387942,
-  "sha256": "213983cabc65ee20d00110e030c17682c4c9b6372a4db9650d121b7100874b0d",
+  "size": 438181,
+  "sha256": "89fe69080409c660292995a56cdce2e18df7653433e80064fc99b3124e24630e",
   "seed": "library-v1"
  },
  {
@@ -2599,8 +2599,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_D%E1%BB%B1_tr%E1%BB%AF_qu%E1%BB%91c_gia_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-du-tru-quoc-gia-viet-nam-2012.pdf",
   "originalName": "ws-luat-du-tru-quoc-gia-viet-nam-2012.pdf",
-  "size": 331864,
-  "sha256": "38e332fb14082ca14fb4cf1cfa3f9ae4fac7dadd24a9491c23b8808d96d370c1",
+  "size": 381543,
+  "sha256": "ed793da922e6ab708e6c09c795352885beead0df2c053fd91ed795557bff19f6",
   "seed": "library-v1"
  },
  {
@@ -2620,8 +2620,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Gi%C3%A1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-gia-viet-nam-2012.pdf",
   "originalName": "ws-luat-gia-viet-nam-2012.pdf",
-  "size": 327391,
-  "sha256": "57cd630c79cb12df4b26d322aa2c7a8e2f95523530a24db3ba1d7827b4f79197",
+  "size": 374944,
+  "sha256": "8e6f5bfcdd107d526e367aa10eae4805ff8308b98056c53477300209cfed346c",
   "seed": "library-v1"
  },
  {
@@ -2641,8 +2641,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Gi%C3%A1m_%C4%91%E1%BB%8Bnh_t%C6%B0_ph%C3%A1p_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-giam-dinh-tu-phap-viet-nam-2012.pdf",
   "originalName": "ws-luat-giam-dinh-tu-phap-viet-nam-2012.pdf",
-  "size": 325540,
-  "sha256": "15dc7a3f106e7e3b61c5f4e89f025b8503fe3f9f3a101ba4dd19addc94957593",
+  "size": 379457,
+  "sha256": "f4bdd8d7db9a959aad78c779032e05987caf33bbac82b8b105209e39340860a6",
   "seed": "library-v1"
  },
  {
@@ -2662,8 +2662,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Gi%C3%A1o_d%E1%BB%A5c_%C4%91%E1%BA%A1i_h%E1%BB%8Dc_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-giao-duc-dai-hoc-viet-nam-2012.pdf",
   "originalName": "ws-luat-giao-duc-dai-hoc-viet-nam-2012.pdf",
-  "size": 440201,
-  "sha256": "a7236e48879a20f2551478fa867f647cab8889c48762ebf28ac4df60004af5aa",
+  "size": 483200,
+  "sha256": "06f300b3133868bd6ea19f92fe1e4d8a70a2627312f27f5ddcb45db609d85253",
   "seed": "library-v1"
  },
  {
@@ -2683,8 +2683,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Gi%C3%A1o_d%E1%BB%A5c_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2019",
   "file": "ws-luat-giao-duc-viet-nam-2019.pdf",
   "originalName": "ws-luat-giao-duc-viet-nam-2019.pdf",
-  "size": 582867,
-  "sha256": "8529ca3a0ba816eeab7e6cc24797bdece87897fefcc3116b0643bec90c8b7c98",
+  "size": 633914,
+  "sha256": "d106b0d27f788988557c1e697d18db8fe1ed36c1408c5622e475a85a6d04b2e3",
   "seed": "library-v1"
  },
  {
@@ -2704,8 +2704,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_H%E1%BB%A3p_t%C3%A1c_x%C3%A3_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-hop-tac-xa-viet-nam-2012.pdf",
   "originalName": "ws-luat-hop-tac-xa-viet-nam-2012.pdf",
-  "size": 439515,
-  "sha256": "bcdff515d05bd91bab43c31776b63505e39f6cfe40b0017d155fca941046d1f7",
+  "size": 501450,
+  "sha256": "12763102d2ac2326a2f8dd00eb1134be91831a1d0aa74e7ea2fe49f33d0145a3",
   "seed": "library-v1"
  },
  {
@@ -2725,8 +2725,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Khoa_h%E1%BB%8Dc_v%C3%A0_c%C3%B4ng_ngh%E1%BB%87_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2013",
   "file": "ws-luat-khoa-hoc-va-cong-nghe-viet-nam-2013.pdf",
   "originalName": "ws-luat-khoa-hoc-va-cong-nghe-viet-nam-2013.pdf",
-  "size": 494724,
-  "sha256": "9bb35b3d26c722600d3a2eb271bb944d7e8511fa7fbc544156711ac78a635d15",
+  "size": 611239,
+  "sha256": "d0734b58a1c4e1fbaa380416a353473e39287d3569995c8b1641475f6baada2b",
   "seed": "library-v1"
  },
  {
@@ -2746,8 +2746,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_L%C3%BD_l%E1%BB%8Bch_t%C6%B0_ph%C3%A1p_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2009",
   "file": "ws-luat-ly-lich-tu-phap-viet-nam-2009.pdf",
   "originalName": "ws-luat-ly-lich-tu-phap-viet-nam-2009.pdf",
-  "size": 270893,
-  "sha256": "70f984b747f2c702e4502fda0a46ffe7d98b29ffe6b0cb91377b96636fdd31d8",
+  "size": 388122,
+  "sha256": "5f7ab3074865914fd6de0fb7d9a3d3b50774af2782bbbe9f56bd799d0f380b42",
   "seed": "library-v1"
  },
  {
@@ -2767,8 +2767,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_N%C4%83ng_l%C6%B0%E1%BB%A3ng_nguy%C3%AAn_t%E1%BB%AD_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2008",
   "file": "ws-luat-nang-luong-nguyen-tu-viet-nam-2008.pdf",
   "originalName": "ws-luat-nang-luong-nguyen-tu-viet-nam-2008.pdf",
-  "size": 514931,
-  "sha256": "54063b009d5f503724401b85140fa306c67a5cd20f41ad1a18278e414f85f032",
+  "size": 555317,
+  "sha256": "1d7d1f2cf81ede0e0fa4fee78e292c4a4641187aa2306e96ad0f91b7a2e52060",
   "seed": "library-v1"
  },
  {
@@ -2788,8 +2788,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Ng%C3%A2n_h%C3%A0ng_Nh%C3%A0_n%C6%B0%E1%BB%9Bc_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-ngan-hang-nha-viet-nam-2010.pdf",
   "originalName": "ws-luat-ngan-hang-nha-viet-nam-2010.pdf",
-  "size": 255042,
-  "sha256": "fbddaeb18f7b62fc565afa5e47f290a09c914c80596ff1a2bb1071cc1f69df50",
+  "size": 303582,
+  "sha256": "201bcbe26d917440a6289c67697045d9444af7b06c04364892561d20694e4daa",
   "seed": "library-v1"
  },
  {
@@ -2809,8 +2809,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_ng%C6%B0%E1%BB%9Di_khuy%E1%BA%BFt_t%E1%BA%ADt_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-nguoi-khuyet-tat-viet-nam-2010.pdf",
   "originalName": "ws-luat-nguoi-khuyet-tat-viet-nam-2010.pdf",
-  "size": 276596,
-  "sha256": "db5ea18b3f5f1b572c7cce51d8ee8237c51f4ca29923e1ff68ec562942326912",
+  "size": 337731,
+  "sha256": "30309c8678ccbc12f6684ae1711c82a4f58018232a5937b061a93cf9e6c16d00",
   "seed": "library-v1"
  },
  {
@@ -2830,8 +2830,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Nu%C3%B4i_con_nu%C3%B4i_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-nuoi-con-nuoi-viet-nam-2010.pdf",
   "originalName": "ws-luat-nuoi-con-nuoi-viet-nam-2010.pdf",
-  "size": 260975,
-  "sha256": "3f5cd9ece8f394685ff377dbfc82bffec5fb12bd09d482bf51e36ec0f638900d",
+  "size": 313492,
+  "sha256": "d168392427a047a8721400b751c82a55ae4229659eeb514dddb17f6472f66597",
   "seed": "library-v1"
  },
  {
@@ -2851,8 +2851,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Ph%E1%BB%95_bi%E1%BA%BFn%2C_gi%C3%A1o_d%E1%BB%A5c_ph%C3%A1p_lu%E1%BA%ADt_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-pho-bien-giao-duc-phap-luat-viet-nam-2012.pdf",
   "originalName": "ws-luat-pho-bien-giao-duc-phap-luat-viet-nam-2012.pdf",
-  "size": 245683,
-  "sha256": "4d2ab85613df77d6e22765dc1cfb78af352e7bb56f64173f07fc6cda2127e2ef",
+  "size": 297761,
+  "sha256": "e31d593aa58cd702cbd40ecdb1a1d3582e2d31dfe9b5b3f593527027f659ec18",
   "seed": "library-v1"
  },
  {
@@ -2872,8 +2872,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Ph%C3%B2ng%2C_ch%E1%BB%91ng_b%E1%BB%87nh_truy%E1%BB%81n_nhi%E1%BB%85m_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2007",
   "file": "ws-luat-phong-chong-benh-truyen-nhiem-viet-nam-2007.pdf",
   "originalName": "ws-luat-phong-chong-benh-truyen-nhiem-viet-nam-2007.pdf",
-  "size": 297054,
-  "sha256": "ee7d817e988ab446c2fb704ad8bee59b0d4dcc96053384677167bcce18ff1df0",
+  "size": 344590,
+  "sha256": "847205948dc141df10928e78da9b960cdeaa641fec004be3b63f4f5a998e1f4b",
   "seed": "library-v1"
  },
  {
@@ -2893,8 +2893,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Ph%C3%B2ng%2C_ch%E1%BB%91ng_r%E1%BB%ADa_ti%E1%BB%81n_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-phong-chong-rua-tien-viet-nam-2012.pdf",
   "originalName": "ws-luat-phong-chong-rua-tien-viet-nam-2012.pdf",
-  "size": 309611,
-  "sha256": "670de32357c83846d70855befbf6f3b9dc4a4d048da983895848dba994b27a85",
+  "size": 423681,
+  "sha256": "5241104fa881f444f05f1e96e8657b9ba44a805c0aa13defca95ff9ac6ea389f",
   "seed": "library-v1"
  },
  {
@@ -2914,8 +2914,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Ph%C3%B2ng%2C_ch%E1%BB%91ng_t%C3%A1c_h%E1%BA%A1i_c%E1%BB%A7a_thu%E1%BB%91c_l%C3%A1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-phong-chong-tac-hai-cua-thuoc-la-viet-nam-201.pdf",
   "originalName": "ws-luat-phong-chong-tac-hai-cua-thuoc-la-viet-nam-201.pdf",
-  "size": 256098,
-  "sha256": "34757d0ccbb904ecde5205f393a160718248964e996ecbfaa265a8d2cd363c07",
+  "size": 312164,
+  "sha256": "368ffa13a39206674c961c71d15022723c06112a0a94816c2e6c991e92b64fd1",
   "seed": "library-v1"
  },
  {
@@ -2935,8 +2935,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Qu%E1%BA%A3n_l%C3%BD%2C_s%E1%BB%AD_d%E1%BB%A5ng_v%C5%A9_kh%C3%AD%2C_v%E1%BA%ADt_li%E1%BB%87u_n%E1%BB%95_v%C3%A0_c%C3%B4ng_c%E1%BB%A5_h%E1%BB%97_tr%E1%BB%A3_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2017",
   "file": "ws-luat-quan-ly-su-dung-vu-khi-vat-lieu-no-va-cong-cu.pdf",
   "originalName": "ws-luat-quan-ly-su-dung-vu-khi-vat-lieu-no-va-cong-cu.pdf",
-  "size": 604120,
-  "sha256": "6e7f655a1ca3c777a4ca9007c41caeaa6ee85be58e2547d76fa0cd883c680b27",
+  "size": 641477,
+  "sha256": "0a979f2ad69c3dec3cdd92fded547d72ee52adf49f4c3daa84803223cd3837d4",
   "seed": "library-v1"
  },
  {
@@ -2956,8 +2956,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Qu%E1%BA%A3ng_c%C3%A1o_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-quang-cao-viet-nam-2012.pdf",
   "originalName": "ws-luat-quang-cao-viet-nam-2012.pdf",
-  "size": 307645,
-  "sha256": "936938b5565a2835aefcec50cd532b9d95f5ee853623b7f7987e9837c181eb21",
+  "size": 345831,
+  "sha256": "5e6c55af6a28e600980edd828d3e425a46996495a0aca2881ff47c9036091fc9",
   "seed": "library-v1"
  },
  {
@@ -2977,8 +2977,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Qu%E1%BB%91c_t%E1%BB%8Bch_Vi%E1%BB%87t_Nam_2008_%28s%E1%BB%ADa_%C4%91%E1%BB%95i%2C_b%E1%BB%95_sung_2014%29",
   "file": "ws-luat-quoc-tich-viet-nam-2008-sua-doi-bo-sung-2014.pdf",
   "originalName": "ws-luat-quoc-tich-viet-nam-2008-sua-doi-bo-sung-2014.pdf",
-  "size": 300855,
-  "sha256": "8241a3786ac3e3ffe3ec8ba126c4f019b80d5620d396e8bb09d818b84a03de70",
+  "size": 340927,
+  "sha256": "2741ca145e6ffbb03721c973727b5e99c031143077797808fcf2a7dba63d1980",
   "seed": "library-v1"
  },
  {
@@ -2998,8 +2998,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_S%E1%BB%AD_d%E1%BB%A5ng_n%C4%83ng_l%C6%B0%E1%BB%A3ng_ti%E1%BA%BFt_ki%E1%BB%87m_v%C3%A0_hi%E1%BB%87u_qu%E1%BA%A3_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-su-dung-nang-luong-tiet-kiem-va-hieu-qua-viet.pdf",
   "originalName": "ws-luat-su-dung-nang-luong-tiet-kiem-va-hieu-qua-viet.pdf",
-  "size": 269586,
-  "sha256": "c2903d9352c6d0a80166fc65760432a86d27e63c2039b79620060caff070eba7",
+  "size": 396849,
+  "sha256": "af65c7a81406e86fc3974863c72ae24edb8935b0619ed191fe19d5808ad7cbb2",
   "seed": "library-v1"
  },
  {
@@ -3019,8 +3019,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_T%C3%A0i_nguy%C3%AAn_n%C6%B0%E1%BB%9Bc_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-tai-nguyen-nuoc-viet-nam-2012.pdf",
   "originalName": "ws-luat-tai-nguyen-nuoc-viet-nam-2012.pdf",
-  "size": 509702,
-  "sha256": "cd9441861ad67123ff245ea0b37046562d09da2f36c84c2cfad047ece8bf1e3e",
+  "size": 623579,
+  "sha256": "03a133b0f0ab8c6bcf4fe78180d5228e57709a07d758f46d56c5acd7d8d1669c",
   "seed": "library-v1"
  },
  {
@@ -3040,8 +3040,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Th%E1%BB%83_d%E1%BB%A5c%2C_th%E1%BB%83_thao_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2006",
   "file": "ws-luat-the-duc-the-thao-viet-nam-2006.pdf",
   "originalName": "ws-luat-the-duc-the-thao-viet-nam-2006.pdf",
-  "size": 312089,
-  "sha256": "57c2969148ec5941be8e43cb067a1cc2edfbbe04afb01b75eac40948793e2631",
+  "size": 356524,
+  "sha256": "f1efebf7390d37af66af6502ccc1cd6572e031a2fe6849862621eea9a589c341",
   "seed": "library-v1"
  },
  {
@@ -3061,8 +3061,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Thi_h%C3%A0nh_%C3%A1n_d%C3%A2n_s%E1%BB%B1_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2008",
   "file": "ws-luat-thi-hanh-an-dan-su-viet-nam-2008.pdf",
   "originalName": "ws-luat-thi-hanh-an-dan-su-viet-nam-2008.pdf",
-  "size": 1040939,
-  "sha256": "7d0ddf9c95a8cffcf3579d8e1ca807cba2c89ae15bda227efe3fe570e7aa8eee",
+  "size": 1085110,
+  "sha256": "4b1b78114cd2aeed972188118c96ba6af0803b9b74b2134896638c14b25c50db",
   "seed": "library-v1"
  },
  {
@@ -3082,8 +3082,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Th%E1%BB%A7_%C4%91%C3%B4_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-thu-do-viet-nam-2012.pdf",
   "originalName": "ws-luat-thu-do-viet-nam-2012.pdf",
-  "size": 212525,
-  "sha256": "ed4e924a443d18cdbb0ae254553ec98321b15a59e6d64d3b0b1e3768a3a46437",
+  "size": 249925,
+  "sha256": "76c6ab6dbc8e9e9a502ac279b80a1c1c18db046b149a259a3c08424251073de8",
   "seed": "library-v1"
  },
  {
@@ -3103,8 +3103,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_t%E1%BB%95_ch%E1%BB%A9c_Ch%C3%ADnh_ph%E1%BB%A7_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2015",
   "file": "ws-luat-to-chuc-chinh-phu-viet-nam-2015.pdf",
   "originalName": "ws-luat-to-chuc-chinh-phu-viet-nam-2015.pdf",
-  "size": 274407,
-  "sha256": "b5444ad2e180f1431f3b6f9f0e5612976e8c1abfb85fabc59b7c530b6140d5a5",
+  "size": 317840,
+  "sha256": "75cf6fcaa6fbfbd0442356cc8aec7458a471ee7bbda8b6e4ff66bd2129b6a75a",
   "seed": "library-v1"
  },
  {
@@ -3124,8 +3124,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_t%E1%BB%95_ch%E1%BB%A9c_Vi%E1%BB%87n_ki%E1%BB%83m_s%C3%A1t_nh%C3%A2n_d%C3%A2n_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2014",
   "file": "ws-luat-to-chuc-vien-kiem-sat-nhan-dan-viet-nam-2014.pdf",
   "originalName": "ws-luat-to-chuc-vien-kiem-sat-nhan-dan-viet-nam-2014.pdf",
-  "size": 483959,
-  "sha256": "c29c015be45a929125af100d9ebb9452496954002789526c1ada847321faa1e1",
+  "size": 538023,
+  "sha256": "31a16a4c391907b077d27e55ce56c5c3121c900f2db61dc74c95545ff9aa2d92",
   "seed": "library-v1"
  },
  {
@@ -3145,8 +3145,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Tr%E1%BB%8Dng_t%C3%A0i_th%C6%B0%C6%A1ng_m%E1%BA%A1i_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-trong-tai-thuong-mai-viet-nam-2010.pdf",
   "originalName": "ws-luat-trong-tai-thuong-mai-viet-nam-2010.pdf",
-  "size": 390701,
-  "sha256": "a34dd42b69cddc85d47e6569f382d62326977c4d2893dce302f02d128014bb2c",
+  "size": 460940,
+  "sha256": "988cb6294a180b6677bbc8388fbfc7ba277444750354a78141f7bed2381d6ebd",
   "seed": "library-v1"
  },
  {
@@ -3166,8 +3166,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Vi%C3%AAn_ch%E1%BB%A9c_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2010",
   "file": "ws-luat-vien-chuc-viet-nam-2010.pdf",
   "originalName": "ws-luat-vien-chuc-viet-nam-2010.pdf",
-  "size": 291342,
-  "sha256": "038caf63ddf3027e577b6dede74a546be33c61a4b8e21954ff768809585d8e87",
+  "size": 339070,
+  "sha256": "6176fd43749f85b7ba3c85c9a19e271e7fa7dfcb22ef5e1fab341fcc9afc826d",
   "seed": "library-v1"
  },
  {
@@ -3187,8 +3187,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_X%E1%BB%AD_l%C3%BD_vi_ph%E1%BA%A1m_h%C3%A0nh_ch%C3%ADnh_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-xu-ly-vi-pham-hanh-chinh-viet-nam-2012.pdf",
   "originalName": "ws-luat-xu-ly-vi-pham-hanh-chinh-viet-nam-2012.pdf",
-  "size": 842336,
-  "sha256": "754051b00ec47b810ddbce6411e57fe0f669a90cd8656e6fcf5d50e3d72a65f8",
+  "size": 888485,
+  "sha256": "cb3300eb89afa9050770da39d0125665132d4d78faf5cc246bb41cb5166328b3",
   "seed": "library-v1"
  },
  {
@@ -3208,8 +3208,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Lu%E1%BA%ADt_Xu%E1%BA%A5t_b%E1%BA%A3n_n%C6%B0%E1%BB%9Bc_C%E1%BB%99ng_h%C3%B2a_x%C3%A3_h%E1%BB%99i_ch%E1%BB%A7_ngh%C4%A9a_Vi%E1%BB%87t_Nam_2012",
   "file": "ws-luat-xuat-ban-viet-nam-2012.pdf",
   "originalName": "ws-luat-xuat-ban-viet-nam-2012.pdf",
-  "size": 387949,
-  "sha256": "e8eae1b465f4fe478c8177789275089e83f6ee303e8e7dcdd47d8eafecef9fb3",
+  "size": 429786,
+  "sha256": "5552db4949c7e41b3b8c3df84d078b603dbf56c510ae33adec44247cdebf6fac",
   "seed": "library-v1"
  },
  {
@@ -3221,7 +3221,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Vũ Trọng Phụng mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Vũ Trọng Phụng mất năm 1939: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1937 (Wikimedia Commons, tệp \"Com Thay Com Co va Luc Si 1937.pdf\", phạm vi công cộng).",
   "id": "ws-luc-si",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -3229,8 +3229,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%E1%BB%A5c_s%C3%AC",
   "file": "ws-luc-si.pdf",
   "originalName": "ws-luc-si.pdf",
-  "size": 244937,
-  "sha256": "e8925b5ae8b685a92e7e9d7c7ff3ccd7dcf9f8a6b678ed07742d647650a425f7",
+  "size": 285310,
+  "sha256": "073a42e86e2671b02c534d0ecc026af5dab74989cdc926d1625c329b0aca409b",
   "seed": "library-v1"
  },
  {
@@ -3250,8 +3250,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%E1%BB%A5c_s%C3%BAc_tranh_c%C3%B4ng",
   "file": "ws-luc-suc-tranh-cong.pdf",
   "originalName": "ws-luc-suc-tranh-cong.pdf",
-  "size": 193956,
-  "sha256": "845e1fd7dc4059a406ed70820ece03bffcdae9c53053d66af22ae836394f668d",
+  "size": 244649,
+  "sha256": "1af1e3a0b2533eebada321905019b8a66ba3b281b3b215219c807d3b694f4b9e",
   "seed": "library-v1"
  },
  {
@@ -3271,8 +3271,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%E1%BB%A5c_V%C3%A2n_Ti%C3%AAn_%28b%E1%BA%A3n_Qu%E1%BB%91c_ng%E1%BB%AF_2082_c%C3%A2u%29",
   "file": "ws-luc-van-tien.pdf",
   "originalName": "ws-luc-van-tien.pdf",
-  "size": 907591,
-  "sha256": "bbe2866c3d711db0b2e7c9dcce1b6d13a1a785272e1dbc2603e595b0b707f506",
+  "size": 960527,
+  "sha256": "3b81d1f4052e4eb9805271b5130d90b645864e2f730d7c79b235c822517fb597",
   "seed": "library-v1"
  },
  {
@@ -3292,8 +3292,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%C3%BD_lu%E1%BA%ADn_c%E1%BB%A7a_t%C3%B4i_1937",
   "file": "ws-ly-luan-cua-toi-1937.pdf",
   "originalName": "ws-ly-luan-cua-toi-1937.pdf",
-  "size": 228347,
-  "sha256": "de2592e90390ce8c23ab9a1326307db786b1836f7aedad7577a77275aa23a1a6",
+  "size": 267429,
+  "sha256": "68285a9e8646ab1787fac54764bbe27c1ea051cadab19ca81ce8cdc361c78986",
   "seed": "library-v1"
  },
  {
@@ -3313,8 +3313,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BA%A5y_l%E1%BB%9Di_b%C3%A0n_v%E1%BB%9Bi_Phan_ti%C3%AAn_sanh_v%E1%BB%81_Kh%E1%BB%95ng_gi%C3%A1o",
   "file": "ws-may-loi-ban-voi-phan-tien-sanh-ve-khong-giao.pdf",
   "originalName": "ws-may-loi-ban-voi-phan-tien-sanh-ve-khong-giao.pdf",
-  "size": 173239,
-  "sha256": "2e7dbe17a70187a9afc0429cfb45fc64706b076f814190b65f65ec92fced53cb",
+  "size": 237914,
+  "sha256": "f4c013f230bab5106f0464e33861e56458f8a8942282ac0943ab9795bf6c5476",
   "seed": "library-v1"
  },
  {
@@ -3334,8 +3334,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BA%A5y_vi%E1%BB%87c_x%E1%BA%A3y_ra_%E1%BB%9F_Hu%E1%BA%BF_tr%C6%B0%E1%BB%9Bc_v%C3%A0_sau_th%E1%BA%A5t_th%E1%BB%A7",
   "file": "ws-may-viec-xay-ra-o-hue-truoc-va-sau-that-thu.pdf",
   "originalName": "ws-may-viec-xay-ra-o-hue-truoc-va-sau-that-thu.pdf",
-  "size": 208715,
-  "sha256": "b4350a1dd6ad2a297c863af7e7a103255dbfd4442f81d0ceaa2b17621dfcd962",
+  "size": 242999,
+  "sha256": "36359dbb7b0f4645824c709d966c5a29c8da658c8af65a1b41311e8dd6a21f00",
   "seed": "library-v1"
  },
  {
@@ -3355,8 +3355,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%9Di_Phan_Kh%C3%B4i_ti%C3%AAn_sanh_tr%E1%BB%9F_v%E1%BB%81_nh%C3%A0_h%E1%BB%8Dc_c%E1%BB%A7a_ta_m%C3%A0_n%C3%B3i_chuy%E1%BB%87n",
   "file": "ws-moi-phan-khoi-tien-sanh-tro-ve-nha-hoc-cua-ta-ma-n.pdf",
   "originalName": "ws-moi-phan-khoi-tien-sanh-tro-ve-nha-hoc-cua-ta-ma-n.pdf",
-  "size": 269244,
-  "sha256": "d7c06c67922ad430d7c08486b49ce963c628cc8d7e1b4365134566b68df8c06c",
+  "size": 322992,
+  "sha256": "a594268e4940b5e0737d0e3077f7f3caaf1a064ff4b36dec8ac51cece599324a",
   "seed": "library-v1"
  },
  {
@@ -3376,8 +3376,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_b%E1%BB%99_s%C3%A1ch_x%C6%B0a_hai_ng%C3%A0n_n%C4%83m_%C4%91%E1%BA%BFn_nay_v%E1%BA%ABn_c%C3%B2n_c%C3%B3_gi%C3%A1_tr%E1%BB%8B_tr%C3%AAn_th%E1%BA%BF_gi%E1%BB%9Bi%3A_S%E1%BB%AD_k%C3%BD_c%E1%BB%A7a_T%C6%B0_M%C3%A3_Thi%C3%AAn",
   "file": "ws-mot-bo-sach-xua-hai-ngan-nam-den-nay-van-con-co-gi.pdf",
   "originalName": "ws-mot-bo-sach-xua-hai-ngan-nam-den-nay-van-con-co-gi.pdf",
-  "size": 219688,
-  "sha256": "50ee643129e74bc4cd6ddd5d6b10b3c220053b503f39d4372c2ac384ca6bffd9",
+  "size": 245638,
+  "sha256": "7dfa99097a6f85ee8d552da5e499977cc4bc7ba6404bb5929e69cbb183d0b1d1",
   "seed": "library-v1"
  },
  {
@@ -3397,8 +3397,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_c%C3%A1i_b%E1%BB%87nh_d%E1%BB%8Bch_trong_l%C3%A0ng_v%C4%83n_n%C3%AAn_c%C3%B9ng_nhau_s%E1%BB%9Bm_t%C3%ACm_thu%E1%BB%91c_ch%E1%BB%AFa",
   "file": "ws-mot-cai-benh-dich-trong-lang-van-nen-cung-nhau-som.pdf",
   "originalName": "ws-mot-cai-benh-dich-trong-lang-van-nen-cung-nhau-som.pdf",
-  "size": 225003,
-  "sha256": "4601b11da17ac761d2783c60dd0151d4cdff4c17c0c6f07ec511ac3d8d675212",
+  "size": 264115,
+  "sha256": "ac0e103c72c4f9736a5ab715b0ece60362db71c3138270e1f27bc7323be19991",
   "seed": "library-v1"
  },
  {
@@ -3418,8 +3418,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_c%C3%A1i_s%E1%BB%AD_li%E1%BB%87u_r%E1%BA%A5t_qu%C3%BD%3A_Th%C6%A1_Nguy%E1%BB%85n_V%C4%83n_T%C6%B0%E1%BB%9Dng_g%E1%BB%9Fi_cho_Nguy%C3%AAn_s%C3%BAy_n%C6%B0%E1%BB%9Bc_Ph%C3%A1p_%E1%BB%9F_T%C3%A2y-ty",
   "file": "ws-mot-cai-su-lieu-rat-quy-tho-nguyen-van-tuong-goi-c.pdf",
   "originalName": "ws-mot-cai-su-lieu-rat-quy-tho-nguyen-van-tuong-goi-c.pdf",
-  "size": 152133,
-  "sha256": "089f10a4583d7e49a28782543b8a3255cbeaabc4630b4ef094060bb062275cff",
+  "size": 183839,
+  "sha256": "ed326d662cecbf71865b67bf534a43e68bcd0c448a15ef21820472e25e102b2d",
   "seed": "library-v1"
  },
  {
@@ -3439,8 +3439,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_ch%E1%BB%AF_t%C3%ACnh",
   "file": "ws-mot-chu-tinh.pdf",
   "originalName": "ws-mot-chu-tinh.pdf",
-  "size": 553338,
-  "sha256": "43e773b4893d28d41cabb47c04440c4f3448297bdb3ae01ef8b9634153aacf9a",
+  "size": 615443,
+  "sha256": "d3bfa793715c14958a17f4cd42fbb80518167a7dee1326b0eb0f91a980e39a94",
   "seed": "library-v1"
  },
  {
@@ -3460,8 +3460,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_%C4%91%C3%B3a_hoa_r%E1%BB%ABng",
   "file": "ws-mot-doa-hoa-rung.pdf",
   "originalName": "ws-mot-doa-hoa-rung.pdf",
-  "size": 320955,
-  "sha256": "e86f97a2638c8b7411593aa2a044a9a0eab16557ef288270c9a2db91fcdd4ac6",
+  "size": 346027,
+  "sha256": "5ad23fa24910aa3040703d7234e79a1db8a67677093e7dea474e9c2ac4c2061c",
   "seed": "library-v1"
  },
  {
@@ -3481,8 +3481,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_%C4%91%E1%BB%9Di_t%C3%A0i_s%E1%BA%AFc",
   "file": "ws-mot-doi-tai-sac.pdf",
   "originalName": "ws-mot-doi-tai-sac.pdf",
-  "size": 616698,
-  "sha256": "0b7c085a99eae9d0a1369a2b236baae0f88c2af37ef622b1cbbd7a393a99b282",
+  "size": 660416,
+  "sha256": "61734d8a20cb6821e262c5c0a541debdc3a477e7abadb2e5b05e723b1d94d0b9",
   "seed": "library-v1"
  },
  {
@@ -3502,8 +3502,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/M%E1%BB%99t_trang_l%E1%BB%8Bch_s%E1%BB%AD%3A_M%E1%BA%A5y_cu%E1%BB%99c_qu%E1%BA%A7n_ch%C3%BAng_v%E1%BA%ADn_%C4%91%E1%BB%99ng_%E1%BB%9F_x%E1%BB%A9_ta",
   "file": "ws-mot-trang-lich-su-may-cuoc-quan-chung-van-dong-o-x.pdf",
   "originalName": "ws-mot-trang-lich-su-may-cuoc-quan-chung-van-dong-o-x.pdf",
-  "size": 178191,
-  "sha256": "7102609f8a788411cec7662474ad21bd62c5c90a85e86b4d1ba4bc9246b4ede5",
+  "size": 203770,
+  "sha256": "b420b49c1d53d6e24f8fa761c33ae7f8805e48062e1ff7f9eed80a2aecf824bb",
   "seed": "library-v1"
  },
  {
@@ -3523,8 +3523,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nam_c%E1%BB%B1c_tinh_huy",
   "file": "ws-nam-cuc-tinh-huy.pdf",
   "originalName": "ws-nam-cuc-tinh-huy.pdf",
-  "size": 1773318,
-  "sha256": "ac5c84bd836538a3a3512de7b9dd487c71bfb8df604403d2d7e83a298942f929",
+  "size": 1812908,
+  "sha256": "fb154001e2fc7225db5c3bf25ac2db78cd64425152dce530f7ba5987cfeb8d0e",
   "seed": "library-v1"
  },
  {
@@ -3536,7 +3536,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Phan Kế Bính mất năm 1921: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Phan Kế Bính mất năm 1921: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1909 (Wikimedia Commons, tệp \"Nam Hai di nhan liet truyen.pdf\", phạm vi công cộng).",
   "id": "ws-nam-hai-di-nhan-liet-truyen",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -3544,8 +3544,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nam_H%E1%BA%A3i_d%E1%BB%8B_nh%C3%A2n_li%E1%BB%87t_truy%E1%BB%87n",
   "file": "ws-nam-hai-di-nhan-liet-truyen.pdf",
   "originalName": "ws-nam-hai-di-nhan-liet-truyen.pdf",
-  "size": 1616379,
-  "sha256": "d16f29cbca8619a76f637ef5a8694ca002556cf6feb083557d028c11dea69933",
+  "size": 1673120,
+  "sha256": "dd73b3faa3ca21c1272db1697c36fa008e3133c3bd54d12297e3f0d7d9fdc16c",
   "seed": "library-v1"
  },
  {
@@ -3565,8 +3565,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%E1%BA%B7ng_g%C3%A1nh_cang_th%C6%B0%E1%BB%9Dng",
   "file": "ws-nang-ganh-cang-thuong.pdf",
   "originalName": "ws-nang-ganh-cang-thuong.pdf",
-  "size": 887977,
-  "sha256": "8462700fdaffe244f924dcd8d28db7ae7ed2c5576734c7922604d9267b3df8ae",
+  "size": 945457,
+  "sha256": "dcaf7f6d3f56dd97ed2550e63bdaa273657bd8cee7ff2c2e4d2d257b3505c2ea",
   "seed": "library-v1"
  },
  {
@@ -3578,7 +3578,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Dương Bá Trạc mất năm 1944: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Dương Bá Trạc mất năm 1944: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1937 (Wikimedia Commons, tệp \"Net muc tinh.pdf\", phạm vi công cộng).",
   "id": "ws-net-muc-tinh",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -3586,8 +3586,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%C3%A9t_m%E1%BB%B1c_t%C3%ACnh",
   "file": "ws-net-muc-tinh.pdf",
   "originalName": "ws-net-muc-tinh.pdf",
-  "size": 808440,
-  "sha256": "f89b03bc06e843d19766c5bfd49f93efc568db637b52020df3734738f26e2c4a",
+  "size": 920374,
+  "sha256": "0ee05609178a3f95a920f2ac30f950962c9d1964ca67bb987cb13a28ac817527",
   "seed": "library-v1"
  },
  {
@@ -3607,8 +3607,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ng%E1%BB%8Dn_c%E1%BB%8F_gi%C3%B3_%C4%91%C3%B9a",
   "file": "ws-ngon-co-gio-dua.pdf",
   "originalName": "ws-ngon-co-gio-dua.pdf",
-  "size": 2378808,
-  "sha256": "4f112ed66eb25903488f9d6e4b2aad3fade19ac85bf286ae4bd410314d15fab3",
+  "size": 2410070,
+  "sha256": "e187af289758a00e17da5050dd020dc5fbaabc2c5163fb304dd390c85c25ce40",
   "seed": "library-v1"
  },
  {
@@ -3628,8 +3628,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ng%C6%B0_Ti%E1%BB%81u_y_thu%E1%BA%ADt_v%E1%BA%A5n_%C4%91%C3%A1p",
   "file": "ws-ngu-tieu-y-thuat-van-dap.pdf",
   "originalName": "ws-ngu-tieu-y-thuat-van-dap.pdf",
-  "size": 1110649,
-  "sha256": "94f251ae1790ca755ee1f3c0e383da99c7a1a93f8215cc8b825eed92db50f714",
+  "size": 1143693,
+  "sha256": "7d370847d1bede9080575f134bf4aa2a7c158c6a4df8545e3acd6a6c088f8a1e",
   "seed": "library-v1"
  },
  {
@@ -3649,8 +3649,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ng%C6%B0%E1%BB%9Di_th%E1%BA%A5t_ch%C3%AD",
   "file": "ws-nguoi-that-chi.pdf",
   "originalName": "ws-nguoi-that-chi.pdf",
-  "size": 620975,
-  "sha256": "15ef5f362340e71a4844086aaf96c1d2f92dbaaafaa3aaa2c51bf13bbd84fcec",
+  "size": 661507,
+  "sha256": "049697d1ffd827a7f6608db04619849fe959b56a39fab6930521e25e6843a0c0",
   "seed": "library-v1"
  },
  {
@@ -3670,8 +3670,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nh%C3%A2n_v%E1%BA%A5n_%C4%91%E1%BB%81_qu%E1%BB%91c_h%E1%BB%8Dc_k%C3%A9o_qua_v%E1%BA%A5n_%C4%91%E1%BB%81_kh%C3%A1c",
   "file": "ws-nhan-van-de-quoc-hoc-keo-qua-van-de-khac.pdf",
   "originalName": "ws-nhan-van-de-quoc-hoc-keo-qua-van-de-khac.pdf",
-  "size": 174568,
-  "sha256": "34d1dce838a44df137e54a9fbd47aced5d91f5284ee9538a43bf7b80dead817b",
+  "size": 229047,
+  "sha256": "7f4a6bbf3743bdfbb9cb9e70a900370002fb3f578e26e95022a408d0ef4d337c",
   "seed": "library-v1"
  },
  {
@@ -3691,8 +3691,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nh%E1%BB%8B_%C4%91%E1%BB%99_mai",
   "file": "ws-nhi-do-mai.pdf",
   "originalName": "ws-nhi-do-mai.pdf",
-  "size": 671093,
-  "sha256": "036a9db87a3a4214de25571b3df67383d06d3c9c5f6e18ce0492d1b521d14bd5",
+  "size": 698943,
+  "sha256": "e3b34415dc6d88ac15af89ec6b045e0373a0393eab0817601c729285e02f33da",
   "seed": "library-v1"
  },
  {
@@ -3712,8 +3712,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nh%C6%A1n_t%C3%ACnh_%E1%BA%A5m_l%E1%BA%A1nh",
   "file": "ws-nhon-tinh-am-lanh.pdf",
   "originalName": "ws-nhon-tinh-am-lanh.pdf",
-  "size": 1683831,
-  "sha256": "dc4d8a202ba1a8c666e5d10aa903786cac0e1b90a2981361cbe22bc57b0e3277",
+  "size": 1720478,
+  "sha256": "905be78ff2f965434ce2389713c15c2a88aee8f1a5acec6c594e4e20fc540a95",
   "seed": "library-v1"
  },
  {
@@ -3733,8 +3733,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nh%E1%BB%AFng_chuy%E1%BB%87n_o%C3%A1i_o%C4%83m",
   "file": "ws-nhung-chuyen-oai-oam.pdf",
   "originalName": "ws-nhung-chuyen-oai-oam.pdf",
-  "size": 274305,
-  "sha256": "ed4dcad8688dbb046b94e4ba3b3ac6b8c6777be5941a4ccdc48278d03395afd9",
+  "size": 309984,
+  "sha256": "726f31dc0ff900fb4799e2b15fc7a0c8bccf5c01dab57e7aeb798aea600883ef",
   "seed": "library-v1"
  },
  {
@@ -3754,8 +3754,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Nh%E1%BB%AFng_%C4%91%E1%BB%93ng_ti%E1%BB%81n_si%E1%BA%BFt_m%C3%A1u",
   "file": "ws-nhung-dong-tien-siet-mau.pdf",
   "originalName": "ws-nhung-dong-tien-siet-mau.pdf",
-  "size": 619998,
-  "sha256": "b5f0eea9481aef9d4d7ca9214ed7eef7bfd5f24add70c3b6872a72768f9dc68a",
+  "size": 818877,
+  "sha256": "e78ef768d61d23dba2b8192c9964c69497a17dec88e7b2b9802cfe896cfc73be",
   "seed": "library-v1"
  },
  {
@@ -3775,8 +3775,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%E1%BB%A3_t%C3%ACnh",
   "file": "ws-no-tinh.pdf",
   "originalName": "ws-no-tinh.pdf",
-  "size": 568627,
-  "sha256": "6460d7a70a9e8a93cfa672a6e309d25f62915621735f4c2700ec337f154a48d1",
+  "size": 602344,
+  "sha256": "4ee06b29e8c73d5e6a31e4f0777e73dff1936f7822fd91ef126125dd8bb7b1f1",
   "seed": "library-v1"
  },
  {
@@ -3796,8 +3796,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%C3%B3i_v%E1%BB%81_%C4%91%E1%BA%A3ng_L%E1%BA%ADp_hi%E1%BA%BFn_%E1%BB%9F_Nam_k%E1%BB%B3",
   "file": "ws-noi-ve-dang-lap-hien-o-nam-ky.pdf",
   "originalName": "ws-noi-ve-dang-lap-hien-o-nam-ky.pdf",
-  "size": 354188,
-  "sha256": "f6579351cbe46349ba8589c9f3be8bead2a72a3a63be81c7fe5f33a9cd758065",
+  "size": 380968,
+  "sha256": "8806949359efe91748e9e261f165210ffcb1bdebd88930683358488bd8d763f2",
   "seed": "library-v1"
  },
  {
@@ -3817,8 +3817,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%E1%BB%AF_t%C3%BA_t%C3%A0i",
   "file": "ws-nu-tu-tai.pdf",
   "originalName": "ws-nu-tu-tai.pdf",
-  "size": 244398,
-  "sha256": "9a7750523d084b029fe8ec795554a0d0791420be19b301312a886b3e2bbc1e3b",
+  "size": 264637,
+  "sha256": "6d743f7124e733f74a339fd05c930c4171e7dd905477b9eecfebedb6f84d26bd",
   "seed": "library-v1"
  },
  {
@@ -3838,8 +3838,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%E1%BB%ADa_ch%E1%BB%ABng_xu%C3%A2n",
   "file": "ws-nua-chung-xuan.pdf",
   "originalName": "ws-nua-chung-xuan.pdf",
-  "size": 1655454,
-  "sha256": "b06ac0cd58ba2510eff85450cdcd09ee67f1733a10f55a617ecdead2a041770d",
+  "size": 1710057,
+  "sha256": "538a629cdd8868381eda91d062a79d0b9b1ee9383b085ae5d8cf892d144bdb0d",
   "seed": "library-v1"
  },
  {
@@ -3859,8 +3859,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/N%C6%B0%E1%BB%9Bc_non_nh%C3%A0",
   "file": "ws-nuoc-non-nha.pdf",
   "originalName": "ws-nuoc-non-nha.pdf",
-  "size": 228171,
-  "sha256": "7a0f4d87241b262a69afde219c87ee44a551b6de1e4a573306f9b8b88b08dc68",
+  "size": 258104,
+  "sha256": "01ae0556e88d06ce5054db963b1d9eb3bd723589c70155dc26879fa987bab408",
   "seed": "library-v1"
  },
  {
@@ -3880,8 +3880,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%94ng_C%E1%BB%AD",
   "file": "ws-ong-cu.pdf",
   "originalName": "ws-ong-cu.pdf",
-  "size": 632370,
-  "sha256": "921070e44910eba85e940b59aaea266aabe308997ca10699d42a94ff9cb4cc6d",
+  "size": 666204,
+  "sha256": "17277a2bb08b0a7e42687d96f346350724d88470f7dd1e2468cc905b66b480dc",
   "seed": "library-v1"
  },
  {
@@ -3901,8 +3901,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Phan_Tr%E1%BA%A7n",
   "file": "ws-phan-tran.pdf",
   "originalName": "ws-phan-tran.pdf",
-  "size": 268661,
-  "sha256": "4d826df7d066396e9b95bb12e768cf2c07e2d14a5798c150c514d47bbad41ea4",
+  "size": 296588,
+  "sha256": "324f1aa988e3946a779c511a1a294fa3ab9042a49298df1c290af6e386bbc1c9",
   "seed": "library-v1"
  },
  {
@@ -3922,8 +3922,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ph%C3%A9p_l%C3%A0m_v%C4%83n",
   "file": "ws-phep-lam-van.pdf",
   "originalName": "ws-phep-lam-van.pdf",
-  "size": 285821,
-  "sha256": "1e690b93a6337b750c9564adb7fbdbcae1c50d62a701463ad56095a9c55a5874",
+  "size": 320375,
+  "sha256": "f3fc1e72164a655988379ca6dcce848bced39daaf3e52a5fb610c6cf1cc984e3",
   "seed": "library-v1"
  },
  {
@@ -3943,8 +3943,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Quan_%C3%82m_Th%E1%BB%8B_K%C3%ADnh_%28truy%E1%BB%87n_th%C6%A1%29",
   "file": "ws-quan-am-thi-kinh.pdf",
   "originalName": "ws-quan-am-thi-kinh.pdf",
-  "size": 243766,
-  "sha256": "074c9112c4b6a0405e804bccadf7b5d4750fd18fdc25ed9a2501712e87a8dbb6",
+  "size": 328207,
+  "sha256": "59158a7772d83334d4d5d24f9be6fb22efd1262230c19410d3e56a46b864ce23",
   "seed": "library-v1"
  },
  {
@@ -3956,7 +3956,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Dương Quảng Hàm mất năm 1946: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Dương Quảng Hàm mất năm 1946: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1930 (Wikimedia Commons, tệp \"Quoc van trich diem 1930.pdf\", phạm vi công cộng).",
   "id": "ws-quoc-van-trich-diem",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -3964,8 +3964,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Qu%E1%BB%91c_v%C4%83n_tr%C3%ADch_di%E1%BB%85m",
   "file": "ws-quoc-van-trich-diem.pdf",
   "originalName": "ws-quoc-van-trich-diem.pdf",
-  "size": 4127454,
-  "sha256": "1420bf12f1fc103fe135e861274eb5c251c08e640fb5016183b4a876ae8a93f3",
+  "size": 4172307,
+  "sha256": "74251629096b69979ad339a2118a873d2a2e522ccf793db2d4b2220dfbdc1687",
   "seed": "library-v1"
  },
  {
@@ -3977,7 +3977,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Huỳnh Tịnh Của mất năm 1907: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Huỳnh Tịnh Của mất năm 1907: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1888 (Wikimedia Commons, tệp \"Sach quan che.pdf\", phạm vi công cộng).",
   "id": "ws-sach-quan-che",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -3985,8 +3985,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%C3%A1ch_quan_ch%E1%BA%BF",
   "file": "ws-sach-quan-che.pdf",
   "originalName": "ws-sach-quan-che.pdf",
-  "size": 1271986,
-  "sha256": "68d223d1458f73162be17f08affd6f8a11ea972fb437195b95c1a1d947ec7aff",
+  "size": 1307570,
+  "sha256": "1c6d94175bf29a055e43d5c6db6f4b273007d89602f80f39f1501f448b478df5",
   "seed": "library-v1"
  },
  {
@@ -4006,8 +4006,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%C3%A3i_v%C3%A3i",
   "file": "ws-sai-vai.pdf",
   "originalName": "ws-sai-vai.pdf",
-  "size": 156467,
-  "sha256": "d1294141b23a4a4c8938c0cd0662d2b63e892e3f80f9a61fe99060e97cfa8fb3",
+  "size": 208226,
+  "sha256": "210e6cab854c4c666cc217ce491a51699d39846c87755df7fffdd2420cc64824",
   "seed": "library-v1"
  },
  {
@@ -4027,8 +4027,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%E1%BB%91ng_m%C3%A3i_v%E1%BB%9Bi_Th%E1%BB%A7_%C4%90%C3%B4",
   "file": "ws-song-mai-voi-thu-do.pdf",
   "originalName": "ws-song-mai-voi-thu-do.pdf",
-  "size": 1781482,
-  "sha256": "5d3c927a691c8401d069b6465ec7ba82b285dd3554eff6bf2edfae3299a3bb54",
+  "size": 1821346,
+  "sha256": "4b42a4ccca2e142699381d516ff94e31c69939d7a8c28143b668794c116bdd4f",
   "seed": "library-v1"
  },
  {
@@ -4048,8 +4048,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%E1%BB%91ng_m%C3%B2n",
   "file": "ws-song-mon.pdf",
   "originalName": "ws-song-mon.pdf",
-  "size": 1395808,
-  "sha256": "3a36efd46c74663cb1b9b6f58b37c38965063044abaf145be32eb306e5012b9b",
+  "size": 1431525,
+  "sha256": "2e19423e990e4c3cb5247d85fd7cb11cdf1a0dfd333a39eca1baa32cad464449",
   "seed": "library-v1"
  },
  {
@@ -4061,7 +4061,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt. Bản dịch: Nhượng Tống.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tư Mã Thiên (thời cổ đại); Nhượng Tống mất năm 1949: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tư Mã Thiên (thời cổ đại); Nhượng Tống mất năm 1949: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1944 (Wikimedia Commons, tệp \"Su Ky Tu Ma Thien 1944.pdf\", phạm vi công cộng).",
   "id": "ws-su-ky-tu-ma-thien",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -4069,8 +4069,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%E1%BB%AD_k%C3%BD_T%C6%B0_M%C3%A3_Thi%C3%AAn",
   "file": "ws-su-ky-tu-ma-thien.pdf",
   "originalName": "ws-su-ky-tu-ma-thien.pdf",
-  "size": 1415231,
-  "sha256": "1a2539b2b5c7fc7a856f79e65fe701c942ba12b14687a4975a9d78a8d370d132",
+  "size": 1461156,
+  "sha256": "dca4b37f8712287cae6f0ac07c637ab4d38dcce569713464fa86f7a3131b2521",
   "seed": "library-v1"
  },
  {
@@ -4090,8 +4090,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%E1%BB%AD_li%E1%BB%87u_t%E1%BB%ABng_m%E1%BA%A3nh_v%E1%BB%A5n",
   "file": "ws-su-lieu-tung-manh-vun.pdf",
   "originalName": "ws-su-lieu-tung-manh-vun.pdf",
-  "size": 228925,
-  "sha256": "f51905a5845d56a31546c1ce63499deba5dac66913b2693f24a20e51979fdf6a",
+  "size": 279580,
+  "sha256": "fa7479b48d7e93db9208410fda1fb5dadbfbbc08d51cb23b3684d19a1af44a4e",
   "seed": "library-v1"
  },
  {
@@ -4111,8 +4111,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%E1%BB%ADa_%C4%91%E1%BB%95i_l%E1%BB%91i_l%C3%A0m_vi%E1%BB%87c",
   "file": "ws-sua-doi-loi-lam-viec.pdf",
   "originalName": "ws-sua-doi-loi-lam-viec.pdf",
-  "size": 684000,
-  "sha256": "57f05b39a5b112a656e88c88851a3b2f1e5df523f4dc4189b06b86051ca54dbf",
+  "size": 740946,
+  "sha256": "a6b7ed433da8265a04796c671161f15aff9854b1596cdeb2a84e3a863f93c544",
   "seed": "library-v1"
  },
  {
@@ -4124,7 +4124,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1938 (Wikimedia Commons, tệp \"Tai toi.pdf\", phạm vi công cộng).",
   "id": "ws-tai-toi",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -4132,8 +4132,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BA%A1i_t%C3%B4i",
   "file": "ws-tai-toi.pdf",
   "originalName": "ws-tai-toi.pdf",
-  "size": 932786,
-  "sha256": "87911aa7ed61de71c5a8c937ff75139658c73b85d4d27552561ab52298f9ce00",
+  "size": 1054656,
+  "sha256": "7fd8f8a75032fcb4fc2f22099cee8bc759966200c0a9506c06f1e3ccfc5b303a",
   "seed": "library-v1"
  },
  {
@@ -4153,8 +4153,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tam_qu%E1%BB%91c_di%E1%BB%85n_ngh%C4%A9a_%28Phan_K%E1%BA%BF_B%C3%ADnh_d%E1%BB%8Bch%2C_B%C3%B9i_K%E1%BB%B7_hi%E1%BB%87u_%C4%91%C3%ADnh%29",
   "file": "ws-tam-quoc-dien-nghia.pdf",
   "originalName": "ws-tam-quoc-dien-nghia.pdf",
-  "size": 12433548,
-  "sha256": "4bba0f339f48e4457e07dfdf81cb3e5e9b2ffdc648045754f7513d61add29bb5",
+  "size": 12556700,
+  "sha256": "a937fb695f94b01839ee52ae268e08914301c7c8c8c08cc6fd999dd6a74d479b",
   "seed": "library-v1"
  },
  {
@@ -4166,7 +4166,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Tác phẩm khuyết danh đã công bố hơn 75 năm: hết thời hạn bảo hộ (Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Tác phẩm khuyết danh đã công bố hơn 75 năm: hết thời hạn bảo hộ (Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1925 (Wikimedia Commons, tệp \"Tap bai thi bang So hoc yeu luoc.pdf\", phạm vi công cộng).",
   "id": "ws-tap-bai-thi-bang-so-hoc-yeu-luoc",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -4174,8 +4174,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BA%ADp_b%C3%A0i_thi_b%E1%BA%B1ng_S%C6%A1_h%E1%BB%8Dc_y%E1%BA%BFu_l%C6%B0%E1%BB%A3c",
   "file": "ws-tap-bai-thi-bang-so-hoc-yeu-luoc.pdf",
   "originalName": "ws-tap-bai-thi-bang-so-hoc-yeu-luoc.pdf",
-  "size": 2182433,
-  "sha256": "71efbba5a0af8e5ae0c02cff0c35dcd2b72a20681ef63519efcb66923ac75e75",
+  "size": 2294017,
+  "sha256": "e18a9437360ee0f78a04a2e227eafb00247d522783c424865ec9628e4c62759a",
   "seed": "library-v1"
  },
  {
@@ -4195,8 +4195,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%E1%BA%A3nh_c%C3%A1o_c%C3%A1c_nh%C3%A0_%22h%E1%BB%8Dc_phi%E1%BB%87t%22",
   "file": "ws-tap-van-phan-khoi-1928-1930.pdf",
   "originalName": "ws-tap-van-phan-khoi-1928-1930.pdf",
-  "size": 863854,
-  "sha256": "269600601a1b387efad9b2c087b060955bbe32ead2f814664d8347a76146874b",
+  "size": 995504,
+  "sha256": "a4af1066a95b73546cea57038da25b7527cad7e64b222d6ab3e953c6566a9f13",
   "seed": "library-v1"
  },
  {
@@ -4216,8 +4216,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%A1i_c%C6%B0%E1%BB%9Di_c%E1%BB%A7a_con_r%E1%BB%93ng_ch%C3%A1u_ti%C3%AAn",
   "file": "ws-tap-van-phan-khoi-1931.pdf",
   "originalName": "ws-tap-van-phan-khoi-1931.pdf",
-  "size": 354008,
-  "sha256": "779099258149a82ff39f4da52c5279741baad0aaa648074ace3a977396501d9e",
+  "size": 378763,
+  "sha256": "673fe6bc86184a580eacc27e9ee9eb97acbc20b33286f0442917b3d8211319d9",
   "seed": "library-v1"
  },
  {
@@ -4237,8 +4237,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Cu%E1%BB%99c_ph%E1%BB%A5_n%E1%BB%AF_v%E1%BA%ADn_%C4%91%E1%BB%99ng_%E1%BB%9F_n%C6%B0%E1%BB%9Bc_Tri%E1%BB%81u_Ti%C3%AAn",
   "file": "ws-tap-van-phan-khoi-1932-1941.pdf",
   "originalName": "ws-tap-van-phan-khoi-1932-1941.pdf",
-  "size": 1239701,
-  "sha256": "1345edf029e19af368f889e3ab5dd5f12eb9a4d53c3f3f28b013dd3d1dd7081f",
+  "size": 1279951,
+  "sha256": "039d216bb90936e45f9a5c76c140b37afee31a74d7cf05f2879da663d76a30a2",
   "seed": "library-v1"
  },
  {
@@ -4250,7 +4250,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Ngô Tất Tố mất năm 1954: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Ngô Tất Tố mất năm 1954: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1939 (Wikimedia Commons, tệp \"Tat den.pdf\", phạm vi công cộng).",
   "id": "ws-tat-den",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -4258,8 +4258,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BA%AFt_%C4%91%C3%A8n",
   "file": "ws-tat-den.pdf",
   "originalName": "ws-tat-den.pdf",
-  "size": 882489,
-  "sha256": "b4fbb841d8fff48d8ea6717c3e4a52462bb42a76d8c7512a76b48cb7d30810d7",
+  "size": 930116,
+  "sha256": "0fb8bcd8faa471db4f12b64b3ad07b39cebe95441c6d6cf5b17941e0f41af119",
   "seed": "library-v1"
  },
  {
@@ -4271,7 +4271,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt. Bản dịch: Nhượng Tống.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Vương Thực Phủ mất năm 1307; Nhượng Tống mất năm 1949: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Vương Thực Phủ mất năm 1307; Nhượng Tống mất năm 1949: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1943 (Wikimedia Commons, tệp \"Mai Tay (Tay suong ky).pdf\", phạm vi công cộng).",
   "id": "ws-tay-suong-ky",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -4279,8 +4279,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%C3%A2y_s%C6%B0%C6%A1ng_k%C3%BD",
   "file": "ws-tay-suong-ky.pdf",
   "originalName": "ws-tay-suong-ky.pdf",
-  "size": 1404594,
-  "sha256": "88245ac3fb7ffd7fba6b9e7f4b9163696fb569a6fd3ddbf29c58e4398673f8a2",
+  "size": 1444468,
+  "sha256": "e192dd9f29d69e1c60907c01548d2efbdda0cfb4a62b3846dc78514fae19184f",
   "seed": "library-v1"
  },
  {
@@ -4300,8 +4300,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Th%E1%BA%A7y_Chung_tr%C3%BAng_s%E1%BB%91",
   "file": "ws-thay-chung-trung-so.pdf",
   "originalName": "ws-thay-chung-trung-so.pdf",
-  "size": 352681,
-  "sha256": "134f0403198772d8983bccb284e986c25e0492e08cd9af84ec5c3da30e6a0c23",
+  "size": 403452,
+  "sha256": "5f280892b2bdd8ddadfe61f42c0549c58ef749a4171a5c1340ba7b7cf15a6bc4",
   "seed": "library-v1"
  },
  {
@@ -4321,8 +4321,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Th%E1%BA%A7y_tr%C3%B2_trong_kh%C3%A1m",
   "file": "ws-thay-tro-trong-kham.pdf",
   "originalName": "ws-thay-tro-trong-kham.pdf",
-  "size": 688365,
-  "sha256": "d47a3de19f423b0664ebfe71a337156f96d2c735a2ae830904c18b3f1a397ec4",
+  "size": 719352,
+  "sha256": "ec1ac1daecfb9835753e1c8e5f94e581cddcf2fa0003b9f426d887905916e7dc",
   "seed": "library-v1"
  },
  {
@@ -4342,8 +4342,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Theo_thuy%E1%BA%BFt_ch%C3%A1nh_danh_%C4%91%C3%ADnh_ch%C3%A1nh_l%E1%BA%A1i_c%C3%A1ch_x%C6%B0ng_t%C3%AAn_c%E1%BB%A7a_ng%C6%B0%E1%BB%9Di_Vi%E1%BB%87t_Nam",
   "file": "ws-theo-thuyet-chanh-danh-dinh-chanh-lai-cach-xung-te.pdf",
   "originalName": "ws-theo-thuyet-chanh-danh-dinh-chanh-lai-cach-xung-te.pdf",
-  "size": 174095,
-  "sha256": "2e1890946d4b3a6e7af9d68b6f665d3a8d2f6ce6bacb2fef128b4b6032161d8e",
+  "size": 202883,
+  "sha256": "44c6a6706f9c0fecdeec078f9fbcd91e3eb3da1a0e6b9cb7850b380a63782ad1",
   "seed": "library-v1"
  },
  {
@@ -4363,8 +4363,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Theo_t%E1%BB%A5c_ng%E1%BB%AF_phong_dao%2C_x%C3%A9t_v%E1%BB%81_s%E1%BB%B1_sanh_ho%E1%BA%A1t_c%E1%BB%A7a_ph%E1%BB%A5_n%E1%BB%AF_n%C6%B0%E1%BB%9Bc_ta",
   "file": "ws-theo-tuc-ngu-phong-dao-xet-ve-su-sanh-hoat-cua-phu.pdf",
   "originalName": "ws-theo-tuc-ngu-phong-dao-xet-ve-su-sanh-hoat-cua-phu.pdf",
-  "size": 528727,
-  "sha256": "6afd7f8028bbd54a21c5a9fabfdef9c48c44f61678aca5a500abe6f9e82e5a53",
+  "size": 573179,
+  "sha256": "3a0e75b80a8d1d2f92f0bd2e2f127ec16e6e334caebd133e29524e89b110a549",
   "seed": "library-v1"
  },
  {
@@ -4384,8 +4384,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Thi_thi%C3%AAn",
   "file": "ws-thi-thien.pdf",
   "originalName": "ws-thi-thien.pdf",
-  "size": 2510071,
-  "sha256": "504f04d067821d7c7bb21f8c84dec536fa4a88a7c3f57ac28e93704c18f48d42",
+  "size": 2534821,
+  "sha256": "3f4ffc8e9ae8433592a01b86771d1080e46f30482d57749ed4692d2740586998",
   "seed": "library-v1"
  },
  {
@@ -4405,8 +4405,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Th%C3%ADch_kh%C3%A1ch_li%E1%BB%87t_truy%E1%BB%87n",
   "file": "ws-thich-khach-liet-truyen.pdf",
   "originalName": "ws-thich-khach-liet-truyen.pdf",
-  "size": 183009,
-  "sha256": "a479483828cb1d4559ccd54af3473b5a71a190586afb3dcfc0835caa21560e9a",
+  "size": 227859,
+  "sha256": "15e0758b34939c33542a53d43a45a0f4f7effab770d5f99e01ae799388d49da2",
   "seed": "library-v1"
  },
  {
@@ -4426,8 +4426,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tinh_huy%E1%BA%BFt",
   "file": "ws-tho-bich-khe.pdf",
   "originalName": "ws-tho-bich-khe.pdf",
-  "size": 537190,
-  "sha256": "3d92fdb4ebb1b14f450c8cd631c91475c692901d4667d1ccf40ead92a71ea57a",
+  "size": 568854,
+  "sha256": "95b06208d1a028f7b1ead85f1e163a80b7097466837a5d9df8215a52d7d5cd8d",
   "seed": "library-v1"
  },
  {
@@ -4447,8 +4447,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%81nh_s%C3%A1ng_c%E1%BB%A7a_v%C3%B4_minh",
   "file": "ws-tho-dong-ho.pdf",
   "originalName": "ws-tho-dong-ho.pdf",
-  "size": 447852,
-  "sha256": "8c7343c1fca39c2a665364b2c0f7dd5345cbb35465ce0f562c2227c949bd8636",
+  "size": 483495,
+  "sha256": "8a73eee411338b54e372aecc44d1405e7d646f179d15eb6817954d34128c23d8",
   "seed": "library-v1"
  },
  {
@@ -4468,8 +4468,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%82m_th%E1%BA%A7m",
   "file": "ws-tho-han-mac-tu.pdf",
   "originalName": "ws-tho-han-mac-tu.pdf",
-  "size": 746254,
-  "sha256": "81283929f04e80f539d94651992e23e70c76a1dab7df50dc7265ec8c47f73293",
+  "size": 801933,
+  "sha256": "75d43bea09dc098f8ac3ccf74ed243d80354872e73e67fed1dad6658b5b00a03",
   "seed": "library-v1"
  },
  {
@@ -4489,8 +4489,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%C3%A1nh_tr%C3%B4i_n%C6%B0%E1%BB%9Bc",
   "file": "ws-tho-ho-xuan-huong.pdf",
   "originalName": "ws-tho-ho-xuan-huong.pdf",
-  "size": 294225,
-  "sha256": "1c451ee9fe4d4645972072b2557fe8adccff9695016fef58e37724a7df87b250",
+  "size": 335386,
+  "sha256": "d42f1d17c91ea9185ba2f390902d20cf6758d439d31a7d78379f6bb0e38efb69",
   "seed": "library-v1"
  },
  {
@@ -4510,8 +4510,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%C6%B0%C6%A1ng_th%C3%A1ng_t%C3%A1m",
   "file": "ws-tho-moi-tien-chien-tham-tam-nguyen-nhuoc-phap-van.pdf",
   "originalName": "ws-tho-moi-tien-chien-tham-tam-nguyen-nhuoc-phap-van.pdf",
-  "size": 599792,
-  "sha256": "d0939501d4af61490cbdabb4be76a96c1dbca8476c53e2ef6b94644c4e97c4f5",
+  "size": 646763,
+  "sha256": "71604495e5ac1c5bdff91cdbb20f33ff0e9f5eeb06c0a6fde74d0b7ae7cbc502",
   "seed": "library-v1"
  },
  {
@@ -4531,8 +4531,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%A1m_c%E1%BA%A3nh_An_Giang",
   "file": "ws-tho-nam-bo-the-ky-19-phan-van-tri-hoc-lac-ton-tho.pdf",
   "originalName": "ws-tho-nam-bo-the-ky-19-phan-van-tri-hoc-lac-ton-tho.pdf",
-  "size": 459768,
-  "sha256": "6f1e29fd3bfe4e1eec97565f9df2c877ab57af03358726cc4e8e89d34b08395f",
+  "size": 509046,
+  "sha256": "999038d60346ed88fb87ce12fbb01c5512e9bd51fb021eaba962aa9c03e6fc52",
   "seed": "library-v1"
  },
  {
@@ -4552,8 +4552,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Th%C6%A1_ng%E1%BB%A5_ng%C3%B4n_La_Fontaine_%281951%29",
   "file": "ws-tho-ngu-ngon-la-fontaine-1951.pdf",
   "originalName": "ws-tho-ngu-ngon-la-fontaine-1951.pdf",
-  "size": 538790,
-  "sha256": "45b43c281f0c2bbfd1292efef5a7065de205f813e9466932ad70eb2cfc08fded",
+  "size": 596340,
+  "sha256": "504ad03d7b42e805af1675a03ccde89d03404f372243b4fcaa658170c270d78e",
   "seed": "library-v1"
  },
  {
@@ -4573,8 +4573,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%81i_khanh_h%C3%A0nh",
   "file": "ws-tho-nguyen-binh.pdf",
   "originalName": "ws-tho-nguyen-binh.pdf",
-  "size": 1229559,
-  "sha256": "828274a1c050cd0112c8e464def29b10a1940ce2b0aee9ebb615ff80ca6c72a2",
+  "size": 1308404,
+  "sha256": "cbf1de9c0a73ff4f924a891d9ccfae4cdc80d3abefffd0d0223b901e1b7480d2",
   "seed": "library-v1"
  },
  {
@@ -4594,8 +4594,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/B%C3%A0i_ca_ng%E1%BA%A5t_ng%C6%B0%E1%BB%9Fng",
   "file": "ws-tho-nguyen-cong-tru.pdf",
   "originalName": "ws-tho-nguyen-cong-tru.pdf",
-  "size": 592706,
-  "sha256": "fd80b601fd6883ac121d8740d88a0fbe51b785f5544b6098300d0b85ddaa0fd3",
+  "size": 617702,
+  "sha256": "6e06e1f044508894b74b5f2297da0b1687fb3df1484817ac344ed1627e0c59fd",
   "seed": "library-v1"
  },
  {
@@ -4615,8 +4615,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%E1%BA%A3nh_chi%E1%BB%81u_h%C3%B4m",
   "file": "ws-tho-nom-ba-huyen-thanh-quan-chu-manh-trinh-duong-k.pdf",
   "originalName": "ws-tho-nom-ba-huyen-thanh-quan-chu-manh-trinh-duong-k.pdf",
-  "size": 285408,
-  "sha256": "ec006b3cbff91866bb93c605c92134ec0c33b9577053aae2377fbe3979cfc073",
+  "size": 327380,
+  "sha256": "1e2f128a4d31c4e301a380af7d2e841bd1acbd9ec9eb0016991a6de131483a7c",
   "seed": "library-v1"
  },
  {
@@ -4636,8 +4636,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Anh_gi%E1%BA%A3_%C4%91i%E1%BA%BFc",
   "file": "ws-tho-nom-nguyen-khuyen.pdf",
   "originalName": "ws-tho-nom-nguyen-khuyen.pdf",
-  "size": 519664,
-  "sha256": "16648cf1cdae45911159825713a586fa7a8c908577176e3817947601a0254741",
+  "size": 563876,
+  "sha256": "91a7f95d6a27ddc482f7de6fb045de1dd9427431af4f3da7fc1cba079189f342",
   "seed": "library-v1"
  },
  {
@@ -4657,8 +4657,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ba_%C4%90%C3%ACnh_k%C3%BD",
   "file": "ws-tho-tan-da.pdf",
   "originalName": "ws-tho-tan-da.pdf",
-  "size": 1292515,
-  "sha256": "eadcb31634977e86c1c52e7096643a50ed17424bfcda701d57d78bed8df5a85d",
+  "size": 1346171,
+  "sha256": "5c9dd15cbadd7d269996c04346bcd03980a6cf7afcef1347bfae4aac628fe959",
   "seed": "library-v1"
  },
  {
@@ -4678,8 +4678,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Th%C6%A1_tr%E1%BA%A3_l%E1%BB%9Di_cho_Nhi%E1%BB%87m_An",
   "file": "ws-tho-tra-loi-cho-nhiem-an.pdf",
   "originalName": "ws-tho-tra-loi-cho-nhiem-an.pdf",
-  "size": 159157,
-  "sha256": "2e573042f8e8b91444755aa4bc75621748c4f8805eeeccb34b61811637d59e48",
+  "size": 191424,
+  "sha256": "5e2ce501bb86840ec1e8fa75d3bbaf7f7b684b258b66eeb70cbdd9c58a2248b0",
   "seed": "library-v1"
  },
  {
@@ -4699,8 +4699,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Anh_Ki%E1%BB%87t_ch%C6%A1i_hoang",
   "file": "ws-tho-tran-te-xuong-tu-xuong.pdf",
   "originalName": "ws-tho-tran-te-xuong-tu-xuong.pdf",
-  "size": 729636,
-  "sha256": "60988ca5dd044f2b370df565a2c3b96f84b4c7d7d1ed0e24fdbef56e8e328232",
+  "size": 755437,
+  "sha256": "025414692d18b01d3ea94abddbb41eaf0654d1f1e93df7f9697d1e06d9fadaed",
   "seed": "library-v1"
  },
  {
@@ -4720,8 +4720,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%81i_ch%E1%BB%A7ng",
   "file": "ws-tho-van-phan-boi-chau.pdf",
   "originalName": "ws-tho-van-phan-boi-chau.pdf",
-  "size": 1594028,
-  "sha256": "cb6681c597b2c74fd8779051ad77da9da7ed2d71dff6b3cbb9aaa239d2f75648",
+  "size": 1715546,
+  "sha256": "34b82f47f9df320487aec265deae25bf8a404c85597422eeaa1c9d4c7af97c7b",
   "seed": "library-v1"
  },
  {
@@ -4741,8 +4741,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tho%E1%BA%A3_thu%E1%BA%ADn_TRIPS_v%E1%BB%81_nh%E1%BB%AFng_kh%C3%ADa_c%E1%BA%A1nh_li%C3%AAn_quan_t%E1%BB%9Bi_th%C6%B0%C6%A1ng_m%E1%BA%A1i_c%E1%BB%A7a_quy%E1%BB%81n_s%E1%BB%9F_h%E1%BB%AFu_tr%C3%AD_tu%E1%BB%87",
   "file": "ws-thoa-thuan-trips-ve-nhung-khia-canh-lien-quan-toi.pdf",
   "originalName": "ws-thoa-thuan-trips-ve-nhung-khia-canh-lien-quan-toi.pdf",
-  "size": 390148,
-  "sha256": "48185d34f64098f9ad129de9fa3620e3476b00d6d1aa096dfd3c7caa07393848",
+  "size": 516761,
+  "sha256": "7fa65ae992e6e7e558f8079cd5421f4c9fbed097dfd3bed290649a5cf85a5e80",
   "seed": "library-v1"
  },
  {
@@ -4762,8 +4762,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Th%E1%BB%9Di_s%E1%BB%B1_trong_tu%E1%BA%A7n_l%E1%BB%85",
   "file": "ws-thoi-su-trong-tuan-le.pdf",
   "originalName": "ws-thoi-su-trong-tuan-le.pdf",
-  "size": 905719,
-  "sha256": "42b0303440ed0c8823815481eb6ec541e0e6ece6241adcc58718e4b0f5101bc9",
+  "size": 936869,
+  "sha256": "5af2d74b4bf5917e59fe3049843b34338718a3fef912c1fd016c4e6e8ab6d6a2",
   "seed": "library-v1"
  },
  {
@@ -4783,8 +4783,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Ti%E1%BA%BFng_g%E1%BB%8Di_c%E1%BB%A7a_r%E1%BB%ABng_th%E1%BA%B3m",
   "file": "ws-tieng-goi-cua-rung-tham.pdf",
   "originalName": "ws-tieng-goi-cua-rung-tham.pdf",
-  "size": 481552,
-  "sha256": "e90a6009da8071143fa7c1a40c85d08d4884ec06f6e7f93d05decb65e0b1d295",
+  "size": 522636,
+  "sha256": "493f52a92847cff5659b75d9bbe1573382b1b035d84fa751a836542cb4820596",
   "seed": "library-v1"
  },
  {
@@ -4804,8 +4804,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BB%89nh_m%E1%BB%99ng",
   "file": "ws-tinh-mong.pdf",
   "originalName": "ws-tinh-mong.pdf",
-  "size": 754881,
-  "sha256": "96c56c7187cd9b644d77a06489f4c010760695166a18e16745e551673f878c33",
+  "size": 861418,
+  "sha256": "758ecc055640900171304e49c4559fcc3376b851342b206fde6c58ab3bb0a7a6",
   "seed": "library-v1"
  },
  {
@@ -4825,8 +4825,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BB%91_T%C3%A2m",
   "file": "ws-to-tam.pdf",
   "originalName": "ws-to-tam.pdf",
-  "size": 356922,
-  "sha256": "cfd2527ccf1d021184d2dd306cbd21248061e56f7df286c63ae58fb00c2ee4df",
+  "size": 390793,
+  "sha256": "71e1722e35cffd6c6f464fb8c90c4350ff952aa1e5915ae3b584b9cdbd18accf",
   "seed": "library-v1"
  },
  {
@@ -4846,8 +4846,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tr%C3%AA_C%C3%B3c",
   "file": "ws-tre-coc.pdf",
   "originalName": "ws-tre-coc.pdf",
-  "size": 204570,
-  "sha256": "fdae56280e663b93f7d05f2ec26d1cbb783b87ce0f00524b9406d0ca08ee6ba0",
+  "size": 303689,
+  "sha256": "a9aad1d1083e36f58a0c22a11305c2574b4f4d2880dae5dbb77d66f64869ab7f",
   "seed": "library-v1"
  },
  {
@@ -4867,8 +4867,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Trong_r%E1%BB%ABng_nho",
   "file": "ws-trong-rung-nho.pdf",
   "originalName": "ws-trong-rung-nho.pdf",
-  "size": 1031579,
-  "sha256": "b1efd30d8557cfe16728a364ee65ea4b7a338d595e1c79df619036c40e70e886",
+  "size": 1069474,
+  "sha256": "7e27b6f46ff347e6815aa7995491fc65dbf91e2d29aab951e093cc7ec0bcc13e",
   "seed": "library-v1"
  },
  {
@@ -4888,8 +4888,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tr%C6%B0%E1%BB%9Bc_c%E1%BA%A3nh_hoang_t%C3%A0n_%C4%90%E1%BA%BF_Thi%C3%AAn_%C4%90%E1%BA%BF_Th%C3%ADch",
   "file": "ws-truoc-canh-hoang-tan-de-thien-de-thich.pdf",
   "originalName": "ws-truoc-canh-hoang-tan-de-thien-de-thich.pdf",
-  "size": 351205,
-  "sha256": "55df2ece02eb58282a7f1721cf569bfa4102dfc833011750dd105768f39ec4b3",
+  "size": 370417,
+  "sha256": "52e7029cd02e614de9a716cf1e3dcffcf8a0405562d4e1005308ce4214c40b38",
   "seed": "library-v1"
  },
  {
@@ -4909,8 +4909,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Truy%E1%BB%87n_Ki%E1%BB%81u",
   "file": "ws-truyen-kieu.pdf",
   "originalName": "ws-truyen-kieu.pdf",
-  "size": 810381,
-  "sha256": "9d83b8a23662fa5f1ab88cd96db5c230e1fa9b4eda5c1aa5cafa80d2a6371dff",
+  "size": 841812,
+  "sha256": "24b9f4a802ec59d8e7f730f2ef214cb2d67a3b812c775427563857e3b1a33818",
   "seed": "library-v1"
  },
  {
@@ -4930,8 +4930,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%A1i_m%E1%BA%B7t_kh%C3%B4ng_ch%C6%A1i_%C4%91%C6%B0%E1%BB%A3c",
   "file": "ws-truyen-ngan-nam-cao-tap-2.pdf",
   "originalName": "ws-truyen-ngan-nam-cao-tap-2.pdf",
-  "size": 545705,
-  "sha256": "1de4daf5bb20ec6653fe4fae0d1fb72ab60469cd2af8ea4b23a96aff6780d90e",
+  "size": 584112,
+  "sha256": "f0daa75332d461af21b529ff82af2dfe51c71d4eb25a22cc167b37da3ef7fcf1",
   "seed": "library-v1"
  },
  {
@@ -4951,8 +4951,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/L%C3%A3o_H%E1%BA%A1c",
   "file": "ws-truyen-ngan-nam-cao.pdf",
   "originalName": "ws-truyen-ngan-nam-cao.pdf",
-  "size": 606758,
-  "sha256": "a58ef399df00c6995ae2f115951cfe5cb46899b2de926929a51e7769b2fc8add",
+  "size": 640585,
+  "sha256": "426de586a3b50d019daf85b12cadcdd64ae68d502365b5749241f7639d52bd23",
   "seed": "library-v1"
  },
  {
@@ -4972,8 +4972,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/S%E1%BB%91ng_ch%E1%BA%BFt_m%E1%BA%B7c_bay",
   "file": "ws-truyen-ngan-pham-duy-ton-le-van-truong-vu-trong-ph.pdf",
   "originalName": "ws-truyen-ngan-pham-duy-ton-le-van-truong-vu-trong-ph.pdf",
-  "size": 377490,
-  "sha256": "99ef981cb8e1a72702e956ccdcb3cb57b6ab3819c76bfeba535eaa5fa867f114",
+  "size": 410851,
+  "sha256": "03472ac76085219c21639f557f531781d000ade43b8e20edce7959a30a4982ac",
   "seed": "library-v1"
  },
  {
@@ -4993,8 +4993,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C4%90%C3%B3i",
   "file": "ws-truyen-ngan-thach-lam-tap-2.pdf",
   "originalName": "ws-truyen-ngan-thach-lam-tap-2.pdf",
-  "size": 746450,
-  "sha256": "4d9058c6d17a6cdbe2d66bc7fd7705d77124af7850eaa98297ef4295725bd111",
+  "size": 777294,
+  "sha256": "a76b108b809f3204007320a27915d90c82e56f0e231fdd1c38689720dbdc637e",
   "seed": "library-v1"
  },
  {
@@ -5014,8 +5014,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/C%C3%B4_h%C3%A0ng_x%C3%A9n",
   "file": "ws-truyen-ngan-thach-lam.pdf",
   "originalName": "ws-truyen-ngan-thach-lam.pdf",
-  "size": 327779,
-  "sha256": "b9c33a46a014dbfd04fd027f4dd38b7a42c3cb0d7f29683640ae8488e0093203",
+  "size": 359364,
+  "sha256": "764f5e3b482f92f4e5d7bf3f380af6949bb598a5eba6f827bbb961cf67e1fbb9",
   "seed": "library-v1"
  },
  {
@@ -5035,8 +5035,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Truy%E1%BB%87n_th%E1%BA%A7y_Lazaro_Phi%E1%BB%81n",
   "file": "ws-truyen-thay-lazaro-phien.pdf",
   "originalName": "ws-truyen-thay-lazaro-phien.pdf",
-  "size": 248238,
-  "sha256": "98219532adccf47fed62f73a19b18dfb4d45a6ff12b155d4e0900efcd1c91fa4",
+  "size": 300915,
+  "sha256": "c0e654eed087633947678071ab9ab50119840b907b00aba788f124607d19a484",
   "seed": "library-v1"
  },
  {
@@ -5048,7 +5048,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Hồ Biểu Chánh mất năm 1958: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1937 (Wikimedia Commons, tệp \"Tu hon.pdf\", phạm vi công cộng).",
   "id": "ws-tu-hon",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -5056,8 +5056,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BB%AB_h%C3%B4n",
   "file": "ws-tu-hon.pdf",
   "originalName": "ws-tu-hon.pdf",
-  "size": 699339,
-  "sha256": "8cfe6ca8916ed4a5926b0cf23a1b819bd10e1aab852a5c8918fb43a4526f60f1",
+  "size": 736146,
+  "sha256": "463d748de5e7b0051f86d1c10bc6323b9cb99ca431d3f7b520166057f13282dd",
   "seed": "library-v1"
  },
  {
@@ -5069,7 +5069,7 @@
   "description": "Văn bản chữ quốc ngữ từ Wikisource tiếng Việt. Bản dịch: Nguyễn Văn Vĩnh.",
   "license": "vn-het-thoi-han-bao-ho",
   "licenseLabel": "Phạm vi công cộng (tác giả, dịch giả mất trước 1976) – văn bản Wikisource CC BY-SA 4.0",
-  "rightsNote": "Alain-René Lesage mất năm 1747; Nguyễn Văn Vĩnh mất năm 1936: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự).",
+  "rightsNote": "Alain-René Lesage mất năm 1747; Nguyễn Văn Vĩnh mất năm 1936: hết thời hạn bảo hộ (đời tác giả + 50 năm, Điều 27 Luật Sở hữu trí tuệ). Văn bản số hóa trên Wikisource tiếng Việt, phát hành theo CC BY-SA 4.0 (ghi nguồn, chia sẻ tương tự). Ảnh bìa: trang bìa bản in gốc năm 1930 (Wikimedia Commons, tệp \"Turcaret 2.pdf\", phạm vi công cộng).",
   "id": "ws-tuc-ca-le",
   "language": "vi",
   "sourceName": "Wikisource tiếng Việt",
@@ -5077,8 +5077,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BB%A5c-ca-l%E1%BB%87",
   "file": "ws-tuc-ca-le.pdf",
   "originalName": "ws-tuc-ca-le.pdf",
-  "size": 889396,
-  "sha256": "d655a33aa5bc121e2c9ba6643084ff33524048b2006c74fc15f19bc19d2b2755",
+  "size": 937638,
+  "sha256": "3fa4e883179a36efccd936981b328c95eff10655b26571a9816fca7cea3d6559",
   "seed": "library-v1"
  },
  {
@@ -5098,8 +5098,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BB%A5c_ng%E1%BB%AF%2C_phong_dao_v%C3%A0_%C4%91%E1%BB%8Ba_v%E1%BB%8B_c%E1%BB%A7a_n%C3%B3_trong_v%C4%83n_h%E1%BB%8Dc",
   "file": "ws-tuc-ngu-phong-dao-va-dia-vi-cua-no-trong-van-hoc.pdf",
   "originalName": "ws-tuc-ngu-phong-dao-va-dia-vi-cua-no-trong-van-hoc.pdf",
-  "size": 216143,
-  "sha256": "24910bad1b0952a3dce019030627f1e84283ff932775b82a223acd02f7868be4",
+  "size": 243546,
+  "sha256": "6a27d9dd11d0b3b7574bcf1d613f6e31c2a1eeab8a1897c08cf8397eec050c1b",
   "seed": "library-v1"
  },
  {
@@ -5119,8 +5119,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tuy%E1%BB%83n_t%E1%BA%ADp_t%E1%BA%A1p_v%C4%83n_L%E1%BB%97_T%E1%BA%A5n",
   "file": "ws-tuyen-tap-tap-van-lo-tan.pdf",
   "originalName": "ws-tuyen-tap-tap-van-lo-tan.pdf",
-  "size": 463203,
-  "sha256": "95ebfc29376e6c9ae0917a8f655ca1cdacf9ccd3ea8f58615de4aca19b0d160e",
+  "size": 578173,
+  "sha256": "9d2ca063a3b4b51c400f9ac436bf752886a51746b4c48e7ba2f91c3636ade79f",
   "seed": "library-v1"
  },
  {
@@ -5140,8 +5140,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Tuy%E1%BB%83n_t%E1%BA%ADp_ti%E1%BB%83u_thuy%E1%BA%BFt_L%E1%BB%97_T%E1%BA%A5n",
   "file": "ws-tuyen-tap-tieu-thuyet-lo-tan.pdf",
   "originalName": "ws-tuyen-tap-tieu-thuyet-lo-tan.pdf",
-  "size": 1617907,
-  "sha256": "f51a8364a165932e880f361448a8a2070b174bf6ce146ec6e2e61b180aef8d7f",
+  "size": 1663413,
+  "sha256": "df9866dca70f3280748c910dac2da6ec27dd328d262c3a7f27f7aec0845a8a48",
   "seed": "library-v1"
  },
  {
@@ -5161,8 +5161,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/T%E1%BB%B3_b%C3%A0_truy%E1%BB%87n",
   "file": "ws-ty-ba-truyen.pdf",
   "originalName": "ws-ty-ba-truyen.pdf",
-  "size": 413500,
-  "sha256": "636714111e33a5979e30be0fb8d16b23d7cb9f84df54017d04f0682ccb4d6539",
+  "size": 438194,
+  "sha256": "6d9f5ad627ad78f856cc809b4e59ec0f6ccc2b662c85cab38f4e2d588d902c40",
   "seed": "library-v1"
  },
  {
@@ -5182,8 +5182,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Vai_ng%E1%BB%B1_s%E1%BB%AD_tr%C3%AAn_%C4%91%C3%A0n_v%C4%83n",
   "file": "ws-vai-ngu-su-tren-dan-van.pdf",
   "originalName": "ws-vai-ngu-su-tren-dan-van.pdf",
-  "size": 215006,
-  "sha256": "f11cb22775eb283dccfae8805d291b4aac70fa02dc8e717361b4f9513e5f60ba",
+  "size": 252618,
+  "sha256": "ba62b21d126cddcc44d04346edd5f18f031dddff24723e1510eb5230bece363d",
   "seed": "library-v1"
  },
  {
@@ -5203,8 +5203,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%E1%BA%A5n_%C4%91%E1%BB%81_c%E1%BA%A3i_c%E1%BA%A3i",
   "file": "ws-van-de-cai-cai.pdf",
   "originalName": "ws-van-de-cai-cai.pdf",
-  "size": 195649,
-  "sha256": "18b97702ddf44f3c6c711fb9aa1bd1d589bc900c055bd7e3bdc93a6d10a3bf8d",
+  "size": 248671,
+  "sha256": "204d2ede40635042004fbde656fd939fb50fd6158ddab2a82de1ccb4b089cb08",
   "seed": "library-v1"
  },
  {
@@ -5224,8 +5224,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%E1%BA%A5n_%C4%91%E1%BB%81_ph%E1%BB%A5_n%E1%BB%AF_gi%E1%BA%A3i_ph%C3%B3ng_v%E1%BB%9Bi_nh%C3%A2n_sanh_quan",
   "file": "ws-van-de-phu-nu-giai-phong-voi-nhan-sanh-quan.pdf",
   "originalName": "ws-van-de-phu-nu-giai-phong-voi-nhan-sanh-quan.pdf",
-  "size": 204136,
-  "sha256": "1d4451be063c2b47336298cca1084c8200cb576505b4ad01ebf97595240f3ffd",
+  "size": 329787,
+  "sha256": "3ed797081eb7d51a4a5056a8bdd52255b58dcc122fbfa05d5428be66733cf542",
   "seed": "library-v1"
  },
  {
@@ -5245,8 +5245,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%C4%83n_t%E1%BA%BF_s%E1%BB%91ng_Tr%C6%B0%E1%BB%9Dng_L%C6%B0u_nh%E1%BB%8B_n%E1%BB%AF",
   "file": "ws-van-te-song-truong-luu-nhi-nu.pdf",
   "originalName": "ws-van-te-song-truong-luu-nhi-nu.pdf",
-  "size": 187493,
-  "sha256": "f337f1df8c9e333182040e4f223927774c216e514ad02e8483a52897540ae7d8",
+  "size": 217609,
+  "sha256": "3030ee8f6033045d5b6941dce7653d33c3075b283fa22366a1b13bf15990d3c4",
   "seed": "library-v1"
  },
  {
@@ -5266,8 +5266,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%E1%BA%ADy_m%E1%BB%9Bi_ph%E1%BA%A3i",
   "file": "ws-vay-moi-phai.pdf",
   "originalName": "ws-vay-moi-phai.pdf",
-  "size": 166419,
-  "sha256": "a7092cc580be020ec958004a4f4540c8f968c6d54b68e0288b70891e76adf7a2",
+  "size": 214011,
+  "sha256": "337cb58097193b28c65483d1bbd9cac07bb4ff48fca26edb4b3012acb42c6caa",
   "seed": "library-v1"
  },
  {
@@ -5287,8 +5287,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%E1%BB%81_b%C3%A0i_ph%C3%AA_b%C3%ACnh_s%C3%A1ch_%22Nho_gi%C3%A1o%22",
   "file": "ws-ve-bai-phe-binh-sach-nho-giao.pdf",
   "originalName": "ws-ve-bai-phe-binh-sach-nho-giao.pdf",
-  "size": 237520,
-  "sha256": "8a415501b627eac5c82e4896fbb9b9d46bb2ba705b58932b20a33ec4f203a7f5",
+  "size": 262389,
+  "sha256": "c7a97f1fe3736d358dd5a1740189843e3034643015baf20de54935d17080dbf8",
   "seed": "library-v1"
  },
  {
@@ -5308,8 +5308,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%E1%BB%81_c%C3%A1c_cu%E1%BB%99c_bi%E1%BB%83u_t%C3%ACnh_%E1%BB%9F_Nam_k%E1%BB%B3_v%E1%BB%ABa_r%E1%BB%93i",
   "file": "ws-ve-cac-cuoc-bieu-tinh-o-nam-ky-vua-roi.pdf",
   "originalName": "ws-ve-cac-cuoc-bieu-tinh-o-nam-ky-vua-roi.pdf",
-  "size": 209956,
-  "sha256": "18ada305538cdc1215935d57c9436045d9ffa69c2436e22a03db55d161fcec03",
+  "size": 254337,
+  "sha256": "0b46ff65dbf6ca0132bbf1a325dc101a4325a86d403b03b7ea894a188daca040",
   "seed": "library-v1"
  },
  {
@@ -5329,8 +5329,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Vi%E1%BB%87c_l%C3%A0ng",
   "file": "ws-viec-lang.pdf",
   "originalName": "ws-viec-lang.pdf",
-  "size": 493495,
-  "sha256": "109598f024b71fe74a58df54ef93b38b01426a726eb49f62ca0107bbd9c5c51c",
+  "size": 519469,
+  "sha256": "d699a8b66008fbc132f45e2515cf30df7d7abeacb2be008514ca70956cbf4f22",
   "seed": "library-v1"
  },
  {
@@ -5350,8 +5350,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Vi%E1%BB%87t_Nam_phong_t%E1%BB%A5c",
   "file": "ws-viet-nam-phong-tuc.pdf",
   "originalName": "ws-viet-nam-phong-tuc.pdf",
-  "size": 2717614,
-  "sha256": "b617f3c7136bdfbc6b2f4075f10ec66457c5f3ca6acac5ab5357ace9cf0a18b0",
+  "size": 2755689,
+  "sha256": "d2802e0902eaf1e6f235c4eec93064fd87601979434ed827ce7ee56f4d285c30",
   "seed": "library-v1"
  },
  {
@@ -5371,8 +5371,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/Vi%E1%BB%87t_thi",
   "file": "ws-viet-thi.pdf",
   "originalName": "ws-viet-thi.pdf",
-  "size": 1777600,
-  "sha256": "e6363e94e5f465c236ff9a0d529d39b6f15d084c43854188bee0dbc6d4a99cf0",
+  "size": 1840147,
+  "sha256": "c12d6aafd79b0b86c5e2c27813ace28760fa3374cc1cee4a8b96e5ab6e532635",
   "seed": "library-v1"
  },
  {
@@ -5392,8 +5392,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%E1%BB%A3_gi%C3%A0_ch%E1%BB%93ng_tr%E1%BA%BB",
   "file": "ws-vo-gia-chong-tre.pdf",
   "originalName": "ws-vo-gia-chong-tre.pdf",
-  "size": 679505,
-  "sha256": "91e103d81b5ebdfa06cbb79016929a22286e4100ad8366048236132597a2e09c",
+  "size": 729410,
+  "sha256": "e911ce745ac1204f46d5f3f0c8b3f468812e617fdd13a60e6c958ccbf5036af5",
   "seed": "library-v1"
  },
  {
@@ -5413,8 +5413,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%C5%A9_trung_t%C3%B9y_b%C3%BAt",
   "file": "ws-vu-trung-tuy-but.pdf",
   "originalName": "ws-vu-trung-tuy-but.pdf",
-  "size": 1633535,
-  "sha256": "9409164e39b410c301344a5c28cf5f07c387ef025f42c229303de9648bd5b5f1",
+  "size": 1670860,
+  "sha256": "a9b2927faf2c28f24f0f16fe7c1e6f9ed86e15636302438f91f8ea29b3a4ce18",
   "seed": "library-v1"
  },
  {
@@ -5434,8 +5434,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/V%C6%B0%C6%A1ng_D%C6%B0%C6%A1ng_Minh",
   "file": "ws-vuong-duong-minh-dao-trinh-nhat.pdf",
   "originalName": "ws-vuong-duong-minh-dao-trinh-nhat.pdf",
-  "size": 2555039,
-  "sha256": "817bf1d593dac568de8af9f5bd9255eda7bbff5fc364111c0f8b8a7e97d02001",
+  "size": 2594636,
+  "sha256": "2be4fb67d93c7ab593538e647c6efd830839167e01f98880742f7cbbb13cdb27",
   "seed": "library-v1"
  },
  {
@@ -5455,8 +5455,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/X%C3%A9t_v%E1%BB%81_c%C3%A2u_s%C3%A1o_ng%C6%B0%E1%BB%9Di_m%C3%ACnh_th%C6%B0%E1%BB%9Dng_n%C3%B3i%3A_Phong_h%C3%B3a_suy_%C4%91%E1%BB%93i",
   "file": "ws-xet-ve-cau-sao-nguoi-minh-thuong-noi-phong-hoa-suy.pdf",
   "originalName": "ws-xet-ve-cau-sao-nguoi-minh-thuong-noi-phong-hoa-suy.pdf",
-  "size": 186965,
-  "sha256": "c045d2feb14712d0fb9cf9b865883049fe488c55be25c5a3596f9429c9a734a6",
+  "size": 381566,
+  "sha256": "984b34ed315b67b674486fb6bdbd5a1aeb79d9f24ec9d7ad1f8110bd246abed8",
   "seed": "library-v1"
  },
  {
@@ -5476,8 +5476,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/X%C3%B3a_m%E1%BB%99t_c%C3%A1i_%C3%A1n_trong_l%E1%BB%8Bch_s%E1%BB%AD%3A_th%C3%A2n_oan_cho_V%C3%B5_h%E1%BA%ADu",
   "file": "ws-xoa-mot-cai-an-trong-lich-su-than-oan-cho-vo-hau.pdf",
   "originalName": "ws-xoa-mot-cai-an-trong-lich-su-than-oan-cho-vo-hau.pdf",
-  "size": 197369,
-  "sha256": "e198f5626ba300daaf0b0a0a7eb40df84edd55f14e591f205f8b8e0dfadeba25",
+  "size": 223180,
+  "sha256": "4d5611fbd02d9bec50d3546c5faa05d16aa6d16fe1c4547356f0dec6a56223ba",
   "seed": "library-v1"
  },
  {
@@ -5497,8 +5497,8 @@
   "sourceUrl": "https://vi.wikisource.org/wiki/%C3%9D_v%C3%A0_t%C3%ACnh",
   "file": "ws-y-va-tinh.pdf",
   "originalName": "ws-y-va-tinh.pdf",
-  "size": 1081645,
-  "sha256": "4b6a33cd88800d225cc4027d9fcf446a85eaebf7f4678477acaecb00d6eab91a",
+  "size": 1130422,
+  "sha256": "05d2ebcc46a3911386694fea0b688b687c268d95a5ee39e0ec6f2b54417faa94",
   "seed": "library-v1"
  }
 ]
