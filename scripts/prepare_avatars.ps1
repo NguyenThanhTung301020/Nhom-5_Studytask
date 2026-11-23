@@ -1,4 +1,4 @@
-# scripts/prepare_avatars.ps1 – Chuẩn bị ảnh đại diện từ một thư mục ảnh (chạy trên Windows, PowerShell 5.1)
+﻿# scripts/prepare_avatars.ps1 – Chuẩn bị ảnh đại diện từ một thư mục ảnh (chạy trên Windows, PowerShell 5.1)
 # Làm đúng như giao diện (components/AccountCards.js, toAvatarBlob): cắt vuông ở giữa, thu về 256×256, JPEG chất lượng 0,88
 # (kèm xoay theo EXIF, nền trắng cho ảnh PNG trong suốt) để ảnh trên máy chủ nhẹ và đồng nhất như ảnh người dùng tự tải lên.
 # Ví dụ:
