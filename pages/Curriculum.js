@@ -1,7 +1,7 @@
 // pages/Curriculum.js – Phòng Đào tạo: kiểm tra các module môn học có đáp ứng chương trình đào tạo (CTĐT)
 // rồi thêm môn còn thiếu / bớt môn ngoài chương trình. CTĐT lưu ở curriculum/{programId}.
 import { setDocument, listDocuments, deleteDocument, errorText } from '../utils/store.js'
-import { checkCurriculum, missingCourses, subjectUsageDetail } from '../utils/curriculum.js'
+import { checkCurriculum, missingCourses, subjectUsageDetail, addCourseToModule } from '../utils/curriculum.js'
 import { SAMPLE_CURRICULUM, SUBJECT_COLORS } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 
@@ -71,8 +71,8 @@ export default function Curriculum({ subjects = [], setSubjects, schedule = [], 
   useEffect(() => { loadPrograms() }, [])
 
   const saveProg = async (next) => {
-    try { await setDocument('curriculum', pid, { ...next, updatedAt: new Date().toISOString() }, false); setProg({ ...next, id: pid }); setMsg(null) }
-    catch (e) { setMsg({ type: 'danger', text: errorText(e) }) }
+    try { await setDocument('curriculum', pid, { ...next, updatedAt: new Date().toISOString() }, false); setProg({ ...next, id: pid }); setMsg(null); return true }
+    catch (e) { setMsg({ type: 'danger', text: errorText(e) }); window.scrollTo?.({ top: 0, behavior: 'smooth' }); return false }
   }
   const createFromSample = async () => {
     const id = slug(SAMPLE_CURRICULUM.name)
@@ -142,9 +142,11 @@ export default function Curriculum({ subjects = [], setSubjects, schedule = [], 
       label: 'Bớt môn',
     })
   }
-  const putInModule = (s, moduleId) => {
-    const next = { ...prog, modules: prog.modules.map(m => m.id === moduleId ? { ...m, courses: [...m.courses, { code: s.code, name: s.name, credits: Number(s.credits) || 0 }] } : m) }
-    saveProg(next)
+  const putInModule = async (s, moduleId) => {
+    // Trước 23/11: so sánh m.id === moduleId (số với chuỗi) nên CTĐT có id module dạng số không nhận môn, cũng không báo gì
+    const { next, error, module } = addCourseToModule(prog, moduleId, s)
+    if (error) return setMsg({ type: 'danger', text: error })
+    if (await saveProg(next)) setMsg({ type: 'success', text: `Đã đưa ${s.code} – ${s.name} vào module "${module.name}".` })
   }
 
   const saveModule = (mod) => {
