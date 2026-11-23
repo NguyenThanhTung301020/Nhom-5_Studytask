@@ -91,3 +91,5 @@ jobs:
         run: python3 tests/server/test_graduation.py
       - name: Nộp bài theo định dạng giáo viên chọn
         run: bash tests/server/test_submit.sh
+      - name: Sao lưu có PDF kho sách, không có sách đã gỡ; thử khôi phục bắt được bản thiếu hoặc hỏng PDF
+        run: bash tests/server/test_backup_library.sh
