@@ -446,6 +446,22 @@ Nhật ký chọn lọc ghi đoạn `705217–770752` ở trạng thái `Complet
 - **Mạng kém hơn:** ping 60 ms (T+7 35 ms), `cloudflared` kết nối lại khoảng 6,5 lần/ngày (T+7 2,7 lần/ngày); trang vẫn trả 200 dưới 1 giây.
 - **Máy chủ không trùng `master`** từ 19/11 02:41 UTC (xem biên bản việc 1 tuần 7).
 
+### 8.4e. Ghi nhận sau mốc T+15 (22–23/11/2026)
+
+**Máy chủ ngừng do cúp điện ngày 22/11/2026.** Nguyên nhân: điện lực cắt điện để bảo trì hệ thống, nhóm không thể can thiệp, chỉ ghi nhận. Số liệu đọc bằng SSH chỉ đọc ngày 22/11 và 23/11:
+
+| Mục | Kết quả |
+|---|---|
+| Thời điểm mất điện | Nhật ký hệ thống dừng đột ngột lúc 22/11 01:00:31 UTC (08:00 giờ Việt Nam), không có bước tắt máy (`journalctl --list-boots`) |
+| Thời điểm có điện lại | Máy tự khởi động lúc 07:33:10 UTC (14:33 giờ Việt Nam). **Ngừng khoảng 6 giờ 33 phút** |
+| Hệ tệp | `fsck` khôi phục nhật ký hệ tệp (`recovering journal`) rồi báo `clean`; không có lỗi I/O |
+| Dữ liệu | `integrity_check` ok; `accounts` 1.031, `docs` 2.564, `chat` 6 (22/11), khớp trước khi mất điện. Bản sao lưu đêm 22/11 20:02 UTC chạy bình thường |
+| Dịch vụ sau khi có điện | 3 dịch vụ tự chạy lại, `active`; site 200; mã trên máy chủ trùng `master` `d8d0d63` (script kiểm chứng ĐẠT 22/11 08:55 UTC) |
+
+Đây là lần khởi động lại ngoài kế hoạch đầu tiên kể từ T0, do nguyên nhân bên ngoài. Mất điện đột ngột cũng là rủi ro cho ổ đĩa đang có vùng lỗi (8.4c); máy chưa có UPS. Ở mốc T+30, điều kiện 1 của 8.6 ghi "không đạt, nguyên nhân bên ngoài (cúp điện bảo trì 22/11)".
+
+**Cập nhật gói và khởi động lại có kế hoạch ngày 23/11/2026** (việc 11 tuần 8, chi tiết ở [biên bản 12](12-doi-chieu-may-chu-2026-11-17.md) mục 3): `apt full-upgrade` 03:18–03:21 UTC, khởi động lại 03:22 UTC, nhân `7.0.0-44`, **0 gói chờ**; dịch vụ `active`, site 200.
+
 ### 8.5. Cần làm gì khi vượt ngưỡng
 
 | Dấu hiệu | Kiểm tra trước | Hướng xử lý |
@@ -485,6 +501,8 @@ Nếu có điều kiện không đạt, ghi rõ trong báo cáo cùng nguyên nh
 **Kết luận chung: chưa đủ điều kiện kết luận "ổn định ở mức đề tài"** (2/5 đạt, 2 chưa đạt, 1 chưa đo). Phần dịch vụ chạy ổn: không sập, không mất dữ liệu, sao lưu và khôi phục đạt. Các điểm chưa đạt có nguyên nhân đã xác định và không do quá tải. Ổ đĩa vẫn **chưa đạt** (8.4c, 8.4d), là rủi ro lớn nhất còn lại.
 
 **Việc tiếp theo:** (1) sửa API để không ghi mã 500 khi trình duyệt ngắt kết nối; (2) cài lại máy chủ từ `master` để có bản sửa P1 (`226c761`); (3) sao lưu riêng thư mục `library/` ra ngoài ổ máy chủ; (4) nhóm ghi quyết định về ổ đĩa; (5) cài 16 gói chờ và khởi động lại có kế hoạch; (6) đăng ký giám sát HTTP bên ngoài nếu cần đo điều kiện 4.
+
+**Cập nhật sau T+15 (23/11, xem 8.4e):** việc (2) đã làm (máy chủ trùng `master` `d8d0d63` ngày 22/11); việc (5) đã làm ngày 23/11 (0 gói chờ, nhân `7.0.0-44`); việc (3) đang làm ở việc 6 tuần 8 (sao lưu PDF kho sách). Ngày 22/11 máy chủ ngừng khoảng 6,5 giờ do điện lực cắt điện bảo trì, ghi nhận cho điều kiện 1 ở mốc T+30.
 
 ## 9. Hạn chế của báo cáo
 
