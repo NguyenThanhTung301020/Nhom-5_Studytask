@@ -14,7 +14,7 @@ import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.
 import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
-import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint } from '../utils/quizScores.js'
+import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint, quizDuePassed, countSubmissionsByQuiz } from '../utils/quizScores.js'
 import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
 import { scheduleText, navLabel } from '../utils/roleText.js'
 import { serverRejected, keysToReload, saveErrorText, echoGuard, recoverFromSaveError, USAGE_KEYS } from '../utils/sharedSync.js'
@@ -949,4 +949,20 @@ describe('Kho sách điện tử (Thư viện)', () => {
     assert.equal(safeSourceUrl('https://evil.example/details/x'), '')
     assert.equal(safeSourceUrl(''), '')
   })
+})
+
+test('Hạn đề trắc nghiệm tính hết ngày theo giờ Việt Nam (ca 24)', () => {
+  assert.equal(quizDuePassed('2026-11-18', new Date('2026-11-18T00:30:00Z')), false) // 7:30 sáng ngày hạn
+  assert.equal(quizDuePassed('2026-11-18', new Date('2026-11-18T16:59:59Z')), false) // 23:59:59 giờ VN
+  assert.equal(quizDuePassed('2026-11-18', new Date('2026-11-18T17:00:00Z')), true)  // 0:00 ngày 19/11 giờ VN
+  assert.equal(quizDuePassed('', new Date()), false)
+  assert.equal(quizDuePassed('abc', new Date()), false)
+})
+
+test('Đếm lượt nộp của từng đề từ quizResults (ca 19)', () => {
+  const m = countSubmissionsByQuiz([{ quizId: 1 }, { quizId: 1 }, { quizId: '2' }])
+  assert.equal(m.get('1'), 2)
+  assert.equal(m.get('2'), 1)
+  assert.equal(m.get('3'), undefined)
+  assert.equal(countSubmissionsByQuiz().size, 0)
 })

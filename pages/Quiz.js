@@ -1,9 +1,10 @@
 // pages/Quiz.js – Hệ thống trắc nghiệm
 import { SUBJECT_COLORS } from '../utils/constants.js'
-import { submitQuiz, APP_ENV } from '../utils/firebase.js'
+import { submitQuiz, APP_ENV, loadAllQuizResults, isFirebaseReady } from '../utils/firebase.js'
 import { assignIds } from '../utils/quizFile.js'
 import { ImportQuizModal, BankModal, QuizViewer, hasKey } from './QuizTools.js'
 import { formatCountdown } from '../utils/exams.js'
+import { quizDuePassed, countSubmissionsByQuiz } from '../utils/quizScores.js'
 
 const { useState, useMemo, useEffect, useRef, createElement: h } = window.React
 
@@ -507,6 +508,23 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
 
   const isTeacher = role === 'admin' || role === 'teacher'
 
+  // Ca 19: giáo viên/Admin không có kết quả của riêng mình → lấy điểm chính thức của lớp từ máy chủ để đếm lượt nộp
+  const [classResults, setClassResults] = useState(null)   // null = đang tải hoặc tải lỗi
+  useEffect(() => {
+    if (!isTeacher || !isFirebaseReady()) return
+    loadAllQuizResults()
+      .then(setClassResults)
+      .catch(e => { console.warn('[Server] quiz/results:', e.message); setClassResults(null) })
+  }, [isTeacher])
+  const serverCounts = useMemo(() => classResults && countSubmissionsByQuiz(classResults), [classResults])
+  // Bản demo (không có máy chủ) giữ cách đếm cũ; null = chưa tải được nên hiện "–" thay vì báo sai là 0
+  const countFor = (quizId) =>
+    !isFirebaseReady() ? submissions.filter(s => s.quizId === quizId).length
+    : serverCounts ? (serverCounts.get(String(quizId)) || 0) : null
+  const totalCount = !isFirebaseReady() ? submissions.length
+    : serverCounts ? quizzes.reduce((n, q) => n + (serverCounts.get(String(q.id)) || 0), 0) : null
+  const countText = (n) => n == null ? '– lượt nộp' : `${n} lượt nộp`
+
   return h('div', { className:'container-fluid py-4' },
 
     // ── Header ──
@@ -514,7 +532,7 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
       h('div', null,
         h('h4', { className:'fw-bold mb-1' }, h('i',{className:'bi bi-patch-question me-2', style:{color:'var(--primary)'}}), 'Trắc nghiệm'),
         h('small', { className:'text-muted' },
-          isTeacher ? `${quizzes.length} đề thi · ${submissions.length} lượt nộp` : `${quizzes.filter(q=>q.status==='active').length} đề đang mở`
+          isTeacher ? `${quizzes.length} đề thi · ${countText(totalCount)}` : `${quizzes.filter(q=>q.status==='active').length} đề đang mở`
         )
       ),
       h('div', { className:'d-flex gap-2 align-items-center' },
@@ -549,7 +567,7 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
       visible.map(quiz => {
         const sub     = mySubmissions.find(s=>s.quizId===quiz.id)
         const color   = subjectColor(quiz.subjectId)
-        const expired = new Date(quiz.dueDate) < new Date()
+        const expired = quizDuePassed(quiz.dueDate)
 
         return h('div', { key:quiz.id, className:'col-12 col-md-6 col-xl-4' },
           h('div', { className:'card border-0 shadow-sm h-100' },
@@ -576,7 +594,7 @@ export default function Quiz({ quizzes, setQuizzes, submissions, setSubmissions,
                 ),
                 isTeacher && h('span', { className:'quiz-info-badge' },
                   h('i',{className:'bi bi-people me-1'}),
-                  `${submissions.filter(s=>s.quizId===quiz.id).length} lượt nộp`
+                  countText(countFor(quiz.id))
                 )
               ),
 
