@@ -1,6 +1,8 @@
 #!/bin/bash
-# Sao lưu StudyTask: cơ sở dữ liệu (bản chụp nhất quán), tệp tải lên, cấu hình. Chạy bằng systemd timer mỗi ngày.
-# Mỗi lần tạo một thư mục AAAA-MM-DD_GGPPSS (giờ UTC). Tệp tải lên dùng liên kết cứng nên các bản trùng nhau không tốn thêm chỗ.
+# Sao lưu StudyTask: cơ sở dữ liệu (bản chụp nhất quán), tệp tải lên, PDF kho sách, cấu hình. Chạy bằng systemd timer mỗi ngày.
+# Mỗi lần tạo một thư mục AAAA-MM-DD_GGPPSS (giờ UTC). Tệp tải lên và PDF kho sách dùng liên kết cứng nên các bản trùng nhau không tốn thêm chỗ.
+# Kho sách: chỉ chép library/books (sách đang hiện trên web), KHÔNG chép library/removed (sách đã gỡ). Bìa sách nằm trong uploads/library.
+# Khôi phục kho sách từ một bản (dừng API trước):  rsync -a <bản>/library/books/ /var/lib/studytask/library/books/
 # Giữ KEEP_DAILY bản mới nhất + KEEP_WEEKLY bản Chủ nhật. Không cần sudo nếu tài khoản chạy đọc được dữ liệu.
 #
 # Biến môi trường (đều có mặc định):
@@ -64,6 +66,16 @@ if [ -d "$SRC/uploads" ]; then
   fi
 fi
 
+# 3b. PDF kho sách: nằm ngoài CSDL (CSDL chỉ có danh mục libraryBooks), liên kết cứng với bản trước nếu không đổi
+if [ -d "$SRC/library/books" ]; then
+  mkdir -p "$TMP/library"
+  if [ -n "$PREV" ] && [ -d "$PREV/library/books" ]; then
+    rsync -a --link-dest="$PREV/library/books" "$SRC/library/books/" "$TMP/library/books/"
+  else
+    rsync -a "$SRC/library/books/" "$TMP/library/books/"
+  fi
+fi
+
 # 4. Cấu hình (chỉ chép tệp đọc được; token của cloudflared thuộc root nên KHÔNG sao lưu ở đây)
 [ -r "$SRC/mail.json" ] && cp -p "$SRC/mail.json" "$TMP/config/mail.json"
 [ -r /etc/nginx/sites-available/studytask ] && cp -p /etc/nginx/sites-available/studytask "$TMP/config/nginx-studytask.conf"
@@ -73,11 +85,15 @@ done
 
 # 5. Xác nhận và công bố
 ( cd "$TMP" && sha256sum studytask.db > SHA256SUMS )
+if [ -d "$TMP/library/books" ]; then       # checksum từng PDF để lần thử khôi phục phát hiện tệp hỏng (sha256sum -c)
+  ( cd "$TMP" && find library/books -type f -print0 | sort -z | xargs -0 -r sha256sum >> SHA256SUMS )
+fi
 {
   echo "thoi_diem_utc: $(date -u '+%F %T')"
   echo "may_chu: $(hostname)"
   echo "csdl_bytes: $(stat -c %s "$TMP/studytask.db")"
   echo "so_tep_tai_len: $(find "$TMP/uploads" -type f 2>/dev/null | wc -l)"
+  echo "so_sach_thu_vien: $(find "$TMP/library/books" -type f -name '*.pdf' 2>/dev/null | wc -l)"
   echo "dung_luong_ban_nay: $(du -sh "$TMP" | cut -f1)"
 } > "$TMP/MANIFEST.txt"
 mv "$TMP" "$FINAL"
