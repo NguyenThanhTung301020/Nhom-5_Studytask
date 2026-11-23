@@ -93,6 +93,18 @@ Kết luận về bảo mật: **không còn bản vá bảo mật nào chưa c�
 
 Kết luận: việc "cập nhật 18 gói và khởi động lại" **đã làm** ngày 13/11, sau khi đo T+7 (01:19 UTC) không lâu. Ghi chú: lần khởi động lại này xảy ra sau mốc đo T+7 nên không nằm trong số liệu T+7.
 
+
+**Cập nhật ngày 23/11/2026 (việc 11 tuần 8; Trương Thanh Vui chạy trên máy chủ, kiểm tra lại lúc 03:24 UTC bằng SSH chỉ đọc):**
+
+| Mục | Kết quả |
+|---|---|
+| Trước khi cập nhật (23/11 02:44 UTC) | 16 gói chờ: nhân `7.0.0-44` (`linux-generic`, `linux-image-generic`, `linux-headers-generic` bị "kept back" nên `apt upgrade` thường không cài), `cloudflared` 2026.11.0 → 2026.11.1, `fwupd`, `snapd` và các gói khác. 5 gói phát hành theo đợt từ 17/11 **không còn ghi "phased"** trong `apt-cache policy`, tức đã phát hành đủ |
+| Lần chạy | `apt full-upgrade` 23/11/2026 03:18:08–03:21:09 UTC (`/var/log/apt/history.log`) |
+| Khởi động lại có kế hoạch | Tắt đúng quy trình 03:22:02 UTC (`systemd-shutdown`), máy lên 03:22:13 UTC; site gián đoạn khoảng 15 giây |
+| Sau khi cập nhật | **0 gói chờ** (`apt list --upgradable`); không có `/var/run/reboot-required`; nhân đang chạy `7.0.0-44-generic`; `cloudflared` 2026.11.1, `snapd` 2.78, `distro-info` 1.15ubuntu0.1 |
+| Dịch vụ | `studytask-api`, `nginx`, `cloudflared` đều `active`, `NRestarts` 0/0/0; không có unit lỗi; `https://sutdytask.io.vn` trả HTTP 200 trong 0,35 giây |
+
+Kết luận việc 11 tuần 8: **đạt** (0 gói chờ, có ghi thời điểm cài và khởi động lại).
 ## 4. Sao lưu tự động
 
 - 12 bản (06/11 06:34 UTC đến **16/11 20:05 UTC**); `backup.log` đều `OK` ngày 14, 15, 16/11.
