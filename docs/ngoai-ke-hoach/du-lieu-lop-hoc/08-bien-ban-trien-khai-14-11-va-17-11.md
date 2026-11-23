@@ -54,7 +54,7 @@ Việc đáng lưu ý: `smartctl -t long /dev/sda` được chạy trên cùng m
 | `npm run test:logic` | 113 kiểm tra đạt |
 | `python tests/server/test_*.py` (18 bộ: gồm `test_seed_curriculum`, `test_class_scope`, `test_assign_avatars`, `test_teacher_limit`) và `test_submit.sh` | Đạt toàn bộ |
 
-Các bước này đã được thêm vào `.github/workflows/ci.yml` (`class_scope`, `assign_avatars`, `teacher_limit`). Kết quả chạy lại trên nhánh PR: `[điền sau khi CI chạy]`.
+Các bước này đã được thêm vào `.github/workflows/ci.yml` (`class_scope`, `assign_avatars`, `teacher_limit`). Kết quả chạy lại trên nhánh PR: [CI run 44111048729](https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/actions/runs/44111048729) trên commit `62a1f77` (17/11, 22:10 giờ VN): `test` và `server-tests` đều đạt, gồm 3 bước `class_scope`, `assign_avatars`, `teacher_limit`; PR guard đạt. [PR61](https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/61) gộp 18/11 08:22 giờ VN (điền ngày 23/11, việc 13 tuần 8).
 
 ## 4b. Bổ sung 18/11: chữ theo vai trò và thi trực tuyến trên trang (đã triển khai 18/11, 09:11)
 

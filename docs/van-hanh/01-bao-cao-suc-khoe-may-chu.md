@@ -462,6 +462,19 @@ Nhật ký chọn lọc ghi đoạn `705217–770752` ở trạng thái `Complet
 
 **Cập nhật gói và khởi động lại có kế hoạch ngày 23/11/2026** (việc 11 tuần 8, chi tiết ở [biên bản 12](12-doi-chieu-may-chu-2026-11-17.md) mục 3): `apt full-upgrade` 03:18–03:21 UTC, khởi động lại 03:22 UTC, nhân `7.0.0-44`, **0 gói chờ**; dịch vụ `active`, site 200.
 
+**Sao lưu có PDF kho sách từ 23/11/2026** (việc 6 tuần 8, [PR80](https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/80)). Trương Thanh Vui cài script mới từ `master` `4841cec` (SHA256 `studytask-backup.sh` `667a6edf…d101`, `studytask-restore-test.sh` `15fa7f07…753f`, khớp repo), chạy sao lưu thủ công và thử khôi phục. Kiểm tra lại bằng SSH chỉ đọc:
+
+| Mục | Kết quả |
+|---|---|
+| Bản sao lưu | `2026-11-23_044156`, chạy 04:41:56–04:42:41 UTC (46 giây), thoát mã 0 |
+| PDF kho sách | `so_sach_thu_vien: 262`, bằng số PDF đang chạy (262); không chép `library/removed` |
+| Checksum | `SHA256SUMS` có 263 dòng (CSDL + 262 PDF), `sha256sum -c` đạt toàn bộ |
+| Dung lượng | Bản này 1,5 GB (lần đầu chép đủ); các bản sau dùng liên kết cứng cho sách không đổi. Ổ sao lưu dùng 1,8 GB / 98 GB |
+| Thử khôi phục | `kho sách: danh mục=262, thiếu hoặc sai kích thước=0`; `PDF kho sách: bản sao lưu=262 đang chạy=262`; `accounts` 1.031, `docs` 2.564, `chat` 6, `contact_email` 3, tệp tải lên 1.474 đều khớp; **THÀNH CÔNG** |
+| Lịch tự động | Lần chạy tiếp theo 23/11 20:03 UTC (`studytask-backup.timer`) |
+
+Kết luận phần sao lưu của việc 6 tuần 8: **đạt** (bản sao lưu có PDF, cách khôi phục ghi ở đầu `deploy/backup/studytask-backup.sh`). Điều kiện 5 của 8.6 từ nay bao gồm cả kho sách.
+
 ### 8.5. Cần làm gì khi vượt ngưỡng
 
 | Dấu hiệu | Kiểm tra trước | Hướng xử lý |
