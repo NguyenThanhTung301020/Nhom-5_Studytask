@@ -1,8 +1,9 @@
-# scripts/prepare_avatars.ps1 – Chuẩn bị ảnh đại diện từ một thư mục ảnh (chạy trên Windows, PowerShell 5.1)
+﻿# scripts/prepare_avatars.ps1 – Chuẩn bị ảnh đại diện từ một thư mục ảnh (chạy trên Windows, PowerShell 5.1)
 # Làm đúng như giao diện (components/AccountCards.js, toAvatarBlob): cắt vuông ở giữa, thu về 256×256, JPEG chất lượng 0,88
 # (kèm xoay theo EXIF, nền trắng cho ảnh PNG trong suốt) để ảnh trên máy chủ nhẹ và đồng nhất như ảnh người dùng tự tải lên.
 # Ví dụ:
-#   powershell -File scripts\prepare_avatars.ps1 -Src "E:\file hình ảnh\hình ảnh đẹp - Google Search" -Dst du-lieu-thu\avatars-256
+#   powershell -File scripts\prepare_avatars.ps1 -Src <thư mục ảnh CÓ GIẤY PHÉP rõ ràng> -Dst du-lieu-thu\avatars-256
+# Không dùng ảnh tải từ kết quả tìm kiếm (chưa rõ bản quyền). Bộ ảnh mặc định của dữ liệu mẫu do scripts/generate_avatars.py tự vẽ.
 # Kết quả: <Dst>\avNNNN.jpg và <Dst>\manifest.csv (tên mới, tên gốc, kích thước gốc, kích thước mới); ảnh lỗi được liệt kê, không dừng cả mẻ.
 param(
   [Parameter(Mandatory = $true)][string]$Src,

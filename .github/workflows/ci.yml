@@ -83,6 +83,8 @@ jobs:
         run: python3 tests/server/test_class_scope.py
       - name: Gán ảnh đại diện hàng loạt (tệp riêng mỗi sinh viên, không đè ảnh tự đặt, gỡ và purge dọn sạch)
         run: python3 tests/server/test_assign_avatars.py
+      - name: Bộ ảnh đại diện tự vẽ (đủ số lượng, không trùng, không dùng ảnh của bên thứ ba)
+        run: python3 tests/server/test_generate_avatars.py
       - name: Mỗi học phần mở chỉ có 1–3 giáo viên được cấp quyền (máy chủ chặn người thứ 4)
         run: python3 tests/server/test_teacher_limit.py
       - name: Thi trực tuyến trên trang (mã truy cập, vào phòng thi theo giờ, không lộ câu hỏi ngoài phòng thi)
