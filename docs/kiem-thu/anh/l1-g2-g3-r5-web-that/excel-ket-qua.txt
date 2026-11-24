@@ -1,0 +1,9 @@
+﻿B2 | Text='+5 | Formula=False | Type=String
+B3 | Text='+0,5 | Formula=False | Type=String
+B4 | Text=-5 | Formula=False | Type=Double
+B5 | Text=-0.5 | Formula=False | Type=Double
+B6 | Text=5 | Formula=False | Type=Double
+B7 | Text='=1+1 | Formula=False | Type=String
+B8 | Text='@x | Formula=False | Type=String
+B9 | Text='+84901 | Formula=False | Type=String
+Excel 16.0
