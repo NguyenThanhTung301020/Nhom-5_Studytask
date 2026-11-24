@@ -82,3 +82,16 @@ export function checkCurriculum(curriculum, subjects) {
     totalMismatch: programCredits !== totalCredits,
   }
 }
+
+// Đưa một môn đang mở (ngoài CTĐT) vào một module. moduleId lấy từ ô chọn nên luôn là CHUỖI, còn id module có thể là số
+// (CTĐT do scripts/seed_curriculum.py tạo dùng 1, 2, 3…): so sánh theo chuỗi. Trả { next } hoặc { error } (không đổi CTĐT).
+export function addCourseToModule(curriculum, moduleId, subject) {
+  const modules = curriculum?.modules || []
+  const target = modules.find(m => String(m.id) === String(moduleId))
+  if (!target) return { error: 'Không tìm thấy module đã chọn.' }
+  if (!subject?.code) return { error: 'Môn chưa có mã môn nên không đưa vào CTĐT được.' }
+  const holder = modules.find(m => (m.courses || []).some(c => norm(c.code) === norm(subject.code)))
+  if (holder) return { error: `Mã môn ${norm(subject.code)} đã có trong module "${holder.name}".` }
+  const course = { code: norm(subject.code), name: String(subject.name || '').trim(), credits: Number(subject.credits) || 0 }
+  return { next: { ...curriculum, modules: modules.map(m => (m === target ? { ...m, courses: [...(m.courses || []), course] } : m)) }, module: target }
+}

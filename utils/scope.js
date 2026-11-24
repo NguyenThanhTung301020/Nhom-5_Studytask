@@ -233,3 +233,33 @@ export function groupTitle(khoa, term) {
   if (term?.key) parts.push(`Học kỳ ${term.ky} (${term.namHoc})`)
   return parts.join(' · ')
 }
+
+// ── Trang Quản lý lớp học: học phần mặc định và danh sách sinh viên của một học phần mở ─────────────────────────────
+// Hồ sơ sinh viên chỉ lưu `subjectIds` của HỌC KỲ HIỆN TẠI, nên học phần đã kết thúc (hoặc kế hoạch) của khóa không
+// tìm được sinh viên qua subjectIds. Mọi lớp của một khóa học cùng chương trình (một chuyên ngành), nên sinh viên của
+// học phần = sinh viên đang có môn đó trong subjectIds, hoặc cùng khóa (`cohort` = `khoa` của học phần).
+export function offeringRoster(user, users = [], subject) {
+  if (!subject) return []
+  const sid = subject.id
+  const secs = teacherSections(user)
+  return users.filter(u => {
+    if (u.role !== 'student') return false
+    const takes = (Array.isArray(u.subjectIds) && u.subjectIds.includes(sid)) || (!!subject.khoa && u.cohort === subject.khoa)
+    if (!takes) return false
+    if (seesAll(user)) return true
+    if (secs && u.classId) return secs.some(s => s.classId === u.classId && s.subjectId === sid)   // giáo viên: đúng lớp học phần mình dạy
+    return studentInScope(user, u)
+  })
+}
+
+// Học phần chọn sẵn khi mở trang: học phần đầu tiên của học kỳ hiện tại (khóa mới nhất trước), không có thì học phần
+// mới nhất đã gắn khóa; dữ liệu cũ chưa gắn khóa/học kỳ (môn demo ban đầu) chỉ chọn khi không còn gì khác.
+export function defaultOfferingId(subjects = [], cur = currentTerm()) {
+  if (!subjects.length) return null
+  const groups = groupOfferings(subjects, cur)
+  for (const g of groups) for (const t of g.terms) if (t.current && t.items.length) return t.items[0].id
+  const tagged = subjects.filter(s => termKey(s)).sort((a, b) => termSortValue(b.namHoc, b.ky) - termSortValue(a.namHoc, a.ky))
+  return (tagged[0] || subjects[0]).id
+}
+
+export const OFFERING_STATUS = { 'dang-hoc': 'Đang học', 'da-ket-thuc': 'Đã kết thúc', 'ke-hoach': 'Kế hoạch' }

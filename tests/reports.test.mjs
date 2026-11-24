@@ -68,3 +68,45 @@ test('P2: trắc nghiệm không bị ảnh hưởng (điểm vẫn tính như c
   assert.equal(d.students[0].avg, 2.5)
   assert.equal(d.cQuiz, 1)
 })
+
+// ── 23/11: trang mặc định mở môn demo cũ và chỉ thấy 1 sinh viên demo; học phần đã kết thúc không có sinh viên ──
+const { offeringRoster, defaultOfferingId, currentTerm } = await import('../utils/scope.js')
+const CUR = currentTerm()                                                     // trang dùng ngày hôm nay, nên dữ liệu thử theo học kỳ hiện tại
+const SUBJ = [
+  { id: 1, name: 'Toán cao cấp' },                                                                    // môn demo ban đầu
+  { id: 1100, name: 'Triết', khoa: '2024-2028', namHoc: '2020-2021', ky: 1, trangThai: 'da-ket-thuc' },
+  { id: 1200, name: 'CSDL', code: 'IT201', khoa: '2024-2028', namHoc: CUR.namHoc, ky: CUR.ky, trangThai: 'dang-hoc' },
+  { id: 1300, name: 'Web', khoa: '2026-2030', namHoc: CUR.namHoc, ky: CUR.ky, trangThai: 'dang-hoc' },
+]
+const USERS = [
+  { uid: 'demo', role: 'student', subjectIds: [1, 2] },
+  { uid: 'a1', role: 'student', classId: 'CNTT24-01', cohort: '2024-2028', subjectIds: [1200] },
+  { uid: 'a2', role: 'student', classId: 'CNTT24-02', cohort: '2024-2028', subjectIds: [1200] },
+  { uid: 'b1', role: 'student', classId: 'CNTT26-01', cohort: '2026-2030', subjectIds: [1300] },
+]
+
+test('Học phần mặc định là học phần của học kỳ hiện tại, không phải môn demo đầu danh sách', () => {
+  assert.equal(defaultOfferingId(SUBJ, CUR), 1300)                          // khóa mới nhất trước
+  assert.equal(defaultOfferingId([SUBJ[0], SUBJ[1]], CUR), 1100)            // không có học kỳ hiện tại: học phần mới nhất đã gắn khóa
+  assert.equal(defaultOfferingId([SUBJ[0]], CUR), 1)
+})
+
+test('Sinh viên của học phần: đang học theo subjectIds, học phần đã kết thúc theo khóa', () => {
+  const ids = (sub, user = { role: 'admin' }) => offeringRoster(user, USERS, SUBJ.find(s => s.id === sub)).map(u => u.uid).sort()
+  assert.deepEqual(ids(1200), ['a1', 'a2'])
+  assert.deepEqual(ids(1100), ['a1', 'a2'])                                 // trước đây: 0 sinh viên
+  assert.deepEqual(ids(1300), ['b1'])
+  assert.deepEqual(ids(1), ['demo'])
+  const gv = { role: 'teacher', subjectIds: [1100], sections: [{ classId: 'CNTT24-02', subjectId: 1100 }] }
+  assert.deepEqual(ids(1100, gv), ['a2'])                                   // giáo viên chỉ thấy lớp mình dạy
+})
+
+test('Trang Quản lý lớp học: sĩ số theo lớp thật, có danh sách lớp để lọc', () => {
+  acts = []
+  firstState = true
+  memos.length = 0
+  Reports({ subjects: SUBJ, quizzes: [], materials: [], homeworks: [], user: { role: 'admin' }, allUsers: USERS, fetchActivities: null })
+  const d = memos.find(x => x && x.students)
+  assert.equal(d.N, 1)                                                      // mặc định học phần 1300 (khóa 2026), không phải môn demo
+  assert.deepEqual(d.classes, ['CNTT26-01'])
+})
