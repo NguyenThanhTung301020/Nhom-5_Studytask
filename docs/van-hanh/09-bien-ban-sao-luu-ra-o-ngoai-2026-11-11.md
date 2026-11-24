@@ -64,7 +64,7 @@ Mỗi bản có `config/mail.json` (mật khẩu ứng dụng gửi email) và `
 | Nguyễn Thanh Tùng xác nhận (theo kế hoạch tuần 6 việc 1b) | Nguyễn Thanh Tùng — đã xác nhận ngày 17/11/2026 cho bản tải về máy mình: mã hóa 7-Zip AES-256 (mục 3). Xác nhận cho ổ G (mục 6) còn trống |
 | ~~Cất mật khẩu của tệp `.7z`~~ — đã cất trong trình quản lý mật khẩu Google, 17/11/2026 (mục 3) | Nguyễn Thanh Tùng |
 | ~~Chép bản thứ hai~~ — đã chép sang `C:\backup\` ngày 17/11/2026 (mục 3) | Nguyễn Thanh Tùng |
-| Khi có ổ ngoài hoặc dịch vụ lưu trữ ngoài máy: chép thêm một bản ra đó, thử `7z t`, ghi ngày chép | Nguyễn Thanh Tùng |
+| ~~Khi có ổ ngoài hoặc dịch vụ lưu trữ ngoài máy: chép thêm một bản ra đó, thử `7z t`, ghi ngày chép~~ — đã tải lên Google Drive ngày 24/11/2026, quyền truy cập Hạn chế; bản tải lại có SHA256 trùng bản gốc (đã đạt `7z t`), nên không chạy lại `7z t`. Link và kết quả ở [bản sao lưu ngoài trên Google Drive](15-ban-sao-luu-ngoai-google-drive.md) (việc 5 tuần 8) | Nguyễn Thanh Tùng |
 | ~~Xóa thư mục gốc và tệp `.rar` cũ chưa mã hóa~~ — đã xóa ngày 17/11/2026 (mục 3); dọn thùng rác Windows | Nguyễn Thanh Tùng |
 
 ## 6. Lần chép lại ngày 17/11/2026 (việc 3 tuần 7)
