@@ -10,6 +10,7 @@ import { semesterLabel, teacherSections, visibleTeachers } from '../utils/scope.
 import { isGuidedSubject } from '../utils/grading.js'
 import { groupOfferings, groupTitle, khoaChoices, termChoices, defaultTermSel, inKhoa, inTerm, currentTerm, termName } from '../utils/scope.js'
 import { subjectUsageDetail } from '../utils/curriculum.js'
+import { quizDuePassed } from '../utils/quizScores.js'
 
 // Nhóm định dạng file nộp bài mà giáo viên có thể chọn
 const SUBMIT_FORMATS = [
@@ -600,7 +601,7 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
             : h('div', { className: 'mat-list' },
                 visibleQuizzes.map(quiz => {
                   const sub     = submittedMap.get(quiz.id)
-                  const expired = new Date(quiz.dueDate) < new Date()
+                  const expired = quizDuePassed(quiz.dueDate)
                   return h('div', { key: quiz.id, className: 'mat-item' },
                     h('div', { className: 'd-flex align-items-start gap-2' },
                       h('div', { className: 'mat-type-icon flex-shrink-0', style: { backgroundColor: 'rgba(230,126,34,.13)', color: '#e67e22' } },
