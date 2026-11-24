@@ -21,6 +21,7 @@ import { serverRejected, keysToReload, saveErrorText, echoGuard, recoverFromSave
 import { GENRES, genreOf, foldText, filterBooks, sortBooks, genreCounts, formatSize, bookFileUrl, sourceLine, safeSourceUrl } from '../utils/library.js'
 import { hasRoomQuiz, canUseRoomQuiz, examWindow, examPhase, quizzesForExam, formatCountdown, validAccessCode, examErrorText } from '../utils/exams.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition, currentTerm, termKey, offeringTitle, inTerm, inKhoa, khoaChoices, termChoices, defaultTermSel, groupOfferings, groupTitle, semesterLabel as semLabel2 } from '../utils/scope.js'
+import { parseClassList, validateRow, usernameOf, MAX_ROWS } from '../utils/classImport.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
@@ -970,6 +971,50 @@ describe('Kho sách điện tử (Thư viện)', () => {
     assert.equal(safeSourceUrl('javascript:alert(1)'), '')
     assert.equal(safeSourceUrl('https://evil.example/details/x'), '')
     assert.equal(safeSourceUrl(''), '')
+  })
+})
+
+describe('[D3] mục 14 – Nhập danh sách lớp từ CSV/Excel', () => {
+  test('CSV dấu phẩy, tiêu đề có dấu, có BOM; mã lớp đổi in hoa, ô có dấu phẩy trong ngoặc kép', () => {
+    const { rows, errors } = parseClassList('\uFEFFMSSV,Họ tên,Lớp,Khóa\n2401001,Nguyễn Văn A,cntt24-01,2024-2028\n2401002,"Lê, B",CNTT24-01,')
+    assert.deepEqual(errors, [])
+    assert.deepEqual(rows.map(r => [r.mssv, r.name, r.classId, r.cohort]),
+      [['2401001', 'Nguyễn Văn A', 'CNTT24-01', '2024-2028'], ['2401002', 'Lê, B', 'CNTT24-01', '']])
+  })
+  test('dán từ Excel (tab), tiêu đề không dấu, không có cột khóa', () => {
+    const { rows, errors } = parseClassList('mssv\tho_ten\tlop\n2401003\tTrần C\tCNTT24-02')
+    assert.deepEqual(errors, [])
+    assert.equal(rows[0].classId, 'CNTT24-02')
+  })
+  test('thiếu cột bắt buộc → báo lỗi dòng 1, không nhận dòng nào', () => {
+    const { rows, errors } = parseClassList('mssv,ho_ten\n2401001,A')
+    assert.equal(rows.length, 0)
+    assert.equal(errors[0].line, 1)
+  })
+  test('báo lỗi đúng số dòng, các dòng đúng vẫn nhận', () => {
+    const { rows, errors } = parseClassList('mssv,ho_ten,lop\n24A01,A,CNTT24-01\n2401004,,CNTT24-01\n2401005,E,CNTT 24\n2401006,F,CNTT24-01')
+    assert.deepEqual(errors.map(e => e.line), [2, 3, 4])
+    assert.deepEqual(rows.map(r => r.mssv), ['2401006'])
+  })
+  test('mã SV lặp trong tệp → dòng sau báo lỗi', () => {
+    const { rows, errors } = parseClassList('mssv,ho_ten,lop\n2401001,A,CNTT24-01\n2401001,B,CNTT24-01')
+    assert.equal(rows.length, 1)
+    assert.equal(errors[0].line, 3)
+  })
+  test(`quá ${MAX_ROWS} dòng → báo lỗi`, () => {
+    const body = Array.from({ length: MAX_ROWS + 1 }, (_, i) => `${2400000 + i},SV ${i},CNTT24-01`).join('\n')
+    const { errors } = parseClassList('mssv,ho_ten,lop\n' + body)
+    assert.ok(errors.some(e => e.line === 0))
+  })
+  test('tệp trống; validateRow; tên đăng nhập = sv + mã SV', () => {
+    assert.equal(parseClassList('').errors[0].message, 'Tệp trống.')
+    assert.equal(validateRow({ mssv: '2401001', name: 'A', classId: 'CNTT24-01' }), null)
+    assert.equal(usernameOf('2401001'), 'sv2401001')
+  })
+  test('khóa phải có dạng 2024-2028 như dữ liệu hiện có; để trống thì vẫn nhận', () => {
+    const { rows, errors } = parseClassList('mssv,ho_ten,lop,khoa\n2401007,G,CNTT24-01,K24\n2401008,H,CNTT24-01,2024-2028\n2401009,I,CNTT24-01,')
+    assert.deepEqual(errors.map(e => e.line), [2])
+    assert.deepEqual(rows.map(r => r.cohort), ['2024-2028', ''])
   })
 })
 

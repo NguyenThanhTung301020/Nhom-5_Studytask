@@ -205,6 +205,8 @@ export const setExamCode  = (examId, code) => api('POST', `/exam/${enc(String(ex
 export const loadMyQuizResults = async () => _ready ? (await api('GET', '/quiz/mine')).results : []
 // Điểm chính thức của cả lớp (Admin: tất cả; giáo viên: môn/lớp mình dạy) cho Bảng điểm và Báo cáo lớp
 export const loadAllQuizResults = async () => _ready ? (await api('GET', '/quiz/results')).results : []
+// [D3] mục 14: Admin / Phòng Đào tạo nhập danh sách lớp → kết quả từng dòng (created | exists | invalid)
+export const importStudents = async (rows) => _ready ? (await api('POST', '/admin/import-students', { rows })).results : []
 
 // ── Tải file lên server (giáo viên / admin) → { url, name, size } ──
 export const uploadFile = async (file, hwId) => {

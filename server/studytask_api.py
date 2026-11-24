@@ -603,7 +603,7 @@ def accepted_of(qq):
     out = []
     for i in range(blanks_of(qq)):
         v = acc[i] if i < len(acc) and isinstance(acc[i], list) else []
-        out.append([x.strip()[:200] for x in v if isinstance(x, str) and x.strip()][:20])
+        out.append([x.strip()[:200] for x in v if isinstance(x, str) and x.strip()])
     return out
 
 
@@ -1640,6 +1640,34 @@ class Handler(BaseHTTPRequestHandler):
                 db().execute('UPDATE chat SET read=1 WHERE thread=? AND from_staff=?', (thread, 0 if admin else 1))
                 publish(online_admins() | {thread}, {'type': 'read', 'thread': thread, 'by': 'staff' if admin else 'user'})
                 return self.send(200, {'ok': True})
+
+        # ── [D3] mục 14: nhập danh sách lớp (chỉ Admin và Phòng Đào tạo; giáo viên chỉ xem) ──
+        if p == ['admin', 'import-students'] and method == 'POST':
+            u = self.need_user()
+            if role_of(u) not in ('admin', 'training'):
+                raise ApiError(403, 'permission-denied', 'Chỉ Admin và Phòng Đào tạo được nhập danh sách lớp.')
+            rows = self.json_body().get('rows')
+            if not isinstance(rows, list) or not 0 < len(rows) <= 500:
+                raise ApiError(400, 'bad-request', 'Danh sách trống hoặc quá 500 dòng.')
+            today_s, out = time.strftime('%Y-%m-%d'), []
+            for r in rows:
+                if not isinstance(r, dict):
+                    out.append({'mssv': '', 'status': 'invalid'}); continue
+                mssv, name = str(r.get('mssv', '')).strip(), str(r.get('name', '')).strip()
+                cid, cohort = str(r.get('classId', '')).strip().upper(), str(r.get('cohort', '')).strip()
+                if not re.fullmatch(r'\d{6,12}', mssv) or not 0 < len(name) <= 100 or not re.fullmatch(r'[A-Z0-9-]{2,20}', cid) \
+                        or (cohort and not re.fullmatch(r'\d{4}-\d{4}', cohort)):
+                    out.append({'mssv': mssv, 'status': 'invalid'}); continue
+                pw = secrets.token_urlsafe(8)
+                prof = {'name': name, 'role': 'student', 'subjectIds': [], 'createdAt': today_s, 'studentId': mssv,
+                        'classId': cid, 'className': cid, 'importedBy': u['uid']}
+                if cohort: prof['cohort'] = cohort
+                try:
+                    uid = create_account('sv' + mssv, pw, prof)
+                except ApiError as e:
+                    out.append({'mssv': mssv, 'status': 'exists' if e.code == 'auth/username-already-in-use' else 'invalid'}); continue
+                out.append({'mssv': mssv, 'status': 'created', 'uid': uid, 'username': 'sv' + mssv, 'password': pw})
+            return self.send(200, {'results': out})
 
         # ── quản trị tài khoản ──
         if p[:2] == ['admin', 'users']:

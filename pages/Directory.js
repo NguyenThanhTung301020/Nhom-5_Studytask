@@ -3,6 +3,7 @@ import { ROLES } from '../utils/constants.js'
 
 import { studentInScope } from '../utils/scope.js'
 import UserAvatar from '../components/UserAvatar.js'
+import ClassImportModal from '../components/ClassImportModal.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
@@ -17,7 +18,8 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
   const subName = (id) => (subjects.find(s => s.id === id) || {}).name
   const subColor = (id) => (subjects.find(s => s.id === id) || {}).color || '#858796'
   const isAdmin = role === 'admin' || role === 'training' || role === 'finance'   // phòng ban xem toàn bộ
-
+  const canImport = role === 'admin' || role === 'training'   // [D3] mục 14: chỉ Admin và Phòng Đào tạo nhập; giáo viên chỉ xem
+  const [importing, setImporting] = useState(false)
   // Giáo viên chỉ xem SV thuộc lớp học phần mình dạy (cùng môn nhưng lớp khác thì không); admin và phòng ban xem tất cả
   const inScope = (u) => isAdmin || studentInScope(user, u)
 
@@ -78,8 +80,12 @@ export default function Directory({ allUsers = [], subjects = [], role = 'admin'
       h('button', { className: `btn btn-sm ${tab === 'student' ? 'btn-success' : 'btn-outline-success'}`, onClick: () => { setTab('student'); setLimit(60) } },
         h('i', { className: 'bi bi-mortarboard me-1' }), `Sinh viên (${students.length})`),
       isAdmin && h('button', { className: `btn btn-sm ${tab === 'teacher' ? 'btn-primary' : 'btn-outline-primary'}`, onClick: () => { setTab('teacher'); setLimit(60) } },
-        h('i', { className: 'bi bi-person-workspace me-1' }), `Giáo viên (${teachers.length})`)
+        h('i', { className: 'bi bi-person-workspace me-1' }), `Giáo viên (${teachers.length})`),
+      // [D3] mục 14: nút nhập danh sách lớp – chỉ Admin và Phòng Đào tạo thấy
+      canImport && tab === 'student' && h('button', { className: 'btn btn-sm btn-outline-secondary ms-auto', onClick: () => setImporting(true) },
+        h('i', { className: 'bi bi-file-earmark-arrow-up me-1' }), 'Nhập danh sách lớp')
     ),
+    importing && h(ClassImportModal, { onClose: () => setImporting(false) }),
 
     list.length === 0
       ? h('div', { className: 'text-center text-muted py-5' },
