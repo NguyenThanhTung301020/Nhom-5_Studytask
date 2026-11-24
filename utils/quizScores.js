@@ -70,3 +70,17 @@ export async function loadOfficialActivities(loadActivities, loadResults) {
   }
   return applyQuizResults(acts, results)
 }
+
+/** Hạn làm bài = hết ngày dueDate theo giờ Việt Nam (UTC+7), giống quiz_due_passed ở máy chủ. */
+export const quizDuePassed = (dueDate, now = new Date()) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate || '')) return false
+  const end = Date.parse(dueDate + 'T00:00:00+07:00') + 86400000
+  return now.getTime() >= end
+}
+
+/** Đếm lượt nộp của từng đề từ kết quả chính thức (quizResults): Map quizId (dạng chuỗi) → số lượt. */
+export const countSubmissionsByQuiz = (results = []) => {
+  const m = new Map()
+  for (const r of results) m.set(String(r.quizId), (m.get(String(r.quizId)) || 0) + 1)
+  return m
+}
