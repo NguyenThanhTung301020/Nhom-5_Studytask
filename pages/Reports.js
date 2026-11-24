@@ -2,7 +2,7 @@
 // Admin xem tất cả môn; Giáo viên xem các môn được phân công (subjects đã được lọc sẵn ở app.js)
 import { formatDate } from '../utils/helpers.js'
 import GradeBook from '../components/GradeBook.js'
-import { studentInScope, offeringTitle } from '../utils/scope.js'
+import { offeringTitle, offeringRoster, defaultOfferingId, groupOfferings, groupTitle, OFFERING_STATUS } from '../utils/scope.js'
 import UserAvatar from '../components/UserAvatar.js'
 import { quizScoresErrorText } from '../utils/quizScores.js'
 
@@ -28,10 +28,11 @@ function PctRing({ pct, color, label, sub }) {
 
 export default function Reports({ subjects = [], quizzes = [], materials = [], homeworks = [], allUsers = [], user, fetchActivities }) {
   const [activities, setActivities] = useState(null)   // null = đang tải
-  const [subId,  setSubId]  = useState(subjects[0]?.id ?? null)
+  const [subId,  setSubId]  = useState(defaultOfferingId(subjects))   // học phần của học kỳ hiện tại, không phải môn demo đầu danh sách
   const [tab,    setTab]    = useState('students')
   const [view,   setView]   = useState('theodoi')   // 'theodoi' | 'bangdiem'
   const [loadError, setLoadError] = useState(null)  // không tải được điểm chính thức (quizResults)
+  const [classSel, setClassSel] = useState('')      // '' = mọi lớp của học phần
 
   useEffect(() => {
     let alive = true
@@ -44,7 +45,7 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
 
   // Đảm bảo subId hợp lệ
   useEffect(() => {
-    if (subjects.length && !subjects.find(s => s.id === subId)) setSubId(subjects[0].id)
+    if (subjects.length && !subjects.find(s => s.id === subId)) setSubId(defaultOfferingId(subjects))
   }, [subjects, subId])
 
   const subject = subjects.find(s => s.id === subId) || null
@@ -54,13 +55,16 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
     if (!subject || !activities) return null
     const sid = subject.id
 
-    // Roster: SV được phân công môn + SV có hoạt động trong môn
+    // Roster: sinh viên của học phần mở (đang học, hoặc cùng khóa với học phần đã kết thúc/kế hoạch; giáo viên chỉ thấy lớp mình dạy)
+    // + sinh viên có hoạt động trong môn mà không còn trong danh sách (vd. đã chuyển lớp)
     const map = new Map()
-    allUsers.filter(u => u.role === 'student' && Array.isArray(u.subjectIds) && u.subjectIds.includes(sid) && studentInScope(user, u))
-      .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.username, username: u.username || '', avatar: u.avatar || '' }))
-    activities.forEach(a => {
+    const inClass = offeringRoster(user, allUsers, subject)
+    const classes = [...new Set(inClass.map(u => u.classId).filter(Boolean))].sort()
+    inClass.filter(u => !classSel || u.classId === classSel)
+      .forEach(u => map.set(u.uid, { uid: u.uid, name: u.name || u.username, username: u.username || '', avatar: u.avatar || '', classId: u.classId || '' }))
+    if (!classSel) activities.forEach(a => {
       if ((a.events || []).some(e => e.subjectId === sid) && !map.has(a.uid))
-        map.set(a.uid, { uid: a.uid, name: a.name || a.username || a.email || a.uid, username: a.username || a.email || '' })
+        map.set(a.uid, { uid: a.uid, name: a.name || a.username || a.email || a.uid, username: a.username || a.email || '', classId: '' })
     })
     const roster = Array.from(map.values())
 
@@ -103,8 +107,8 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
       if (e.subjectId === sid && isRealHw(e)) hwSeen.set(e.refId, realHw.get(String(e.refId)) || e.refTitle)
     }))
 
-    return { roster, students, N, pct, cViewed, cHw, cQuiz, subMaterials, subQuizzes, hwSeen, eventsOf }
-  }, [subject, activities, allUsers, materials, quizzes, homeworks])
+    return { roster, students, N, pct, cViewed, cHw, cQuiz, subMaterials, subQuizzes, hwSeen, eventsOf, classes }
+  }, [subject, activities, allUsers, materials, quizzes, homeworks, user, classSel])
 
   // ── Render ──
   return h('div', { className: 'container-fluid py-4' },
@@ -117,8 +121,15 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
           user?.role === 'admin' ? 'Theo dõi hoạt động & chấm điểm toàn bộ môn học' : 'Theo dõi hoạt động & chấm điểm các môn bạn phụ trách'
         )
       ),
-      view === 'theodoi' && subjects.length > 0 && h('select', { className: 'form-select', style: { width: 'auto', minWidth: 220 }, value: subId ?? '', onChange: e => setSubId(Number(e.target.value)) },
-        subjects.map(s => h('option', { key: s.id, value: s.id }, offeringTitle(s)))
+      view === 'theodoi' && subjects.length > 0 && h('select', { className: 'form-select', style: { width: 'auto', minWidth: 220, maxWidth: '100%' }, value: subId ?? '',
+          onChange: e => { setSubId(Number(e.target.value)); setClassSel('') } },
+        // nhóm theo khóa → học kỳ (như trang Môn học); môn demo cũ chưa gắn khóa nằm cuối
+        groupOfferings(subjects).flatMap(g => g.terms.map(t => h('optgroup', { key: (g.khoa || '-') + t.key, label: groupTitle(g.khoa, t) + (t.current ? ' – hiện tại' : '') },
+          t.items.map(s => h('option', { key: s.id, value: s.id }, `${s.code ? s.code + ' · ' : ''}${offeringTitle(s)}`)))))
+      ),
+      view === 'theodoi' && data && data.classes.length > 1 && h('select', { className: 'form-select', style: { width: 'auto' }, value: classSel, onChange: e => setClassSel(e.target.value) },
+        h('option', { value: '' }, `Tất cả ${data.classes.length} lớp`),
+        data.classes.map(c => h('option', { key: c, value: c }, `Lớp ${c}`))
       )
     ),
 
@@ -159,7 +170,8 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                     h('div', { className: 'report-ring', style: { background: 'rgba(78,115,223,.12)' } },
                       h('div', { className: 'report-ring-inner' }, h('span', { style: { color: 'var(--primary)' } }, data.N))
                     ),
-                    h('div', null, h('div', { className: 'fw-bold' }, 'Sĩ số'), h('div', { className: 'small text-muted' }, 'sinh viên trong môn'))
+                    h('div', null, h('div', { className: 'fw-bold' }, 'Sĩ số', subject?.trangThai && OFFERING_STATUS[subject.trangThai] && h('span', { className: 'badge bg-light text-muted border ms-2 fw-normal' }, OFFERING_STATUS[subject.trangThai])),
+                      h('div', { className: 'small text-muted' }, classSel ? `sinh viên lớp ${classSel}` : data.classes.length ? `sinh viên · ${data.classes.length} lớp` : 'sinh viên trong môn'))
                   )
                 )
               ),
@@ -201,14 +213,14 @@ export default function Reports({ subjects = [], quizzes = [], materials = [], h
                         h('th', { className: 'text-center' }, 'Hoạt động gần nhất')
                       )),
                       h('tbody', null,
-                        data.students.slice().sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1)).map(s =>
+                        data.students.slice().sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1) || String(a.classId).localeCompare(String(b.classId)) || String(a.name).localeCompare(String(b.name), 'vi')).map(s =>
                           h('tr', { key: s.uid, className: s.active ? '' : 'text-muted' },
                             h('td', null,
                               h('div', { className: 'd-flex align-items-center gap-2' },
                                 h(UserAvatar, { name: s.name, src: s.avatar, size: 34 }),
                                 h('div', { className: 'min-w-0' },
                                   h('div', { className: 'fw-semibold text-truncate' }, s.name),
-                                  s.username && h('div', { className: 'small text-muted text-truncate' }, s.username)
+                                  (s.username || s.classId) && h('div', { className: 'small text-muted text-truncate' }, [s.username, s.classId && `Lớp ${s.classId}`].filter(Boolean).join(' · '))
                                 )
                               )
                             ),

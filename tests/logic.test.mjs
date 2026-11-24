@@ -11,7 +11,7 @@ import {
   subjectColumns, countedColumns, evaluateStudentSubject, isGuidedSubject,
 } from '../utils/grading.js'
 import { tuitionSummary, tuitionReminder, tuitionLines } from '../utils/tuition.js'
-import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail } from '../utils/curriculum.js'
+import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail, addCourseToModule } from '../utils/curriculum.js'
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
 import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint, quizDuePassed, countSubmissionsByQuiz } from '../utils/quizScores.js'
@@ -214,6 +214,28 @@ describe('Chương trình đào tạo', () => {
   })
   test('môn ngoài CTĐT: Z', () => assert.deepEqual(r.extra.map(s => s.code), ['Z']))
   test('tổng thể chưa đạt', () => assert.equal(r.ok, false))
+})
+
+describe('CTĐT – đưa môn ngoài CTĐT vào module (lỗi web thật 23/11: id module dạng số)', () => {
+  const prog = { name: 'Khung', modules: [{ id: 1, name: 'Đại cương', kind: 'required', courses: [{ code: 'GEN101', name: 'Triết', credits: 3 }] },
+                                          { id: 2, name: 'Cơ sở ngành', kind: 'required', courses: [] }] }
+  const phy = { id: 5, code: 'phy101', name: 'Vật lý đại cương', credits: 4 }
+  test('ô chọn trả chuỗi "2" vẫn đưa được vào module id số 2, môn ra khỏi danh sách ngoài CTĐT', () => {
+    const { next, error, module } = addCourseToModule(prog, '2', phy)
+    assert.equal(error, undefined); assert.equal(module.name, 'Cơ sở ngành')
+    assert.deepEqual(next.modules[1].courses, [{ code: 'PHY101', name: 'Vật lý đại cương', credits: 4 }])
+    assert.equal(prog.modules[1].courses.length, 0)                            // không sửa CTĐT gốc
+    assert.deepEqual(checkCurriculum(next, [phy]).extra, [])
+  })
+  test('id module dạng chuỗi (CTĐT tạo trên giao diện) vẫn chạy', () => {
+    const p2 = { modules: [{ id: 'm17', name: 'A', courses: [] }] }
+    assert.equal(addCourseToModule(p2, 'm17', phy).next.modules[0].courses.length, 1)
+  })
+  test('báo lỗi thay vì lặng lẽ không làm gì: module không có, môn không mã, mã đã có trong CTĐT', () => {
+    assert.match(addCourseToModule(prog, '9', phy).error, /Không tìm thấy module/)
+    assert.match(addCourseToModule(prog, '1', { name: 'X' }).error, /chưa có mã/)
+    assert.match(addCourseToModule(prog, '2', { code: 'gen101', name: 'Triết' }).error, /Đại cương/)
+  })
 })
 
 describe('Quy chế điểm – cột do giáo viên chọn', () => {
