@@ -10,7 +10,7 @@
 **Link Google Drive tới bản `.7z` đã mã hóa:** https://drive.google.com/file/d/1ccmuUtgXcKhqsS7Y_L1g2cB5Z-M0TBOy/view
 
 - Quyền truy cập chung: **Hạn chế** (chỉ người được thêm mới mở được), không để "Bất kỳ ai có đường liên kết". Repo này là public, nên link ghi ở đây ai cũng thấy; quyền truy cập do Google Drive kiểm soát.
-- Người được thêm quyền: Trần Đức Tùng, Trương Thanh Vui (tài khoản sinh viên của trường; không ghi địa chỉ email ở đây). Ngày 24/11/2026 một người có quyền **Người chỉnh sửa**, một người **Người xem**. Người chỉnh sửa xóa hoặc thay được tệp sao lưu, nên đề xuất hạ cả hai xuống Người xem.
+- Người được thêm quyền: Trần Đức Tùng, Trương Thanh Vui (tài khoản sinh viên của trường; không ghi địa chỉ email ở đây). Cả hai chỉ có quyền **Người xem**: lúc đầu một người có quyền Người chỉnh sửa (xóa hoặc thay được tệp sao lưu), đã hạ xuống Người xem ngày 24/11/2026. Chỉ chủ sở hữu sửa hoặc xóa được tệp.
 - Tài khoản Google giữ tệp: tài khoản sinh viên HCMUTE của Nguyễn Thanh Tùng (chủ sở hữu).
 
 ## 2. Tệp đã tải lên
