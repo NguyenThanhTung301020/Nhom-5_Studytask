@@ -15,7 +15,7 @@ import { checkCurriculum, missingCourses, subjectUsage, subjectUsageDetail, addC
 import { isHttpUrl, csvCell, toCSV } from '../utils/sanitize.js'
 import { summarizeSystem } from '../utils/systemStats.js'
 import { applyQuizResults, resultToEvent, loadOfficialActivities, isMissingEndpoint, quizDuePassed, countSubmissionsByQuiz } from '../utils/quizScores.js'
-import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel } from '../utils/periods.js'
+import { TIET, SESSIONS, sessionOfTiet, blockFits, blockTime, blockStarts, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, tkbDay, classOnDate, termWeekNumber, weekRangeLabel, monthEvents, monthGrid } from '../utils/periods.js'
 import { scheduleText, navLabel } from '../utils/roleText.js'
 import { serverRejected, keysToReload, saveErrorText, echoGuard, recoverFromSaveError, USAGE_KEYS } from '../utils/sharedSync.js'
 import { GENRES, genreOf, foldText, filterBooks, sortBooks, genreCounts, formatSize, bookFileUrl, sourceLine, safeSourceUrl } from '../utils/library.js'
@@ -1032,4 +1032,52 @@ test('Đếm lượt nộp của từng đề từ quizResults (ca 19)', () => {
   assert.equal(m.get('2'), 1)
   assert.equal(m.get('3'), undefined)
   assert.equal(countSubmissionsByQuiz().size, 0)
+})
+
+describe('[D3] mục 16 – Lịch theo tháng (pages/MonthCalendar.js)', () => {
+  test('lưới bắt đầu từ Thứ Hai, đủ số tuần chứa tháng, không thừa hàng toàn ngày tháng sau', () => {
+    const nov = monthGrid(2026, 10)                       // 01/11/2026 là Chủ nhật → 6 tuần
+    assert.equal(nov.length, 42)
+    assert.equal(nov[0].date, '2026-10-26'); assert.equal(nov[6].date, '2026-11-01'); assert.equal(nov.at(-1).date, '2026-12-06')
+    assert.equal(nov.filter(c => c.inMonth).length, 30)
+    const dec = monthGrid(2026, 11)                       // qua năm: ô cuối là 03/01/2027
+    assert.equal(dec.length, 35); assert.equal(dec[0].date, '2026-11-30'); assert.equal(dec.at(-1).date, '2027-01-03')
+    const feb = monthGrid(2027, 1)                        // 01/02/2027 là Thứ Hai, 28 ngày → đúng 4 hàng
+    assert.equal(feb.length, 28); assert.equal(feb.every(c => c.inMonth), true)
+    for (const g of [nov, dec, feb]) {
+      assert.equal(g.length % 7, 0)
+      for (let i = 0; i < g.length; i += 7) assert.equal(tkbDay(g[i].date), 2)          // mỗi hàng mở đầu bằng Thứ Hai
+    }
+  })
+  test('buổi học lặp theo thứ trong khoảng ngày học kỳ, lịch thi đúng ngày, trong ngày xếp theo giờ', () => {
+    const schedule = [
+      { id: 1, subjectId: 1, day: 3, start: '13:30', startDate: '2026-09-07', endDate: '2026-11-20' },   // Thứ Ba, hết học kỳ 20/11
+      { id: 2, subjectId: 2, day: 8, start: '18:00' },                                                  // Chủ nhật, không giới hạn ngày
+    ]
+    const exams = [
+      { id: 9, subjectId: 1, date: '2026-11-17', start: '07:30' },
+      { id: 10, subjectId: 2, date: '2026-12-01', start: '07:30' },                                     // tháng sau, không hiện
+    ]
+    const ev = monthEvents(2026, 10, schedule, exams)
+    assert.deepEqual(Object.keys(ev).filter(d => ev[d].some(e => e.kind === 'class' && e.id === 1)), ['2026-11-03', '2026-11-10', '2026-11-17'])
+    assert.deepEqual(Object.keys(ev).filter(d => ev[d].some(e => e.id === 2)), ['2026-11-01', '2026-11-08', '2026-11-15', '2026-11-22', '2026-11-29'])
+    assert.deepEqual(ev['2026-11-17'].map(e => `${e.kind}:${e.start}`), ['exam:07:30', 'class:13:30'])   // thi buổi sáng đứng trước
+    assert.equal(ev['2026-11-24'], undefined)                                   // Thứ Ba sau khi hết học kỳ, ngày trống không có khóa
+    assert.equal(Object.values(ev).flat().some(e => e.id === 10), false)
+    const keys = Object.values(ev).flat().map(e => e.key)
+    assert.equal(new Set(keys).size, keys.length)                              // khóa React không trùng giữa các tuần
+  })
+  test('cùng một buổi học như thời khóa biểu theo tuần (classOnDate) ở mọi ngày trong tháng', () => {
+    const schedule = [2, 3, 4, 5, 6, 7, 8].map((day, i) => ({ id: i + 1, day, start: '07:30', startDate: '2026-11-10', endDate: '2026-11-25' }))
+    const ev = monthEvents(2026, 10, schedule, [])
+    for (let d = 1; d <= 30; d++) {
+      const iso = `2026-11-${String(d).padStart(2, '0')}`
+      assert.deepEqual((ev[iso] || []).map(e => e.id), schedule.filter(c => classOnDate(c, iso)).map(c => c.id), iso)
+    }
+  })
+  test('dữ liệu thiếu giờ hoặc danh sách rỗng không làm lỗi trang', () => {
+    assert.deepEqual(monthEvents(2026, 10), {})
+    const ev = monthEvents(2026, 10, [{ id: 1, day: 2 }], [{ id: 2, date: '2026-11-02', start: '08:00' }])
+    assert.deepEqual(ev['2026-11-02'].map(e => e.kind), ['class', 'exam'])
+  })
 })

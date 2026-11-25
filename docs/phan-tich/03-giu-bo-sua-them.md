@@ -36,8 +36,8 @@ Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các m�
 | 12 | Git/GitHub, quy ước nhánh và commit; CI/CD bằng GitHub Actions | Thêm | Chứng minh quá trình làm việc, đối chiếu nhật ký AI, tự động kiểm thử và triển khai | GVHD (dùng AI); TC2 CI/CD | 2, 5 |
 | 13 | Kiểm thử tự động: rules unit test, Vitest, Playwright | Thêm | Thay thế kiểm thử thủ công; chạy trong CI | GVPB; TC2 | 2, 10 |
 | 14 | Nhập danh sách lớp từ tệp CSV/Excel | Thêm | Giáo viên đưa lớp thật vào hệ thống nhanh, không phải tạo từng tài khoản – điều kiện để áp dụng thực tế. **Đã làm ở tuần 8**: Chỉ Admin và Phòng Đào tạo được nhập. giáo viên chỉ xem (GVHD đồng ý, tránh tạo trùng hoặc sai tài khoản sinh viên); nhận tệp CSV UTF-8 hoặc dán từ Excel, cột mssv, ho_ten, lop, khoa (dạng 2024-2028 như dữ liệu hiện có); tên đăng nhập sv + mãSV, mật khẩu ban đầu ngẫu nhiên; trùng tài khoản thì bỏ qua, không ghi đè; tối đa 500 dòng mỗi lần. Chưa đọc thẳng tệp .xlsx vì phải thêm thư viện ngoài | GVHD (tính khả thi) | 7 |
-| 15 | Nộp tệp trực tiếp (Firebase Storage) | Thêm | Không phụ thuộc liên kết Google Drive/OneDrive | GVPB; người dùng thử | 8 |
-| 16 | Xem lịch theo tháng | Thêm | 2/5 người dùng thử nghiệm đề nghị | Người dùng thử | 8 |
+| 15 | Nộp tệp trực tiếp (Firebase Storage) | Thêm | Không phụ thuộc liên kết Google Drive/OneDrive. **Đã làm sớm (tuần 5–6), rà lại ở tuần 8**: lưu tệp trên máy chủ riêng thay Firebase Storage (`POST /api/upload`); sinh viên chỉ nộp đúng định dạng giáo viên chọn, tối đa 15 MB, kiểm tra nội dung tệp; chỉ người nộp và nhân viên tải lại được ([PR39]); kiểm thử `tests/server/test_submit.sh` 18 ca trong CI. Minh chứng: [rà soát mục 15, 16](../kiem-thu/ra-soat-d3-muc-15-16-tuan-8.md) | GVPB; người dùng thử | 8 |
+| 16 | Xem lịch theo tháng | Thêm | 2/5 người dùng thử nghiệm đề nghị. **Đã làm sớm (tuần 3, [PR9]), rà lại ở tuần 8**: trang `pages/MonthCalendar.js` cho mọi vai trò; tuần 8 dùng chung cách tính buổi học với thời khóa biểu theo tuần, bỏ hàng thừa ở tháng chỉ có 4 tuần, thêm 4 ca kiểm thử `tests/logic.test.mjs`. Minh chứng: [rà soát mục 15, 16](../kiem-thu/ra-soat-d3-muc-15-16-tuan-8.md) | Người dùng thử | 8 |
 | 17 | PWA và thông báo đẩy nhắc deadline | Thêm | 3/5 người dùng thử nghiệm đề nghị; nhắc việc khi không mở ứng dụng | Người dùng thử; GVPB | 9 |
 | 18 | Thử nghiệm với lớp thật và đo KPI | Thêm | Chứng minh tính khả thi bằng số liệu thực tế | GVHD; TC1, TC2 | 11 |
 | | **GIỮ** | | | | |
@@ -45,6 +45,7 @@ Cập nhật tuần 4 (01/11/2026): điều chỉnh cột "Tuần" của các m�
 | 20 | Thư viện số, Tin tức, Biểu mẫu, Pomodoro, Quy đổi điểm, Ghi chú nhanh, tùy chỉnh giao diện, chế độ tối | Giữ | Chi phí bảo trì thấp, hỗ trợ trực tiếp việc học; không mở rộng thêm trong đợt này | Nhóm đánh giá | – |
 | 21 | RBAC hai lớp; offline-first với cờ dataReady | Giữ | Được GVPB đánh giá là điểm mạnh kỹ thuật; tiếp tục củng cố bằng rules test | GVPB (ưu điểm) | – |
 
+[PR9]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/9
 [PR26]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/26
 [PR34]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/34
 [PR39]: https://github.com/NguyenThanhTung301020/Nhom-5_Studytask/pull/39
