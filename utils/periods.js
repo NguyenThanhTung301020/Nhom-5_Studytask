@@ -72,3 +72,33 @@ export function weekRangeLabel(monday) {
   const dm = (d) => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`
   return `${dm(a)} – ${dm(b)}/${b.getFullYear()}`
 }
+
+// ── Lịch theo tháng ([D3] mục 16, trang MonthCalendar) ─────────────────────────────────────────
+// Dùng chung classOnDate/tkbDay với thời khóa biểu theo tuần để hai chế độ xem luôn ra cùng một buổi học.
+
+// Sự kiện từng ngày của tháng `month` (0..11): { 'yyyy-mm-dd': [ { kind: 'class' | 'exam', key, ...mục } ] }
+// Buổi học lặp theo thứ trong khoảng ngày học kỳ; lịch thi đúng ngày; trong ngày xếp theo giờ bắt đầu. Ngày trống không có khóa.
+export function monthEvents(year, month, schedule = [], exams = []) {
+  const days = new Date(year, month + 1, 0).getDate()
+  const map = {}
+  for (let d = 1; d <= days; d++) {
+    const date = toIso(new Date(year, month, d))
+    const list = []
+    schedule.forEach(c => { if (classOnDate(c, date)) list.push({ kind: 'class', key: `c${c.id}-${date}`, ...c }) })
+    exams.forEach(e => { if (e.date === date) list.push({ kind: 'exam', key: `e${e.id}`, ...e }) })
+    list.sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')))
+    if (list.length) map[date] = list
+  }
+  return map
+}
+
+// Lưới tháng bắt đầu từ Thứ Hai: đủ số tuần chứa tháng (4–6 tuần) × 7 ô { y, m, d, date, inMonth };
+// ô ngoài tháng là ngày của tháng trước/sau. Không thêm hàng toàn ngày tháng sau (vd tháng 2/2027 chỉ 4 hàng).
+export function monthGrid(year, month) {
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7
+  const weeks = Math.ceil((offset + new Date(year, month + 1, 0).getDate()) / 7)
+  return Array.from({ length: weeks * 7 }, (_, i) => {
+    const d = new Date(year, month, 1 - offset + i)
+    return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate(), date: toIso(d), inMonth: d.getMonth() === month }
+  })
+}

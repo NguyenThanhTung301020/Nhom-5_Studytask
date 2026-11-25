@@ -3,33 +3,11 @@ import { CLASS_FORMATS, EXAM_FORMATS } from '../utils/constants.js'
 import { offeringTitle } from '../utils/scope.js'
 import { scheduleText } from '../utils/roleText.js'
 import { hasRoomQuiz } from '../utils/exams.js'
+import { monthEvents, monthGrid, todayIso } from '../utils/periods.js'
 
 const { useState, useMemo, createElement: h } = window.React
 
 const WEEK_HEAD = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
-const pad = (n) => String(n).padStart(2, '0')
-const iso = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`          // m: 0..11 (giờ địa phương, không lệch múi giờ)
-const todayIso = () => { const t = new Date(); return iso(t.getFullYear(), t.getMonth(), t.getDate()) }
-// JS getDay(): 0=CN..6=T7 → mã thứ trong TKB: 2=T2..7=T7, 8=CN
-const tkbDay = (y, m, d) => { const g = new Date(y, m, d).getDay(); return g === 0 ? 8 : g + 1 }
-
-// Một tiết học có diễn ra vào ngày `date` không (giới hạn bởi ngày bắt đầu/kết thúc học phần nếu có)
-const classOn = (c, date, day) => c.day === day && (!c.startDate || date >= c.startDate) && (!c.endDate || date <= c.endDate)
-
-// Danh sách sự kiện của một tháng: { date: [ {kind:'class'|'exam', ...} ] }
-export function monthEvents(year, month, schedule, exams) {
-  const days = new Date(year, month + 1, 0).getDate()
-  const map = {}
-  for (let d = 1; d <= days; d++) {
-    const date = iso(year, month, d), day = tkbDay(year, month, d)
-    const list = []
-    schedule.forEach(c => { if (classOn(c, date, day)) list.push({ kind: 'class', key: `c${c.id}-${date}`, ...c }) })
-    exams.forEach(e => { if (e.date === date) list.push({ kind: 'exam', key: `e${e.id}`, ...e }) })
-    list.sort((a, b) => (a.start || '').localeCompare(b.start || ''))
-    if (list.length) map[date] = list
-  }
-  return map
-}
 
 export default function MonthCalendar({ schedule = [], exams = [], subjects = [], onNavigate, role = 'student' }) {
   const T = scheduleText(role)        // sinh viên: lịch học; giáo viên: lịch giảng dạy
@@ -45,14 +23,8 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
   const events = useMemo(() => monthEvents(ym.y, ym.m, show.class ? fSchedule : [], show.exam ? fExams : []),
     [ym, schedule, exams, show, subjectId])
 
-  // Lưới 6 tuần bắt đầu từ thứ Hai
-  const first = new Date(ym.y, ym.m, 1)
-  const offset = (first.getDay() + 6) % 7
-  const cells = Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(ym.y, ym.m, 1 - offset + i)
-    return { y: d.getFullYear(), m: d.getMonth(), d: d.getDate(), date: iso(d.getFullYear(), d.getMonth(), d.getDate()), inMonth: d.getMonth() === ym.m }
-  })
-  const weeks = cells[35].inMonth ? 6 : 5
+  // Lưới 5–6 tuần bắt đầu từ thứ Hai
+  const cells = monthGrid(ym.y, ym.m)
   const move = (delta) => setYm(({ y, m }) => { const d = new Date(y, m + delta, 1); return { y: d.getFullYear(), m: d.getMonth() } })
   const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(todayIso()) }
 
@@ -146,7 +118,7 @@ export default function MonthCalendar({ schedule = [], exams = [], subjects = []
         h('div', { className: 'card border-0 shadow-sm' },
           h('div', { className: 'mcal-grid mcal-head' }, WEEK_HEAD.map(w => h('div', { key: w, className: `mcal-head-cell${w === 'CN' ? ' text-danger' : ''}` }, w))),
           h('div', { className: 'mcal-grid' },
-            cells.slice(0, weeks * 7).map(c => {
+            cells.map(c => {
               const evs = events[c.date] || []
               const isToday = c.date === today, isSel = c.date === selected
               return h('button', { key: c.date, type: 'button',
