@@ -1,0 +1,17 @@
+Kiểm tra thêm từ ngoài (mạng 4G 27.66.20.x) - 2026-11-25 02:10-02:12 UTC
+Mục tiêu: 113.161.166.x (IP công cộng của mạng nhà ghi nhận ngày 11/11; chưa xác nhận lại hôm nay, xem biên bản 08 mục 6.7)
+Chỉ thử kết nối TCP và đọc tiêu đề phản hồi; không đăng nhập, không dò lỗ hổng.
+
+Nhận diện dịch vụ ở cổng 80/443:
+  HEAD http://<IP>/      -> HTTP/1.1 404 Not Found, Server: Microsoft-HTTPAPI/2.0 (HTTP.sys của Windows, giống 11/11)
+  HEAD https://<IP>/ (-k) -> HTTP/1.1 404 Not Found (bắt tay TLS hoàn tất; ngày 11/11 bị ngắt khi bắt tay)
+  -> không phải nginx của máy chủ StudyTask (máy chủ dùng nginx/1.28.3, không nghe 443)
+
+Cổng quản trị Windows và cổng khác (mục A6, kiểm tra DMZ):
+  135 khong phan hoi | 139 khong phan hoi | 445 khong phan hoi | 3389 khong phan hoi
+  5985 khong phan hoi | 5986 khong phan hoi | 23 khong phan hoi
+  8080 MO -> HTTP 200, Server: nginx/1.26.2, tiêu đề trang của một cổng dịch vụ không thuộc nhóm (không phải máy chủ StudyTask)
+  21 MO   -> chấp nhận kết nối, không gửi lời chào trong 5 giây
+
+Kết luận: các cổng quản trị Windows không mở, nên modem nhiều khả năng KHÔNG dùng DMZ cho máy Windows (chỉ chuyển tiếp một số cổng riêng).
+Cổng 8080 và 21 mở tới thiết bị/dịch vụ khác, không phải máy chủ StudyTask; nhóm không dò thêm.
