@@ -250,6 +250,7 @@ Xếp theo mức ưu tiên.
 | 6 | Bot dò quét liên tục | Bật Bot Fight Mode / quy tắc WAF của Cloudflare; ghi lại địa chỉ thật của người truy cập trong nginx |
 | 7 | 403 ngày 03–04/11 chưa rõ nguồn | Theo dõi; nếu tái diễn, ghi thêm tên người dùng vào nhật ký API để truy vết |
 | 8 | Điểm lỗi duy nhất (một máy, một ổ, một đường mạng) | Chấp nhận ở quy mô đề tài; ghi rõ là hạn chế (đã nêu trong tài liệu 06) |
+| 9 | **Cổng 80/443 của mạng nhà mở ra Internet tới một máy Windows** (HTTP.sys/IIS), do quy tắc trên modem của nhà mạng; nhóm không có quyền sửa modem. Máy chủ StudyTask không bị vào thẳng, nhưng máy Windows bị chiếm có thể thành bàn đạp vào LAN (việc tuần 7 làm trễ, ghi nhận 25/11/2026 trong tuần 8) | Ghi nhận, chấp nhận có điều kiện. Nhóm chỉ thao tác trên máy chủ, không can thiệp vào mạng. **Đã áp dụng 25/11/2026:** bật `ufw` trên máy chủ (mặc định chặn kết nối vào; SSH và nginx chỉ từ LAN; chặn máy Windows nhận cổng vào SSH), SSH chỉ đăng nhập bằng khóa; web và dịch vụ bình thường. Hướng dẫn gửi chủ máy Windows tự áp dụng: tường lửa mặc định chặn, chặn 80/443 và cổng quản trị Windows từ địa chỉ ngoài LAN, tắt dịch vụ web nếu không dùng. Đánh giá lại ở đợt kiểm tra bảo mật trước nghiệm thu. Chi tiết: [biên bản 08](08-kiem-tra-cong-mang-tu-ngoai.md) mục 6 |
 
 Việc nhỏ về mã nguồn có thể làm sau: hỗ trợ `HEAD /api/auth/me` (hiện trả 501), và không gọi `/api/chat/status` khi chưa đăng nhập (đang gây 40 dòng 401 vô hại).
 
