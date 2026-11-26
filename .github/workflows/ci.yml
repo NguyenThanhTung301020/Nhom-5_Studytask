@@ -95,6 +95,8 @@ jobs:
         run: python3 tests/server/test_import_students.py
       - name: Dọn dữ liệu cũ (chỉ Admin, chỉ học phần đã kết thúc ngoài khoảng hiển thị, xóa trọn dữ liệu đi kèm, giữ tệp dùng chung, không sống lại)
         run: python3 tests/server/test_old_data.py
+      - name: Giả lập số liệu học kỳ (đủ cột điểm, trắc nghiệm chấm đúng khóa, học phí, xét tốt nghiệp, đề tài đồ án; không ghi đè, gỡ sạch)
+        run: python3 tests/server/test_seed_semester.py
       - name: Nộp bài theo định dạng giáo viên chọn
         run: bash tests/server/test_submit.sh
       - name: Sao lưu có PDF kho sách, không có sách đã gỡ; thử khôi phục bắt được bản thiếu hoặc hỏng PDF
