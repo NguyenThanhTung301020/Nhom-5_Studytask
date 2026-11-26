@@ -1033,6 +1033,12 @@ body {
   .settings-drawer { width: 280px; }
   .fab-settings { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 1.1rem; }
 }
+/* G4: điện thoại 320 px (iPhone SE đời 1, Galaxy cũ) – thanh trên cùng rộng hơn màn hình gây cuộn ngang mọi trang.
+   Nút bảng màu ở đây trùng với nút nổi .fab-settings (luôn hiện) nên ẩn bớt; thu khoảng cách giữa các nút. */
+@media (max-width: 359.98px) {
+  .app-topbar .container-fluid { gap: 4px; }
+  .app-topbar .topbar-palette { display: none; }
+}
 
 /* ═══ Vai trò phòng ban ═══ */
 .role-badge-training { background: rgba(111,66,193,.12); color: #6f42c1; }
