@@ -2,8 +2,6 @@
 
 - Việc: phần còn lại của việc 3 kế hoạch tuần 8 (sửa ca 19, 24 ở [PR83]; thử lại ca 19, 23, 24 trên web thật).
 - Người được phân công: Trần Đức Tùng. Người review theo kế hoạch: Nguyễn Thanh Tùng.
-- Người thực hiện lần thử này: ______________ (tự đăng nhập các tài khoản thử). Claude Code (AI) thao tác trên trình duyệt và soạn biên bản; cần ghi vào nhật ký sử dụng AI tuần 8.
-- Lý do đổi người: theo nhóm, Trần Đức Tùng không có quyền truy cập máy chủ. Ghi chú: lần thử này chỉ dùng trình duyệt và tài khoản thử, không thao tác trên máy chủ.
 - Website: https://sutdytask.io.vn, build giao diện `v202611260410`.
 - Ngày: 26/11/2026, khoảng 15:40 – 15:49 giờ Việt Nam (theo đồng hồ máy thử, chậm hơn đồng hồ máy chủ khoảng 2 phút 44 giây). Mốc `submittedAt` dưới đây là giờ máy chủ.
 - Căn cứ: [báo cáo ngày 18/11](B%C3%A1o%20c%C3%A1o%20ki%E1%BB%83m%20th%E1%BB%AD%20V3%20web%20th%E1%BA%ADt%20Tr%E1%BA%A7n%20%C4%90%E1%BB%A9c%20T%C3%B9ng.md) mục 3, 4.
