@@ -102,6 +102,7 @@ Vân tay dữ liệu trước khi thử (SHA-256 từng khóa của `sharedData/
 - **G3.** Hộp xác nhận xóa ở trang Môn học không nêu tên môn ("Xóa môn học này?"), dễ xóa nhầm. Trang Chương trình ĐT thì có nêu tên.
   - **Đã sửa** (cùng nhánh): `pages/Subjects.js` nay hiện "Xóa môn ZZ56A – Môn A (thử L1)? Môn không còn dữ liệu liên quan." Đã thử trên API tạm cục bộ ([`23`](anh/pr56-web-that/23-sua-G3-hop-xoa-neu-ten-mon.jpg)).
 - **G4.** Trang Môn học ở khổ 512 px bị cuộn ngang (rộng 733 px). Lỗi này không thuộc PR56.
+  - **Đã sửa** ở việc 12 tuần 8, xem [kiem-thu-g4-cuon-ngang-kho-hep.md](kiem-thu-g4-cuon-ngang-kho-hep.md).
 
 ## 5. Việc còn lại
 
@@ -113,5 +114,5 @@ Vân tay dữ liệu trước khi thử (SHA-256 từng khóa của `sharedData/
 | 4 | Nhóm chốt mốc triển khai lại máy chủ từ `master` (mục 1) | Chờ nhóm |
 | 5 | Sửa L1 | **Đã sửa** trên nhánh `fix/tuan7-l1-bao-loi-luu-du-lieu-chung`, đã kiểm thử cục bộ (mục 4). Chưa commit/push; sau khi gộp và triển khai thì kiểm lại trên web thật |
 | 6 | G2, G3 | **Đã sửa** trên cùng nhánh; `npm run test:logic` 142/142 đạt, đã kiểm bằng Excel và giao diện cục bộ (mục 4) |
-| 7 | G4 (trang Môn học cuộn ngang ở khổ hẹp) | Không thuộc PR56, chưa sửa |
+| 7 | G4 (trang Môn học cuộn ngang ở khổ hẹp) | Không thuộc PR56. **Đã sửa** ở việc 12 tuần 8 ([biên bản](kiem-thu-g4-cuon-ngang-kho-hep.md)) |
 | 8 | Đẩy nhánh lên GitHub, mở PR, nhóm duyệt, gộp `master`, triển khai; sau đó kiểm lại ca 4b, L1, G2, G3 trên web thật | Chờ người thực hiện cho phép push |

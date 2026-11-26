@@ -821,7 +821,7 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
       h('div', { className: 'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-4' },
         h('div', null,
           h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-book me-2', style: { color: 'var(--primary)' } }), 'Quản lý Môn học'),
-          h('div', { className: 'd-flex gap-3' },
+          h('div', { className: 'd-flex flex-wrap column-gap-3 row-gap-1' },
             h('small', { className: 'text-muted' }, h('i', { className: 'bi bi-layers me-1' }),
               filtered.length === subjects.length ? `${subjects.length} học phần` : `${filtered.length}/${subjects.length} học phần`),
             totalCredits > 0 && h('small', { className: 'text-muted' }, h('i', { className: 'bi bi-award me-1' }), `${totalCredits} tín chỉ`),
@@ -829,16 +829,17 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
             totalMaterials > 0 && h('small', { className: 'text-muted' }, h('i', { className: 'bi bi-file-earmark-text me-1' }), `${totalMaterials} tài liệu`)
           )
         ),
-        h('div', { className: 'd-flex gap-2' },
-          khoaOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fKhoa, onChange: (e) => setFKhoa(e.target.value), 'aria-label': 'Lọc theo khóa' },
+        // G4: ở khổ hẹp các ô lọc, ô tìm và nút Thêm xuống dòng thay vì đẩy trang rộng ra (gây cuộn ngang)
+        h('div', { className: 'd-flex flex-wrap gap-2' },
+          khoaOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto', maxWidth: '100%' }, value: fKhoa, onChange: (e) => setFKhoa(e.target.value), 'aria-label': 'Lọc theo khóa' },
             h('option', { value: '' }, 'Tất cả khóa'),
             khoaOpts.map((k) => h('option', { key: k, value: k }, `Khóa ${k}`))
           ),
-          termOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: termSel, onChange: (e) => setFTerm(e.target.value), 'aria-label': 'Lọc theo học kỳ' },
+          termOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto', maxWidth: '100%' }, value: termSel, onChange: (e) => setFTerm(e.target.value), 'aria-label': 'Lọc theo học kỳ' },
             h('option', { value: '' }, 'Tất cả học kỳ'),
             termOpts.map((t) => h('option', { key: t.key, value: t.key }, t.label))
           ),
-          h('div', { className: 'input-group input-group-sm', style: { width: 200 } },
+          h('div', { className: 'input-group input-group-sm', style: { width: 200, maxWidth: '100%' } },
             h('span', { className: 'input-group-text bg-light border-end-0 text-muted' }, h('i', { className: 'bi bi-search' })),
             h('input', { className: 'form-control border-start-0', placeholder: 'Tìm môn học...', value: search, onChange: (e) => setSearch(e.target.value) })
           ),

@@ -94,7 +94,7 @@ export default function Navbar({ user, profile, currentPage, onNavigate, onLogou
                   )
             )
           ),
-          h('button', { className: 'btn btn-link text-white-50 p-2 border-0', title: 'Tùy chỉnh giao diện', onClick: onOpenSettings },
+          h('button', { className: 'btn btn-link text-white-50 p-2 border-0 topbar-palette', title: 'Tùy chỉnh giao diện', onClick: onOpenSettings },
             h('i', { className: 'bi bi-palette fs-5' })
           ),
           h('div', { className: 'dropdown', ref: menuRef, style: { position: 'relative' } },
