@@ -24,6 +24,8 @@ import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCat
 import { parseClassList, validateRow, usernameOf, MAX_ROWS } from '../utils/classImport.js'
 import { recentFrom, itemStartYear, isOldItem, splitTermChoices, clampDisplayYears, TERM_RECENT, TERM_OLD, namHocFrom } from '../utils/scope.js'
 
+import { buildPdf, fitToPage, scaleDown, outputName, sizeText as fileSize, moveItem } from '../utils/fileTools.js'
+import { toLetter, neededFinal, secondsLeft, openDeadlines, pomoStats, upcomingExams, parseTopics, buildStudyPlan, replan, planProgress, dayLabel } from '../utils/studyTools.js'
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
 
@@ -1134,5 +1136,82 @@ describe('Khoảng hiển thị dữ liệu – N năm học gần nhất, dữ 
   })
   test('defaultTermSel giữ nguyên: không có học kỳ hiện tại → chuỗi rỗng (trang có khoảng hiển thị dùng || TERM_RECENT)', () => {
     assert.equal(defaultTermSel([{ namHoc: '2020-2021', ky: 1 }], cur), '')
+  })
+})
+
+describe('Tiện ích – Điểm cuối kỳ cần đạt và Pomodoro', () => {
+  const L1 = { cc: 10, bt: 15, gk: 20, ck: 55 }
+  test('ví dụ L1 của quy chế: CC 9, BT 7, GK 6,5 → cuối kỳ 7,0 thì điểm môn 7,1', () => {
+    assert.deepEqual(neededFinal(L1, { cc: 9, bt: 7, gk: 6.5 }, 7.1), { need: 7, status: 'ok' })
+    assert.deepEqual(neededFinal(L1, { cc: 9, bt: 7, gk: 6.5 }, 4), { need: 1.3, status: 'ok' })
+  })
+  test('đã chắc chắn đạt, không thể đạt, dữ liệu sai', () => {
+    assert.equal(neededFinal(L1, { cc: 10, bt: 10, gk: 10 }, 4).status, 'done')
+    assert.equal(neededFinal(L1, { cc: 0, bt: 0, gk: 0 }, 8.5).status, 'impossible')
+    assert.equal(neededFinal(L1, { cc: 9, bt: '', gk: 6 }, 4).status, 'invalid')
+    assert.equal(neededFinal(L1, { cc: 11, bt: 7, gk: 6 }, 4).status, 'invalid')
+    assert.equal(neededFinal({ cc: 10, bt: 10, gk: 10, ck: 60 }, { cc: 9, bt: 7, gk: 6 }, 4).status, 'invalid')
+  })
+  test('quy đổi điểm chữ', () => {
+    assert.equal(toLetter(8.5).letter, 'A')
+    assert.equal(toLetter(3.9).pass, false)
+    assert.equal(toLetter(''), null)
+  })
+  test('Pomodoro: giây còn lại, deadline chưa xong, thống kê phiên', () => {
+    assert.equal(secondsLeft(10500, 0), 11)
+    assert.equal(secondsLeft(0, 5000), 0)
+    const dl = [{ id: 1, dueDate: '2026-12-05', status: 'pending' }, { id: 2, dueDate: '2026-12-01', status: 'completed' }, { id: 3, dueDate: '2026-11-30', status: 'in_progress' }]
+    assert.deepEqual(openDeadlines(dl).map(d => d.id), [3, 1])
+    const log = [{ date: '2026-11-25', mins: 25, deadlineId: '1' }, { date: '2026-11-25', mins: 50, deadlineId: null }, { date: '2026-11-24', mins: 25, deadlineId: '1' }]
+    assert.deepEqual(pomoStats(log, '2026-11-25', '1'), { todayCount: 2, todayMins: 75, taskCount: 2 })
+  })
+})
+describe('Tiện ích – Lập kế hoạch ôn thi', () => {
+  const T = ['C1', 'C2', 'C3', 'C4', 'C5']
+  test('đủ ngày: mỗi ngày một mục, ngày trước hôm thi để ôn tổng hợp, không xếp vào ngày thi', () => {
+    const p = buildStudyPlan('2026-11-26', '2026-12-03', T)
+    assert.deepEqual(p.map(x => x.date), ['2026-11-26', '2026-11-27', '2026-11-28', '2026-11-29', '2026-11-30', '2026-12-01', '2026-12-02'])
+    assert.deepEqual(p.slice(0, 5).map(x => x.topics.join()), T)
+    assert.equal(p[5].kind, 'review'); assert.equal(p.at(-1).kind, 'review')
+  })
+  test('ít ngày: gộp nhiều mục một ngày, không bỏ sót mục nào; thi ngày mai dồn hết vào hôm nay; thi hôm nay thì không lập', () => {
+    const p = buildStudyPlan('2026-11-26', '2026-11-29', T)
+    assert.deepEqual(p.map(x => x.topics.join()), ['C1,C2,C3', 'C4,C5', 'Ôn tổng hợp, xem lại phần còn yếu'])
+    assert.deepEqual(buildStudyPlan('2026-11-26', '2026-11-27', T)[0].topics, T)
+    assert.deepEqual(buildStudyPlan('2026-11-26', '2026-11-26', T), [])
+  })
+  test('lập lại từ hôm nay giữ phần đã xong, chia lại phần còn thiếu; tiến độ đếm ngày chậm', () => {
+    const p = buildStudyPlan('2026-11-26', '2026-12-03', T)
+    const done = { '2026-11-26': true }
+    assert.deepEqual(planProgress(p, done, '2026-11-28'), { done: 1, total: 7, behind: 1 })
+    assert.deepEqual(replan(p, done, '2026-11-28', '2026-12-03').flatMap(x => x.kind === 'study' ? x.topics : []), ['C2', 'C3', 'C4', 'C5'])
+  })
+  test('tách nội dung, chọn kỳ thi sắp tới, nhãn ngày', () => {
+    assert.deepEqual(parseTopics('a\n\n b \na\nc'), ['a', 'b', 'c'])
+    const ex = upcomingExams([{ id: 1, subjectId: 1, date: '2026-11-20' }, { id: 2, subjectId: 2, date: '2026-12-05' }, { id: 3, subjectId: 1, date: '2026-12-01' }], [{ id: 1, name: 'Toán' }], '2026-11-26')
+    assert.deepEqual(ex.map(e => [e.id, e.subjectName]), [[3, 'Toán'], [2, 'Môn học']])
+    assert.equal(dayLabel('2026-11-29'), 'CN 29/11')
+  })
+})
+
+describe('Tiện ích – Chuyển đổi tệp (ảnh → PDF)', () => {
+  const pdfText = (u) => new TextDecoder('latin1').decode(u)
+  test('PDF có đủ trang, bảng xref trỏ đúng từng đối tượng, ảnh ngang ra trang ngang', () => {
+    const t = pdfText(buildPdf([{ bytes: new Uint8Array(100), width: 800, height: 1200 }, { bytes: new Uint8Array(50), width: 1600, height: 900 }]))
+    assert.ok(t.startsWith('%PDF-1.4')); assert.ok(t.endsWith('%%EOF\n')); assert.match(t, /\/Count 2/)
+    const x = +t.match(/startxref\n(\d+)/)[1]
+    assert.equal(t.slice(x, x + 4), 'xref')
+    const offs = [...t.slice(x).matchAll(/(\d{10}) 00000 n/g)].map(m => +m[1])
+    offs.forEach((o, i) => assert.ok(t.startsWith(`${i + 1} 0 obj`, o)))
+    assert.deepEqual(t.match(/MediaBox \[[^\]]+\]/g), ['MediaBox [0 0 595.28 841.89]', 'MediaBox [0 0 841.89 595.28]'])
+    assert.throws(() => buildPdf([]))
+  })
+  test('thu nhỏ, đặt vừa trang, tên tệp, dung lượng, đổi thứ tự', () => {
+    assert.deepEqual(scaleDown(4000, 3000, 1800), { w: 1800, h: 1350 })
+    assert.deepEqual(scaleDown(800, 600, 1800), { w: 800, h: 600 })
+    const b = fitToPage(1000, 1000); assert.ok(b.w <= 595.28 - 48 + 1e-9 && Math.abs(b.w - b.h) < 1e-9)
+    assert.equal(outputName('bai lam:1.png', 'pdf'), 'bai lam_1.pdf')
+    assert.equal(fileSize(1536), '1,5 KB')
+    assert.deepEqual(moveItem([1, 2, 3], 0, 1), [2, 1, 3]); assert.deepEqual(moveItem([1, 2, 3], 0, -1), [1, 2, 3])
   })
 })

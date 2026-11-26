@@ -629,7 +629,7 @@ function App() {
         page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
         page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity, exams: myExams, onNavigate: navigate }),
         page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers, quizzes: myQuizzes, submissions, setSubmissions, displayYears }),
-        page === 'tools'      && h(Tools,      {}),
+        page === 'tools'      && h(Tools,      { deadlines: myDeadlines, exams: myExams, subjects: mySubjects }),
         page === 'news'       && h(News,       { news, setNews, role: user.role }),
         page === 'forms'      && h(Forms,      { forms, setForms, role: user.role }),
         page === 'calendar'   && h(MonthCalendar, { schedule: mySchedule, exams: myExams, subjects: mySubjects, onNavigate: navigate, role: user.role }),
