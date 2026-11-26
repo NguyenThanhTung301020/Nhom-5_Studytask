@@ -508,6 +508,202 @@ def check_subject_removal(old, merged):
                            + '. Hãy xử lý các mục đó trước.')
 
 
+# ── Dữ liệu cũ: chỉ hiển thị N năm học gần nhất, Admin xóa phần cũ hơn (kèm bản trích lục) ──────────────────────────
+# Giao diện mặc định chỉ hiện dữ liệu của N năm học gần nhất (settings/retention.displayYears, mặc định 3, trong 2–5);
+# dữ liệu cũ hơn vẫn xem và trích lục được bằng bộ lọc. Admin xóa hẳn được học phần ĐÃ KẾT THÚC thuộc năm học cũ hơn khoảng
+# hiển thị cùng mọi dữ liệu gắn với chúng. Trước khi xóa máy chủ ghi bản trích lục JSON vào DATA_DIR/exports/.
+# Mã học phần đã xóa được ghi vào meta/purgedSubjects để một trang đang mở (giữ bản cũ) có ghi ngược lại cũng không làm sống lại.
+RETENTION_DEFAULT, RETENTION_MIN, RETENTION_MAX = 3, 2, 5
+EXPORT_DIR = os.path.join(DATA_DIR, 'exports')
+NAM_HOC_RE = re.compile(r'(\d{4})-(\d{4})')
+
+
+def display_years():
+    v = (doc_get('settings', 'retention') or {}).get('displayYears', RETENTION_DEFAULT)
+    return max(RETENTION_MIN, min(RETENTION_MAX, int(v))) if is_number(v) else RETENTION_DEFAULT
+
+
+def current_start_year(today=None):
+    """Năm bắt đầu của năm học hiện tại: học kỳ 1 từ tháng 8 (giống utils/scope.js currentTerm)."""
+    d = today or datetime.now()
+    return d.year if d.month >= 8 else d.year - 1
+
+
+def start_of(nam_hoc):
+    m = NAM_HOC_RE.fullmatch(str(nam_hoc or ''))
+    return int(m.group(1)) if m else None
+
+
+def _sid_key(s):
+    """Khóa so sánh mã học phần: mã trong grades là chuỗi ("1001"), ở nơi khác là số (1001)."""
+    return json.dumps(int(s)) if isinstance(s, str) and s.lstrip('-').isdigit() else json.dumps(s)
+
+
+def purged_subject_ids():
+    return {json.dumps(i) for i in (doc_get('meta', 'purgedSubjects') or {}).get('ids', [])}
+
+
+def strip_purged(doc):
+    """Bỏ học phần đã xóa (và mục gắn với chúng) khỏi bản sharedData sắp ghi."""
+    gone = purged_subject_ids()
+    if not gone or not isinstance(doc, dict):
+        return doc
+    out = dict(doc)
+    if isinstance(out.get('subjects'), list):
+        out['subjects'] = [s for s in out['subjects'] if not (isinstance(s, dict) and json.dumps(s.get('id')) in gone)]
+    for k in SUBJECT_SCOPED + ('quizzes',):
+        if isinstance(out.get(k), list):
+            out[k] = [x for x in out[k] if not (isinstance(x, dict) and 'subjectId' in x and json.dumps(x['subjectId']) in gone)]
+    if isinstance(out.get('grades'), dict):
+        out['grades'] = {u: ({s: c for s, c in v.items() if _sid_key(s) not in gone} if isinstance(v, dict) else v)
+                         for u, v in out['grades'].items()}
+    return out
+
+
+def old_data_plan(before):
+    """Mọi thứ sẽ bị xóa nếu xóa học phần đã kết thúc của các năm học bắt đầu trước năm `before`."""
+    shared = doc_get('sharedData', 'global') or {}
+    subs = [s for s in shared.get('subjects') or [] if isinstance(s, dict) and s.get('trangThai') == 'da-ket-thuc'
+            and start_of(s.get('namHoc')) is not None and start_of(s.get('namHoc')) < before]
+    keys = {json.dumps(s.get('id')) for s in subs}
+    mine = lambda x: isinstance(x, dict) and 'subjectId' in x and json.dumps(x['subjectId']) in keys
+    items = {k: [x for x in shared.get(k) or [] if mine(x)] for k in SUBJECT_SCOPED + ('quizzes',)}
+    quiz_ids = {str(q.get('id')) for q in items['quizzes']}
+    exam_ids = {str(e.get('id')) for e in items['exams']}
+    hw_ids = {str(x.get('id')) for x in items['homeworks']}
+    grades = {}
+    for uid, cells in (shared.get('grades') or {}).items():
+        if isinstance(cells, dict):
+            hit = {s: c for s, c in cells.items() if _sid_key(s) in keys}
+            if hit:
+                grades[uid] = hit
+    docs = {}
+    for col, ids, prefix in (('quizKeys', quiz_ids, False), ('quizArchive', quiz_ids, False), ('quizResults', quiz_ids, True),
+                             ('examKeys', exam_ids, False), ('examSessions', exam_ids, True)):
+        rows = db().execute('SELECT id, data FROM docs WHERE col=?', (col,)).fetchall()
+        docs[col] = {i: json.loads(d) for i, d in rows if (i.split('_', 1)[0] if prefix else i) in ids}
+    for col in ('gradingPolicies', 'gradingColumns'):
+        docs[col] = {i: json.loads(d) for i, d in db().execute('SELECT id, data FROM docs WHERE col=?', (col,)).fetchall()
+                     if _sid_key(i) in keys}
+    refs = []      # tài khoản (giáo viên) còn được phân các học phần này
+    for uid, data in db().execute("SELECT id, data FROM docs WHERE col='user'").fetchall():
+        d = json.loads(data)
+        if any(json.dumps(i) in keys for i in d.get('subjectIds') or []) or \
+                any(isinstance(x, dict) and json.dumps(x.get('subjectId')) in keys for x in d.get('sections') or []):
+            refs.append(uid)
+    events = subs_n = 0
+    for _, data in db().execute("SELECT id, data FROM docs WHERE col='activities'").fetchall():
+        events += sum(1 for e in json.loads(data).get('events') or [] if mine(e))
+    for _, data in db().execute("SELECT id, data FROM docs WHERE col='userData'").fetchall():
+        subs_n += sum(1 for k in (json.loads(data).get('homeworkSubs') or {}) if k in hw_ids)
+    counts = {'subjects': len(subs), **{k: len(v) for k, v in items.items()}, 'grades': sum(len(v) for v in grades.values()),
+              **{k: len(v) for k, v in docs.items()}, 'activityEvents': events, 'homeworkSubs': subs_n, 'accounts': len(refs)}
+    return {'before': before, 'subjects': subs, 'keys': keys, 'items': items, 'grades': grades, 'docs': docs, 'refs': refs,
+            'hwIds': hw_ids, 'counts': counts, 'total': sum(counts.values()) - counts['accounts']}
+
+
+def old_data_summary(plan):
+    return {'before': f"{plan['before']}-{plan['before'] + 1}", 'counts': plan['counts'], 'total': plan['total'],
+            'subjects': [{k: s.get(k) for k in ('id', 'code', 'name', 'khoa', 'namHoc', 'ky')} for s in plan['subjects']]}
+
+
+def old_data_export(plan):
+    return {'exportedAt': iso_utc(time.time()), 'before': f"{plan['before']}-{plan['before'] + 1}", 'counts': plan['counts'],
+            'subjects': plan['subjects'], **plan['items'], 'grades': plan['grades'], **plan['docs']}
+
+
+def check_purge_before(before_s):
+    """`before` là năm học đầu tiên được GIỮ lại; chỉ cho xóa phần nằm ngoài khoảng hiển thị."""
+    before = start_of(before_s)
+    if before is None:
+        raise ApiError(400, 'bad-request', 'Năm học không hợp lệ (dạng 2024-2025).')
+    limit = current_start_year() - display_years() + 1
+    if before > limit:
+        raise ApiError(400, 'too-recent', f'Chỉ xóa được dữ liệu cũ hơn {display_years()} năm học gần nhất '
+                                          f'(trước năm học {limit}-{limit + 1}).')
+    return before
+
+
+def purge_old_data(plan, uid):
+    """Xóa trong MỘT giao dịch; ghi bản trích lục trước. Trả (tên tệp trích lục, tệp tài liệu đã xóa)."""
+    os.makedirs(EXPORT_DIR, exist_ok=True)
+    name = f"du-lieu-cu-truoc-{plan['before']}-{time.strftime('%Y%m%d-%H%M%S')}.json"
+    with open(os.path.join(EXPORT_DIR, name), 'w', encoding='utf-8') as f:
+        json.dump(old_data_export(plan), f, ensure_ascii=False)
+    keys, hw_ids = plan['keys'], plan['hwIds']
+    mine = lambda x: isinstance(x, dict) and 'subjectId' in x and json.dumps(x['subjectId']) in keys
+    con = db()
+    con.execute('BEGIN')
+    try:
+        shared = doc_get('sharedData', 'global') or {}
+        shared['subjects'] = [s for s in shared.get('subjects') or [] if not (isinstance(s, dict) and json.dumps(s.get('id')) in keys)]
+        for k in SUBJECT_SCOPED + ('quizzes',):
+            if isinstance(shared.get(k), list):
+                shared[k] = [x for x in shared[k] if not mine(x)]
+        g = shared.get('grades')
+        if isinstance(g, dict):
+            for u2, hit in plan['grades'].items():
+                cells = g.get(u2)
+                if isinstance(cells, dict):
+                    g[u2] = {s: c for s, c in cells.items() if s not in hit}
+                    if not g[u2]:
+                        g.pop(u2)
+        doc_put('sharedData', 'global', shared)
+        for col, rows in plan['docs'].items():
+            con.executemany('DELETE FROM docs WHERE col=? AND id=?', [(col, i) for i in rows])
+        for u2 in plan['refs']:
+            d = doc_get('user', u2) or {}
+            if isinstance(d.get('subjectIds'), list):
+                d['subjectIds'] = [i for i in d['subjectIds'] if json.dumps(i) not in keys]
+            if isinstance(d.get('sections'), list):
+                d['sections'] = [x for x in d['sections'] if not (isinstance(x, dict) and json.dumps(x.get('subjectId')) in keys)]
+            doc_put('user', u2, d)
+        for cid, data in con.execute("SELECT id, data FROM docs WHERE col='classes'").fetchall():
+            d = json.loads(data)
+            secs = d.get('sections')
+            if isinstance(secs, list) and any(isinstance(x, dict) and json.dumps(x.get('subjectId')) in keys for x in secs):
+                d['sections'] = [x for x in secs if not (isinstance(x, dict) and json.dumps(x.get('subjectId')) in keys)]
+                doc_put('classes', cid, d)
+        for aid, data in con.execute("SELECT id, data FROM docs WHERE col='activities'").fetchall():
+            d = json.loads(data)
+            evs = d.get('events') or []
+            keep = [e for e in evs if not mine(e)]
+            if len(keep) != len(evs):
+                d['events'] = keep
+                doc_put('activities', aid, d)
+        for did, data in con.execute("SELECT id, data FROM docs WHERE col='userData'").fetchall():
+            d = json.loads(data)
+            hs = d.get('homeworkSubs')
+            if isinstance(hs, dict) and any(k in hw_ids for k in hs):
+                d['homeworkSubs'] = {k: v for k, v in hs.items() if k not in hw_ids}
+                doc_put('userData', did, d)
+        gone = (doc_get('meta', 'purgedSubjects') or {}).get('ids', [])
+        doc_put('meta', 'purgedSubjects', {'ids': gone + [s.get('id') for s in plan['subjects']]})
+        log = (doc_get('meta', 'purgeLog') or {}).get('items', [])
+        doc_put('meta', 'purgeLog', {'items': (log + [{'at': iso_utc(time.time()), 'by': uid, 'before': f"{plan['before']}-{plan['before'] + 1}",
+                                                       'counts': plan['counts'], 'export': name}])[-50:]})
+        con.execute('COMMIT')
+    except Exception:
+        con.execute('ROLLBACK')
+        raise
+    # Tệp tài liệu: chỉ xóa tệp không còn mục nào (tài liệu, bài tập còn lại) trỏ tới; tài liệu dùng chung giữa các năm được giữ
+    shared = doc_get('sharedData', 'global') or {}
+    still = {str(x.get(f)) for k in ('materials', 'homeworks') for x in shared.get(k) or [] if isinstance(x, dict) for f in ('url', 'fileUrl')}
+    removed = []
+    for x in plan['items']['materials'] + plan['items']['homeworks']:
+        for f in ('url', 'fileUrl'):
+            url = str(x.get(f) or '')
+            rel = url[len('/uploads/'):]
+            if url.startswith('/uploads/') and url not in still and rel and '/' not in rel and '..' not in rel:
+                try:
+                    os.remove(os.path.join(UPLOAD_DIR, rel))
+                    removed.append(url)
+                except OSError:
+                    pass
+                still.add(url)
+    return name, removed
+
+
 def can(op, col, id_, user, old=None, new=None):
     """Chuyển từ firestore.rules. op: read | create | update | delete."""
     signed = user is not None
@@ -550,6 +746,7 @@ def can(op, col, id_, user, old=None, new=None):
     if col in ('gradingPolicies', 'curriculum', 'theses'):
         return signed if op == 'read' else role in ('admin', 'training')
     if col == 'financeConfig': return signed if op == 'read' else role in ('admin', 'finance')
+    if col == 'settings':      return signed if op == 'read' else admin     # cấu hình hệ thống (vd. retention: số năm học hiển thị)
     if col == 'tuition':       return (owner or role in ('admin', 'finance')) if op == 'read' else role in ('admin', 'finance')
     if col == 'gradingColumns':
         if op == 'read': return signed
@@ -1641,6 +1838,29 @@ class Handler(BaseHTTPRequestHandler):
                 publish(online_admins() | {thread}, {'type': 'read', 'thread': thread, 'by': 'staff' if admin else 'user'})
                 return self.send(200, {'ok': True})
 
+        # ── Dữ liệu cũ: Admin xem trước, tải bản trích lục, rồi xóa (học phần đã kết thúc ngoài khoảng hiển thị) ──
+        if p == ['admin', 'old-data'] and method == 'GET':
+            u = self.need_user()
+            if role_of(u) != 'admin':
+                raise ApiError(403, 'permission-denied', 'Chỉ Admin được dọn dữ liệu cũ.')
+            plan = old_data_plan(check_purge_before((q.get('before') or [''])[0]))
+            if (q.get('export') or [''])[0] == '1':
+                return self.send(200, old_data_export(plan), {'Content-Disposition':
+                                 f"attachment; filename=\"du-lieu-cu-truoc-{plan['before']}.json\""})
+            return self.send(200, old_data_summary(plan))
+        if p == ['admin', 'old-data', 'purge'] and method == 'POST':
+            u = self.need_user()
+            if role_of(u) != 'admin':
+                raise ApiError(403, 'permission-denied', 'Chỉ Admin được dọn dữ liệu cũ.')
+            b = self.json_body()
+            plan = old_data_plan(check_purge_before(b.get('before')))
+            if not plan['subjects']:
+                raise ApiError(400, 'nothing', 'Không có học phần đã kết thúc nào trước năm học này.')
+            if b.get('expect') != plan['total']:
+                raise ApiError(409, 'changed', 'Dữ liệu đã thay đổi từ lúc xem trước. Hãy xem trước và tải bản trích lục lại.')
+            name, files = purge_old_data(plan, u['uid'])
+            return self.send(200, {'ok': True, 'counts': plan['counts'], 'export': name, 'files': len(files)})
+
         # ── [D3] mục 14: nhập danh sách lớp (chỉ Admin và Phòng Đào tạo; giáo viên chỉ xem) ──
         if p == ['admin', 'import-students'] and method == 'POST':
             u = self.need_user()
@@ -1744,6 +1964,8 @@ class Handler(BaseHTTPRequestHandler):
                     # kiểm tra trên merged sẽ ghi đè user.phone mỗi khi sửa email hay dữ liệu khác. Giá trị ghi lấy từ `merged`: bản đã qua kiểm tra.
                     if isinstance(new.get('profile'), dict) and 'phone' in new['profile'] and 'phone' in (merged.get('profile') or {}):
                         sync_phone = merged['profile']['phone']
+                if col == 'sharedData' and id_ == 'global':
+                    merged = strip_purged(merged)
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                     guard_exams(old, merged)
@@ -1797,6 +2019,8 @@ class Handler(BaseHTTPRequestHandler):
                         if trimmed and trimmed[-1] is value:
                             arr = trimmed
                 merged[field] = arr
+                if col == 'sharedData' and id_ == 'global':
+                    merged = strip_purged(merged)
                 if col == 'sharedData' and id_ == 'global' and u and role_of(u) in STAFF:
                     merged, quiz_ops = guard_quizzes(u, role_of(u), old, merged)
                     guard_exams(old, merged)

@@ -2,12 +2,13 @@
 import { DAY_LABELS, DAY_ORDER, weekdayLabel, CLASS_FORMATS, EXAM_FORMATS } from '../utils/constants.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 import { classOptionsForSubject, classesInItems, semesterLabel, teacherSections, FULL_ROLES,
-         khoaChoices, termChoices, defaultTermSel, inKhoa, inTerm, termInfoOf, termKey, currentTerm } from '../utils/scope.js'
+         khoaChoices, termChoices, defaultTermSel, inKhoa, inTerm, termInfoOf, termKey, currentTerm, TERM_RECENT } from '../utils/scope.js'
 import { TIET, blockFits, blockTime, tietRangeOf, tietLabel, mondayOf, weekDates, addDays, todayIso, classOnDate, termWeekNumber, weekRangeLabel, fromIso } from '../utils/periods.js'
 import { isGuidedSubject } from '../utils/grading.js'
 import { scheduleText } from '../utils/roleText.js'
 import { hasRoomQuiz, canUseRoomQuiz, examPhase, quizzesForExam } from '../utils/exams.js'
 import { ExamEntryModal, ExamRoomPanel } from './ExamRoom.js'
+import { TermSelect, ExportButton } from '../components/TermFilter.js'
 
 const { useState, useEffect, createElement: h } = window.React
 
@@ -244,7 +245,7 @@ function ExamModal({ subjects, quizzes, item, defaultTeacher, classOptionsFor, r
   )
 }
 
-export default function Schedule({ schedule = [], setSchedule, exams = [], setExams, subjects = [], subjectTeacherMap = {}, role = 'student', user = null, allUsers = [], quizzes = [], submissions = [], setSubmissions }) {
+export default function Schedule({ schedule = [], setSchedule, exams = [], setExams, subjects = [], subjectTeacherMap = {}, role = 'student', user = null, allUsers = [], quizzes = [], submissions = [], setSubmissions, displayYears }) {
   const [tab,      setTab]      = useState('tkb')   // 'tkb' | 'thi'
   const [clsModal, setClsModal] = useState(null)    // null | 'add' | 'edit'
   const [editCls,  setEditCls]  = useState(null)
@@ -295,14 +296,14 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
   const termItems = allItems.map(x => termInfoOf(x, subjectOf)).filter(Boolean)
   const khoaOpts = khoaChoices(allItems.map(x => ({ khoa: x.khoa || subjectOf(x.subjectId).khoa })))
   const termOpts = termChoices(termItems)
-  const termSel = fTerm === null ? defaultTermSel(termItems) : fTerm
-  const inScopeTK = (x) => inKhoa(x, fKhoa, subjectOf) && inTerm(x, termSel, subjectOf)
+  const termSel = fTerm === null ? (defaultTermSel(termItems) || TERM_RECENT) : fTerm
+  const inScopeTK = (x) => inKhoa(x, fKhoa, subjectOf) && inTerm(x, termSel, subjectOf, displayYears)
   const classChoices = classesInItems(allItems.filter(inScopeTK))
   const visible = (x) => inScopeTK(x) && (!fClass || x.classId === fClass)
   const shownSchedule = schedule.filter(visible), shownExams = exams.filter(visible)
   const showFilters = role !== 'student' && (khoaOpts.length > 1 || termOpts.length > 1 || classChoices.length > 1)
   // Ô chọn môn trong form chỉ liệt kê học phần của học kỳ đang lọc (kèm môn của mục đang sửa) để không dài theo số năm
-  const modalSubjects = (extraId) => subjects.filter(sb => !isGuidedSubject(sb) && (sb.id === extraId || inTerm(sb, termSel) && inKhoa(sb, fKhoa)))   // môn hướng dẫn không xếp lịch
+  const modalSubjects = (extraId) => subjects.filter(sb => !isGuidedSubject(sb) && (sb.id === extraId || inTerm(sb, termSel, undefined, displayYears) && inKhoa(sb, fKhoa)))   // môn hướng dẫn không xếp lịch
   const resetFilters = () => { setFKhoa(''); setFTerm(null); setFClass('') }
   const isDefault = !fKhoa && fTerm === null && !fClass
   const classBadge = (c) => c.classId && h('span', { className: 'badge bg-light text-dark border ms-2', style: { fontSize: '0.7rem' } }, h('i', { className: 'bi bi-people me-1' }), c.className || c.classId)
@@ -428,16 +429,24 @@ export default function Schedule({ schedule = [], setSchedule, exams = [], setEx
         h('option', { value: '' }, 'Tất cả khóa'),
         khoaOpts.map(k => h('option', { key: k, value: k }, `Khóa ${k}`))
       ),
-      termOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: termSel, onChange: e => { setFTerm(e.target.value); setFClass('') }, 'aria-label': 'Lọc theo học kỳ' },
-        h('option', { value: '' }, 'Tất cả học kỳ'),
-        termOpts.map(t => h('option', { key: t.key, value: t.key }, t.label))
-      ),
+      termOpts.length > 1 && h(TermSelect, { termOpts, value: termSel, onChange: v => { setFTerm(v); setFClass('') }, years: displayYears }),
       classChoices.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto' }, value: fClass, onChange: e => setFClass(e.target.value), 'aria-label': 'Lọc theo lớp' },
         h('option', { value: '' }, `Tất cả lớp (${classChoices.length})`),
         classChoices.map(c => h('option', { key: c.id, value: c.id }, c.name))
       ),
       !isDefault && h('button', { className: 'btn btn-sm btn-link', onClick: resetFilters }, 'Về học kỳ hiện tại'),
-      h('small', { className: 'text-muted ms-1' }, `${shownExams.length} lịch thi`, termSel && termOpts.find(t => t.key === termSel)?.current ? ' · học kỳ hiện tại' : '')
+      h('small', { className: 'text-muted ms-1' }, `${shownExams.length} lịch thi`, termSel && termOpts.find(t => t.key === termSel)?.current ? ' · học kỳ hiện tại' : ''),
+      h('div', { className: 'ms-auto d-flex flex-wrap gap-2' },
+        h(ExportButton, { filename: 'lich-thi.csv', count: shownExams.length, label: 'Trích lục lịch thi',
+          header: ['Mã HP', 'Học phần', 'Khóa', 'Năm học', 'Học kỳ', 'Lớp', 'Ngày thi', 'Bắt đầu', 'Kết thúc', 'Phòng', 'Hình thức', 'Giám thị'],
+          rows: () => shownExams.map(e => { const sb = subjectOf(e.subjectId), t = termInfoOf(e, subjectOf) || {}
+            return [sb.code || '', sb.name || '', e.khoa || sb.khoa || '', t.namHoc || '', t.ky || '', e.className || e.classId || '', e.date || '',
+              e.start || '', e.end || '', e.room || '', EXAM_FORMATS[e.format]?.label || e.format || '', e.teacher || ''] }) }),
+        h(ExportButton, { filename: 'thoi-khoa-bieu.csv', count: shownSchedule.length, label: 'Trích lục lịch học',
+          header: ['Mã HP', 'Học phần', 'Khóa', 'Năm học', 'Học kỳ', 'Lớp', 'Thứ', 'Bắt đầu', 'Kết thúc', 'Phòng', 'Giáo viên', 'Từ ngày', 'Đến ngày'],
+          rows: () => shownSchedule.map(c => { const sb = subjectOf(c.subjectId), t = termInfoOf(c, subjectOf) || {}
+            return [sb.code || '', sb.name || '', c.khoa || sb.khoa || '', t.namHoc || '', t.ky || '', c.className || c.classId || '',
+              DAY_LABELS[c.day] || c.day || '', c.start || '', c.end || '', c.room || '', c.teacher || '', c.startDate || '', c.endDate || ''] }) }))
     ),
 
     // ── TAB: Thời khóa biểu theo tuần ──

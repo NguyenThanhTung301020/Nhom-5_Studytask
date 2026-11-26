@@ -22,6 +22,7 @@ import { GENRES, genreOf, foldText, filterBooks, sortBooks, genreCounts, formatS
 import { hasRoomQuiz, canUseRoomQuiz, examWindow, examPhase, quizzesForExam, formatCountdown, validAccessCode, examErrorText } from '../utils/exams.js'
 import { teacherSections, scopeBySubject, scopeByClass, studentInScope, classCatalog, classOptionsForSubject, classesInItems, semestersOf, visibleTeachers, sortBySemester, scopeSubjects, termLabel, semesterLabel, yearOfStudy, termOfYear, studyYear, khungPosition, currentTerm, termKey, offeringTitle, inTerm, inKhoa, khoaChoices, termChoices, defaultTermSel, groupOfferings, groupTitle, semesterLabel as semLabel2 } from '../utils/scope.js'
 import { parseClassList, validateRow, usernameOf, MAX_ROWS } from '../utils/classImport.js'
+import { recentFrom, itemStartYear, isOldItem, splitTermChoices, clampDisplayYears, TERM_RECENT, TERM_OLD, namHocFrom } from '../utils/scope.js'
 
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
@@ -1079,5 +1080,59 @@ describe('[D3] mục 16 – Lịch theo tháng (pages/MonthCalendar.js)', () => 
     assert.deepEqual(monthEvents(2026, 10), {})
     const ev = monthEvents(2026, 10, [{ id: 1, day: 2 }], [{ id: 2, date: '2026-11-02', start: '08:00' }])
     assert.deepEqual(ev['2026-11-02'].map(e => e.kind), ['class', 'exam'])
+  })
+})
+
+describe('Khoảng hiển thị dữ liệu – N năm học gần nhất, dữ liệu cũ xem/trích lục bằng bộ lọc', () => {
+  const cur = { start: 2026, ky: 1, namHoc: '2026-2027' }
+  const subs = [
+    { id: 1, namHoc: '2023-2024', ky: 1 }, { id: 2, namHoc: '2024-2025', ky: 2 },
+    { id: 3, namHoc: '2026-2027', ky: 1 }, { id: 4 },
+  ]
+  const subjectOf = (id) => subs.find(s => s.id === id)
+  test('số năm hiển thị: mặc định 3, giới hạn 2–5', () => {
+    assert.equal(clampDisplayYears(undefined), 3)
+    assert.equal(clampDisplayYears('abc'), 3)
+    assert.equal(clampDisplayYears(1), 2)
+    assert.equal(clampDisplayYears(9), 5)
+    assert.equal(clampDisplayYears(4), 4)
+  })
+  test('năm học hiện tại 2026-2027, 3 năm → hiển thị từ 2024-2025', () => {
+    assert.equal(recentFrom(3, cur), 2024)
+    assert.equal(namHocFrom(recentFrom(3, cur)), '2024-2025')
+    assert.equal(recentFrom(2, cur), 2025)
+  })
+  test('năm của mục: theo học kỳ của mục/học phần; không có thì theo ngày (tháng 8 sang năm học mới)', () => {
+    assert.equal(itemStartYear({ subjectId: 1 }, subjectOf), 2023)
+    assert.equal(itemStartYear({ namHoc: '2025-2026', ky: 2, subjectId: 1 }, subjectOf), 2025)
+    assert.equal(itemStartYear({ dueDate: '2024-07-31' }), 2023)
+    assert.equal(itemStartYear({ dueDate: '2024-08-01' }), 2024)
+    assert.equal(itemStartYear({ subjectId: 4 }, subjectOf), null)
+  })
+  test('mục cũ: ngoài khoảng hiển thị; mục không rõ năm không bị coi là cũ', () => {
+    assert.equal(isOldItem({ subjectId: 1 }, 3, subjectOf, cur), true)
+    assert.equal(isOldItem({ subjectId: 2 }, 3, subjectOf, cur), false)
+    assert.equal(isOldItem({ subjectId: 2 }, 2, subjectOf, cur), true)
+    assert.equal(isOldItem({ subjectId: 4 }, 3, subjectOf, cur), false)
+  })
+  test('inTerm với TERM_RECENT / TERM_OLD tách đúng hai phần, cộng lại đủ cả danh sách', () => {
+    const items = [{ subjectId: 1 }, { subjectId: 2 }, { subjectId: 3 }, { subjectId: 4 }, { dueDate: '2020-01-01' }]
+    const recent = items.filter(x => inTerm(x, TERM_RECENT, subjectOf, 3))
+    const old = items.filter(x => inTerm(x, TERM_OLD, subjectOf, 3))
+    // dùng năm học hiện tại thật nên chỉ kiểm tra phần không phụ thuộc ngày chạy
+    assert.equal(recent.length + old.length, items.length)
+    assert.ok(old.some(x => x.dueDate === '2020-01-01'))
+    assert.ok(recent.some(x => x.subjectId === 4))
+    assert.equal(items.filter(x => inTerm(x, '', subjectOf, 3)).length, items.length)
+  })
+  test('chia danh sách học kỳ thành gần đây và dữ liệu cũ', () => {
+    const opts = termChoices(subs, cur)
+    const { recent, old, from } = splitTermChoices(opts, 3, cur)
+    assert.equal(from, 2024)
+    assert.deepEqual(recent.map(t => t.key), ['2026-2027|1', '2024-2025|2'])
+    assert.deepEqual(old.map(t => t.key), ['2023-2024|1'])
+  })
+  test('defaultTermSel giữ nguyên: không có học kỳ hiện tại → chuỗi rỗng (trang có khoảng hiển thị dùng || TERM_RECENT)', () => {
+    assert.equal(defaultTermSel([{ namHoc: '2020-2021', ky: 1 }], cur), '')
   })
 })

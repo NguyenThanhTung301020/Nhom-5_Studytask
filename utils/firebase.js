@@ -208,6 +208,11 @@ export const loadAllQuizResults = async () => _ready ? (await api('GET', '/quiz/
 // [D3] mục 14: Admin / Phòng Đào tạo nhập danh sách lớp → kết quả từng dòng (created | exists | invalid)
 export const importStudents = async (rows) => _ready ? (await api('POST', '/admin/import-students', { rows })).results : []
 
+// ── Dữ liệu cũ (chỉ Admin): xem trước, trích lục (JSON đầy đủ), xóa học phần đã kết thúc trước năm học `before` ──
+export const oldDataPreview = (before) => api('GET', '/admin/old-data?before=' + enc(before))
+export const oldDataExport  = (before) => api('GET', '/admin/old-data?export=1&before=' + enc(before))
+export const oldDataPurge   = (before, expect) => api('POST', '/admin/old-data/purge', { before, expect })
+
 // ── Tải file lên server (giáo viên / admin) → { url, name, size } ──
 export const uploadFile = async (file, hwId) => {
   const res = await fetch('/api/upload?filename=' + enc(file.name) + (hwId != null ? '&hw=' + enc(String(hwId)) : ''), {

@@ -7,6 +7,7 @@ import { summarizeSystem } from '../utils/systemStats.js'
 import { todayISO } from '../utils/tuition.js'
 import { classCatalog, semesterLabel, termChoices, defaultTermSel, groupOfferings, groupTitle, inTerm } from '../utils/scope.js'
 import UserAvatar from '../components/UserAvatar.js'
+import OldDataPanel from '../components/OldDataPanel.js'
 
 const { useState, useEffect, useMemo, createElement: h } = window.React
 
@@ -235,7 +236,7 @@ function UserList({ subjects, onUpdateSubjects }) {
 
 // ── Main Admin page ──────────────────────────────────────────────
 export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubjects, allUsers = [], quizzes = [], fetchActivities,
-                                schedule = [], exams = [], materials = [] }) {
+                                schedule = [], exams = [], materials = [], displayYears, onDisplayYears }) {
   const [activeTab, setActiveTab] = useState('accounts')
 
   // Thống kê hệ thống: tải lại danh sách người dùng và nhật ký hoạt động từ máy chủ mỗi lần mở tab (không dùng bản nhớ tạm 5 phút của app)
@@ -298,6 +299,7 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
     { key: 'users',    label: 'Phân công môn học',       icon: 'people-fill'    },
     { key: 'perms',    label: 'Ma trận phân quyền',       icon: 'table'          },
     { key: 'stats',    label: 'Thống kê hệ thống',        icon: 'bar-chart-fill' },
+    { key: 'olddata',  label: 'Dữ liệu cũ',               icon: 'archive'        },
   ]
 
   return h('div', { className: 'container-fluid py-4' },
@@ -413,6 +415,8 @@ export default function Admin({ subjects, deadlines, homeworks, onUpdateUserSubj
     ),
 
     // ── Tab: Thống kê ──
+    activeTab === 'olddata' && h(OldDataPanel, { subjects, displayYears, onDisplayYears }),
+
     activeTab === 'stats' && h('div', null,
       h('div', { className: 'd-flex align-items-center gap-2 mb-3 flex-wrap' },
         h('button', { className: 'btn btn-sm btn-outline-primary', disabled: live.loading, onClick: () => setReloadKey(k => k + 1) },

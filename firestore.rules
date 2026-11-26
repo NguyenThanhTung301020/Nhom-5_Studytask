@@ -208,6 +208,12 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if hasRole(['admin', 'finance']);
     }
+
+    // Cấu hình hệ thống (vd. settings/retention: số năm học hiển thị) – chỉ Admin ghi
+    match /settings/{docId} {
+      allow read: if signedIn();
+      allow write: if hasRole(['admin']);
+    }
     // Công nợ từng sinh viên: chỉ chính sinh viên và Phòng Tài chính / Admin xem
     match /tuition/{uid} {
       allow read: if isOwner(uid) || hasRole(['admin', 'finance']);
