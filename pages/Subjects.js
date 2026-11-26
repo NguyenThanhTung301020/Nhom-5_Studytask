@@ -8,7 +8,8 @@ import { QuizTaker } from './Quiz.js'
 import { uploadFile, isFirebaseReady } from '../utils/firebase.js'
 import { semesterLabel, teacherSections, visibleTeachers } from '../utils/scope.js'
 import { isGuidedSubject } from '../utils/grading.js'
-import { groupOfferings, groupTitle, khoaChoices, termChoices, defaultTermSel, inKhoa, inTerm, currentTerm, termName } from '../utils/scope.js'
+import { groupOfferings, groupTitle, khoaChoices, termChoices, defaultTermSel, inKhoa, inTerm, currentTerm, termName, TERM_RECENT, OFFERING_STATUS } from '../utils/scope.js'
+import { TermSelect, ExportButton } from '../components/TermFilter.js'
 import { subjectUsageDetail } from '../utils/curriculum.js'
 import { quizDuePassed } from '../utils/quizScores.js'
 
@@ -762,7 +763,7 @@ function SubjectCard({ subject, deadlines, homeworks, setHomeworks, onEdit, onDe
 }
 
 // ── Main Subjects Page ──
-export default function Subjects({ subjects, setSubjects, deadlines, homeworks, setHomeworks, materials = [], setMaterials, role = 'student', subjectTeacherMap = {}, user, quizzes = [], submissions = [], setSubmissions, onNavigate, onActivity, onSubmitHomework, onUndoHomework, usageData = {} }) {
+export default function Subjects({ subjects, setSubjects, deadlines, homeworks, setHomeworks, materials = [], setMaterials, role = 'student', subjectTeacherMap = {}, user, quizzes = [], submissions = [], setSubmissions, onNavigate, onActivity, onSubmitHomework, onUndoHomework, usageData = {}, displayYears }) {
   const [modal,     setModal]     = useState(null)
   const [notice,    setNotice]    = useState(null)   // lý do chưa xóa được môn
   const [editItem,  setEditItem]  = useState(null)
@@ -775,9 +776,9 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
   // mặc định chỉ học kỳ hiện tại (các năm trước và kế hoạch xem bằng bộ lọc). Chỉ hiện học phần thuộc phạm vi của người đang xem.
   const khoaOpts = khoaChoices(subjects)
   const termOpts = termChoices(subjects)
-  const termSel = fTerm === null ? defaultTermSel(subjects) : fTerm
+  const termSel = fTerm === null ? (defaultTermSel(subjects) || TERM_RECENT) : fTerm
   const filtered = subjects.filter((s) =>
-    inKhoa(s, fKhoa) && inTerm(s, termSel) &&
+    inKhoa(s, fKhoa) && inTerm(s, termSel, undefined, displayYears) &&
     (s.name.toLowerCase().includes(search.toLowerCase()) || (s.code || '').toLowerCase().includes(search.toLowerCase())))
   const classIdsFor = (s) => {
     const secs = role === 'teacher' ? teacherSections(user) : null
@@ -835,10 +836,11 @@ export default function Subjects({ subjects, setSubjects, deadlines, homeworks, 
             h('option', { value: '' }, 'Tất cả khóa'),
             khoaOpts.map((k) => h('option', { key: k, value: k }, `Khóa ${k}`))
           ),
-          termOpts.length > 1 && h('select', { className: 'form-select form-select-sm', style: { width: 'auto', maxWidth: '100%' }, value: termSel, onChange: (e) => setFTerm(e.target.value), 'aria-label': 'Lọc theo học kỳ' },
-            h('option', { value: '' }, 'Tất cả học kỳ'),
-            termOpts.map((t) => h('option', { key: t.key, value: t.key }, t.label))
-          ),
+          termOpts.length > 1 && h(TermSelect, { termOpts, value: termSel, onChange: setFTerm, years: displayYears }),
+          role !== 'student' && h(ExportButton, { filename: 'hoc-phan.csv', count: filtered.length,
+            header: ['Mã HP', 'Tên học phần', 'Số TC', 'Khóa', 'Năm học', 'Học kỳ', 'Trạng thái', 'Giáo viên'],
+            rows: () => filtered.map(s => [s.code || '', s.name || '', s.credits ?? '', s.khoa || '', s.namHoc || '', s.ky || '',
+              OFFERING_STATUS[s.trangThai] || '', (s.teachers || []).join('; ')]) }),
           h('div', { className: 'input-group input-group-sm', style: { width: 200, maxWidth: '100%' } },
             h('span', { className: 'input-group-text bg-light border-end-0 text-muted' }, h('i', { className: 'bi bi-search' })),
             h('input', { className: 'form-control border-start-0', placeholder: 'Tìm môn học...', value: search, onChange: (e) => setSearch(e.target.value) })

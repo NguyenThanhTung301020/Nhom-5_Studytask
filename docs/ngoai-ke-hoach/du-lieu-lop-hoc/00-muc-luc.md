@@ -13,6 +13,7 @@ Cập nhật ngày 17/11/2026 (thêm 07 và 08); 23/11/2026 thêm 09. Người t
 | [07-hoc-phan-mo-khoa-tiet-tuan-avatar.md](07-hoc-phan-mo-khoa-tiet-tuan-avatar.md) | Đợt 14–17/11: học phần mở theo khóa, 1–3 giáo viên, thời khóa biểu theo tiết và theo tuần, môn hướng dẫn, ảnh đại diện | Giải thích thay đổi và minh chứng hình ảnh (thư mục `bang-chung/`) |
 | [08-bien-ban-trien-khai-14-11-va-17-11.md](08-bien-ban-trien-khai-14-11-va-17-11.md) | Biên bản triển khai 14/11 và 17/11, số liệu máy chủ, sao lưu, cách quay lại | Minh chứng vận hành |
 | [09-thay-anh-dai-dien-tu-ve.md](09-thay-anh-dai-dien-tu-ve.md) | 23/11: gỡ ảnh đại diện tìm trên mạng (chưa rõ bản quyền), thay bằng 1.056 ảnh nhóm tự vẽ bằng mã | Trả lời câu hỏi về bản quyền ảnh đại diện |
+| [10-gia-lap-so-lieu-hoc-ky-1.md](10-gia-lap-so-lieu-hoc-ky-1.md) | 26/11: giả lập trọn HK1 2026-2027 cho 982 sinh viên: cột điểm, bài tập, deadline, trắc nghiệm, học phí, xét tốt nghiệp, đề tài đồ án | Giải thích nguồn gốc số liệu điểm và công nợ trên bản demo |
 
 Cách đọc các chỗ `[…]`: là chỗ cần Thanh Vui xác nhận hoặc điền (ngày cụ thể, ý kiến nhóm). Mọi con số còn lại đều lấy từ lần đo hoặc từ mã trong kho, có ghi nguồn.
 

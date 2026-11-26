@@ -1,6 +1,7 @@
 // pages/Deadlines.js – Quản lý Deadline
 import { PRIORITY_LABEL, STATUS_LABEL, PRIORITY_CLASS, STATUS_CLASS } from '../utils/constants.js'
-import { offeringTitle } from '../utils/scope.js'
+import { offeringTitle, inTerm, isOldItem, TERM_RECENT } from '../utils/scope.js'
+import { RangeSelect, ExportButton } from '../components/TermFilter.js'
 import { isOverdue, getDaysUntil } from '../utils/helpers.js'
 import ConfirmModal from '../components/ConfirmModal.js'
 
@@ -67,7 +68,7 @@ function DeadlineModal({ item, subjects, onSave, onClose }) {
   )
 }
 
-export default function Deadlines({ subjects, deadlines, setDeadlines, filterPreset = {}, role = 'student' }) {
+export default function Deadlines({ subjects, deadlines, setDeadlines, filterPreset = {}, role = 'student', displayYears }) {
   const [modal,     setModal]     = useState(null)
   const [editItem,  setEditItem]  = useState(null)
   const [confirmId, setConfirmId] = useState(null)
@@ -77,6 +78,7 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
   const [fPriority, setFPriority] = useState('')
   const [fOverdue,  setFOverdue]  = useState(filterPreset.overdue || false)
   const [sortBy,    setSortBy]    = useState('dueDate')
+  const [fRange,    setFRange]    = useState(TERM_RECENT)   // mặc định N năm học gần nhất; dữ liệu cũ hơn chọn ở ô Thời gian
 
   useEffect(() => {
     setFStatus(filterPreset.status || '')
@@ -93,6 +95,8 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
   const markDone     = (id) => setDeadlines(prev => prev.map((d) => d.id === id ? { ...d, status: 'completed' } : d))
   const subjectName  = (id) => (subjects.find((s) => s.id === id) || {}).name  || '—'
   const subjectColor = (id) => (subjects.find((s) => s.id === id) || {}).color || '#ccc'
+  const subjectOf    = (id) => subjects.find((s) => s.id === id)
+  const oldCount     = deadlines.filter((d) => isOldItem(d, displayYears, subjectOf)).length
 
   const hasFilter  = search || fSubject || fStatus || fPriority || fOverdue
   const clearAll   = () => { setSearch(''); setFSubject(''); setFStatus(''); setFPriority(''); setFOverdue(false) }
@@ -105,6 +109,7 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
 
   const filtered = deadlines
     .filter((d) => {
+      if (!inTerm(d, fRange, subjectOf, displayYears)) return false
       if (search    && !d.title.toLowerCase().includes(search.toLowerCase())) return false
       if (fSubject  && d.subjectId !== Number(fSubject)) return false
       if (fStatus   && d.status !== fStatus) return false
@@ -196,6 +201,14 @@ export default function Deadlines({ subjects, deadlines, setDeadlines, filterPre
               )
             )
           ),
+          (oldCount > 0 || fRange !== TERM_RECENT || filtered.length > 0) && h('div', { className: 'd-flex flex-wrap align-items-center gap-2 mt-2' },
+            h('small', { className: 'text-muted' }, h('i', { className: 'bi bi-clock-history me-1' }), 'Thời gian:'),
+            h(RangeSelect, { value: fRange, onChange: setFRange, years: displayYears, oldCount }),
+            h('div', { className: 'ms-auto' },
+              h(ExportButton, { filename: 'deadline.csv', count: filtered.length,
+                header: ['Tên deadline', 'Môn học', 'Hạn', 'Ưu tiên', 'Trạng thái', 'Ghi chú'],
+                rows: () => filtered.map(d => [d.title || '', offeringTitle(subjectOf(d.subjectId)) || '', d.dueDate || '',
+                  PRIORITY_LABEL[d.priority] || d.priority || '', STATUS_LABEL[d.status] || d.status || '', d.description || '']) }))),
           hasFilter && h('div', { className: 'mt-2' },
             h('button', { className: 'btn btn-sm btn-warning', onClick: clearAll },
               h('i', { className: 'bi bi-x-circle me-1' }), 'Xóa tất cả bộ lọc'

@@ -171,9 +171,37 @@ export function termInfoOf(item, subjectOf) {
   return termKey(s) ? s : null
 }
 
-// Mục có thuộc học kỳ đã chọn không (sel = termKey, '' = tất cả). Mục chưa gắn năm học (dữ liệu cũ) luôn hiện để không bị mất
-export const inTerm = (item, sel, subjectOf) => {
+// ── Khoảng hiển thị: chỉ N năm học gần nhất (settings/retention.displayYears do Admin đặt, mặc định 3) ──────────────────
+// Dữ liệu cũ hơn không bị ẩn hẳn: bộ lọc học kỳ có nhóm "Dữ liệu cũ" để xem và trích lục; Admin xóa hẳn ở trang Quản trị.
+export const DISPLAY_YEARS_DEFAULT = 3, DISPLAY_YEARS_MIN = 2, DISPLAY_YEARS_MAX = 5
+export const TERM_RECENT = '@recent'     // mọi học kỳ trong N năm học gần nhất
+export const TERM_OLD    = '@old'        // mọi học kỳ cũ hơn
+export const clampDisplayYears = (n) => {
+  const v = Math.round(Number(n))
+  return Number.isFinite(v) && v > 0 ? Math.min(DISPLAY_YEARS_MAX, Math.max(DISPLAY_YEARS_MIN, v)) : DISPLAY_YEARS_DEFAULT
+}
+// Năm bắt đầu sớm nhất còn trong khoảng hiển thị (năm học hiện tại 2026-2027, N = 3 → 2024, tức từ năm học 2024-2025)
+export const recentFrom = (years, cur = currentTerm()) => cur.start - clampDisplayYears(years) + 1
+export const namHocFrom = (start) => `${start}-${start + 1}`
+// Năm bắt đầu năm học của một mục: theo học kỳ của mục/học phần; mục không gắn học kỳ thì theo ngày (dueDate/date, tháng 8 sang năm học mới)
+export function itemStartYear(item, subjectOf) {
+  const t = termInfoOf(item, subjectOf)
+  if (t) return startYear(t.namHoc)
+  const m = String(item?.dueDate || item?.date || '').match(/^(\d{4})-(\d{2})/)
+  return m ? (Number(m[2]) >= 8 ? Number(m[1]) : Number(m[1]) - 1) : null
+}
+// Mục cũ hơn khoảng hiển thị. Mục không xác định được năm thì không coi là cũ (luôn hiện)
+export const isOldItem = (item, years, subjectOf, cur = currentTerm()) => {
+  const y = itemStartYear(item, subjectOf)
+  return y != null && y < recentFrom(years, cur)
+}
+
+// Mục có thuộc học kỳ đã chọn không (sel = termKey, '' = tất cả, TERM_RECENT / TERM_OLD = trong / ngoài khoảng hiển thị).
+// Mục chưa gắn năm học (dữ liệu cũ) luôn hiện để không bị mất
+export const inTerm = (item, sel, subjectOf, years = DISPLAY_YEARS_DEFAULT) => {
   if (!sel) return true
+  if (sel === TERM_RECENT) return !isOldItem(item, years, subjectOf)
+  if (sel === TERM_OLD) return isOldItem(item, years, subjectOf)
   const t = termInfoOf(item, subjectOf)
   return !t || termKey(t) === sel
 }
@@ -199,8 +227,15 @@ export function termChoices(items = [], cur = currentTerm()) {
     .map(t => ({ ...t, current: t.key === curKey, label: termName(t.namHoc, t.ky) + (t.key === curKey ? ' (hiện tại)' : '') }))
 }
 
-// Mặc định lọc theo học kỳ hiện tại nếu có dữ liệu của học kỳ đó, ngược lại hiện tất cả ('')
+// Mặc định lọc theo học kỳ hiện tại nếu có dữ liệu của học kỳ đó, ngược lại hiện tất cả ('').
+// Trang có bộ lọc khoảng hiển thị dùng `defaultTermSel(...) || TERM_RECENT` để mặc định không hiện dữ liệu cũ.
 export const defaultTermSel = (items = [], cur = currentTerm()) => (items.some(x => termKey(x) === termKey(cur)) ? termKey(cur) : '')
+
+// Chia danh sách học kỳ (termChoices) thành trong khoảng hiển thị và cũ hơn
+export function splitTermChoices(opts = [], years = DISPLAY_YEARS_DEFAULT, cur = currentTerm()) {
+  const from = recentFrom(years, cur)
+  return { recent: opts.filter(t => startYear(t.namHoc) >= from), old: opts.filter(t => startYear(t.namHoc) < from), from }
+}
 
 // Nhóm học phần theo KHÓA rồi theo học kỳ: [{ khoa, terms: [{ key, namHoc, ky, namThu, current, items }] }]
 // Khóa mới nhất trước; trong khóa, học kỳ theo thứ tự thời gian; học phần chưa gắn khóa/năm học nằm ở nhóm cuối (khoa '').

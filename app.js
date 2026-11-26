@@ -4,7 +4,7 @@ import { SAMPLE_SUBJECTS, SAMPLE_DEADLINES, SAMPLE_HOMEWORKS, SAMPLE_QUIZZES, SA
          DEFAULT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, BLANK_STUDENT_PROFILE,
          DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY, STAFF_ROLES } from './utils/constants.js'
 import { load, save, applySettings, getDaysUntil } from './utils/helpers.js'
-import { scopeSubjects, scopeBySubject, scopeByClass } from './utils/scope.js'
+import { scopeSubjects, scopeBySubject, scopeByClass, DISPLAY_YEARS_DEFAULT, clampDisplayYears } from './utils/scope.js'
 import { scheduleText } from './utils/roleText.js'
 import { getDocument } from './utils/store.js'
 import { DEFAULT_FINANCE_CONFIG, tuitionSummary, tuitionReminder } from './utils/tuition.js'
@@ -281,6 +281,17 @@ function App() {
   const myMaterials = useMemo(() => scopeBySubject(user, materials), [materials, user])
   const mySchedule  = useMemo(() => scopeByClass(user, schedule),    [schedule, user])
   const myExams     = useMemo(() => scopeByClass(user, exams),       [exams, user])
+
+  // ── Khoảng hiển thị dữ liệu: N năm học gần nhất (settings/retention, Admin đặt ở trang Quản trị) ──
+  const [displayYears, setDisplayYears] = useState(DISPLAY_YEARS_DEFAULT)
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    getDocument('settings', 'retention')
+      .then(d => { if (alive) setDisplayYears(clampDisplayYears(d?.displayYears ?? DISPLAY_YEARS_DEFAULT)) })
+      .catch(e => console.warn('[Khoảng hiển thị]', e.message))
+    return () => { alive = false }
+  }, [user?.uid])
 
   // ── Học phí của sinh viên (để nhắc công nợ đến hạn trên chuông thông báo) ──
   const [tuitionInfo, setTuitionInfo] = useState(null)   // { cfg, acc }
@@ -610,14 +621,14 @@ function App() {
       h(Sidebar, { user, currentPage: page, onNavigate: navigate, open: sidebarOpen, onClose: () => setSidebarOpen(false), badges: { contact: chatUnread } }),
       h('main', { className: 'app-main' },
         page === 'dashboard'  && h(Dashboard,  { subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, onNavigate: navigate }),
-        page === 'subjects'   && h(Subjects,   { subjects: mySubjects, setSubjects, deadlines: myDeadlines, homeworks: myHomeworks, setHomeworks, materials: myMaterials, setMaterials, role: user.role, subjectTeacherMap, user, quizzes: myQuizzes, submissions, setSubmissions, onNavigate: navigate, onActivity: trackActivity, onSubmitHomework: handleHomeworkSubmit, onUndoHomework: handleHomeworkUndo, usageData: { schedule, exams, deadlines, homeworks, materials, quizzes, users: allUsers } }),
-        page === 'deadlines'  && h(Deadlines,  { subjects: mySubjects, deadlines: myDeadlines, setDeadlines, filterPreset: dlFilter, role: user.role }),
+        page === 'subjects'   && h(Subjects,   { subjects: mySubjects, setSubjects, deadlines: myDeadlines, homeworks: myHomeworks, setHomeworks, materials: myMaterials, setMaterials, role: user.role, subjectTeacherMap, user, quizzes: myQuizzes, submissions, setSubmissions, onNavigate: navigate, onActivity: trackActivity, onSubmitHomework: handleHomeworkSubmit, onUndoHomework: handleHomeworkUndo, usageData: { schedule, exams, deadlines, homeworks, materials, quizzes, users: allUsers }, displayYears }),
+        page === 'deadlines'  && h(Deadlines,  { subjects: mySubjects, deadlines: myDeadlines, setDeadlines, filterPreset: dlFilter, role: user.role, displayYears }),
         page === 'statistics' && h(Statistics, { subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks }),
         page === 'profile'    && h(Profile,    { profile, setProfile, onSave: handleProfileSave, subjects: mySubjects, deadlines: myDeadlines, homeworks: myHomeworks, user, onAvatarChange: handleAvatarChange }),
         page === 'library'    && h(Library),
         page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
         page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity, exams: myExams, onNavigate: navigate }),
-        page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers, quizzes: myQuizzes, submissions, setSubmissions }),
+        page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers, quizzes: myQuizzes, submissions, setSubmissions, displayYears }),
         page === 'tools'      && h(Tools,      {}),
         page === 'news'       && h(News,       { news, setNews, role: user.role }),
         page === 'forms'      && h(Forms,      { forms, setForms, role: user.role }),
@@ -629,7 +640,7 @@ function App() {
         page === 'theses'     && h(Theses, { user }),
         page === 'directory'  && ['admin', 'teacher', 'training', 'finance'].includes(user.role) && h(Directory, { allUsers, subjects, role: user.role, user }),
         page === 'reports'    && (user.role === 'admin' || user.role === 'teacher') && h(Reports, { subjects: mySubjects, quizzes: myQuizzes, materials: myMaterials, homeworks, allUsers, user, fetchActivities }),
-        page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities, schedule, exams, materials }),
+        page === 'admin'      && user.role === 'admin' && h(Admin, { subjects, deadlines, homeworks: homeworksView, onUpdateUserSubjects: handleUpdateUserSubjects, allUsers, quizzes, fetchActivities, schedule, exams, materials, displayYears, onDisplayYears: setDisplayYears }),
       )
     ),
     syncError && h('div', { className: 'alert alert-danger alert-dismissible shadow small position-fixed start-50 translate-middle-x mb-0', role: 'alert',
