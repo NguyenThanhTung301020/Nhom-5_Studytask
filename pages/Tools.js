@@ -1,48 +1,14 @@
 // pages/Tools.js – Trang Tiện ích hỗ trợ học tập
 import { PRESETS, COMPONENT_LABEL } from '../utils/grading.js'
 import { todayIso } from '../utils/periods.js'
-import { toLetter, neededFinal, TARGETS, POMO_PRESETS, secondsLeft, openDeadlines, pomoStats, upcomingExams, parseTopics, buildStudyPlan, replan, planProgress, dayLabel } from '../utils/studyTools.js'
-import { load, save } from '../utils/helpers.js'
+import { toLetter, neededFinal, TARGETS, POMO_PRESETS, secondsLeft, openDeadlines, pomoStats } from '../utils/studyTools.js'
+import { load, save, downloadBlob } from '../utils/helpers.js'
 import { QUALITY, MAX_SUBMIT_MB, scaleDown, buildPdf, outputName, sizeText, moveItem } from '../utils/fileTools.js'
-const { useState, useEffect, useRef, createElement: h } = window.React
-
-// ─────────────────────────────────────────────────────────────────
-// Khung dùng chung để các tiện ích trông thống nhất: cùng thẻ, cùng tiêu đề, cùng kiểu tab và nút chính.
-// Mỗi tiện ích có một màu nhấn (color) dùng cho biểu tượng, tab đang chọn và nút chính.
-// ─────────────────────────────────────────────────────────────────
-function ToolCard({ icon, color, title, sub, extra, children }) {
-  return h('div', { className: 'tool-card card border-0 shadow-sm h-100' },
-    h('div', { className: 'card-body d-flex flex-column' },
-      h('div', { className: 'tool-head' },
-        h('div', { className: 'tool-icon', style: { backgroundColor: `${color}1f`, color } }, h('i', { className: `bi bi-${icon}` })),
-        h('div', { className: 'flex-grow-1' }, h('div', { className: 'fw-bold' }, title), h('small', { className: 'text-muted' }, sub)),
-        extra
-      ),
-      children
-    )
-  )
-}
-
-// Nhóm tab chiếm hết chiều ngang; items: [[khóa, nhãn, biểu tượng?, màu riêng?]]
-function ToolTabs({ value, onChange, items, color }) {
-  return h('div', { className: 'btn-group btn-group-sm w-100 mb-3', role: 'group' },
-    items.map(([k, label, icon, c]) => {
-      const on = value === k, col = c || color
-      return h('button', { key: k, type: 'button', className: `btn ${on ? 'text-white' : 'btn-outline-secondary'}`,
-        style: on ? { backgroundColor: col, borderColor: col } : {}, onClick: () => onChange(k) },
-        icon && h('i', { className: `bi bi-${icon} me-1` }), label)
-    }))
-}
-
-// Kiểu nút chính theo màu nhấn của tiện ích
-const accent = (color) => ({ backgroundColor: color, borderColor: color, color: '#fff' })
-
-// Hàng nút cuối khối: nút chính rộng hết (flex-grow-1), nút phụ viền xám bên phải; luôn nằm sát đáy thẻ
-const ToolFooter = (...btns) => h('div', { className: 'd-flex gap-2 mt-auto pt-2' }, ...btns)
-
-// Trạng thái trống: biểu tượng mờ và một dòng hướng dẫn, nằm giữa phần còn trống của thẻ
-const ToolEmpty = (icon, text) => h('div', { className: 'flex-grow-1 d-flex flex-column align-items-center justify-content-center text-muted small text-center py-3' },
-  h('i', { className: `bi bi-${icon} fs-3 mb-1`, style: { opacity: .5 } }), text)
+import { ownerOf } from '../utils/quickNote.js'
+import { ToolCard, ToolTabs, ToolFooter, ToolEmpty, accent } from '../components/ToolCard.js'
+import { useQuickNote, saveNoteFile, SaveBadge } from '../components/QuickNote.js'
+import StudyPlanner from '../components/StudyPlanner.js'
+const { useState, useEffect, createElement: h } = window.React
 
 // ─────────────────────────────────────────────────────────────────
 // 1. Đồng hồ Pomodoro
@@ -184,99 +150,30 @@ function GradeConverter() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// 3. Ghi chú nhanh (lưu localStorage)
+// 3. Ghi chú nhanh (lưu trên thiết bị, riêng từng tài khoản). Thanh nổi đi theo mọi trang: components/QuickNote.js
 // ─────────────────────────────────────────────────────────────────
-function Scratchpad() {
-  const [note, setNote]   = useState(() => load('st_scratchpad', ''))
-  const [saved, setSaved] = useState(false)
-  const typed = useRef(false)
+function Scratchpad({ owner }) {
+  const { note, panel, saved, setNote, setPanel } = useQuickNote(owner)
+  const C = '#36b9cc'
 
-  useEffect(() => {
-    if (!typed.current) return
-    const t = setTimeout(() => { save('st_scratchpad', note); setSaved(true) }, 600)
-    return () => clearTimeout(t)
-  }, [note])
-
-  useEffect(() => { if (saved) { const t = setTimeout(() => setSaved(false), 1500); return () => clearTimeout(t) } }, [saved])
-
-  return h(ToolCard, { icon: 'pencil-square', color: '#36b9cc', title: 'Ghi chú nhanh', sub: 'Tự động lưu trên thiết bị',
-      extra: saved && h('span', { className: 'badge bg-success-subtle text-success' }, h('i', { className: 'bi bi-check2 me-1' }), 'Đã lưu') },
-      h('textarea', { className: 'form-control form-control-sm flex-grow-1', rows: 6, placeholder: 'Ghi chú ý tưởng, việc cần làm, công thức cần nhớ...', value: note, onChange: e => { typed.current = true; setNote(e.target.value) }, style: { resize: 'none' } }),
+  return h(ToolCard, { icon: 'pencil-square', color: C, title: 'Ghi chú nhanh', sub: 'Tự động lưu trên thiết bị, riêng từng tài khoản',
+      extra: h(SaveBadge, { saved }) },
+      h('textarea', { className: 'form-control form-control-sm flex-grow-1', rows: 6, 'aria-label': 'Nội dung ghi chú nhanh', placeholder: 'Ghi chú ý tưởng, việc cần làm, công thức cần nhớ...', value: note, onChange: e => setNote(e.target.value), style: { resize: 'none' } }),
       h('div', { className: 'd-flex justify-content-between align-items-center pt-2' },
         h('small', { className: 'text-muted' }, `${note.length} ký tự`),
-        note && h('button', { className: 'btn btn-sm btn-outline-danger', onClick: () => { typed.current = true; setNote('') } }, h('i', { className: 'bi bi-trash me-1' }), 'Xóa')
-      )
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────
-// 4. Lập kế hoạch ôn thi (lưu trên thiết bị: { [mã lịch thi]: { plan, done } })
-// ─────────────────────────────────────────────────────────────────
-const PLAN_KEY = 'st_studyplan'
-
-function StudyPlanner({ exams = [], subjects = [] }) {
-  const today = todayIso()
-  const list = upcomingExams(exams, subjects, today)
-  const [plans, setPlans]   = useState(() => load(PLAN_KEY, {}))
-  const [examId, setExamId] = useState('')
-  const [text, setText]     = useState('')
-  useEffect(() => { save(PLAN_KEY, plans) }, [plans])
-
-  const exam = list.find(e => String(e.id) === examId)
-  const cur = exam ? plans[examId] : null
-  const daysLeft = exam ? Math.round((new Date(exam.date) - new Date(today)) / 86400000) : 0
-  // Chỉ hiện ngày có nội dung ôn và ngày ôn tổng hợp cuối cùng; ngày trống (ôn lại, làm đề) được ẩn cho gọn
-  const shown = cur ? cur.plan.filter((p, i) => p.kind === 'study' || i === cur.plan.length - 1) : []
-  const hidden = cur ? cur.plan.length - shown.length : 0
-  const prog = cur ? planProgress(shown, cur.done, today) : null
-
-  const setCur = (v) => setPlans(p => { const n = { ...p }; if (v) n[examId] = v; else delete n[examId]; return n })
-  const create = () => setCur({ plan: buildStudyPlan(today, exam.date, parseTopics(text)), done: {} })
-  const toggle = (date) => setCur({ ...cur, done: { ...cur.done, [date]: !cur.done[date] } })
-  const redo   = () => setCur({ plan: replan(cur.plan, cur.done, today, exam.date), done: {} })
-
-  const C = '#4e73df'
-  return h(ToolCard, { icon: 'calendar2-check', color: C, title: 'Lập kế hoạch ôn thi', sub: 'Chia nội dung ôn theo số ngày còn lại đến kỳ thi' },
-      list.length === 0 ? ToolEmpty('calendar-x', 'Chưa có lịch thi sắp tới')
-      : h('select', { className: 'form-select form-select-sm mb-2', value: examId, onChange: e => setExamId(e.target.value) },
-          h('option', { value: '' }, '— Chọn kỳ thi —'),
-          list.map(e => h('option', { key: e.id, value: String(e.id) },
-            `${e.subjectName} – ${dayLabel(e.date)}/${e.date.slice(0, 4)}${e.start ? ` lúc ${e.start}` : ''}${plans[e.id] ? ' ✓' : ''}`))),
-
-      list.length > 0 && !exam && ToolEmpty('calendar2-week', 'Chọn kỳ thi, nhập các chương cần ôn để chia lịch ôn theo từng ngày'),
-
-      exam && !cur && h('div', { className: 'd-flex flex-column flex-grow-1' },
-        h('small', { className: 'text-muted d-block mb-1' }, `Còn ${daysLeft} ngày đến ngày thi. Nhập nội dung cần ôn, mỗi dòng một mục (chương, chủ đề, dạng bài):`),
-        h('textarea', { className: 'form-control form-control-sm mb-2', rows: 5, value: text, placeholder: 'Chương 1: Giới hạn\nChương 2: Đạo hàm\nChương 3: Tích phân',
-          onChange: e => setText(e.target.value) }),
-        daysLeft < 1 ? h('div', { className: 'alert alert-warning small py-2 mb-0' }, 'Kỳ thi diễn ra hôm nay, không còn ngày để lập kế hoạch')
-        : ToolFooter(h('button', { className: 'btn btn-sm flex-grow-1', style: accent(C), disabled: !parseTopics(text).length, onClick: create },
-            h('i', { className: 'bi bi-magic me-1' }), 'Lập kế hoạch'))
+        note && h('button', { className: 'btn btn-sm btn-outline-danger', onClick: () => { if (window.confirm('Xóa toàn bộ nội dung ghi chú?')) setNote('') } }, h('i', { className: 'bi bi-trash me-1' }), 'Xóa')
       ),
-
-      cur && h('div', null,
-        h('div', { className: 'd-flex flex-wrap align-items-center gap-2 mb-2' },
-          h('small', { className: 'text-muted me-auto' }, `Còn ${daysLeft} ngày · đã xong ${prog.done}/${prog.total} ngày`
-            + (prog.behind ? ` · chậm ${prog.behind} ngày` : '')),
-          prog.behind > 0 && h('button', { className: 'btn btn-sm btn-outline-primary', onClick: redo, title: 'Chia lại phần chưa ôn từ hôm nay' }, h('i', { className: 'bi bi-arrow-repeat me-1' }), 'Lập lại từ hôm nay'),
-          h('button', { className: 'btn btn-sm btn-outline-danger', onClick: () => setCur(null) }, h('i', { className: 'bi bi-trash me-1' }), 'Xóa kế hoạch')
-        ),
-        h('div', { className: 'progress mb-2', style: { height: 6 } },
-          h('div', { className: 'progress-bar', style: { width: `${prog.total ? prog.done / prog.total * 100 : 0}%`, backgroundColor: C } })),
-        hidden > 0 && h('small', { className: 'text-muted d-block mb-1' }, `Các ngày còn lại (${hidden} ngày) dùng để ôn lại phần đã học, làm đề.`),
-        h('ul', { className: 'list-group list-group-flush small' }, shown.map(p =>
-          h('li', { key: p.date, className: `list-group-item d-flex gap-2 align-items-start${p.date === today ? ' bg-primary-subtle' : ''}` },
-            h('input', { type: 'checkbox', className: 'form-check-input mt-1', checked: !!cur.done[p.date], onChange: () => toggle(p.date) }),
-            h('span', { className: `fw-semibold text-nowrap${p.date < today && !cur.done[p.date] ? ' text-danger' : ''}`, style: { minWidth: 70 } }, dayLabel(p.date)),
-            h('span', { className: cur.done[p.date] ? 'text-decoration-line-through text-muted' : '' },
-              p.topics.length ? p.topics.join(' · ') : 'Ôn lại phần đã học, làm đề')
-          )))
-      )
+      h('div', { className: 'd-flex flex-wrap gap-2 pt-2' },
+        h('button', { className: 'btn btn-sm flex-grow-1', style: accent(C), onClick: () => setPanel(panel.open ? { open: false } : { open: true, collapsed: false }) },
+          h('i', { className: `bi bi-${panel.open ? 'x-lg' : 'pin-angle'} me-1` }), panel.open ? 'Đóng thanh nổi' : 'Ghim thanh ghi chú'),
+        h('button', { className: 'btn btn-sm btn-outline-secondary', disabled: !note.trim(), onClick: () => saveNoteFile(note) },
+          h('i', { className: 'bi bi-download me-1' }), 'Lưu .txt')),
+      h('small', { className: 'text-muted pt-1' }, 'Thanh ghim kéo được và vẫn hiện khi bạn chuyển sang trang khác.')
   )
 }
 
 // ─────────────────────────────────────────────────────────────────
-// 5. Chuyển đổi tệp: ghép ảnh thành PDF, nén ảnh. Xử lý ngay trên trình duyệt, tệp không gửi lên máy chủ.
+// 4. Chuyển đổi tệp: ghép ảnh thành PDF, nén ảnh. Xử lý ngay trên trình duyệt, tệp không gửi lên máy chủ.
 // ─────────────────────────────────────────────────────────────────
 // Vẽ lại ảnh lên canvas (nền trắng cho ảnh PNG trong suốt), thu nhỏ theo mức chất lượng, xuất JPEG
 async function toJpeg(file, { q, max }) {
@@ -291,11 +188,6 @@ async function toJpeg(file, { q, max }) {
     const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q))
     return { blob, bytes: new Uint8Array(await blob.arrayBuffer()), width: w, height: hh }
   } finally { URL.revokeObjectURL(url) }
-}
-
-function download(blob, name) {
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000)
 }
 
 function FileConverter() {
@@ -322,11 +214,11 @@ function FileConverter() {
       if (tab === 'pdf') {
         const pdf = new Blob([buildPdf(imgs)], { type: 'application/pdf' })
         const fname = outputName(name, 'pdf'), over = pdf.size > MAX_SUBMIT_MB * 1024 * 1024
-        download(pdf, fname)
+        downloadBlob(pdf, fname)
         setMsg({ ok: !over, text: `Đã tạo ${fname}: ${files.length} trang, ${sizeText(pdf.size)}`
           + (over ? `. Vượt ${MAX_SUBMIT_MB} MB nên không nộp bài được, hãy chọn mức Nhẹ` : '') })
       } else {
-        imgs.forEach((im, i) => download(im.blob, outputName(files[i].file.name, 'jpg')))
+        imgs.forEach((im, i) => downloadBlob(im.blob, outputName(files[i].file.name, 'jpg')))
         setMsg({ ok: true, text: `Đã nén ${files.length} ảnh: ${sizeText(total)} → ${sizeText(imgs.reduce((a, im) => a + im.blob.size, 0))}` })
       }
     } catch (e) { setMsg({ ok: false, text: e.message }) }
@@ -365,19 +257,19 @@ function FileConverter() {
 // ─────────────────────────────────────────────────────────────────
 // Main Tools Page
 // ─────────────────────────────────────────────────────────────────
-export default function Tools({ deadlines = [], exams = [], subjects = [] }) {
-  const bottom = 'col-12 col-md-6'      // hàng dưới: 2 khối
+export default function Tools({ user, deadlines = [], exams = [], subjects = [], materials = [], quizzes = [], homeworks = [], submissions = [] }) {
+  const third = 'col-12 col-md-6 col-xl-4'
   return h('div', { className: 'container-fluid py-4' },
     h('div', { className: 'mb-4' },
       h('h4', { className: 'fw-bold mb-1' }, h('i', { className: 'bi bi-tools me-2', style: { color: 'var(--primary)' } }), 'Tiện ích'),
       h('small', { className: 'text-muted' }, 'Các công cụ mở rộng hỗ trợ học tập hiệu quả')
     ),
     h('div', { className: 'row g-3' },
-      h('div', { className: 'col-12 col-md-6 col-xl-4' }, h(Pomodoro, { deadlines })),
-      h('div', { className: 'col-12 col-md-6 col-xl-4' }, h(GradeConverter)),
-      h('div', { className: 'col-12 col-md-6 col-xl-4' }, h(Scratchpad)),
-      h('div', { className: bottom }, h(StudyPlanner, { exams, subjects })),
-      h('div', { className: bottom }, h(FileConverter))
+      h('div', { className: third }, h(Pomodoro, { deadlines })),
+      h('div', { className: third }, h(GradeConverter)),
+      h('div', { className: third }, h(Scratchpad, { owner: ownerOf(user) })),
+      h('div', { className: 'col-12' }, h(StudyPlanner, { user, subjects, exams, materials, quizzes, homeworks, submissions })),
+      h('div', { className: 'col-12 col-md-6' }, h(FileConverter))
     )
   )
 }

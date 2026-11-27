@@ -19,6 +19,12 @@ export const save = (key, d) => {
   try { localStorage.setItem(key, JSON.stringify(d)) } catch {}
 }
 
+// Tải một tệp tạo ngay trên trình duyệt về máy
+export function downloadBlob(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000)
+}
+
 export const applySettings = (s) => {
   const root = document.documentElement
   const hex = s.accentColor || '#4e73df'
