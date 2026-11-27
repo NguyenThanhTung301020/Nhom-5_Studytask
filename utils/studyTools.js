@@ -1,5 +1,7 @@
 // utils/studyTools.js – Logic các tiện ích học tập (trang Tiện ích); thuần logic để kiểm thử bằng node --test
 import { addDays, tkbDay } from './periods.js'
+import { COMPONENTS, defaultPolicy, subjectColumns, countedColumns, evaluateStudentSubject, subjectScore } from './grading.js'
+import { currentTerm, termKey, offeringTitle } from './scope.js'
 
 // ── Quy đổi điểm (thang 10 → điểm chữ, hệ 4) ─────────────────────────────────
 export const LETTER_SCALE = [            // [điểm tối thiểu, chữ, hệ 4], từ cao xuống thấp
@@ -102,4 +104,129 @@ export function planProgress(plan = [], done = {}, today) {
 
 export const DAY_SHORT = { 2: 'T2', 3: 'T3', 4: 'T4', 5: 'T5', 6: 'T6', 7: 'T7', 8: 'CN' }
 export const dayLabel = (iso) => `${DAY_SHORT[tkbDay(iso)]} ${iso.slice(8, 10)}/${iso.slice(5, 7)}`
+
+// ── Ôn thi: điểm hiện tại so với mục tiêu ────────────────────────────────────
+// Các mức mục tiêu lấy đúng thang điểm chữ ở trên: qua môn (D) rồi tới từng xếp loại cao hơn
+export const GOAL_TARGETS = LETTER_SCALE.filter(([, letter]) => letter !== 'F').reverse()
+  .map(([score, letter]) => ({ score, letter, label: score === PASS_SCORE ? `Qua môn (${letter})` : `Xếp loại ${letter}` }))
+
+// Mục tiêu gợi ý: chưa có điểm hoặc chưa qua → qua môn; đã qua → xếp loại kế tiếp; đã ở mức cao nhất → giữ mức đó
+export function suggestTarget(current) {
+  if (current == null || current < PASS_SCORE) return PASS_SCORE
+  return (GOAL_TARGETS.find(t => t.score > current) || GOAL_TARGETS.at(-1)).score
+}
+
+// Điểm môn của chính người dùng, đọc dữ liệu giống Bảng điểm (components/GradeBook.js) rồi tính bằng utils/grading.js.
+//   cell: phần điểm giáo viên nhập (grades[uid][subjectId]); events: nhật ký hoạt động của người dùng, trong đó
+//   sự kiện `quiz` đã được thay bằng kết quả chính thức (utils/quizScores.js)
+export function myEvaluation({ subject, policyDoc, columnsDoc, quizzes = [], homeworks = [], cell = {}, events = [] }) {
+  const columns = subjectColumns(subject.id, quizzes, homeworks)
+  const last = (type, id) => events.filter(e => e.type === type && e.subjectId === subject.id && e.refId === id).at(-1)
+  const quizScore = (id) => last('quiz', id)?.score ?? null
+  const colScore = (key) => {
+    const [t, id] = key.split(':')
+    if (t !== 'q') return cell.hw?.[id] ?? null
+    return cell.quiz?.[id] !== undefined ? cell.quiz[id] : quizScore(Number(id))
+  }
+  const colDone = (key) => {
+    const [t, id] = key.split(':')
+    return t === 'q' ? quizScore(Number(id)) != null : !!last('homework', Number(id)) || cell.hw?.[id] != null
+  }
+  const policy = { ...defaultPolicy(subject), ...(policyDoc || {}) }
+  const ev = evaluateStudentSubject({ policy, columns, counted: countedColumns(columnsDoc, columns), colScore, colDone, cell })
+  return { ...ev, gradedColumns: ev.countedCols.filter(c => colScore(c.key) != null).length }
+}
+
+// Các thành phần tạo nên điểm môn theo quy chế (bỏ thành phần trọng số 0; 'th' khi môn có phần thực hành)
+export const goalParts = (policy) => [...COMPONENTS.filter(k => Number(policy.weights[k]) > 0), ...(policy.practice?.enabled ? ['th'] : [])]
+
+// Điểm người dùng tự nhập cho cột hệ thống chưa có: chỉ nhận số trong thang 10 (chấp nhận dấu phẩy thập phân)
+export function manualScore(v) {
+  const s = String(v ?? '').trim().replace(',', '.')
+  const x = Number(s)
+  return s !== '' && x >= 0 && x <= 10 ? x : null
+}
+
+// Ghép điểm hệ thống với điểm tự nhập; điểm hệ thống luôn được ưu tiên. typed: các cột đang dùng điểm tự nhập
+export function mergeScores(parts, system = {}, manual = {}) {
+  const scores = {}, typed = []
+  for (const k of parts) {
+    scores[k] = system[k] ?? manualScore(manual[k])
+    if (system[k] == null && scores[k] != null) typed.push(k)
+  }
+  return { scores, typed }
+}
+
+// So sánh với mục tiêu. policy: quy chế đã áp dụng (evaluateStudentSubject().eff).
+// Thử lần lượt 0,0 → 10,0 cho MỌI cột còn thiếu và tính bằng đúng subjectScore (kể cả cách làm tròn).
+// → { status, need, missing, current, official, low, high }
+//    achieved / failed : đã đủ điểm, đạt / không đạt mục tiêu
+//    done              : còn thiếu cột nhưng 0 điểm vẫn đạt
+//    ok                : cần tối thiểu `need` ở mỗi cột còn thiếu
+//    impossible        : 10 điểm mọi cột còn thiếu vẫn không đạt
+//    invalid           : quy chế không tính được điểm (vd. môn có thực hành nhưng số tín chỉ bằng 0)
+export function goalAnalysis(policy, scores, target) {
+  const missing = goalParts(policy).filter(k => scores[k] == null)
+  const now = subjectScore(policy, scores)
+  const at = (x) => subjectScore(policy, { ...scores, ...Object.fromEntries(missing.map(k => [k, x])) }).final
+  const low = at(0), high = at(10)
+  const reach = (v) => v >= target - 1e-9
+  const base = { need: null, missing, current: now.final ?? now.provisional, official: now.final != null, low, high }
+  if (high == null || Number.isNaN(high)) return { ...base, status: 'invalid' }
+  if (!missing.length) return { ...base, status: reach(high) ? 'achieved' : 'failed' }
+  if (reach(low)) return { ...base, status: 'done', need: 0 }
+  if (!reach(high)) return { ...base, status: 'impossible' }
+  let i = 1
+  while (!reach(at(i / 10))) i++
+  return { ...base, status: 'ok', need: i / 10 }
+}
+
+// ── Ôn thi: môn học và mục giáo trình ────────────────────────────────────────
+// Chia môn cho ô chọn: có lịch thi sắp tới (gần nhất trước) → học kỳ hiện tại → còn lại (mới nhất trước)
+export function subjectGroups(subjects = [], exams = [], today, term = currentTerm(new Date(today))) {
+  const next = new Map()
+  for (const e of upcomingExams(exams, subjects, today)) if (!next.has(e.subjectId)) next.set(e.subjectId, e.date)
+  const title = (s) => offeringTitle(s) || 'Môn học'
+  const byTitle = (a, b) => title(a).localeCompare(title(b), 'vi')
+  const rest = subjects.filter(s => !next.has(s.id))
+  const now = `${term.namHoc}|${term.ky}`
+  return [
+    { label: 'Có lịch thi sắp tới', items: subjects.filter(s => next.has(s.id)).sort((a, b) => next.get(a.id).localeCompare(next.get(b.id)) || byTitle(a, b)) },
+    { label: 'Học kỳ hiện tại', items: rest.filter(s => termKey(s) === now).sort(byTitle) },
+    { label: 'Học phần khác', items: rest.filter(s => termKey(s) !== now).sort((a, b) => termKey(b).localeCompare(termKey(a)) || byTitle(a, b)) },
+  ].filter(g => g.items.length)
+}
+
+// Thứ tự nhóm tài liệu khi ôn (khóa trùng MATERIAL_TYPES ở utils/constants.js)
+export const MATERIAL_ORDER = ['giaoTrinh', 'slide', 'baiTap', 'thamKhao', 'khac']
+
+// Tài liệu của một môn, nhóm theo loại, trong nhóm xếp theo tên (Chương 2 trước Chương 10). Chỉ lấy dữ liệu có thật.
+export function studyItems(subjectId, materials = []) {
+  const mine = materials.filter(m => m && m.subjectId === subjectId && String(m.title || '').trim())
+  const typeOf = (m) => MATERIAL_ORDER.includes(m.type) ? m.type : 'khac'
+  return MATERIAL_ORDER.map(type => ({
+    type,
+    items: mine.filter(m => typeOf(m) === type)
+      .sort((a, b) => a.title.localeCompare(b.title, 'vi', { numeric: true }))
+      .map(m => ({ key: String(m.id), title: m.title.trim(), description: m.description || '', url: m.url || '' })),
+  })).filter(g => g.items.length)
+}
+
+// Nội dung đưa vào kế hoạch: các mục tài liệu đang được chọn (theo thứ tự nhóm) rồi tới mục người dùng tự thêm
+export const planTopics = (groups = [], excluded = [], extra = '') =>
+  parseTopics([...groups.flatMap(g => g.items).filter(it => !excluded.includes(it.key)).map(it => it.title), extra].join('\n'))
+
+// Ngày được xếp cho từng mục trong kế hoạch: { tên mục: 'yyyy-mm-dd' }
+export const topicDates = (plan = []) =>
+  Object.fromEntries(plan.filter(p => p.kind === 'study').flatMap(p => p.topics.map(t => [t, p.date])))
+
+// Kế hoạch bản trước lưu theo mã lịch thi; bản này lưu theo môn
+export function migratePlans(legacy = {}, exams = []) {
+  const out = {}
+  for (const [examId, v] of Object.entries(legacy || {})) {
+    const e = exams.find(x => String(x.id) === examId)
+    if (e && v?.plan?.length) out[e.subjectId] = { plan: v.plan, done: v.done || {}, planFor: e.date }
+  }
+  return out
+}
 

@@ -2,7 +2,7 @@
 import { SAMPLE_SUBJECTS, SAMPLE_DEADLINES, SAMPLE_HOMEWORKS, SAMPLE_QUIZZES, SAMPLE_MATERIALS,
          SAMPLE_SCHEDULE, SAMPLE_EXAMS, SAMPLE_NEWS, SAMPLE_FORMS,
          DEFAULT_PROFILE, DEFAULT_TEACHER_PROFILE, DEFAULT_ADMIN_PROFILE, BLANK_STUDENT_PROFILE,
-         DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY, STAFF_ROLES } from './utils/constants.js'
+         DEFAULT_LIBRARY, DEFAULT_SETTINGS, DEMO_ACCOUNTS, SAMPLE_ACTIVITY, STAFF_ROLES, NAV_ITEMS } from './utils/constants.js'
 import { load, save, applySettings, getDaysUntil } from './utils/helpers.js'
 import { scopeSubjects, scopeBySubject, scopeByClass, DISPLAY_YEARS_DEFAULT, clampDisplayYears } from './utils/scope.js'
 import { scheduleText } from './utils/roleText.js'
@@ -33,6 +33,8 @@ import Profile    from './pages/Profile.js'
 import Admin      from './pages/Admin.js'
 import Quiz       from './pages/Quiz.js'
 import Tools      from './pages/Tools.js'
+import QuickNote  from './components/QuickNote.js'
+import { ownerOf, adoptLegacy, NOTE_KEY } from './utils/quickNote.js'
 import Reports    from './pages/Reports.js'
 import Schedule   from './pages/Schedule.js'
 import News       from './pages/News.js'
@@ -108,7 +110,10 @@ function App() {
     // (Lỗi cũ: tài khoản B đăng nhập sau tài khoản A trên cùng máy sẽ nhận hồ sơ của A
     //  từ st_profile và bản đó còn bị ghi ngược lên Firestore của B.)
     const ownerKey  = uid || fbUser?.username || fbUser?.email || 'guest'
-    const sameOwner = load('st_owner', null) === ownerKey
+    const prevOwner = load('st_owner', null)
+    const sameOwner = prevOwner === ownerKey
+    // Ghi chú nhanh và kế hoạch ôn thi nay lưu riêng từng tài khoản; dữ liệu bản trước chuyển cho người dùng máy gần nhất
+    ;[NOTE_KEY, 'st_studyplan'].forEach(k => adoptLegacy(localStorage, k, prevOwner, ownerKey))
     const loadMine  = (key, fallback) => sameOwner ? load(key, fallback) : fallback
 
     // Hồ sơ mặc định theo vai trò; tài khoản thật (có uid) không nhận dữ liệu mẫu của sinh viên demo
@@ -629,7 +634,7 @@ function App() {
         page === 'contact'    && h(Contact,    { user, contacts, setContacts }),
         page === 'quiz'       && h(Quiz,       { quizzes: myQuizzes, setQuizzes, submissions, setSubmissions, subjects: mySubjects, user, role: user.role, onActivity: trackActivity, exams: myExams, onNavigate: navigate }),
         page === 'schedule'   && h(Schedule,   { schedule: mySchedule, setSchedule, exams: myExams, setExams, subjects: mySubjects, subjectTeacherMap, role: user.role, user, allUsers, quizzes: myQuizzes, submissions, setSubmissions, displayYears }),
-        page === 'tools'      && h(Tools,      { deadlines: myDeadlines, exams: myExams, subjects: mySubjects }),
+        page === 'tools'      && h(Tools,      { user, deadlines: myDeadlines, exams: myExams, subjects: mySubjects, materials: myMaterials, quizzes: myQuizzes, homeworks: myHomeworks, submissions }),
         page === 'news'       && h(News,       { news, setNews, role: user.role }),
         page === 'forms'      && h(Forms,      { forms, setForms, role: user.role }),
         page === 'calendar'   && h(MonthCalendar, { schedule: mySchedule, exams: myExams, subjects: mySubjects, onNavigate: navigate, role: user.role }),
@@ -647,6 +652,7 @@ function App() {
         style: { top: 72, zIndex: 2000, width: 'calc(100% - 32px)', maxWidth: 560 } },
       h('i', { className: 'bi bi-exclamation-triangle-fill me-2' }), syncError,
       h('button', { className: 'btn-close', 'aria-label': 'Đóng', onClick: () => setSyncError(null) })),
+    NAV_ITEMS.find(n => n.key === 'tools').roles.includes(user.role) && h(QuickNote, { key: ownerOf(user), owner: ownerOf(user) }),
     h(ChatNotifier, { toasts: chatToasts, onClose: closeToast, onOpen: (t) => { closeToast(t.id); navigate('contact') } }),
     showSettings && h(SettingsDrawer, { settings, onChange: (s) => setSettings(s), onClose: () => setShowSettings(false) }),
     !showSettings && h('button', { className: 'fab-settings', title: 'Tùy chỉnh giao diện', onClick: () => setShowSettings(true) },

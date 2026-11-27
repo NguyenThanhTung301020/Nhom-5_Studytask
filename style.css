@@ -841,6 +841,31 @@ body {
 /* Pomodoro */
 .pomodoro-display { font-size: 3rem; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
 
+/* Thanh ghi chú nhanh nổi: nằm dưới thanh bên (di động), nút bảng màu và hộp thoại */
+.qn-panel {
+  position: fixed; z-index: 1025; width: min(320px, calc(100vw - 16px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.22);
+}
+.qn-panel.qn-collapsed { width: auto; max-width: calc(100vw - 16px); }
+.qn-head { display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 8px; cursor: grab; touch-action: none; user-select: none; border-top: 3px solid #36b9cc; }
+.qn-head:active { cursor: grabbing; }
+.qn-head:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.qn-btn { color: var(--text); padding: 2px 7px; border: 0; }
+.qn-body { display: flex; flex-direction: column; gap: 4px; padding: 0 8px 8px; }
+.qn-text { height: 180px; min-height: 80px; max-height: 50vh; resize: vertical; }
+@media (max-width: 576px) { .qn-text { height: 22vh; max-height: 35vh; } }
+
+/* Lập kế hoạch ôn thi */
+.plan-compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center; background: var(--bg); border-radius: 10px; padding: 10px 6px; }
+.plan-num { font-size: 1.2rem; font-weight: 800; }
+.plan-items { max-height: 320px; overflow-y: auto; }
+/* Giao diện tối: chữ, bảng và danh sách trong thẻ tiện ích theo màu nền tối */
+[data-theme="dark"] .tool-card { --bs-card-color: var(--text); color: var(--text); }
+[data-theme="dark"] .tool-card .table { --bs-table-bg: transparent; --bs-table-color: var(--text); --bs-table-border-color: var(--border); --bs-table-active-color: var(--text); --bs-table-active-bg: rgba(255,255,255,.08); }
+[data-theme="dark"] .tool-card .list-group { --bs-list-group-bg: transparent; --bs-list-group-color: var(--text); --bs-list-group-border-color: var(--border); }
+
 /* Quy đổi điểm */
 .grade-result { background: var(--bg); border-radius: 10px; padding: 16px 8px; }
 .grade-big { font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
@@ -1094,7 +1119,7 @@ body {
 
 /* ═══ In phiếu xét tốt nghiệp ═══ */
 @media print {
-  .app-sidebar, .navbar, .fab-settings, .btn, .alert, .col-lg-4 { display: none !important; }
+  .app-sidebar, .navbar, .fab-settings, .qn-panel, .btn, .alert, .col-lg-4 { display: none !important; }
   .app-main { margin: 0 !important; padding: 0 !important; }
   .grad-form { box-shadow: none !important; }
   .col-lg-8 { width: 100% !important; }

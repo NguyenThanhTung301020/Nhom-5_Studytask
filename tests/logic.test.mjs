@@ -25,7 +25,8 @@ import { parseClassList, validateRow, usernameOf, MAX_ROWS } from '../utils/clas
 import { recentFrom, itemStartYear, isOldItem, splitTermChoices, clampDisplayYears, TERM_RECENT, TERM_OLD, namHocFrom } from '../utils/scope.js'
 
 import { buildPdf, fitToPage, scaleDown, outputName, sizeText as fileSize, moveItem } from '../utils/fileTools.js'
-import { toLetter, neededFinal, secondsLeft, openDeadlines, pomoStats, upcomingExams, parseTopics, buildStudyPlan, replan, planProgress, dayLabel } from '../utils/studyTools.js'
+import { toLetter, neededFinal, secondsLeft, openDeadlines, pomoStats, upcomingExams, parseTopics, buildStudyPlan, replan, planProgress, dayLabel, GOAL_TARGETS, LETTER_SCALE, suggestTarget, myEvaluation, goalParts, manualScore, mergeScores, goalAnalysis, subjectGroups, studyItems, planTopics, topicDates, migratePlans } from '../utils/studyTools.js'
+import { ownerOf, readNote, writeNote, readPanel, writePanel, adoptLegacy, noteFileText, noteFileName, clampPos, defaultPos } from '../utils/quickNote.js'
 const w = (p) => ({ cc: p.cc, bt: p.bt, gk: p.gk, ck: p.ck })
 const sum = (o) => o.cc + o.bt + o.gk + o.ck
 
@@ -1213,5 +1214,150 @@ describe('Tiện ích – Chuyển đổi tệp (ảnh → PDF)', () => {
     assert.equal(outputName('bai lam:1.png', 'pdf'), 'bai lam_1.pdf')
     assert.equal(fileSize(1536), '1,5 KB')
     assert.deepEqual(moveItem([1, 2, 3], 0, 1), [2, 1, 3]); assert.deepEqual(moveItem([1, 2, 3], 0, -1), [1, 2, 3])
+  })
+})
+
+describe('Tiện ích – Ôn thi: điểm hiện tại so với mục tiêu', () => {
+  const L1 = { weights: { cc: 10, bt: 15, gk: 20, ck: 55 } }
+  const have = { cc: 9, bt: 7, gk: 6.5, ck: null }
+  test('mục tiêu lấy đúng thang điểm chữ, từ qua môn lên cao dần; gợi ý mức kế tiếp', () => {
+    assert.deepEqual(GOAL_TARGETS.map(t => t.score), LETTER_SCALE.slice(0, -1).map(l => l[0]).reverse())
+    assert.equal(GOAL_TARGETS[0].label, 'Qua môn (D)')
+    assert.deepEqual([null, 3.9, 4, 6.8, 7, 9.2].map(suggestTarget), [4, 4, 5, 7, 8, 8.5])
+  })
+  test('thiếu một cột: điểm cần đạt khớp neededFinal ở mọi mức', () => {
+    for (const { score } of GOAL_TARGETS) {
+      const a = goalAnalysis(L1, have, score), b = neededFinal(L1.weights, have, score)
+      assert.equal(a.status, b.status, String(score))
+      if (a.status === 'ok') assert.equal(a.need, b.need, String(score))
+    }
+    const a = goalAnalysis(L1, have, 7)
+    assert.deepEqual([a.status, a.need, a.missing, a.official], ['ok', 6.8, ['ck'], false])
+    assert.equal(subjectScore(L1, { ...have, ck: 6.8 }).final, 7)
+    assert.ok(subjectScore(L1, { ...have, ck: 6.7 }).final < 7)
+  })
+  test('thiếu nhiều cột: cùng một mức tối thiểu cho mọi cột còn thiếu', () => {
+    const a = goalAnalysis(L1, { cc: 9, bt: 7 }, 5.5)
+    assert.deepEqual([a.status, a.missing], ['ok', ['gk', 'ck']])
+    assert.ok(subjectScore(L1, { cc: 9, bt: 7, gk: a.need, ck: a.need }).final >= 5.5)
+    assert.ok(subjectScore(L1, { cc: 9, bt: 7, gk: a.need - 0.1, ck: a.need - 0.1 }).final < 5.5)
+    assert.deepEqual(goalAnalysis(L1, {}, 4).need, 4)          // chưa có cột nào: làm tròn 3,95 → 4,0
+    assert.equal(goalAnalysis(L1, {}, 4).current, null)
+  })
+  test('không thể đạt, đã chắc chắn đạt, đã đủ điểm', () => {
+    const no = goalAnalysis(L1, { cc: 2, bt: 1, gk: 1 }, 8.5)
+    assert.deepEqual([no.status, no.high, no.need], ['impossible', 6.1, null])
+    const yes = goalAnalysis(L1, { cc: 10, bt: 10, gk: 10 }, 4)
+    assert.deepEqual([yes.status, yes.need, yes.low], ['done', 0, 4.5])
+    const full = { cc: 9, bt: 7, gk: 6.5, ck: 7 }
+    assert.deepEqual([goalAnalysis(L1, full, 7).status, goalAnalysis(L1, full, 8).status, goalAnalysis(L1, full, 7).current], ['achieved', 'failed', 7.1])
+  })
+  test('môn thực hành bỏ cột trọng số 0; môn có cả lý thuyết và thực hành tính theo tín chỉ', () => {
+    assert.deepEqual(goalParts({ weights: PRESETS.H1 }), ['cc', 'bt', 'ck'])
+    const pol = { ...L1, practice: { enabled: true, theoryCredits: 2, practiceCredits: 1 } }
+    assert.deepEqual(goalParts(pol), ['cc', 'bt', 'gk', 'ck', 'th'])
+    const a = goalAnalysis(pol, { cc: 9, bt: 7, gk: 6.5, ck: 7 }, 8)       // LT 7,1; TH cần (8 − …)
+    assert.deepEqual([a.status, a.missing], ['ok', ['th']])
+    assert.equal(subjectScore(pol, { cc: 9, bt: 7, gk: 6.5, ck: 7, th: a.need }).final >= 8, true)
+    assert.equal(subjectScore(pol, { cc: 9, bt: 7, gk: 6.5, ck: 7, th: +(a.need - 0.1).toFixed(1) }).final < 8, true)
+    assert.equal(goalAnalysis({ ...L1, practice: { enabled: true, theoryCredits: 0, practiceCredits: 0 } }, {}, 4).status, 'invalid')
+  })
+  test('điểm tự nhập: chỉ nhận 0–10, không ghi đè điểm hệ thống', () => {
+    assert.deepEqual(['7,5', '10', '0', '', '11', '-1', 'abc', null].map(manualScore), [7.5, 10, 0, null, null, null, null, null])
+    assert.deepEqual(mergeScores(['cc', 'gk', 'ck'], { cc: 8, gk: null }, { cc: '2', gk: '6', ck: '99' }),
+      { scores: { cc: 8, gk: 6, ck: null }, typed: ['gk'] })
+  })
+  test('đọc điểm của mình giống Bảng điểm: điểm giáo viên sửa ưu tiên hơn kết quả trắc nghiệm; quy chế đã cấu hình được dùng', () => {
+    const subject = { id: 1, name: 'Toán', credits: 3 }
+    const quizzes = [{ id: 11, subjectId: 1, title: 'Q1' }, { id: 12, subjectId: 1, title: 'Q2' }, { id: 13, subjectId: 2, title: 'Môn khác' }]
+    const homeworks = [{ id: 21, subjectId: 1, title: 'BT1' }]
+    const events = [{ type: 'quiz', subjectId: 1, refId: 11, score: 5 }, { type: 'quiz', subjectId: 1, refId: 12, score: 8 }, { type: 'homework', subjectId: 1, refId: 21 }]
+    const cell = { quiz: { 11: 9 }, att: 10, gk: 6 }
+    const ev = myEvaluation({ subject, quizzes, homeworks, events, cell })
+    assert.equal(ev.scores.bt, 8.5)                       // (9 đã sửa + 8) / 2; BT1 chưa chấm
+    assert.deepEqual([ev.gradedColumns, ev.countedCols.length], [2, 3])
+    assert.deepEqual([ev.scores.cc, ev.scores.gk, ev.scores.ck], [10, 6, null])
+    const policyDoc = { preset: 'L1', auto: false, weights: { cc: 10, bt: 20, gk: 20, ck: 50 } }
+    const ev2 = myEvaluation({ subject, quizzes, homeworks, events, cell, policyDoc, columnsDoc: { counted: { 'q:12': 1 } } })
+    assert.equal(ev2.eff.weights.ck, 50)
+    assert.equal(ev2.scores.bt, 8)
+    assert.equal(ev2.scores.cc, 10)                       // 60% điểm danh 10 + 40% tham gia (2/2 cột không tính điểm đã làm)
+    assert.deepEqual(myEvaluation({ subject }).scores, { cc: null, bt: null, gk: null, ck: null, th: null })
+  })
+})
+
+describe('Tiện ích – Ôn thi: môn học, mục giáo trình, kế hoạch', () => {
+  const M = [
+    { id: 1, subjectId: 1, type: 'slide', title: 'Slide – Chương 10' }, { id: 2, subjectId: 1, type: 'slide', title: 'Slide – Chương 2' },
+    { id: 3, subjectId: 1, type: 'giaoTrinh', title: ' Giáo trình Toán ', url: '/uploads/a.pdf' }, { id: 4, subjectId: 2, type: 'giaoTrinh', title: 'Môn khác' },
+    { id: 5, subjectId: 1, type: 'la', title: 'Loại lạ' }, { id: 6, subjectId: 1, type: 'slide', title: '  ' },
+  ]
+  test('nhóm theo loại (giáo trình trước), xếp theo số chương, chỉ lấy tài liệu của môn; môn không có tài liệu → rỗng', () => {
+    const g = studyItems(1, M)
+    assert.deepEqual(g.map(x => [x.type, x.items.map(i => i.title)]),
+      [['giaoTrinh', ['Giáo trình Toán']], ['slide', ['Slide – Chương 2', 'Slide – Chương 10']], ['khac', ['Loại lạ']]])
+    assert.equal(g[0].items[0].url, '/uploads/a.pdf')
+    assert.deepEqual(studyItems(9, M), [])
+  })
+  test('kế hoạch gồm mục đang chọn và mục tự thêm; mỗi mục biết ngày được xếp', () => {
+    const g = studyItems(1, M)
+    const topics = planTopics(g, ['2', '5'], 'Chương 4 giáo trình\n\nSlide – Chương 10')
+    assert.deepEqual(topics, ['Giáo trình Toán', 'Slide – Chương 10', 'Chương 4 giáo trình'])
+    assert.deepEqual(topicDates(buildStudyPlan('2026-11-26', '2026-11-30', topics)),
+      { 'Giáo trình Toán': '2026-11-26', 'Slide – Chương 10': '2026-11-27', 'Chương 4 giáo trình': '2026-11-28' })
+    assert.deepEqual(planTopics([], [], ''), [])
+  })
+  test('chia môn cho ô chọn: sắp thi → học kỳ hiện tại → còn lại', () => {
+    const subs = [{ id: 1, name: 'A', namHoc: '2025-2026', ky: 2 }, { id: 2, name: 'B', namHoc: '2026-2027', ky: 1 }, { id: 3, name: 'C' }, { id: 4, name: 'D' }]
+    const g = subjectGroups(subs, [{ id: 9, subjectId: 3, date: '2026-12-10' }, { id: 8, subjectId: 4, date: '2026-12-01' }], '2026-11-27')
+    assert.deepEqual(g.map(x => [x.label, x.items.map(s => s.id)]), [['Có lịch thi sắp tới', [4, 3]], ['Học kỳ hiện tại', [2]], ['Học phần khác', [1]]])
+  })
+  test('chuyển kế hoạch bản trước (theo mã lịch thi) sang theo môn', () => {
+    const plan = [{ date: '2026-12-01', topics: ['a'], kind: 'study' }]
+    assert.deepEqual(migratePlans({ 7: { plan, done: {} }, 99: { plan } }, [{ id: 7, subjectId: 3, date: '2026-12-05' }]),
+      { 3: { plan, done: {}, planFor: '2026-12-05' } })
+  })
+})
+
+describe('Tiện ích – Ghi chú nhanh', () => {
+  const memory = (init = {}) => {
+    const m = new Map(Object.entries(init))
+    return { m, getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) }
+  }
+  test('nội dung và trạng thái thanh nổi tách theo tài khoản', () => {
+    globalThis.localStorage = memory()
+    assert.equal(ownerOf({ uid: 'u1', username: 'a' }), 'u1'); assert.equal(ownerOf({ username: 'student' }), 'student')
+    writeNote('sv-a', 'Ghi chú của A'); writePanel('sv-a', { open: true }); writePanel('sv-a', { pos: { x: 10, y: 90 } })
+    assert.equal(readNote('sv-a'), 'Ghi chú của A'); assert.equal(readNote('sv-b'), '')
+    assert.deepEqual(readPanel('sv-a'), { open: true, collapsed: false, pos: { x: 10, y: 90 } })
+    assert.equal(readPanel('sv-b').open, false)
+    assert.equal(globalThis.localStorage.m.get('st_scratchpad:sv-a'), JSON.stringify('Ghi chú của A'))
+    delete globalThis.localStorage
+  })
+  test('trình duyệt không cho lưu: báo false nhưng nội dung đang gõ không mất', () => {
+    globalThis.localStorage = { getItem: () => null, setItem: () => { throw new Error('đầy') }, removeItem: () => {} }
+    assert.equal(writeNote('sv-c', 'x'), false); assert.equal(readNote('sv-c'), 'x')
+    delete globalThis.localStorage
+  })
+  test('ghi chú dùng chung của bản trước chuyển cho người dùng máy gần nhất, không cho tài khoản đăng nhập sau', () => {
+    const s = memory({ st_scratchpad: '"cũ"' })
+    adoptLegacy(s, 'st_scratchpad', 'sv-a', 'sv-b')
+    assert.deepEqual([...s.m], [['st_scratchpad:sv-a', '"cũ"']])
+    const t = memory({ st_scratchpad: '"cũ"', 'st_scratchpad:sv-a': '"mới"' })
+    adoptLegacy(t, 'st_scratchpad', null, 'sv-a')
+    assert.deepEqual([...t.m], [['st_scratchpad:sv-a', '"mới"']])
+  })
+  test('tệp .txt: UTF-8 có BOM, xuống dòng CRLF, giữ nguyên tiếng Việt; tên tệp theo ngày giờ', () => {
+    const bytes = new TextEncoder().encode(noteFileText('Ôn tập\nĐạo hàm\r\nhết'))
+    assert.deepEqual([...bytes.slice(0, 3)], [0xEF, 0xBB, 0xBF])
+    assert.equal(new TextDecoder('utf-8').decode(bytes), 'Ôn tập\r\nĐạo hàm\r\nhết')
+    assert.equal(noteFileName(new Date(2026, 10, 7, 8, 5)), 'ghi-chu-2026-11-07-0805.txt')
+  })
+  test('thanh nổi luôn nằm trong khung, không đè thanh trên cùng, kể cả khổ hẹp', () => {
+    const size = { w: 304, h: 260 }, view = { w: 320, h: 568 }
+    assert.deepEqual(clampPos({ x: -50, y: 0 }, size, view), { x: 8, y: 66 })
+    assert.deepEqual(clampPos({ x: 999, y: 999 }, size, view), { x: 8, y: 300 })
+    assert.deepEqual(defaultPos({ w: 320, h: 260 }, { w: 1280, h: 800 }), { x: 944, y: 456 })
+    assert.deepEqual(clampPos({ x: 100, y: 100 }, { w: 400, h: 700 }, view), { x: 8, y: 66 })
   })
 })
