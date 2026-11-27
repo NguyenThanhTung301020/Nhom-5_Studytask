@@ -15,12 +15,14 @@ Người thực hiện: Trương Thanh Vui (cùng Claude Code, model Claude Opus
 
 ## 2. Cách làm
 
-Script mới `scripts/seed_semester.py` sinh số liệu cho **mọi sinh viên đang có**. Nó chạy sau `seed_curriculum.py` và chỉ ghi vào bảng `docs`, không tạo hay sửa tài khoản. Theo yêu cầu, số liệu tính **trọn học kỳ đến 31/12/2026** (`--as-of`, mặc định 31/12). Học kỳ kết thúc lớp ngày 20/12 và thi cuối kỳ 21–29/12, nên mọi môn đều đã có điểm cuối kỳ.
+Script mới `scripts/seed_semester.py` sinh số liệu cho **mọi sinh viên đang có**. Nó chạy sau `seed_curriculum.py` và chỉ ghi vào bảng `docs`, không tạo hay sửa tài khoản. Theo yêu cầu, số liệu tính **trọn học kỳ đến 31/12/2026** (`--as-of`, mặc định 31/12). Riêng **điểm thi cuối kỳ và điểm bảo vệ đồ án chỉ có khi buổi thi đã diễn ra** (`--ck-as-of`, mặc định là ngày chạy script). Học kỳ kết thúc lớp ngày 20/12, thi cuối kỳ 21–29/12, bảo vệ đồ án 22–25/12. Vì vậy, chạy ngày 27/11/2026 thì mọi môn đã đủ điểm quá trình (chuyên cần, bài tập, giữa kỳ) nhưng chưa có điểm cuối kỳ, chưa có điểm tổng kết.
+
+*Sửa 27/11/2026:* bản nạp ngày 26/11 tính cả điểm cuối kỳ đến 31/12, tức là có điểm trước ngày thi. Deadline thi cuối kỳ, bảo vệ đồ án cũng hiện "Hoàn thành". Đã thêm `--ck-as-of` và nạp lại.
 
 | Phần | Nội dung |
 |---|---|
 | Bài tập (`sharedData.homeworks`) | Mỗi môn lý thuyết có 3 bài tập chương và 1 tiểu luận. Môn thực hành có 5 bài thực hành và 1 bài tập lớn. Hạn nộp rải từ tuần 2 đến tuần 13 và tránh tuần thi giữa kỳ. |
-| Deadline (`sharedData.deadlines`) | Gồm kiểm tra giữa kỳ (tuần 8), hạn nộp bài lớn và thi cuối kỳ. Ngày thi lấy theo lịch thi đã có. Mục đã qua ngày chốt được đánh dấu hoàn thành. |
+| Deadline (`sharedData.deadlines`) | Gồm kiểm tra giữa kỳ (tuần 8), hạn nộp bài lớn và thi cuối kỳ. Ngày thi lấy theo lịch thi đã có. Mục đã qua ngày chốt được đánh dấu hoàn thành; riêng thi cuối kỳ và bảo vệ đồ án theo mốc `--ck-as-of`. |
 | Quy chế điểm (`gradingPolicies`) | Lý luận chính trị dùng L3, Toán dùng L1, môn lập trình có phòng máy dùng Q50 (điểm danh theo số buổi có mặt), môn CNTT khác dùng L2. Đồ án là môn hướng dẫn: giáo viên nhập thẳng điểm tổng kết. |
 | Cột điểm (`sharedData.grades`) | Gồm chuyên cần, điểm từng bài tập, giữa kỳ, cuối kỳ. Sinh viên không nộp bài bị 0 điểm, khoảng 2% vắng thi cuối kỳ. Mỗi sinh viên có một "năng lực" riêng nên điểm các môn nhất quán với nhau. |
 | Trắc nghiệm (`quizResults`) | Câu trả lời được giả lập rồi chấm bằng đúng hàm `grade_quiz` của máy chủ, theo khóa đáp án. Bài nộp không muộn hơn hạn. Đề gắn với phòng thi trực tuyến được bỏ qua. |
@@ -49,12 +51,13 @@ Script mới `scripts/seed_semester.py` sinh số liệu cho **mọi sinh viên 
 - nhật ký hoạt động hợp lệ;
 - không ghi đè dữ liệu đã có;
 - `--replace` cho ra đúng số liệu cũ;
+- `--ck-as-of 2026-12-22` chỉ môn đã thi đến ngày đó có điểm cuối kỳ, điểm quá trình vẫn đủ;
 - `--as-of 2026-11-26` chưa có điểm cuối kỳ;
 - `--purge` trả CSDL về như cũ.
 
 ## 5. Giới hạn
 
-- **Điểm học kỳ 1 có trước ngày thật.** Số liệu đã có điểm cuối kỳ và các khoản nộp học phí tháng 12, dù hôm nay mới 26/11. Đây là lựa chọn có chủ ý, để bản demo trông như đã hết học kỳ. Muốn số liệu chỉ đến hôm nay thì chạy lại với `--replace --as-of <ngày>`.
+- **Điểm quá trình có trước ngày thật.** Chuyên cần, bài tập và các khoản nộp học phí tính đến 31/12, dù hôm nay mới 27/11. Đây là lựa chọn có chủ ý, để bản demo có đủ điểm quá trình. Điểm cuối kỳ thì không: sau mỗi đợt thi, chạy lại `--replace` để thêm điểm các môn đã thi. Muốn mọi số liệu chỉ đến hôm nay thì chạy lại với `--replace --as-of <ngày>`.
 - **Trạng thái deadline dùng chung cho mọi người.** Trạng thái lưu chung trong `sharedData`, không riêng từng sinh viên, nên deadline đã qua ngày chốt hiện "Hoàn thành" với mọi người.
 - **Lượt làm trắc nghiệm đã ghi trước.** Đề trắc nghiệm còn mở (hạn 27/11) đã có kết quả cho sinh viên mẫu, nên tài khoản mẫu không nộp lại được đề đó (máy chủ chỉ cho nộp một lần).
 - **Điểm học kỳ trước chưa giả lập.** GPA tích lũy chỉ là số ước lượng ghi vào hồ sơ.

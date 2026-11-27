@@ -47,7 +47,7 @@ shared0['grades'] = {keep_uid: {'1': {'gk': 9}}}
 put(d, 'sharedData', 'global', shared0)
 before = snapshot(d)
 
-r = run(SEM, '--data-dir', d, '--as-of', '2026-12-31')
+r = run(SEM, '--data-dir', d, '--as-of', '2026-12-31', '--ck-as-of', '2026-12-31')
 chk('nạp được', r.returncode == 0)
 print(r.stdout[-600:] if r.returncode == 0 else r.stderr[-2000:])
 after = snapshot(d)
@@ -105,11 +105,25 @@ chk('sharedData dưới giới hạn ghi 5 MB', len(json.dumps(sh, ensure_ascii=
 
 r = run(SEM, '--data-dir', d)
 chk('chạy lần hai bị từ chối (đã có dữ liệu)', r.returncode != 0)
-r = run(SEM, '--data-dir', d, '--replace', '--as-of', '2026-12-31')
+r = run(SEM, '--data-dir', d, '--replace', '--as-of', '2026-12-31', '--ck-as-of', '2026-12-31')
 again = snapshot(d)
 same = all(again.get(k) == v for k, v in after.items() if k[0] in ('quizResults', 'tuition', 'graduationApps', 'activities')) \
     and again[('sharedData', 'global')]['grades'] == sh['grades']
 chk('--replace ra đúng số liệu cũ (cùng hạt giống)', r.returncode == 0 and same)
+
+r = run(SEM, '--data-dir', d, '--replace', '--as-of', '2026-12-31', '--ck-as-of', '2026-12-22')
+pa = snapshot(d)[('sharedData', 'global')]
+cells = [(cur[int(s)], c) for u, x in pa['grades'].items() if u != keep_uid for s, c in x.items()]
+exam = {}
+for e in pa['exams']:
+    if e.get('subjectId') in cur:
+        exam[e['subjectId']] = min(exam.get(e['subjectId'], e['date']), e['date'])
+chk('--ck-as-of 22/12: chỉ môn đã thi có điểm cuối kỳ, điểm quá trình vẫn đủ',
+    r.returncode == 0 and all(('ck' in c) <= (exam.get(s['id'], '9') <= '2026-12-22') for s, c in cells if s.get('kieuHoc') != 'huong-dan')
+    and any('ck' in c for s, c in cells) and all('gk' in c and c.get('hw') for s, c in cells if s.get('kieuHoc') != 'huong-dan')
+    and pa['grades'] != sh['grades']
+    and all(x['status'] == ('completed' if x['dueDate'] <= '2026-12-22' else 'pending')
+            for x in pa['deadlines'] if x.get('seed') == 'semester-v1' and x['title'].startswith(('Thi cuối kỳ', 'Bảo vệ'))))
 
 r = run(SEM, '--data-dir', d, '--as-of', '2026-11-26', '--replace')
 mid = snapshot(d)[('sharedData', 'global')]

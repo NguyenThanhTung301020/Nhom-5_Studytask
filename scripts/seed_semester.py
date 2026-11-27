@@ -112,7 +112,7 @@ def to_gpa4(avg10):
 
 
 # ── Kế hoạch ───────────────────────────────────────────────────────────────────────────────────
-def build(api, seed, as_of):
+def build(api, seed, as_of, ck_as_of=None):
     con = api.db()
     shared = api.doc_get('sharedData', 'global') or {}
     subjects = shared.get('subjects') or []
@@ -159,7 +159,8 @@ def build(api, seed, as_of):
     rng = random.Random(seed)
     P = dict(shared=shared, cur=cur, cur_ids=cur_ids, by_id=by_id, students=students, users=users, advisor_of=advisor_of,
              t_start=t_start, t_end=t_end, exams=exams, exam_by_subject=exam_by_subject, exam_quiz=exam_quiz, fin=fin,
-             required=required, final_cohort=final_cohort, as_of=as_of, seed=seed)
+             required=required, final_cohort=final_cohort, as_of=as_of, seed=seed,
+             ck_as_of=min(as_of, ck_as_of or as_of))   # điểm cuối kỳ / bảo vệ chỉ có khi ngày thi đã qua
 
     # 1. Bài tập và deadline theo từng học phần đang học
     homeworks, deadlines, policies = [], [], {}
@@ -212,8 +213,9 @@ def build(api, seed, as_of):
             if ex:
                 dls.append(('Thi cuối kỳ', pdate(ex), 'high', 'Xem phòng thi, giờ thi của lớp mình ở trang Lịch thi.'))
         for title, due, prio, desc in dls:
+            cut = P['ck_as_of'] if title.startswith(('Thi cuối kỳ', 'Bảo vệ')) else as_of     # buổi thi chưa diễn ra thì chưa hoàn thành
             deadlines.append({'id': dl_id, 'title': title, 'subjectId': sid, 'dueDate': iso(due), 'priority': prio,
-                              'status': 'completed' if due <= as_of else 'pending', 'description': desc, 'seed': TAG})
+                              'status': 'completed' if due <= cut else 'pending', 'description': desc, 'seed': TAG})
             dl_id += 1
         P.setdefault('midterm', {})[sid] = mid_week + timedelta(days=idx % 5)
         # Quy chế điểm của môn
@@ -315,7 +317,7 @@ def simulate(api, P):
                     events.setdefault(uid, []).append({'type': 'material', 'at': iso(at), 'subjectId': sid, 'refId': m['id'], 'refTitle': m.get('title', '')})
             if s.get('kieuHoc') == 'huong-dan':
                 dfd = P.get('defense', {}).get(sid)
-                if dfd and dfd <= as_of and uid in topics:
+                if dfd and dfd <= P['ck_as_of'] and uid in topics:
                     cell['ck'] = tenth(r.gauss(a + 0.4, 0.8))
                 fin_scores[sid] = cell.get('ck')
             else:
@@ -332,7 +334,7 @@ def simulate(api, P):
                 if P['midterm'][sid] <= as_of:
                     cell['gk'] = tenth(r.gauss(a - 0.2, 1.2))
                 ex = P['exams'].get((cls, sid)) or P['exam_by_subject'].get(sid)
-                if ex and pdate(ex) <= as_of and r.random() > 0.02:       # ~2% vắng thi cuối kỳ
+                if ex and pdate(ex) <= P['ck_as_of'] and r.random() > 0.02:       # ~2% vắng thi cuối kỳ
                     cell['ck'] = tenth(r.gauss(a - 0.1, 1.2))
                 w = pol['weights']
                 bt = sum(hw_scores) / len(hw_scores) if hw_scores else None
@@ -544,7 +546,7 @@ def topics_csv(P, S):
 # ── Ghi / gỡ ───────────────────────────────────────────────────────────────────────────────────
 def write_all(api, P, S, data_dir):
     con = api.db()
-    meta = {'at': time.time(), 'asOf': iso(P['as_of']), 'seed': P['seed'], 'grades': [], 'results': [], 'tuition': [], 'grad': [],
+    meta = {'at': time.time(), 'asOf': iso(P['as_of']), 'ckAsOf': iso(P['ck_as_of']), 'seed': P['seed'], 'grades': [], 'results': [], 'tuition': [], 'grad': [],
             'policies': [], 'subs': {}, 'events': {}, 'gpa': {}, 'files': []}
     shared = api.doc_get('sharedData', 'global') or {}
     # Tệp danh sách đề tài cho học phần đồ án
@@ -709,7 +711,8 @@ def purge(api):
 
 def summarize(P, S, size=None):
     from collections import Counter
-    print(f"Học kỳ: {P['t_start']:%d/%m/%Y} – {P['t_end']:%d/%m/%Y}; số liệu tính đến {P['as_of']:%d/%m/%Y}")
+    print(f"Học kỳ: {P['t_start']:%d/%m/%Y} – {P['t_end']:%d/%m/%Y}; số liệu tính đến {P['as_of']:%d/%m/%Y}; "
+          f"điểm cuối kỳ có cho buổi thi đến {P['ck_as_of']:%d/%m/%Y}")
     print(f"Học phần đang học: {len(P['cur'])}; sinh viên: {len(P['students'])} (khóa năm cuối {P['final_cohort']})")
     print(f"Bài tập: {len(P['homeworks'])}; deadline: {len(P['deadlines'])}; quy chế điểm: {len(P['policies'])}")
     print(f"Bảng điểm mới: {len(S['grades'])} sinh viên, {sum(len(c) for c in S['grades'].values())} môn; "
@@ -738,6 +741,8 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--data-dir', required=True, help='thư mục dữ liệu của máy chủ (STUDYTASK_DATA), chứa studytask.db')
     p.add_argument('--as-of', help='ngày chốt số liệu YYYY-MM-DD (mặc định 31/12 của năm học hiện tại)')
+    p.add_argument('--ck-as-of', help='điểm thi cuối kỳ / bảo vệ đồ án chỉ có cho buổi thi đến ngày này '
+                   '(mặc định hôm nay: chưa thi thì chưa có điểm, dù điểm quá trình tính đến --as-of)')
     p.add_argument('--seed', type=int, default=20261126, help='hạt giống ngẫu nhiên (cùng hạt giống → cùng số liệu)')
     p.add_argument('--dry-run', action='store_true', help='chỉ in thống kê, không ghi gì')
     p.add_argument('--purge', action='store_true', help='gỡ đúng dữ liệu script đã thêm rồi thoát')
@@ -758,7 +763,8 @@ def main(argv=None):
         sys.exit('CSDL đã có dữ liệu do seed_semester tạo. Dùng --replace để nạp lại hoặc --purge để gỡ.')
     today = date.today()
     as_of = pdate(a.as_of) if a.as_of else date(today.year if today.month >= 8 else today.year - 1, 12, 31)
-    P = build(api, a.seed, as_of)
+    ck_as_of = pdate(a.ck_as_of) if a.ck_as_of else min(as_of, today)
+    P = build(api, a.seed, as_of, ck_as_of)
     S = simulate(api, P)
     if a.dry_run:
         summarize(P, S)
