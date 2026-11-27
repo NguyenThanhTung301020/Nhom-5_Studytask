@@ -13,7 +13,7 @@ Việc 7 của kế hoạch tuần 6 (lập trình V3) do Trương Thanh Vui th�
 | `quizResults/{quizId}_{uid}` | Có, ghi bằng `INSERT` với khóa chính `(col, id)` nên mỗi sinh viên chỉ nộp một lần (HTTP 409 khi nộp lại). Không đọc/ghi qua `/api/doc/*` |
 | Cloud Function / Worker | Endpoint trong `server/studytask_api.py`: `POST /api/quiz/{id}/submit`, `GET /api/quiz/mine`, `GET /api/quiz/{id}/results` (Admin, giáo viên dạy môn) |
 | Firestore Security Rules | Hàm `guard_quizzes()` ở máy chủ: đề mới chỉ ở `draft`; `draft → active → closed`, một chiều; sau `draft` chỉ đổi được `status`; chỉ xóa đề `draft` (đồng thời xóa khóa); không đổi môn; giáo viên chỉ ghi đề môn mình dạy; người không có quyền chỉ được gửi lại đúng bản họ thấy (nên trình duyệt tải rồi ghi ngược vẫn chạy); mở đề cần mỗi câu có đáp án đúng (câu một lựa chọn: đúng một đáp án) |
-| Điểm vào Bảng điểm | Máy chủ ghi `quizResults` (nguồn chính thức) và **đồng thời** ghi một sự kiện `quiz` vào `activities/{uid}` để Bảng điểm và Báo cáo lớp tiếp tục chạy. Giao diện không còn ghi điểm trắc nghiệm. `activity_write_ok()` **chặn chủ tài khoản tự thêm sự kiện `quiz`** (máy chủ ghi sự kiện này bằng `doc_put()`, không đi qua hàm kiểm tra nên luồng chấm điểm không bị ảnh hưởng; góp ý review PR40). Việc 8 (V4) còn lại: chuyển hai màn hình sang đọc `quizResults` |
+| Điểm vào Bảng điểm | Máy chủ ghi `quizResults` (nguồn chính thức) và **đồng thời** ghi một sự kiện `quiz` vào `activities/{uid}` làm nhật ký hoạt động. Giao diện không còn ghi điểm trắc nghiệm. `activity_write_ok()` **chặn chủ tài khoản tự thêm sự kiện `quiz`** (máy chủ ghi sự kiện này bằng `doc_put()`, không đi qua hàm kiểm tra nên luồng chấm điểm không bị ảnh hưởng; góp ý review PR40). **Việc 8 (V4) đã xong (tuần 7, PR #67, #68)**: Bảng điểm và Báo cáo lớp đọc điểm chính thức từ `quizResults` qua `loadOfficialActivities`(`utils/quizScores`); chỉ khi máy chủ bản cũ chưa có `GET /api/quiz/results` (404) mới dùng tạm sự kiện `quiz` trong `activities`, lỗi khác thì màn hình báo lỗi. Bảng điểm vẫn ưu tiên điểm sửa tay.  |
 
 **Quyết định đã chốt cho các câu còn mở ở mục 8** (nhóm thống nhất ngày 16/11/2026):
 
@@ -31,7 +31,7 @@ Việc 7 của kế hoạch tuần 6 (lập trình V3) do Trương Thanh Vui th�
 
 **Kiểm thử:** `tests/server/test_quiz_v3.py` (chạy trong CI) chuyển các ca RULE-01…18 và API-01…12 sang kiểm thử máy chủ, thêm ca di trú. Chưa có ca cho API-13 (token Emulator) vì không còn Firebase.
 
-**Chưa làm:** cập nhật `docs/phan-tich/03` và các mục 4, 5.1, 7 của tài liệu này theo máy chủ riêng (nội dung vẫn mô tả Firestore); thử trên web thật; sửa giao diện (`Quiz.js:531`, `Subjects.js:578`) đang so `new Date(quiz.dueDate) < new Date()` (tính theo UTC, báo hết hạn từ 7 giờ sáng ngày hạn) cho khớp máy chủ (hết hạn cuối ngày UTC+7); đây là việc riêng, không thuộc việc 8.
+**Chưa làm:** cập nhật `docs/phan-tich/03` và các mục 4, 5.1, 7 của tài liệu này theo máy chủ riêng (nội dung vẫn mô tả Firestore); Đã xong: thử trên web thật (PR #64, PR #93); giao diện tính hạn đề theo cuối ngày giờ Việt Nam bằng `quizDuePassed()` giống máy chủ (PR #83).
 
 [D06]: 06-chuyen-firebase-sang-may-chu-rieng.md
 
